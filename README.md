@@ -1,11 +1,11 @@
-# [Spring 2026] Operating System
+# [Spring 2026] Operating Systems
 
 ![Last Commit](https://img.shields.io/github/last-commit/Choroning/26Spring_Operating-Systems)
 ![Languages](https://img.shields.io/github/languages/top/Choroning/26Spring_Operating-Systems)
 
 This repository organizes and stores sample C code and shell scripts written for university lectures and assignments.
 
-*Author: Cheolwon Park (Korea University Sejong, CSE) – Year 3 as of 2026*
+*Author: Cheolwon Park (Korea University Sejong, CSE) – Year 3 (Junior) as of 2026*
 <br><br>
 
 ## 📑 Table of Contents
@@ -30,7 +30,7 @@ This repository contains code examples developed for a university-level Operatin
 
 > **🤖 AI-Assisted Development**
 > This course encourages the use of AI agents.
-> [Claude Code](https://claude.ai/download) was used as a coding assistant throughout the course.
+> [Claude Code](https://claude.ai/download) and [Gemini CLI](https://github.com/google-gemini/gemini-cli) were used as coding assistants throughout the course.
 
 <br><a name="course-information"></a>
 ## 📚 Course Information

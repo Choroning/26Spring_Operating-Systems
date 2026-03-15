@@ -30,7 +30,7 @@
 
 > **🤖 AI 에이전트 활용**
 > 본 과목은 AI 에이전트 사용을 권장합니다.
-> 수업 전반에 걸쳐 [Claude Code](https://claude.ai/download)를 코딩 어시스턴트로 활용하였습니다.
+> 수업 전반에 걸쳐 [Claude Code](https://claude.ai/download)와 [Gemini CLI](https://github.com/google-gemini/gemini-cli)를 코딩 어시스턴트로 활용하였습니다.
 
 <br><a name="course-information"></a>
 ## 📚 강의 정보
