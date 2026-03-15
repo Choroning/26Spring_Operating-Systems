@@ -47,7 +47,7 @@ This repository contains code examples developed for a university-level Operatin
 | Type | Contents |
 |:----:|:---------|
 |Textbook|"Operating System Concepts, 10th Edition" by Silberschatz, Galvin, and Gagne (the Dinosaur Book)|
-|Other|Lecture Slides by instructor|
+|Lecture Notes|[Instructor's Markdown notes and slides (GitHub)](https://github.com/codingchild2424/2026-lecture-operating-system)|
 
 <br><a name="prerequisites"></a>
 ## ✅ Prerequisites

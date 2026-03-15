@@ -47,7 +47,7 @@
 | 유형 | 내용 |
 |:----:|:---------|
 |교재|Operating System Concepts 10판(공룡책)|
-|기타|교수자 제공 강의자료|
+|강의자료|[교수자 제공 Markdown 노트 및 슬라이드 (GitHub)](https://github.com/codingchild2424/2026-lecture-operating-system)|
 
 <br><a name="prerequisites"></a>
 ## ✅ 사전 요구사항
