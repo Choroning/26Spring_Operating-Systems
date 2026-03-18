@@ -1,6 +1,6 @@
 # W02 이론 — 프로세스 (1)
 
-> **최종 수정일:** 2026-03-17
+> **최종 수정일:** 2026-03-18
 >
 > Silberschatz, Operating System Concepts Ch 3 (Sections 3.1 – 3.3)
 
@@ -811,6 +811,6 @@ int main() {
   - 실제 IPC 구현: POSIX 공유 메모리, 파이프 (일반/이름 있는)
   - 클라이언트-서버 통신: 소켓, RPC
   - 교재: Ch 3, Sections 3.4–3.8
-- **문의:** codingchild@korea.ac.kr
+- **문의:** *[블라인드 처리됨]*
 
 ---

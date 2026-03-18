@@ -1,6 +1,6 @@
 # W01 이론 — 운영체제 소개
 
-> **최종 수정일:** 2026-03-17
+> **최종 수정일:** 2026-03-18
 
 ---
 
@@ -44,20 +44,7 @@
 
 ### 1.1 담당 교수
 
-**이웅기(Unggi Lee)**, codingchild@korea.ac.kr
-
-- 고려대학교 세종캠퍼스 컴퓨터소프트웨어학과 조교수
-- 경력:
-  - 조선대학교 컴퓨터공학과 조교수
-  - 글로벌 에듀테크 AI/NLP 엔지니어 (Enuma, 아이스크림에듀)
-  - 초등학교 교사
-- 연구 ([Google Scholar](https://scholar.google.co.kr/citations?user=xnsGrp0AAAAJ)):
-  - AIED: 교육에서의 생성형 AI, 교수학적 정렬(Pedagogical Alignment), 지식 추적(Knowledge Tracing)
-  - NLP & 로보틱스: 대규모 언어 모델(LLMs), 시각-언어-행동 모델(VLA)
-- 연구실 활동 ([Lab](https://codingchild2424.github.io/lab-website/)):
-  - 조선대학교 학부생들과 VLA 프리프린트 게재
-  - Upstage, Neudive 등과의 산학 협력
-  - 미국, 싱가포르, 영국 연구자들과의 공동 연구
+> *개인정보 보호를 위해 블라인드 처리되었습니다.*
 
 ### 1.2 강의 계획서
 
@@ -494,6 +481,6 @@ graph LR
 ## 부록
 
 - 다음 주: **프로세스(Process)** — fork, exec, wait, pipe
-- **문의:** codingchild@korea.ac.kr
+- **문의:** *[블라인드 처리됨]*
 
 ---
