@@ -119,7 +119,7 @@ gcc -Wall -o minishell minishell.c
      │                                       ├── "received ping" 출력
      │ ←─────────────────────── 'p' 전송 ──── │
      ├── "received pong" 출력                 │
-     ├── 왕복 시간 출력                        │
+     ├── 왕복 시간 출력                         │
      └── wait()으로 자식 회수                   └── exit(0)
 ```
 
@@ -225,7 +225,7 @@ exit(0);
 ### 2.6 TODO 7, 8, 9: 부모 프로세스의 동작
 
 ```c
-long start_time = get_time_us();   /* 시간 측정 시작 */
+long start_time = get_time_us();      /* 시간 측정 시작 */
 
 /* TODO 7: 자식에게 1바이트를 보내세요 (ping). */
 char buf = 'p';
@@ -252,24 +252,24 @@ wait(NULL);   /* 자식 프로세스 회수 — 좀비 방지 */
 ```text
 시간 →
 
-부모 프로세스                              자식 프로세스
-━━━━━━━━━                              ━━━━━━━━━
+부모 프로세스                               자식 프로세스
+━━━━━━━━━                                ━━━━━━━━━
 pipe(parent_to_child)
 pipe(child_to_parent)
-fork() ─────────────────────────→ [생성됨]
-close(parent_to_child[0])         close(parent_to_child[1])
-close(child_to_parent[1])         close(child_to_parent[0])
-                                          │
-start_time = get_time_us()                │
-write(parent_to_child[1], 'p') ──→ read(parent_to_child[0])
-        │                         printf("received ping")
+fork() ──────────────────────────────────→ [생성됨]
+close(parent_to_child[0])          close(parent_to_child[1])
+close(child_to_parent[1])          close(child_to_parent[0])
+                                              │
+start_time = get_time_us()                    │
+write(parent_to_child[1], 'p') ───→ read(parent_to_child[0])
+        │                            printf("received ping")
         │                         write(child_to_parent[1], 'p')
-read(child_to_parent[0]) ←──────
-printf("received pong")           close(...)
-end_time = get_time_us()          exit(0) → [좀비 상태]
-printf("Round-trip time: ...")            │
-close(...)                                │
-wait(NULL) ──────────────────────→ [회수됨]
+read(child_to_parent[0]) ←─────────
+printf("received pong")                   close(...)
+end_time = get_time_us()              exit(0) → [좀비 상태]
+printf("Round-trip time: ...")                │
+close(...)                                    │
+wait(NULL) ──────────────────────────────→ [회수됨]
 ```
 
 ### 2.8 핵심 학습 포인트
@@ -361,10 +361,10 @@ if (pid == 0) {
         int fd = open(cmd->infile, O_RDONLY);   /* 파일을 읽기 전용으로 열기 */
         if (fd < 0) {
             perror(cmd->infile);
-            exit(1);                             /* 파일 열기 실패 시 종료 */
+            exit(1);                            /* 파일 열기 실패 시 종료 */
         }
-        dup2(fd, STDIN_FILENO);                  /* stdin(fd 0)을 파일로 교체 */
-        close(fd);                               /* 원래 fd는 닫기 */
+        dup2(fd, STDIN_FILENO);                 /* stdin(fd 0)을 파일로 교체 */
+        close(fd);                              /* 원래 fd는 닫기 */
     }
     ...
 }
@@ -384,7 +384,7 @@ if (pid == 0) {
     if (cmd->outfile != NULL) {
         int fd = open(cmd->outfile,
                       O_WRONLY | O_CREAT | O_TRUNC,   /* 쓰기용 | 없으면 생성 | 있으면 덮어쓰기 */
-                      0644);                           /* 권한: rw-r--r-- */
+                      0644);                          /* 권한: rw-r--r-- */
         if (fd < 0) {
             perror(cmd->outfile);
             exit(1);
@@ -494,10 +494,10 @@ execute_command(cmd) 호출 — 예: "ls -l > out.txt"
 ```text
 예: ls | wc -l
 
-ls 프로세스              파이프(커널 버퍼)            wc -l 프로세스
-━━━━━━━━               ━━━━━━━━━━━━               ━━━━━━━━━━━━
-stdout ──────────→ [   커널 버퍼   ] ──────────→ stdin
-(파일 목록 출력)                                 (줄 수 세기)
+     ls 프로세스                파이프(커널 버퍼)               wc -l 프로세스
+  ━━━━━━━━━━━━━━━            ━━━━━━━━━━━━━━━            ━━━━━━━━━━━━━━━
+      stdout ──────────────→ [   커널 버퍼   ] ──────────────→ stdin
+   (파일 목록 출력)                                           (줄 수 세기)
 ```
 
 **execute_pipe()가 해야 할 일:**
@@ -701,9 +701,9 @@ stdout → [파이프] → stdin
 fd 소유 상황 (fork() 후):
 
              fd[0]  fd[1]
-부모:          ✕      ✕    ← 둘 다 닫기
-자식1(cmd1):   ✕      ✓    ← fd[0] 닫기, fd[1]을 stdout에 연결 후 닫기
-자식2(cmd2):   ✓      ✕    ← fd[1] 닫기, fd[0]을 stdin에 연결 후 닫기
+       부모:   ✕      ✕     ← 둘 다 닫기
+자식1(cmd1):   ✕      ✓     ← fd[0] 닫기, fd[1]을 stdout에 연결 후 닫기
+자식2(cmd2):   ✓      ✕     ← fd[1] 닫기, fd[0]을 stdin에 연결 후 닫기
 ```
 
 ### 5.3 이 과제와 강의 내용의 연결
