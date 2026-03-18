@@ -76,9 +76,9 @@ graph LR
 
 | 에이전트 | 가격 | 설명 |
 |:---------|:-----|:-----|
-| ![Gemini](./images/gemini.png) **Gemini CLI** | 무료 (1일 1000회) | Google의 에이전트. 기본 선택으로 적합하다. |
-| ![Claude](./images/claude_ai.png) **Claude Code** | 유료 | Anthropic의 에이전트. 강력한 다중 파일 추론 능력이 있다. |
-| ![OpenAI](./images/openai.png) **Codex CLI** | 유료 | OpenAI의 에이전트. 오픈소스 CLI이다. |
+| ![Gemini](../images/gemini.png) **Gemini CLI** | 무료 (1일 1000회) | Google의 에이전트. 기본 선택으로 적합하다. |
+| ![Claude](../images/claude_ai.png) **Claude Code** | 유료 | Anthropic의 에이전트. 강력한 다중 파일 추론 능력이 있다. |
+| ![OpenAI](../images/openai.png) **Codex CLI** | 유료 | OpenAI의 에이전트. 오픈소스 CLI이다. |
 
 기타: **OpenCode** (오픈소스 하네스 — 오픈소스 LLM을 포함한 모든 모델 사용 가능)
 
@@ -176,7 +176,7 @@ gemini --version    # 또는: claude --version
 
 **검증 가능한 평가 루브릭(rubric)**을 작성하고, 이를 활용하여 반복적으로 결과물의 품질을 개선한다.
 
-![Ralph Wiggum](./images/ralph_wiggum.png)
+![Ralph Wiggum](../images/ralph_wiggum.png)
 
 **R**equest(요청) → **A**nalyze(분석) → **L**ist issues(문제 나열) → **P**rompt again(재요청) → **H**armonize(조율)
 

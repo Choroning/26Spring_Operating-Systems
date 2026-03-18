@@ -70,7 +70,7 @@
 
 프로세스의 메모리 레이아웃은 여러 **영역(section)**으로 나뉜다:
 
-![메모리에서의 프로세스 레이아웃](./images/figures/p002_fig.png)
+![메모리에서의 프로세스 레이아웃](../images/figures/p002_fig.png)
 
 *Silberschatz, Figure 3.1 — 메모리에서의 프로세스 레이아웃*
 
@@ -160,7 +160,7 @@ int main(int argc, char *argv[]) {   // argc, argv 영역
 
 **중요:** 어느 시점에서든 단일 프로세서 코어 위에서는 **하나의 프로세스만** 실행 상태에 있을 수 있다. 그러나 여러 프로세스가 동시에 준비 또는 대기 상태에 있을 수 있다.
 
-![프로세스 상태 다이어그램](./images/figures/p005_fig.png)
+![프로세스 상태 다이어그램](../images/figures/p005_fig.png)
 
 *Silberschatz, Figure 3.2 — 프로세스 상태 다이어그램*
 
@@ -181,7 +181,7 @@ int main(int argc, char *argv[]) {   // argc, argv 영역
 
 각 프로세스는 운영체제에서 **PCB (프로세스 제어 블록, Process Control Block)**로 표현된다. 다른 이름으로 **태스크 제어 블록(task control block)**이라고도 한다.
 
-![프로세스 제어 블록](./images/figures/p005_fig2.png)
+![프로세스 제어 블록](../images/figures/p005_fig2.png)
 
 *Silberschatz, Figure 3.3 — 프로세스 제어 블록(PCB)*
 
@@ -277,11 +277,11 @@ current->state = new_state;  // 현재 프로세스의 상태 변경
 - **레디 큐(Ready Queue):** CPU를 기다리는 프로세스들의 큐; **연결 리스트**로 구현
 - **대기 큐(Wait Queue):** 특정 이벤트(예: I/O 완료)를 기다리는 프로세스들의 큐
 
-![레디 큐와 대기 큐](./images/figures/p008_fig.png)
+![레디 큐와 대기 큐](../images/figures/p008_fig.png)
 
 *Silberschatz, Figure 3.4 — 레디 큐와 대기 큐*
 
-![큐잉 다이어그램](./images/figures/p009_fig.png)
+![큐잉 다이어그램](../images/figures/p009_fig.png)
 
 *Silberschatz, Figure 3.5 — 프로세스 스케줄링의 큐잉 다이어그램*
 
@@ -304,7 +304,7 @@ current->state = new_state;  // 현재 프로세스의 상태 변경
 
 **문맥 교환(Context Switch):** CPU 코어를 다른 프로세스로 전환하는 작업이다. 현재 프로세스의 **상태 저장(state save)** + 새 프로세스의 **상태 복원(state restore)**으로 구성된다.
 
-![문맥 교환 다이어그램](./images/figures/p010_fig.png)
+![문맥 교환 다이어그램](../images/figures/p010_fig.png)
 
 *Silberschatz, Figure 3.6 — 프로세스 간 문맥 교환*
 
@@ -349,7 +349,7 @@ current->state = new_state;  // 현재 프로세스의 상태 변경
 | **프로세스 트리(Process tree)** | 부모-자식 관계로 형성된 트리 구조 |
 | **프로세스 ID (pid)** | 각 프로세스의 고유 식별자 (일반적으로 정수) |
 
-![Linux 프로세스 트리](./images/figures/p012_fig.png)
+![Linux 프로세스 트리](../images/figures/p012_fig.png)
 
 *Silberschatz, Figure 3.7 — 일반적인 Linux 시스템의 프로세스 트리*
 

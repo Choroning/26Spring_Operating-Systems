@@ -132,7 +132,7 @@
 
 ### 2.2 OS의 위치
 
-![컴퓨터 시스템 구성 요소](./images/cropped/ch01_p02-02_fig.png)
+![컴퓨터 시스템 구성 요소](../images/cropped/ch01_p02-02_fig.png)
 
 *Silberschatz, Figure 1.1 — 컴퓨터 시스템 구성 요소의 추상적 관점*
 
@@ -186,7 +186,7 @@ graph LR
 
 ### 2.5 시스템 콜
 
-![시스템 콜 처리 과정](./images/cropped/ch02_p11-11_fig.png)
+![시스템 콜 처리 과정](../images/cropped/ch02_p11-11_fig.png)
 
 *Silberschatz, Figure 2.6 — 사용자 애플리케이션이 open() 시스템 콜을 호출하는 과정*
 
@@ -224,7 +224,7 @@ graph TD
 
 ### 2.7 저장 장치 계층
 
-![저장 장치 계층 구조](./images/cropped/ch01_p11-11_fig.png)
+![저장 장치 계층 구조](../images/cropped/ch01_p11-11_fig.png)
 
 *Silberschatz, Figure 1.6 — 저장 장치 계층 구조*
 
@@ -249,7 +249,7 @@ graph TD
 
 대부분의 현대 OS는 **하이브리드(Hybrid)** — 순수한 이론보다는 실용적 접근을 취한다.
 
-![Tux](./images/tux.png)
+![Tux](../images/tux.png)
 
 > **참고:** 모놀리식 커널은 모든 서비스가 커널 공간에서 실행되므로 빠르지만, 하나의 버그가 전체 시스템을 다운시킬 수 있다. 마이크로커널은 최소한의 기능(IPC, 스케줄링)만 커널에 두고 나머지를 사용자 공간에서 실행하므로 안정적이지만, 컨텍스트 스위칭 오버헤드가 크다. Linux는 모놀리식이지만 LKM을 통해 모듈 방식의 유연성도 갖추고 있다.
 
@@ -261,7 +261,7 @@ graph TD
 - 구현 내용: 프로세스, 가상 메모리, 파일 시스템, 셸
 - 학기 내내 xv6를 **읽고, 수정하고, 확장**할 예정이다.
 
-![RISC-V Logo](./images/riscv_logo.png)
+![RISC-V Logo](../images/riscv_logo.png)
 
 ```bash
 git clone https://github.com/mit-pdos/xv6-riscv
