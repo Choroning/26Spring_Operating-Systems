@@ -188,20 +188,20 @@ make TOOLPREFIX=riscv64-elf- qemu
 
 ```
   유저 프로그램: fork()
-        │
-        ▼
+         │
+         ▼
   usys.S:  li a7, SYS_fork  →  ecall
-        │
-        ▼
+         │
+         ▼
   trap.c:  usertrap()        ← 모든 유저 트랩 처리
-        │
-        ▼
+         │
+         ▼
   syscall.c:  syscall()      ← a7 읽기, 디스패치 테이블 조회
-        │
-        ▼
+         │
+         ▼
   sysproc.c:  sys_fork()     ← 얇은 래퍼(Wrapper)
-        │
-        ▼
+         │
+         ▼
   proc.c:  kfork()           ← 실제 작업 수행
 ```
 
@@ -291,7 +291,7 @@ $ lab2_trace
 **프로세스 상태 머신(State Machine)** — `kernel/proc.h`에 정의:
 
 ```
-                allocproc()        fork()/userinit()       scheduler
+                  allocproc()        fork()/userinit()        scheduler
   UNUSED ──────────▶ USED ──────────────▶ RUNNABLE ──────────▶ RUNNING
     ▲                                        ▲                  │  │
     │                                        │   yield()/       │  │
@@ -302,8 +302,8 @@ $ lab2_trace
     │                                        │         │           │
     │                                     SLEEPING ◀───┘           │
     │                                                              │
-    │                                                    exit()    │
-    │                     wait() reaps                             │
+    │                                                      exit()  │
+    │                       wait() reaps                           │
     └──────────────────────── ZOMBIE ◀─────────────────────────────┘
 ```
 
@@ -320,20 +320,20 @@ struct proc {
   struct spinlock lock;
   enum procstate state;        // UNUSED → USED → RUNNABLE → RUNNING → ZOMBIE
   void *chan;                  // 슬립 채널 (SLEEPING 상태일 때)
-  int killed;                 // 대기 중인 킬 시그널
-  int xstate;                 // 부모에게 전달할 종료 상태
-  int pid;                    // 프로세스 ID
+  int killed;                  // 대기 중인 킬 시그널
+  int xstate;                  // 부모에게 전달할 종료 상태
+  int pid;                     // 프로세스 ID
 
-  struct proc *parent;        // 부모 프로세스 (wait_lock으로 보호됨)
+  struct proc *parent;         // 부모 프로세스 (wait_lock으로 보호됨)
 
-  uint64 kstack;              // 커널 스택 가상 주소
-  uint64 sz;                  // 프로세스 메모리 크기 (바이트)
-  pagetable_t pagetable;      // 유저 페이지 테이블(Page Table)
-  struct trapframe *trapframe;// 저장된 유저 레지스터 (trampoline.S에서 사용)
-  struct context context;     // 저장된 커널 레지스터 (swtch.S에서 사용)
-  struct file *ofile[NOFILE]; // 열린 파일 디스크립터
-  struct inode *cwd;          // 현재 작업 디렉토리
-  char name[16];              // 프로세스 이름 (디버깅용)
+  uint64 kstack;               // 커널 스택 가상 주소
+  uint64 sz;                   // 프로세스 메모리 크기 (바이트)
+  pagetable_t pagetable;       // 유저 페이지 테이블(Page Table)
+  struct trapframe *trapframe; // 저장된 유저 레지스터 (trampoline.S에서 사용)
+  struct context context;      // 저장된 커널 레지스터 (swtch.S에서 사용)
+  struct file *ofile[NOFILE];  // 열린 파일 디스크립터
+  struct inode *cwd;           // 현재 작업 디렉토리
+  char name[16];               // 프로세스 이름 (디버깅용)
 };
 ```
 
@@ -353,19 +353,19 @@ struct proc {
 
 ```
   1. allocproc()         ── 새 프로세스 슬롯, pid, kstack, 트랩프레임 확보
-        │
+         │
   2. uvmcopy()           ── 부모의 페이지 테이블 + 메모리 복사
-        │
-  3. 트랩프레임 복사      ── 자식도 fork()에서 리턴
-        │
-  4. a0 = 0 설정         ── 자식은 fork() 반환값이 0    ★
-        │
-  5. ofile[] 복사        ── 열린 파일 디스크립터 공유
-        │
-  6. parent 설정,        ── 자식이 실행 가능 상태
+         │
+  3. 트랩프레임 복사         ── 자식도 fork()에서 리턴
+         │
+  4. a0 = 0 설정          ── 자식은 fork() 반환값이 0
+         │
+  5. ofile[] 복사         ── 열린 파일 디스크립터 공유
+         │
+  6. parent 설정,         ── 자식이 실행 가능 상태
      state = RUNNABLE
-        │
-  7. 부모에게 자식 PID   ── 반환
+         │
+  7. 부모에게 자식 PID      ── 반환
 ```
 
 **토론 질문**:
@@ -423,6 +423,6 @@ struct proc {
 ## 부록
 
 - 다음 주제: **스레드(Thread), 스케줄링(Scheduling), 동기화(Synchronization)** — 오늘 탐색한 내용 위에 구축된다.
-- **문의:** codingchild@korea.ac.kr
+- **문의:** *[블라인드 처리됨]*
 
 ---

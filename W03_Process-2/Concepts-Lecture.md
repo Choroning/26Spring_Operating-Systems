@@ -97,7 +97,7 @@ IPC는 현대 소프트웨어 어디에서나 사용된다:
 
 > 대부분의 운영체제는 **두 모델 모두** 제공한다.
 
-![두 가지 IPC 모델](./images/figures/p021_fig.png)
+![두 가지 IPC 모델](../images/figures/p021_fig.png)
 
 *Silberschatz, Figure 3.11 — (a) 공유 메모리. (b) 메시지 전달.*
 
@@ -109,7 +109,7 @@ IPC는 현대 소프트웨어 어디에서나 사용된다:
 
 > **참고:** 현재 Chrome은 각 iframe마다 별도의 렌더러 프로세스를 사용하는 **Site Isolation** 정책을 적용하여 보안을 더욱 강화하고 있다.
 
-![Chrome 멀티프로세스](./images/figures/chrome_ipc_p020.png)
+![Chrome 멀티프로세스](../images/figures/chrome_ipc_p020.png)
 
 *Silberschatz, Ch 3.4 — 각 탭은 별도의 프로세스를 나타낸다*
 
@@ -181,7 +181,7 @@ IPC는 현대 소프트웨어 어디에서나 사용된다:
   └───┴───┴───┴───┴───┘
     ↑               ↑
    out             in
- (소비자)        (생산자)
+  (소비자)         (생산자)
 
  원형 배열 (순환)
 ```
@@ -428,22 +428,22 @@ int main()
 **흐름 요약:**
 
 ```text
-  Producer                              Consumer
-  ────────                              ────────
+          Producer                           Consumer
+          ────────                           ────────
   shm_open("OS", O_CREAT|O_RDWR)
   ftruncate(fd, 4096)
   mmap(..., MAP_SHARED, fd, 0)
-       ↓
+              ↓
   sprintf(ptr, "Hello")
   sprintf(ptr, "World!")
-       ↓
-  Exit                                  shm_open("OS", O_RDONLY)
-                                        mmap(..., MAP_SHARED, fd, 0)
-                                             ↓
-                                        printf("%s", ptr)
-                                        → Outputs "HelloWorld!"
-                                             ↓
-                                        shm_unlink("OS")
+              ↓
+            Exit                      shm_open("OS", O_RDONLY)
+                                      mmap(..., MAP_SHARED, fd, 0)
+                                                 ↓
+                                      printf("%s", ptr)
+                                      → Outputs "HelloWorld!"
+                                                 ↓
+                                      shm_unlink("OS")
 ```
 
 **실세계 공유 메모리 활용 사례:**
@@ -498,7 +498,7 @@ Windows에서 같은 머신 내의 프로세스 간 통신 메커니즘이다.
 2. **대형** — **섹션 객체(section object, 공유 메모리)** 사용
 3. **초대형** — 서버가 클라이언트의 주소 공간을 직접 읽기/쓰기
 
-![Windows ALPC](./images/figures/p035_fig.png)
+![Windows ALPC](../images/figures/p035_fig.png)
 
 *Silberschatz, Figure 3.19 — Windows의 Advanced local procedure calls*
 
@@ -515,7 +515,7 @@ Windows에서 같은 머신 내의 프로세스 간 통신 메커니즘이다.
 - 생산자는 **쓰기 끝(write end)** 에 쓰고, 소비자는 **읽기 끝(read end)** 에서 읽는다.
 - **단방향** — 양방향에는 두 개의 파이프가 필요하다.
 
-![일반 파이프의 파일 디스크립터](./images/figures/p036_fig.png)
+![일반 파이프의 파일 디스크립터](../images/figures/p036_fig.png)
 
 *Silberschatz, Figure 3.23 — 일반 파이프의 파일 디스크립터*
 
@@ -552,12 +552,12 @@ int main(void)
 
     pid = fork();
 
-    if (pid > 0) {          /* 부모 프로세스 */
+    if (pid > 0) {           /* 부모 프로세스 */
         close(fd[READ_END]);
         write(fd[WRITE_END], write_msg, strlen(write_msg) + 1);
         close(fd[WRITE_END]);
     }
-    else if (pid == 0) {    /* 자식 프로세스 */
+    else if (pid == 0) {     /* 자식 프로세스 */
         close(fd[WRITE_END]);
         read(fd[READ_END], read_msg, BUFFER_SIZE);
         printf("read %s", read_msg);
@@ -579,7 +579,7 @@ int main(void)
 **셸에서의 활용:**
 
 ```text
-ls -l | less              # ls의 stdout이 파이프를 통해 less의 stdin으로 전달
+ls -l | less                          # ls의 stdout이 파이프를 통해 less의 stdin으로 전달
 cat file.txt | grep "error" | wc -l   # 파이프 체인
 ```
 
@@ -631,7 +631,7 @@ read(fd, buf, 6);
 
 ```text
   HTTP 요청 → 웹 서버 ──pipe──▷ CGI 스크립트 (Python/Perl)
-                       ◁──pipe── HTML 응답
+                   ◁──pipe── HTML 응답
 ```
 
 - **셸 작업 제어** — `|`가 프로세스 간 익명 파이프를 생성:
@@ -653,7 +653,7 @@ find / -name "*.log" 2>/dev/null | xargs grep "ERROR" | sort -u
 
 **소켓(Socket)** = 통신의 **끝점(endpoint)**이다. **IP 주소 + 포트 번호**로 식별된다.
 
-![소켓을 이용한 통신](./images/figures/p043_fig.png)
+![소켓을 이용한 통신](../images/figures/p043_fig.png)
 
 *Silberschatz, Figure 3.26 — 소켓을 이용한 통신*
 
@@ -753,7 +753,7 @@ public class DateClient {
 1. **스텁(Stub)** — 클라이언트 측의 프록시. 서버의 실제 프로시저를 대리하여 매개변수를 패킹하여 서버로 전송한다.
 2. **마샬링(Marshalling)** — 데이터를 네트워크 전송에 적합한 형식으로 변환한다. Big-endian vs Little-endian 차이를 해결하기 위해 **XDR** 등의 표준을 사용한다.
 
-![RPC 실행 흐름](./images/figures/p048_fig.png)
+![RPC 실행 흐름](../images/figures/p048_fig.png)
 
 *Silberschatz, Figure 3.29 — 원격 프로시저 호출(RPC)의 실행*
 
@@ -808,14 +808,14 @@ interface RemoteService {
 ```protobuf
 // weather.proto
 service WeatherService {
-  rpc GetForecast (Location)
+   rpc GetForecast (Location)
       returns (Forecast);
 }
 ```
 
 클라이언트는 `GetForecast()`를 로컬 함수처럼 호출하고, gRPC가 마샬링, 네트워크 전송, 언마샬링을 자동으로 처리한다.
 
-![gRPC 아키텍처](./images/figures/grpc_architecture.png)
+![gRPC 아키텍처](../images/figures/grpc_architecture.png)
 
 *출처: grpc.io — gRPC 개념 다이어그램*
 
@@ -1007,6 +1007,6 @@ int main() {
   - 스레드 라이브러리 (Pthreads, Windows, Java)
   - 암묵적 스레딩(Implicit Threading)
   - 실습: Pthreads를 이용한 멀티스레드 프로그래밍
-- **문의:** codingchild@korea.ac.kr
+- **문의:** *[블라인드 처리됨]*
 
 ---
