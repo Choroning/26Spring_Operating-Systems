@@ -107,6 +107,7 @@
 │   │   └── (cropped figure images)
 │   └── figures
 │       └── (extracted lecture figures)
+├── xv6-riscv                            (git submodule → mit-pdos/xv6-riscv)
 ├── LICENSE
 ├── README.ko.md
 └── README.md
