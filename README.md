@@ -22,11 +22,12 @@ This repository organizes and stores sample C code and shell scripts written for
 <br><a name="about-this-repository"></a>
 ## 📝 About This Repository
 
-This repository contains code examples developed for a university-level Operating Systems course in C and shell scripts, including:
+This repository contains bilingual study materials and system-level code developed for a university-level Operating Systems course, including:
 
-- Lecture demonstration codes
-- Assignment solutions (C implementations with `.sh` grading scripts)
-- Additional practice exercises
+- Bilingual Concepts notes (Korean `.ko.md` + English `.md`) for every lecture and lab session
+- Assignment solutions with bilingual explanation documents (`.ko.md` + `.md`)
+- C implementations with `.sh` grading scripts
+- Weekly directory structure covering the full Dinosaur Book curriculum
 
 > **🤖 AI-Assisted Development**
 > This course encourages the use of AI agents.
@@ -68,11 +69,46 @@ This repository contains code examples developed for a university-level Operatin
 
 ```plaintext
 26Spring_Operating-Systems
+├── W01_Introduction-to-Operating-Systems
+│   ├── Concepts-Lab.ko.md
+│   ├── Concepts-Lab.md
+│   ├── Concepts-Lecture.ko.md
+│   └── Concepts-Lecture.md
+├── W02_Process-1
+│   ├── Assignment
+│   │   ├── minishell.c
+│   │   ├── pingpong.c
+│   │   ├── test_minishell.sh
+│   │   └── test_pingpong.sh
+│   ├── Assignment-Explanation.ko.md
+│   ├── Assignment-Explanation.md
+│   ├── Concepts-Lab.ko.md
+│   ├── Concepts-Lab.md
+│   ├── Concepts-Lecture.ko.md
+│   └── Concepts-Lecture.md
+├── W03_Process-2
+│   ├── Concepts-Lab.ko.md
+│   ├── Concepts-Lab.md
+│   ├── Concepts-Lecture.ko.md
+│   └── Concepts-Lecture.md
+├── W04_Thread-And-Concurrency-1
+├── W05_Thread-And-Concurrency-2
+├── W06_CPU-Scheduling-1
+├── W07_CPU-Scheduling-2
+├── W09_Synchronization
+├── W10_Deadlocks
+├── W11_Main-Memory
+├── W12_Virtual-Memory
+├── W13_Storage-Management
+├── W14_Security-And-Protection
+├── images
+│   ├── cropped
+│   │   └── (cropped figure images)
+│   └── figures
+│       └── (lecture figure images)
 ├── LICENSE
 ├── README.ko.md
 └── README.md
-
-0 directories, 3 files
 ```
 
 <br><a name="license"></a>

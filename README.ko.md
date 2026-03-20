@@ -22,11 +22,12 @@
 <br><a name="about-this-repository"></a>
 ## 📝 레포지토리 소개
 
-이 레포지토리에는 대학 수준의 C 및 셸 스크립트 기반 운영체제 과목을 위해 작성된 코드가 포함되어 있습니다:
+이 레포지토리에는 대학 수준의 운영체제 과목을 위해 작성된 이중 언어 학습 자료와 시스템 수준 코드가 포함되어 있습니다:
 
-- 강의에서 소개한 코드
-- 각 과제의 솔루션 (C 구현 및 `.sh` 채점 스크립트)
-- 추가적인 연습 문제
+- 매 강의 및 실습 세션별 이중 언어 개념 정리 노트 (한국어 `.ko.md` + 영어 `.md`)
+- 이중 언어 설명 문서(`.ko.md` + `.md`)를 포함한 과제 솔루션
+- C 구현 및 `.sh` 채점 스크립트
+- 공룡책 기반 전체 커리큘럼을 다루는 주차별 디렉토리 구조
 
 > **🤖 AI 에이전트 활용**
 > 본 과목은 AI 에이전트 사용을 권장합니다.
@@ -68,11 +69,46 @@
 
 ```plaintext
 26Spring_Operating-Systems
+├── W01_Introduction-to-Operating-Systems
+│   ├── Concepts-Lab.ko.md
+│   ├── Concepts-Lab.md
+│   ├── Concepts-Lecture.ko.md
+│   └── Concepts-Lecture.md
+├── W02_Process-1
+│   ├── Assignment
+│   │   ├── minishell.c
+│   │   ├── pingpong.c
+│   │   ├── test_minishell.sh
+│   │   └── test_pingpong.sh
+│   ├── Assignment-Explanation.ko.md
+│   ├── Assignment-Explanation.md
+│   ├── Concepts-Lab.ko.md
+│   ├── Concepts-Lab.md
+│   ├── Concepts-Lecture.ko.md
+│   └── Concepts-Lecture.md
+├── W03_Process-2
+│   ├── Concepts-Lab.ko.md
+│   ├── Concepts-Lab.md
+│   ├── Concepts-Lecture.ko.md
+│   └── Concepts-Lecture.md
+├── W04_Thread-And-Concurrency-1
+├── W05_Thread-And-Concurrency-2
+├── W06_CPU-Scheduling-1
+├── W07_CPU-Scheduling-2
+├── W09_Synchronization
+├── W10_Deadlocks
+├── W11_Main-Memory
+├── W12_Virtual-Memory
+├── W13_Storage-Management
+├── W14_Security-And-Protection
+├── images
+│   ├── cropped
+│   │   └── (잘라낸 도표 이미지)
+│   └── figures
+│       └── (강의 도표 이미지)
 ├── LICENSE
 ├── README.ko.md
 └── README.md
-
-0개의 디렉토리, 3개의 파일
 ```
 
 <br><a name="license"></a>

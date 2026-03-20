@@ -1,6 +1,6 @@
 # Week 3 Lecture — Process (2)
 
-> **Last Updated:** 2026-03-18
+> **Last Updated:** 2026-03-21
 >
 > Silberschatz, Operating System Concepts Ch 3 (Sections 3.4 – 3.8)
 

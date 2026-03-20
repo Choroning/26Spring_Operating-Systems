@@ -1,6 +1,6 @@
 # Week 2 Assignment Explanation — pingpong & minishell
 
-> **Last Updated:** 2026-03-19
+> **Last Updated:** 2026-03-21
 >
 > Lecture reference: Lecture (Ch 3.1–3.3 Processes), Lab (Labs 3–4 pipe/dup2)
 

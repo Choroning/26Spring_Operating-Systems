@@ -1,6 +1,6 @@
 # Week 3 Lab — Exploring xv6 Internals
 
-> **Last Updated:** 2026-03-19
+> **Last Updated:** 2026-03-21
 
 ---
 
