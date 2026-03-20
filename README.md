@@ -102,10 +102,11 @@ This repository contains bilingual study materials and system-level code develop
 ├── W13_Storage-Management
 ├── W14_Security-And-Protection
 ├── images
+│   ├── *.png                          (lecture diagrams and icons)
 │   ├── cropped
 │   │   └── (cropped figure images)
 │   └── figures
-│       └── (lecture figure images)
+│       └── (extracted lecture figures)
 ├── LICENSE
 ├── README.ko.md
 └── README.md

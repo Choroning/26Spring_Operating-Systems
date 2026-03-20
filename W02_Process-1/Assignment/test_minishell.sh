@@ -2,22 +2,23 @@
 #
 # @file        test_minishell.sh
 # @brief       Automated test script for minishell assignment
+# @author      Cheolwon Park
 # @date        2026-03-08
 #
-# 사용법: ./test_minishell.sh [minishell.c 경로]
-#         기본값: ./minishell.c
+# Usage: ./test_minishell.sh [path_to_minishell.c]
+#        Default: ./minishell.c
 #
-# 테스트 항목:
-#   1. 컴파일
-#   2. 단일 명령어 실행 (echo, ls)
-#   3. 명령어 인자 처리
-#   4. 입력 리다이렉션 (<)
-#   5. 출력 리다이렉션 (>)
-#   6. 파이프 (|)
-#   7. 파이프 + 리다이렉션 조합
-#   8. exit 명령어
-#   9. 존재하지 않는 명령어 처리
-#  10. 빈 입력 처리
+# Test items:
+#   1. Compilation
+#   2. Single command execution (echo, ls)
+#   3. Command argument handling
+#   4. Input redirection (<)
+#   5. Output redirection (>)
+#   6. Pipe (|)
+#   7. Pipe + redirection combination
+#   8. exit command
+#   9. Non-existent command handling
+#  10. Empty input handling
 
 set -e
 
@@ -25,7 +26,7 @@ PASS=0
 FAIL=0
 TOTAL=0
 
-# 색상 설정
+# Color settings
 if [ -t 1 ]; then
     GREEN='\033[0;32m'
     RED='\033[0;31m'
@@ -60,16 +61,16 @@ info() {
     echo -e "  ${YELLOW}[INFO]${NC} $1"
 }
 
-# minishell에 명령어를 전달하고 출력을 캡처
-# 사용법: run_shell "command1\ncommand2\n..."
-# 출력: $TMPDIR/shell_output.txt, $TMPDIR/shell_stderr.txt
+# Send commands to minishell and capture output
+# Usage: run_shell "command1\ncommand2\n..."
+# Output: $TMPDIR/shell_output.txt, $TMPDIR/shell_stderr.txt
 run_shell() {
     echo -e "$1\nexit" | timeout 10 "$BIN" > "$TMPDIR/shell_output.txt" 2>"$TMPDIR/shell_stderr.txt" || true
-    # "minishell> " 프롬프트 접두사 제거 후 빈 줄 삭제
+    # Remove "minishell> " prompt prefix and delete empty lines
     sed 's/^minishell> *//g' "$TMPDIR/shell_output.txt" | sed '/^$/d' > "$TMPDIR/shell_clean.txt" 2>/dev/null || true
 }
 
-# 소스 파일 경로 결정
+# Determine source file path
 SRC="${1:-./minishell.c}"
 if [ ! -f "$SRC" ]; then
     echo "Error: Source file not found: $SRC"
@@ -83,35 +84,35 @@ trap "rm -rf $TMPDIR" EXIT
 BIN="$TMPDIR/minishell"
 
 echo "========================================="
-echo " minishell 테스트"
+echo " minishell Test"
 echo "========================================="
 echo ""
 echo "Source: $SRC"
 echo ""
 
-# 테스트 1: 컴파일
-echo "[Test 1] 컴파일"
+# Test 1: Compilation
+echo "[Test 1] Compilation"
 if gcc -Wall -o "$BIN" "$SRC" 2>"$TMPDIR/compile_err.txt"; then
-    pass "gcc -Wall 컴파일 성공"
+    pass "gcc -Wall compilation succeeded"
 else
-    fail "컴파일 실패"
-    echo "    컴파일러 출력:"
+    fail "Compilation failed"
+    echo "    Compiler output:"
     sed 's/^/    /' "$TMPDIR/compile_err.txt"
     echo ""
     echo "========================================="
-    echo " 결과: 컴파일 실패로 나머지 테스트를 건너뜁니다."
+    echo " Result: Skipping remaining tests due to compilation failure."
     echo "========================================="
     exit 1
 fi
 
 if [ -s "$TMPDIR/compile_err.txt" ]; then
-    info "컴파일 경고 있음:"
+    info "Compilation warnings present:"
     sed 's/^/    /' "$TMPDIR/compile_err.txt"
 fi
 echo ""
 
-# 테스트 2: echo 명령어
-echo "[Test 2] 단일 명령어 - echo"
+# Test 2: echo command
+echo "[Test 2] Single command - echo"
 run_shell "echo hello world"
 RESULT=$(cat "$TMPDIR/shell_clean.txt")
 if [ "$RESULT" = "hello world" ]; then
@@ -121,40 +122,40 @@ else
 fi
 echo ""
 
-# 테스트 3: 명령어 인자 처리
-echo "[Test 3] 명령어 인자 처리"
+# Test 3: Command argument handling
+echo "[Test 3] Command argument handling"
 run_shell "echo -n test"
 RESULT=$(cat "$TMPDIR/shell_clean.txt")
 if [ "$RESULT" = "test" ]; then
-    pass "echo -n test → 'test' (개행 없이)"
+    pass "echo -n test → 'test' (no newline)"
 else
-    # echo -n 동작은 시스템마다 다를 수 있으므로 유연하게 처리
+    # echo -n behavior may vary across systems, so handle flexibly
     if echo "$RESULT" | grep -q "test"; then
-        pass "echo -n test 출력에 'test' 포함"
+        pass "echo -n test output contains 'test'"
     else
         fail "echo -n test" "test" "$RESULT"
     fi
 fi
 echo ""
 
-# 테스트 4: 출력 리다이렉션 (>)
-echo "[Test 4] 출력 리다이렉션 (>)"
+# Test 4: Output redirection (>)
+echo "[Test 4] Output redirection (>)"
 OUTFILE="$TMPDIR/test_output.txt"
 run_shell "echo redirected output > $OUTFILE"
 if [ -f "$OUTFILE" ]; then
     CONTENT=$(cat "$OUTFILE")
     if [ "$CONTENT" = "redirected output" ]; then
-        pass "echo ... > file 결과 파일에 올바른 내용"
+        pass "echo ... > file correct content in file"
     else
-        fail "파일 내용 불일치" "redirected output" "$CONTENT"
+        fail "File content mismatch" "redirected output" "$CONTENT"
     fi
 else
-    fail "출력 파일이 생성되지 않음: $OUTFILE"
+    fail "Output file was not created: $OUTFILE"
 fi
 echo ""
 
-# 테스트 5: 입력 리다이렉션 (<)
-echo "[Test 5] 입력 리다이렉션 (<)"
+# Test 5: Input redirection (<)
+echo "[Test 5] Input redirection (<)"
 INFILE="$TMPDIR/test_input.txt"
 printf "apple\nbanana\ncherry\n" > "$INFILE"
 run_shell "wc -l < $INFILE"
@@ -166,8 +167,8 @@ else
 fi
 echo ""
 
-# 테스트 6: 파이프 (|)
-echo "[Test 6] 파이프 (|)"
+# Test 6: Pipe (|)
+echo "[Test 6] Pipe (|)"
 run_shell "echo hello pipe test | wc -w"
 RESULT=$(cat "$TMPDIR/shell_clean.txt" | tr -d ' ')
 if [ "$RESULT" = "3" ]; then
@@ -177,43 +178,43 @@ else
 fi
 echo ""
 
-# 테스트 7: 파이프 - grep
-echo "[Test 7] 파이프 - grep"
+# Test 7: Pipe - grep
+echo "[Test 7] Pipe - grep"
 run_shell "echo -e 'apple\nbanana\napricot' | grep ap"
 RESULT=$(cat "$TMPDIR/shell_clean.txt")
-# echo -e 동작은 시스템마다 다를 수 있으므로 유연하게 처리
+# echo -e behavior may vary across systems, so handle flexibly
 if echo "$RESULT" | grep -q "apple"; then
-    pass "파이프를 통한 grep 동작 확인"
+    pass "grep through pipe works"
 else
-    # 대안: 일부 시스템에서는 printf 필요
+    # Alternative: some systems need printf
     run_shell "printf 'apple\nbanana\napricot\n' | grep ap"
     RESULT=$(cat "$TMPDIR/shell_clean.txt")
     if echo "$RESULT" | grep -q "apple"; then
-        pass "파이프를 통한 grep 동작 확인 (printf 사용)"
+        pass "grep through pipe works (using printf)"
     else
-        fail "파이프 + grep" "apple 포함" "$RESULT"
+        fail "pipe + grep" "contains apple" "$RESULT"
     fi
 fi
 echo ""
 
-# 테스트 8: 파이프 + 출력 리다이렉션
-echo "[Test 8] 파이프 + 출력 리다이렉션"
+# Test 8: Pipe + output redirection
+echo "[Test 8] Pipe + output redirection"
 PIPEFILE="$TMPDIR/pipe_output.txt"
 run_shell "echo pipe to file | cat > $PIPEFILE"
 if [ -f "$PIPEFILE" ]; then
     CONTENT=$(cat "$PIPEFILE")
     if [ "$CONTENT" = "pipe to file" ]; then
-        pass "echo ... | cat > file 결과 올바름"
+        pass "echo ... | cat > file result correct"
     else
-        fail "파이프 + 리다이렉션 파일 내용" "pipe to file" "$CONTENT"
+        fail "Pipe + redirection file content" "pipe to file" "$CONTENT"
     fi
 else
-    fail "파이프 + 리다이렉션 출력 파일이 생성되지 않음"
+    fail "Pipe + redirection output file was not created"
 fi
 echo ""
 
-# 테스트 9: 입력 리다이렉션 + 파이프
-echo "[Test 9] 입력 리다이렉션 + 파이프"
+# Test 9: Input redirection + pipe
+echo "[Test 9] Input redirection + pipe"
 SORTFILE="$TMPDIR/sort_input.txt"
 printf "cherry\napple\nbanana\n" > "$SORTFILE"
 run_shell "sort < $SORTFILE | head -1"
@@ -225,75 +226,75 @@ else
 fi
 echo ""
 
-# 테스트 10: exit 명령어
-echo "[Test 10] exit 명령어"
+# Test 10: exit command
+echo "[Test 10] exit command"
 echo "exit" | timeout 5 "$BIN" > /dev/null 2>&1
 EXIT_CODE=$?
 if [ $EXIT_CODE -eq 0 ]; then
-    pass "exit 명령어로 정상 종료"
+    pass "Normal exit with exit command"
 else
-    fail "exit 종료 코드" "0" "$EXIT_CODE"
+    fail "exit exit code" "0" "$EXIT_CODE"
 fi
 echo ""
 
-# 테스트 11: EOF 처리 (Ctrl-D)
-echo "[Test 11] EOF 처리 (Ctrl-D)"
+# Test 11: EOF handling (Ctrl-D)
+echo "[Test 11] EOF handling (Ctrl-D)"
 echo -n "" | timeout 5 "$BIN" > /dev/null 2>&1
 EXIT_CODE=$?
 if [ $EXIT_CODE -eq 0 ]; then
-    pass "EOF(빈 입력)으로 정상 종료"
+    pass "Normal exit with EOF (empty input)"
 else
-    fail "EOF 종료 코드" "0" "$EXIT_CODE"
+    fail "EOF exit code" "0" "$EXIT_CODE"
 fi
 echo ""
 
-# 테스트 12: 존재하지 않는 명령어
-echo "[Test 12] 존재하지 않는 명령어"
+# Test 12: Non-existent command
+echo "[Test 12] Non-existent command"
 run_shell "nonexistent_command_xyz123"
-# 셸이 죽지 않고 에러 출력 후 계속 실행되어야 함
+# Shell should continue running after printing error, not crash
 if timeout 5 echo "echo still alive" | "$BIN" > "$TMPDIR/alive_check.txt" 2>/dev/null; then
-    # 에러 후에도 출력을 받을 수 있는지 확인
-    pass "존재하지 않는 명령어 후에도 셸이 계속 실행됨"
+    # Check if output can still be received after error
+    pass "Shell continues running after non-existent command"
 else
-    fail "존재하지 않는 명령어 실행 후 셸이 죽음"
+    fail "Shell crashed after non-existent command"
 fi
 echo ""
 
-# 테스트 13: 빈 입력 처리
-echo "[Test 13] 빈 입력 처리"
+# Test 13: Empty input handling
+echo "[Test 13] Empty input handling"
 run_shell "\n\n\necho after empty lines"
 RESULT=$(cat "$TMPDIR/shell_clean.txt")
 if echo "$RESULT" | grep -q "after empty lines"; then
-    pass "빈 줄 이후에도 정상 실행"
+    pass "Normal execution after empty lines"
 else
-    fail "빈 줄 처리" "after empty lines" "$RESULT"
+    fail "Empty line handling" "after empty lines" "$RESULT"
 fi
 echo ""
 
-# 테스트 14: 연속 명령어 실행
-echo "[Test 14] 연속 명령어 실행"
+# Test 14: Sequential command execution
+echo "[Test 14] Sequential command execution"
 run_shell "echo first\necho second\necho third"
 RESULT=$(cat "$TMPDIR/shell_clean.txt")
 EXPECTED=$(printf "first\nsecond\nthird")
 if [ "$RESULT" = "$EXPECTED" ]; then
-    pass "연속 3개 명령어 실행 결과 올바름"
+    pass "3 sequential commands executed correctly"
 else
-    fail "연속 명령어" "$EXPECTED" "$RESULT"
+    fail "Sequential commands" "$EXPECTED" "$RESULT"
 fi
 echo ""
 
-# 요약
+# Summary
 echo "========================================="
-echo " 결과 요약"
+echo " Result Summary"
 echo "========================================="
-echo -e " 통과: ${GREEN}${PASS}${NC} / ${TOTAL}"
-echo -e " 실패: ${RED}${FAIL}${NC} / ${TOTAL}"
+echo -e " Passed: ${GREEN}${PASS}${NC} / ${TOTAL}"
+echo -e " Failed: ${RED}${FAIL}${NC} / ${TOTAL}"
 echo ""
 
 if [ $FAIL -eq 0 ]; then
-    echo -e " ${GREEN}모든 테스트 통과!${NC}"
+    echo -e " ${GREEN}All tests passed!${NC}"
     exit 0
 else
-    echo -e " ${RED}일부 테스트 실패${NC}"
+    echo -e " ${RED}Some tests failed${NC}"
     exit 1
 fi

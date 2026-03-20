@@ -2,18 +2,19 @@
 #
 # @file        test_pingpong.sh
 # @brief       Automated test script for pingpong assignment
+# @author      Cheolwon Park
 # @date        2026-03-08
 #
-# 사용법: ./test_pingpong.sh [pingpong.c 경로]
-#         기본값: ./pingpong.c
+# Usage: ./test_pingpong.sh [path_to_pingpong.c]
+#        Default: ./pingpong.c
 #
-# 테스트 항목:
-#   1. 컴파일 성공 여부
-#   2. 실행 시 정상 종료 여부
-#   3. 출력 형식 검증 ("received ping", "received pong")
-#   4. PID 형식 확인
-#   5. Round-trip time 출력 확인
-#   6. 반복 실행 안정성
+# Test items:
+#   1. Compilation success
+#   2. Normal exit on execution
+#   3. Output format validation ("received ping", "received pong")
+#   4. PID format check
+#   5. Round-trip time output check
+#   6. Repeated execution stability
 
 set -e
 
@@ -21,7 +22,7 @@ PASS=0
 FAIL=0
 TOTAL=0
 
-# 색상 설정 (터미널이 아닌 경우 비활성화)
+# Color settings (disabled if not a terminal)
 if [ -t 1 ]; then
     GREEN='\033[0;32m'
     RED='\033[0;31m'
@@ -50,7 +51,7 @@ info() {
     echo -e "  ${YELLOW}[INFO]${NC} $1"
 }
 
-# 소스 파일 경로 결정
+# Determine source file path
 SRC="${1:-./pingpong.c}"
 if [ ! -f "$SRC" ]; then
     echo "Error: Source file not found: $SRC"
@@ -64,44 +65,44 @@ trap "rm -rf $TMPDIR" EXIT
 BIN="$TMPDIR/pingpong"
 
 echo "========================================="
-echo " pingpong 테스트"
+echo " pingpong Test"
 echo "========================================="
 echo ""
 echo "Source: $SRC"
 echo ""
 
-# 테스트 1: 컴파일
-echo "[Test 1] 컴파일"
+# Test 1: Compilation
+echo "[Test 1] Compilation"
 if gcc -Wall -o "$BIN" "$SRC" 2>"$TMPDIR/compile_err.txt"; then
-    pass "gcc -Wall 컴파일 성공"
+    pass "gcc -Wall compilation succeeded"
 else
-    fail "컴파일 실패"
-    echo "    컴파일러 출력:"
+    fail "Compilation failed"
+    echo "    Compiler output:"
     sed 's/^/    /' "$TMPDIR/compile_err.txt"
     echo ""
     echo "========================================="
-    echo " 결과: 컴파일 실패로 나머지 테스트를 건너뜁니다."
+    echo " Result: Skipping remaining tests due to compilation failure."
     echo "========================================="
     exit 1
 fi
 
-# 경고 확인
+# Check for warnings
 if [ -s "$TMPDIR/compile_err.txt" ]; then
-    info "컴파일 경고 있음:"
+    info "Compilation warnings present:"
     sed 's/^/    /' "$TMPDIR/compile_err.txt"
 fi
 echo ""
 
-# 테스트 2: 실행 및 종료 (5초 이내에 exit 0)
-echo "[Test 2] 실행 및 종료"
+# Test 2: Execution and exit (exit 0 within 5 seconds)
+echo "[Test 2] Execution and exit"
 if timeout 5 "$BIN" > "$TMPDIR/output.txt" 2>"$TMPDIR/stderr.txt"; then
-    pass "정상 종료 (exit code 0)"
+    pass "Normal exit (exit code 0)"
 else
     EXIT_CODE=$?
     if [ $EXIT_CODE -eq 124 ]; then
-        fail "시간 초과 (5초 이상 실행됨 - 무한 대기 가능성)"
+        fail "Timeout (ran for more than 5 seconds - possible infinite wait)"
     else
-        fail "비정상 종료 (exit code $EXIT_CODE)"
+        fail "Abnormal exit (exit code $EXIT_CODE)"
     fi
     if [ -s "$TMPDIR/stderr.txt" ]; then
         echo "    stderr:"
@@ -110,113 +111,113 @@ else
 fi
 echo ""
 
-# 테스트 3: 출력 형식 - "received ping"
-echo "[Test 3] 출력 형식 - ping"
+# Test 3: Output format - "received ping"
+echo "[Test 3] Output format - ping"
 if grep -q "received ping" "$TMPDIR/output.txt" 2>/dev/null; then
-    pass "'received ping' 메시지 있음"
+    pass "'received ping' message present"
 else
-    fail "'received ping' 메시지 없음"
-    echo "    실제 출력:"
+    fail "'received ping' message missing"
+    echo "    Actual output:"
     sed 's/^/    /' "$TMPDIR/output.txt"
 fi
 
-# ping 행의 PID 형식 확인
+# Check PID format in ping line
 if grep -qE '^[0-9]+: received ping$' "$TMPDIR/output.txt" 2>/dev/null; then
-    pass "ping 행 형식 올바름 (<pid>: received ping)"
+    pass "ping line format correct (<pid>: received ping)"
 else
-    fail "ping 행 형식이 '<pid>: received ping'이 아님"
-    PING_LINE=$(grep "received ping" "$TMPDIR/output.txt" 2>/dev/null || echo "(없음)")
-    echo "    실제: $PING_LINE"
+    fail "ping line format is not '<pid>: received ping'"
+    PING_LINE=$(grep "received ping" "$TMPDIR/output.txt" 2>/dev/null || echo "(none)")
+    echo "    Actual: $PING_LINE"
 fi
 echo ""
 
-# 테스트 4: 출력 형식 - "received pong"
-echo "[Test 4] 출력 형식 - pong"
+# Test 4: Output format - "received pong"
+echo "[Test 4] Output format - pong"
 if grep -q "received pong" "$TMPDIR/output.txt" 2>/dev/null; then
-    pass "'received pong' 메시지 있음"
+    pass "'received pong' message present"
 else
-    fail "'received pong' 메시지 없음"
+    fail "'received pong' message missing"
 fi
 
 if grep -qE '^[0-9]+: received pong$' "$TMPDIR/output.txt" 2>/dev/null; then
-    pass "pong 행 형식 올바름 (<pid>: received pong)"
+    pass "pong line format correct (<pid>: received pong)"
 else
-    fail "pong 행 형식이 '<pid>: received pong'이 아님"
-    PONG_LINE=$(grep "received pong" "$TMPDIR/output.txt" 2>/dev/null || echo "(없음)")
-    echo "    실제: $PONG_LINE"
+    fail "pong line format is not '<pid>: received pong'"
+    PONG_LINE=$(grep "received pong" "$TMPDIR/output.txt" 2>/dev/null || echo "(none)")
+    echo "    Actual: $PONG_LINE"
 fi
 echo ""
 
-# 테스트 5: ping과 pong의 PID가 서로 다른지 검증
-echo "[Test 5] PID 검증"
+# Test 5: Verify that ping and pong PIDs are different
+echo "[Test 5] PID verification"
 PING_PID=$(grep "received ping" "$TMPDIR/output.txt" 2>/dev/null | grep -oE '^[0-9]+' || echo "")
 PONG_PID=$(grep "received pong" "$TMPDIR/output.txt" 2>/dev/null | grep -oE '^[0-9]+' || echo "")
 
 if [ -n "$PING_PID" ] && [ -n "$PONG_PID" ] && [ "$PING_PID" != "$PONG_PID" ]; then
-    pass "ping PID($PING_PID) != pong PID($PONG_PID) (서로 다른 프로세스)"
+    pass "ping PID($PING_PID) != pong PID($PONG_PID) (different processes)"
 else
     if [ "$PING_PID" = "$PONG_PID" ] && [ -n "$PING_PID" ]; then
-        fail "ping PID와 pong PID가 동일함 ($PING_PID) - 서로 다른 프로세스여야 합니다"
+        fail "ping PID and pong PID are the same ($PING_PID) - they should be different processes"
     else
-        fail "PID 추출 실패"
+        fail "PID extraction failed"
     fi
 fi
 echo ""
 
-# 테스트 6: Round-trip time 출력
-echo "[Test 6] Round-trip time 출력"
+# Test 6: Round-trip time output
+echo "[Test 6] Round-trip time output"
 if grep -qE 'Round-trip time:.*us' "$TMPDIR/output.txt" 2>/dev/null; then
-    pass "Round-trip time 출력 있음"
+    pass "Round-trip time output present"
     RTT=$(grep "Round-trip time" "$TMPDIR/output.txt")
     info "$RTT"
 else
-    fail "Round-trip time 출력 없음"
+    fail "Round-trip time output missing"
 fi
 echo ""
 
-# 테스트 7: 출력 순서 (ping이 pong보다 먼저 출력되어야 함)
-echo "[Test 7] 출력 순서"
+# Test 7: Output order (ping should be printed before pong)
+echo "[Test 7] Output order"
 PING_LINE_NUM=$(grep -n "received ping" "$TMPDIR/output.txt" 2>/dev/null | head -1 | cut -d: -f1 || echo "0")
 PONG_LINE_NUM=$(grep -n "received pong" "$TMPDIR/output.txt" 2>/dev/null | head -1 | cut -d: -f1 || echo "0")
 
 if [ "$PING_LINE_NUM" -gt 0 ] 2>/dev/null && [ "$PONG_LINE_NUM" -gt 0 ] 2>/dev/null; then
     if [ "$PING_LINE_NUM" -lt "$PONG_LINE_NUM" ]; then
-        pass "ping이 pong보다 먼저 출력됨"
+        pass "ping printed before pong"
     else
-        fail "pong이 ping보다 먼저 출력됨 (ping이 먼저여야 합니다)"
+        fail "pong printed before ping (ping should come first)"
     fi
 else
-    fail "출력 순서 확인 불가"
+    fail "Unable to verify output order"
 fi
 echo ""
 
-# 테스트 8: 반복 실행 안정성
-echo "[Test 8] 반복 실행 안정성 (5회)"
+# Test 8: Repeated execution stability
+echo "[Test 8] Repeated execution stability (5 runs)"
 STABLE=true
 for i in $(seq 1 5); do
     if ! timeout 5 "$BIN" > /dev/null 2>&1; then
         STABLE=false
-        fail "반복 실행 $i/5 실패"
+        fail "Repeated execution $i/5 failed"
         break
     fi
 done
 if $STABLE; then
-    pass "5회 반복 실행 모두 정상"
+    pass "All 5 repeated executions succeeded"
 fi
 echo ""
 
-# 요약
+# Summary
 echo "========================================="
-echo " 결과 요약"
+echo " Result Summary"
 echo "========================================="
-echo -e " 통과: ${GREEN}${PASS}${NC} / ${TOTAL}"
-echo -e " 실패: ${RED}${FAIL}${NC} / ${TOTAL}"
+echo -e " Passed: ${GREEN}${PASS}${NC} / ${TOTAL}"
+echo -e " Failed: ${RED}${FAIL}${NC} / ${TOTAL}"
 echo ""
 
 if [ $FAIL -eq 0 ]; then
-    echo -e " ${GREEN}모든 테스트 통과!${NC}"
+    echo -e " ${GREEN}All tests passed!${NC}"
     exit 0
 else
-    echo -e " ${RED}일부 테스트 실패${NC}"
+    echo -e " ${RED}Some tests failed${NC}"
     exit 1
 fi

@@ -102,10 +102,11 @@
 ├── W13_Storage-Management
 ├── W14_Security-And-Protection
 ├── images
+│   ├── *.png                          (lecture diagrams and icons)
 │   ├── cropped
-│   │   └── (잘라낸 도표 이미지)
+│   │   └── (cropped figure images)
 │   └── figures
-│       └── (강의 도표 이미지)
+│       └── (extracted lecture figures)
 ├── LICENSE
 ├── README.ko.md
 └── README.md
