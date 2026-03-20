@@ -1,296 +1,296 @@
-# 1주차 실습 — 코딩 에이전트
+# Week 1 Lab — Coding Agents
 
-> **최종 수정일:** 2026-03-18
+> **Last Updated:** 2026-03-21
 
 ---
 
-## 목차
+## Table of Contents
 
-- [1. 실습 개요](#1-실습-개요)
-- [2. 코딩 에이전트란?](#2-코딩-에이전트란)
-- [3. 사용 가능한 에이전트](#3-사용-가능한-에이전트)
-- [4. 과제 1 — 코딩 에이전트 설치](#4-과제-1--코딩-에이전트-설치)
-- [5. 과제 2 — 파일 정리](#5-과제-2--파일-정리)
-- [6. 과제 3 — GitHub 저장소 문서화](#6-과제-3--github-저장소-문서화)
-- [7. 과제 4 — RALPH 기법](#7-과제-4--ralph-기법)
-  - [7.1 RALPH 실전 적용](#71-ralph-실전-적용)
-- [8. 과제 5 — 미니 OS 구축](#8-과제-5--미니-os-구축)
-  - [8.1 관찰할 점](#81-관찰할-점)
-- [요약](#요약)
-- [부록](#부록)
+- [1. Lab Overview](#1-lab-overview)
+- [2. What is a Coding Agent?](#2-what-is-a-coding-agent)
+- [3. Available Agents](#3-available-agents)
+- [4. Task 1 — Install a Coding Agent](#4-task-1--install-a-coding-agent)
+- [5. Task 2 — File Organization](#5-task-2--file-organization)
+- [6. Task 3 — GitHub Repository Documentation](#6-task-3--github-repository-documentation)
+- [7. Task 4 — The RALPH Technique](#7-task-4--the-ralph-technique)
+  - [7.1 Applying RALPH in Practice](#71-applying-ralph-in-practice)
+- [8. Task 5 — Build a Mini OS](#8-task-5--build-a-mini-os)
+  - [8.1 What to Observe](#81-what-to-observe)
+- [Summary](#summary)
+- [Appendix](#appendix)
 
 ---
 
 <br>
 
-## 1. 실습 개요
+## 1. Lab Overview
 
-- **목표**: AI 기반 코딩 에이전트(Coding Agent)를 설치하고 실제 개발 작업에 활용한다.
-- **소요 시간**: 약 50분
-- **제출물**: 없음 — 탐색형 실습
-- 이 도구들은 **학기 전체**에 걸쳐 실습 및 과제에 사용된다.
+- **Objective**: Install AI-based coding agents and use them in real development tasks.
+- **Duration**: Approximately 50 minutes
+- **Deliverables**: None — this is an exploratory lab
+- These tools will be used for labs and assignments **throughout the semester**.
 
 ```mermaid
 graph LR
-    T1["과제 1<br/>에이전트 설치"] --> T2["과제 2<br/>파일 정리"]
-    T2 --> T3["과제 3<br/>저장소 문서화"]
-    T3 --> T4["과제 4<br/>RALPH 기법"]
-    T4 --> T5["과제 5<br/>미니 OS 구축"]
+    T1["Task 1<br/>Install Agent"] --> T2["Task 2<br/>File Organization"]
+    T2 --> T3["Task 3<br/>Repo Documentation"]
+    T3 --> T4["Task 4<br/>RALPH Technique"]
+    T4 --> T5["Task 5<br/>Mini OS Build"]
 ```
 
 ---
 
 <br>
 
-## 2. 코딩 에이전트란?
+## 2. What is a Coding Agent?
 
-**컨텍스트를 이해**하여 코드를 생성하는 AI 기반 CLI 도구이다.
+An AI-based CLI tool that generates code by **understanding context**.
 
 ```mermaid
 graph LR
-    A["읽기<br/>파일 및 컨텍스트"] --> B["계획<br/>수행할 작업 결정"]
-    B --> C["실행<br/>편집 및 실행"]
-    C --> D["검증<br/>결과 확인"]
-    D -->|반복| A
+    A["Read<br/>Files & Context"] --> B["Plan<br/>Decide what to do"]
+    B --> C["Execute<br/>Edit & Run"]
+    C --> D["Verify<br/>Check results"]
+    D -->|Iterate| A
     style A fill:#e3f2fd
     style B fill:#fff3e0
     style C fill:#e8f5e9
     style D fill:#fce4ec
 ```
 
-- 파일 시스템을 읽고, 명령을 실행하고, 자율적으로 편집할 수 있다.
-- 활용 분야: 스캐폴딩(scaffolding), 리팩토링, 문서화, 디버깅
+- It can read the file system, execute commands, and make edits autonomously.
+- Use cases: scaffolding, refactoring, documentation, debugging
 
-> **참고:** **스캐폴딩(scaffolding)**이란 프로젝트의 초기 뼈대(디렉토리 구조, 설정 파일, 보일러플레이트 코드 등)를 자동으로 생성하는 것을 뜻한다. 건축에서 공사용 비계(scaffold)를 먼저 세우는 것에서 유래한 용어이다. 예를 들어 "React 프로젝트를 생성해줘"라고 하면 에이전트가 `package.json`, `src/` 디렉토리, 기본 컴포넌트 파일 등을 한꺼번에 만들어 준다.
+> **Note:** **Scaffolding** refers to automatically generating a project's initial skeleton (directory structure, configuration files, boilerplate code, etc.). The term originates from the construction industry, where scaffolds are erected before building. For example, if you say "Create a React project," the agent will create `package.json`, a `src/` directory, basic component files, and more all at once.
 
-> **예시**: _"디버그 및 릴리스 타겟이 포함된 C 프로젝트용 Makefile을 작성해줘"_
-> 에이전트: 디렉토리 확인 → Makefile 작성 → 빌드 성공 확인
+> **Example**: _"Write a Makefile for a C project with debug and release targets."_
+> Agent: checks directory → writes Makefile → verifies build success
 
-> **핵심:** 코딩 에이전트는 단순한 코드 자동완성(Copilot 등)과 달리, 프로젝트 전체 맥락을 파악하여 여러 파일을 동시에 읽고, 수정하고, 명령어를 실행할 수 있는 자율적인 도구이다. 기존의 ChatGPT 웹 인터페이스와 달리 로컬 파일 시스템에 직접 접근하여 작업을 수행한다는 점이 핵심적인 차이이다.
-
----
-
-<br>
-
-## 3. 사용 가능한 에이전트
-
-| 에이전트 | 가격 | 설명 |
-|:---------|:-----|:-----|
-| ![Gemini](../images/gemini.png) **Gemini CLI** | 무료 (1일 1000회) | Google의 에이전트. 기본 선택으로 적합하다. |
-| ![Claude](../images/claude_ai.png) **Claude Code** | 유료 | Anthropic의 에이전트. 강력한 다중 파일 추론 능력이 있다. |
-| ![OpenAI](../images/openai.png) **Codex CLI** | 유료 | OpenAI의 에이전트. 오픈소스 CLI이다. |
-
-기타: **OpenCode** (오픈소스 하네스 — 오픈소스 LLM을 포함한 모든 모델 사용 가능)
-
-> **추천**: 특별한 선호가 없다면 **Gemini CLI**를 설치하라 — 무료이며 설정이 간편하다.
-
-> **참고:** Gemini CLI는 무료이므로 실습용으로 부담 없이 사용 가능하다. Claude Code는 복잡한 멀티파일 프로젝트에서 강점이 있고, Codex CLI는 오픈소스라 커스터마이징이 가능하다. 먼저 무료인 Gemini CLI로 시작한 뒤 필요에 따라 다른 에이전트도 시도해 보는 것을 권장한다.
+> **Key Point:** Unlike simple code autocompletion tools (such as Copilot), coding agents are autonomous tools that can understand the entire project context, read and modify multiple files simultaneously, and execute commands. The key difference from a ChatGPT web interface is that they directly access the local file system to perform tasks.
 
 ---
 
 <br>
 
-## 4. 과제 1 — 코딩 에이전트 설치
+## 3. Available Agents
 
-공식 문서를 참고하여 코딩 에이전트를 최소 하나 이상 설치한다.
+| Agent | Price | Description |
+|:------|:------|:------------|
+| ![Gemini](../images/gemini.png) **Gemini CLI** | Free (1,000 requests/day) | Google's agent. A good default choice. |
+| ![Claude](../images/claude_ai.png) **Claude Code** | Paid | Anthropic's agent. Powerful multi-file reasoning capabilities. |
+| ![OpenAI](../images/openai.png) **Codex CLI** | Paid | OpenAI's agent. An open-source CLI. |
 
-**설치 명령어:**
+Others: **OpenCode** (open-source harness — supports all models including open-source LLMs)
+
+> **Recommendation**: If you have no particular preference, install **Gemini CLI** — it is free and easy to set up.
+
+> **Note:** Gemini CLI is free and can be used without cost concerns for lab exercises. Claude Code excels in complex multi-file projects, and Codex CLI is open-source and customizable. We recommend starting with the free Gemini CLI and trying other agents as needed.
+
+---
+
+<br>
+
+## 4. Task 1 — Install a Coding Agent
+
+Refer to the official documentation and install at least one coding agent.
+
+**Installation commands:**
 
 ```bash
-npm install -g @google/gemini-cli           # Gemini CLI (무료)
-npm install -g @anthropic-ai/claude-code    # Claude Code (유료)
+npm install -g @google/gemini-cli           # Gemini CLI (free)
+npm install -g @anthropic-ai/claude-code    # Claude Code (paid)
 ```
 
-**설치 확인:**
+**Verify installation:**
 
 ```bash
-gemini --version    # 또는: claude --version
+gemini --version    # or: claude --version
 ```
 
-**확인 사항:**
-- CLI가 오류 없이 실행되는지
-- 인증이 가능한지 (Gemini는 Google 계정, Claude는 Anthropic 계정)
-- 간단한 프롬프트를 시도: `"2 + 2는?"` — 응답이 오는지 확인
+**Checklist:**
+- Does the CLI run without errors?
+- Can you authenticate? (Gemini uses a Google account, Claude uses an Anthropic account)
+- Try a simple prompt: `"What is 2 + 2?"` — verify that a response is returned
 
-> **[프로그래밍언어]** `npm`은 Node.js의 패키지 관리자이다. 설치되어 있지 않다면 먼저 [Node.js 공식 사이트](https://nodejs.org)에서 LTS 버전을 설치해야 한다. 설치 후 터미널에서 `node --version`과 `npm --version`으로 정상 설치를 확인할 수 있다.
+> **[Programming Languages]** `npm` is the package manager for Node.js. If it is not installed, you must first install the LTS version from [the official Node.js website](https://nodejs.org). After installation, you can verify it by running `node --version` and `npm --version` in the terminal.
 
-> **참고:** `npm install -g`에서 `-g`는 **global**의 약자로, 패키지를 현재 프로젝트가 아닌 시스템 전역에 설치하라는 의미이다. 전역 설치하면 터미널 어디서든 `gemini`, `claude` 같은 명령어를 직접 실행할 수 있다. `-g` 없이 설치하면 현재 디렉토리의 `node_modules/`에만 설치되어 전역 명령어로 사용할 수 없다.
+> **Note:** The `-g` in `npm install -g` stands for **global**, meaning the package is installed system-wide rather than in the current project. With a global installation, you can run commands like `gemini` or `claude` directly from any terminal location. Without `-g`, the package is installed only in the current directory's `node_modules/` and cannot be used as a global command.
 
 ---
 
 <br>
 
-## 5. 과제 2 — 파일 정리
+## 5. Task 2 — File Organization
 
-에이전트를 사용하여 정리되지 않은 디렉토리의 **파일을 정리**한다.
+Use an agent to **organize files** in a messy directory.
 
-**예시 프롬프트:**
+**Example prompt:**
 
 ```
-"~/Downloads에 있는 파일들을 파일 유형별 하위 폴더
- (images, documents, code 등)로 정리해줘. 실행 전에 계획을 보여줘."
+"Organize the files in ~/Downloads into subdirectories by file type
+ (images, documents, code, etc.). Show me the plan before executing."
 ```
 
-**관찰할 점:**
-- 에이전트가 파일을 옮기기 전에 **확인을 요청**하는가?
-- 합리적인 폴더 구조를 만드는가?
-- 예외 상황(예: 확장자 없는 파일)을 잘 처리하는가?
+**What to observe:**
+- Does the agent **ask for confirmation** before moving files?
+- Does it create a reasonable folder structure?
+- Does it handle edge cases well (e.g., files without extensions)?
 
-**토론:**
-- _"먼저 계획을 보여줘"_ 라고 말하지 않았다면 어떤 일이 벌어졌을까?
-- 결과가 마음에 들지 않을 때 어떻게 더 구체적인 지시를 내릴 수 있을까?
+**Discussion:**
+- What would have happened if you hadn't said _"Show me the plan first"_?
+- How can you give more specific instructions when the result is unsatisfactory?
 
-> **참고:** 에이전트에게 작업을 맡길 때 "계획을 먼저 보여줘(Show me the plan first)"라고 요청하는 습관은 매우 중요하다. 이를 통해 의도하지 않은 파일 삭제나 이동을 방지할 수 있다. 특히 실제 파일 시스템을 다룰 때는 되돌리기(undo)가 어려우므로, 항상 에이전트의 계획을 먼저 검토한 후 승인하는 방식으로 작업하는 것이 안전하다.
+> **Note:** Getting into the habit of asking the agent to "Show me the plan first" when delegating tasks is very important. This prevents unintended file deletion or movement. Especially when working with real file systems, undo is difficult, so it is safest to always review and approve the agent's plan before execution.
 
 ---
 
 <br>
 
-## 6. 과제 3 — GitHub 저장소 문서화
+## 6. Task 3 — GitHub Repository Documentation
 
-에이전트를 사용하여 기존 코드베이스의 **README.md를 생성**한다.
+Use an agent to **generate a README.md** for an existing codebase.
 
-**대상 저장소 선택:**
-- 자신의 프로젝트, 또는 다음과 같은 공개 저장소:
+**Choose a target repository:**
+- Your own project, or a public repository such as:
   - `https://github.com/code-yeongyu/oh-my-opencode`
 
-**예시 프롬프트:**
+**Example prompt:**
 
 ```
-"이 코드베이스를 읽고 아키텍처 개요, 설치 방법,
- 사용 예시가 포함된 포괄적인 README.md를 작성해줘."
+"Read this codebase and write a comprehensive README.md that includes
+ an architecture overview, installation instructions, and usage examples."
 ```
 
-**결과 평가:**
-- README가 프로젝트를 **정확하게** 설명하는가?
-- 설치 방법이 정확하고 완전한가?
-- 빠진 내용은 없는가 (라이선스, 기여 가이드, 스크린샷)?
+**Evaluate the result:**
+- Does the README **accurately** describe the project?
+- Are the installation instructions correct and complete?
+- Is anything missing (license, contribution guide, screenshots)?
 
-> 이 README를 저장하라 — 다음 과제에서 개선할 것이다.
+> Save this README — you will improve it in the next task.
 
 ---
 
 <br>
 
-## 7. 과제 4 — RALPH 기법
+## 7. Task 4 — The RALPH Technique
 
-**검증 가능한 평가 루브릭(rubric)**을 작성하고, 이를 활용하여 반복적으로 결과물의 품질을 개선한다.
+Create a **verifiable evaluation rubric** and use it to iteratively improve the quality of the output.
 
 ![Ralph Wiggum](../images/ralph_wiggum.png)
 
-**R**equest(요청) → **A**nalyze(분석) → **L**ist issues(문제 나열) → **P**rompt again(재요청) → **H**armonize(조율)
+**R**equest → **A**nalyze → **L**ist issues → **P**rompt again → **H**armonize
 
-**단계별 진행:**
+**Step-by-step process:**
 
-1. 에이전트에게 루브릭 생성 요청 (예: _"최고 수준의 README란 어떤 것인가?"_)
-2. 에이전트에게 **자체 출력물을 루브릭에 따라 평가**하도록 요청
-3. 식별된 모든 문제를 수정하도록 요청
-4. 모든 기준이 충족될 때까지 반복
+1. Ask the agent to generate a rubric (e.g., _"What makes a world-class README?"_)
+2. Ask the agent to **evaluate its own output against the rubric**
+3. Ask it to fix all identified issues
+4. Repeat until all criteria are met
 
-**시도해볼 핵심 표현:**
-- _"기준이 모두 충족될 때까지 계속해"_
-- _"루브릭에 따라 평가하고 모든 문제를 수정해"_
+**Key phrases to try:**
+- _"Keep going until all criteria are met"_
+- _"Evaluate against the rubric and fix all issues"_
 
-> **핵심:** RALPH 기법은 AI 에이전트의 출력을 체계적으로 개선하는 방법론이다. 핵심은 "에이전트 스스로 평가 기준을 만들게 하고, 그 기준으로 자기 결과물을 평가하게 한 뒤, 미달 항목을 수정하게 하는 것"이다. 이 루프를 반복하면 처음 출력보다 훨씬 높은 품질의 결과물을 얻을 수 있다.
+> **Key Point:** The RALPH technique is a methodology for systematically improving AI agent output. The core idea is to "have the agent create its own evaluation criteria, evaluate its own output against those criteria, and then fix any deficiencies." Repeating this loop yields results of much higher quality than the initial output.
 
-### 7.1 RALPH 실전 적용
+### 7.1 Applying RALPH in Practice
 
-**과제 3의 README를 활용한 예시 워크플로:**
+**Example workflow using the README from Task 3:**
 
 ```
-You:   "고품질 오픈소스 README를 평가하기 위한 루브릭을 만들어줘."
-Agent: 8개 기준 반환 (설명, 설치, 사용법, 아키텍처, ...)
+You:   "Create a rubric for evaluating a high-quality open-source README."
+Agent: Returns 8 criteria (description, installation, usage, architecture, ...)
 
-You:   "네가 작성한 README를 이 루브릭으로 평가해줘. 각 기준별로 점수를 매겨."
-Agent: 6/8 점수 — 미충족: 아키텍처 다이어그램, 기여 가이드.
+You:   "Evaluate the README you wrote against this rubric. Score each criterion."
+Agent: 6/8 score — not met: architecture diagram, contribution guide.
 
-You:   "미충족 기준을 모두 수정해. 아키텍처 다이어그램과 기여 가이드를 추가해."
-Agent: 두 항목을 추가하여 README 업데이트.
+You:   "Fix all unmet criteria. Add an architecture diagram and a contribution guide."
+Agent: Updates README with both additions.
 
-You:   "다시 평가해. 모든 기준이 충족됐어?"
-Agent: 8/8 — 모든 기준 충족.
+You:   "Evaluate again. Are all criteria met?"
+Agent: 8/8 — all criteria met.
 ```
 
-**왜 이것이 중요한가:**
-- 에이전트는 첫 시도에서 _그럭저럭 괜찮은_ 결과를 만들지만, **완벽하지는 않다**.
-- RALPH 루프는 에이전트 출력물을 **체계적으로 개선**하는 방법을 가르친다.
-- 이 기술은 코딩 에이전트뿐 아니라 모든 AI 도구에 적용 가능하다.
+**Why this matters:**
+- Agents produce _decent_ results on the first try, but they are **not perfect**.
+- The RALPH loop teaches you how to **systematically improve** agent output.
+- This technique applies not only to coding agents but to all AI tools.
 
 ---
 
 <br>
 
-## 8. 과제 5 — 미니 OS 구축
+## 8. Task 5 — Build a Mini OS
 
-에이전트를 사용하여 **최소한의 운영체제**를 만든다 — 기말 프로젝트의 미리보기이다.
+Use an agent to create a **minimal operating system** — a preview of the final project.
 
-**예시 프롬프트:**
+**Example prompt:**
 
 ```
-"x86용 최소 부팅 가능 OS를 만들어줘. 화면에 'Hello, OS!'를 출력해야 해.
- Makefile과 QEMU에서 실행하는 방법도 포함해줘."
+"Create a minimal bootable OS for x86. It should print 'Hello, OS!' to the screen.
+ Include a Makefile and instructions for running it in QEMU."
 ```
 
-**예상 결과 파일:**
+**Expected output files:**
 
 ```mermaid
 graph LR
-    A["boot.asm<br/>부트로더"] --> B["kernel.c<br/>메인 커널"]
-    B --> C["linker.ld<br/>메모리 레이아웃"]
-    C --> D["Makefile<br/>빌드 시스템"]
+    A["boot.asm<br/>Bootloader"] --> B["kernel.c<br/>Main Kernel"]
+    B --> C["linker.ld<br/>Memory Layout"]
+    C --> D["Makefile<br/>Build System"]
     style A fill:#e3f2fd
     style B fill:#fff3e0
     style C fill:#e8f5e9
     style D fill:#fce4ec
 ```
 
-> **[컴퓨터구조]** 컴퓨터가 전원이 켜지면 BIOS/UEFI가 부트 섹터(512바이트)를 메모리에 로드하고 실행한다. `boot.asm`은 이 부트 섹터 코드로, 리얼 모드(Real Mode)에서 시작하여 프로텍티드 모드(Protected Mode)로 전환한 뒤 커널(`kernel.c`)을 로드한다. `linker.ld`는 커널 코드와 데이터가 메모리 어디에 배치될지를 지정하는 링커 스크립트이다.
+> **[Computer Architecture]** When a computer is powered on, the BIOS/UEFI loads the boot sector (512 bytes) into memory and executes it. `boot.asm` is this boot sector code, which starts in Real Mode, transitions to Protected Mode, and then loads the kernel (`kernel.c`). `linker.ld` is a linker script that specifies where the kernel code and data are placed in memory.
 
-> **참고:** 일반 응용 프로그램은 OS가 메모리 배치를 관리해 주지만, OS 자체를 개발할 때는 "코드가 메모리 어디에 올라갈지"를 직접 지정해야 한다. **링커 스크립트(linker script)**가 바로 이 역할을 수행한다. 예를 들어, 부트로더는 반드시 메모리 주소 `0x7C00`에 위치해야 하고, 커널 코드는 그 뒤에 배치되어야 하는데, 이를 링커 스크립트에서 `.text`, `.data`, `.bss` 섹션의 시작 주소와 순서로 지정한다. 링커 스크립트가 없으면 컴파일러가 임의의 주소를 사용하여 부팅에 실패한다.
+> **Note:** For regular applications, the OS manages memory layout, but when developing an OS itself, you must specify "where the code is loaded in memory" yourself. The **linker script** is what performs this role. For example, the bootloader must be located at memory address `0x7C00`, and the kernel code must be placed after it — this is specified in the linker script through the starting addresses and ordering of `.text`, `.data`, and `.bss` sections. Without a linker script, the compiler would use arbitrary addresses and booting would fail.
 
-### 8.1 관찰할 점
+### 8.1 What to Observe
 
-OS를 성공적으로 부팅할 필요는 **없다** — **과정**이 중요하다.
+You do **not** need to successfully boot the OS — the **process** is what matters.
 
-**에이전트가 어떻게 하는지 관찰하라:**
-- 복잡한 문제를 여러 파일로 분해하는 과정
-- 각 구성 요소의 역할을 설명하는 방식
-- 피드백을 줬을 때 오류를 처리하는 방식
-- 빌드 실패 시 반복 수정하는 과정
+**Observe how the agent:**
+- Decomposes a complex problem into multiple files
+- Explains the role of each component
+- Handles errors when given feedback
+- Iteratively fixes build failures
 
-**후속 프롬프트 시도:**
-- _"키보드 입력 지원을 추가해"_
-- _"링커 스크립트가 하는 일을 한 줄씩 설명해"_
-- _"빌드가 X 에러로 실패해 — 고쳐줘"_
+**Follow-up prompts to try:**
+- _"Add keyboard input support"_
+- _"Explain what the linker script does, line by line"_
+- _"The build failed with error X — fix it"_
 
-> **참고:** 에이전트가 생성한 OS 코드를 그대로 실행하면 빌드 오류가 발생할 가능성이 높다. 이때 당황하지 말고 에러 메시지를 에이전트에게 그대로 전달하면 된다. "빌드가 실패했어. 에러 메시지는 다음과 같아: [에러 메시지]"처럼 구체적으로 알려주는 것이 핵심이다.
-
----
-
-<br>
-
-## 요약
-
-| 과제 | 습득한 기술 |
-|:-----|:-----------|
-| 1. 에이전트 설치 | 도구 설정, 인증, 기본 프롬프팅 |
-| 2. 파일 정리 | 실제 작업 위임, 에이전트 판단 검토 |
-| 3. 저장소 문서화 | AI 생성 기술 문서 평가 |
-| 4. RALPH 기법 | 루브릭을 활용한 체계적 반복 개선 |
-| 5. 미니 OS | 복잡한 다중 파일 시스템 프로젝트 다루기 |
-
-> 코딩 에이전트는 도구일 뿐 — 에이전트가 생성한 결과물을 이해하는 것은 여전히 **여러분의** 책임이다.
-
-> **참고:** 에이전트를 "마법 도구"가 아닌 "강력한 보조 도구"로 인식하는 것이 중요하다. 에이전트가 생성한 코드를 이해하지 못한 채 제출하면 학습 효과가 없다. 항상 "왜 이렇게 했는지 설명해줘"라고 물어보고, 생성된 코드를 직접 읽고 이해하는 습관을 들여야 한다.
+> **Note:** It is highly likely that the OS code generated by the agent will produce build errors when run as-is. Do not panic — just pass the error message directly to the agent. The key is to be specific: "The build failed. Here is the error message: [error message]."
 
 ---
 
 <br>
 
-## 부록
+## Summary
 
-- **본 교과목과의 연결**: 9주차에 3~4인 팀을 구성하며, 기말 프로젝트는 코딩 에이전트를 활용하여 OS 프로토타입을 만드는 것이다.
-- **다음 시간 — 2주차 실습**: 프로세스 시스템 콜 (`fork`, `exec`, `wait`, `pipe`)
-- **문의:** *[블라인드 처리됨]*
+| Task | Skills Acquired |
+|:-----|:----------------|
+| 1. Install Agent | Tool setup, authentication, basic prompting |
+| 2. File Organization | Delegating real tasks, reviewing agent decisions |
+| 3. Repo Documentation | Evaluating AI-generated technical documentation |
+| 4. RALPH Technique | Systematic iterative improvement using rubrics |
+| 5. Mini OS | Working with complex multi-file system projects |
+
+> Coding agents are just tools — understanding the output they generate is still **your** responsibility.
+
+> **Note:** It is important to view agents as "powerful assistants," not "magic tools." If you submit agent-generated code without understanding it, there is no learning benefit. Always ask "Explain why you did it this way," and develop the habit of reading and understanding the generated code yourself.
+
+---
+
+<br>
+
+## Appendix
+
+- **Connection to this course**: Teams of 3–4 will be formed in Week 9, and the final project involves building an OS prototype using coding agents.
+- **Next session — Week 2 Lab**: Process system calls (`fork`, `exec`, `wait`, `pipe`)
+- **Contact:** *[redacted]*
 
 ---

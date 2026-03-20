@@ -1,41 +1,41 @@
-# 3주차 실습 — xv6 내부 구조 탐색
+# Week 3 Lab — Exploring xv6 Internals
 
-> **최종 수정일:** 2026-03-19
+> **Last Updated:** 2026-03-21
 
 ---
 
-## 목차
+## Table of Contents
 
-- [1. 실습 개요](#1-실습-개요)
-- [2. Lab 0: 환경 설정](#2-lab-0-환경-설정)
-  - [2.1 선행 요건](#21-선행-요건)
-  - [2.2 빌드 확인 & 트러블슈팅](#22-빌드-확인--트러블슈팅)
-- [3. Lab 1: 소스 구조](#3-lab-1-소스-구조)
-- [4. Lab 2: 시스템 콜 추적](#4-lab-2-시스템-콜-추적)
-  - [4.1 시스템 콜 경로](#41-시스템-콜-경로)
-  - [4.2 추적 연습 실행 방법](#42-추적-연습-실행-방법)
-- [5. Lab 3: struct proc 분석](#5-lab-3-struct-proc-분석)
-  - [5.1 프로세스 상태 머신](#51-프로세스-상태-머신)
-  - [5.2 struct proc 전체 정의](#52-struct-proc-전체-정의)
-- [6. Lab 4: fork() 구현 심층 분석](#6-lab-4-fork-구현-심층-분석)
-- [요약](#요약)
-- [부록](#부록)
+- [1. Lab Overview](#1-lab-overview)
+- [2. Lab 0: Environment Setup](#2-lab-0-environment-setup)
+  - [2.1 Prerequisites](#21-prerequisites)
+  - [2.2 Build Verification & Troubleshooting](#22-build-verification--troubleshooting)
+- [3. Lab 1: Source Structure](#3-lab-1-source-structure)
+- [4. Lab 2: System Call Tracing](#4-lab-2-system-call-tracing)
+  - [4.1 System Call Path](#41-system-call-path)
+  - [4.2 How to Run the Tracing Exercise](#42-how-to-run-the-tracing-exercise)
+- [5. Lab 3: struct proc Analysis](#5-lab-3-struct-proc-analysis)
+  - [5.1 Process State Machine](#51-process-state-machine)
+  - [5.2 Full Definition of struct proc](#52-full-definition-of-struct-proc)
+- [6. Lab 4: Deep Dive into fork() Implementation](#6-lab-4-deep-dive-into-fork-implementation)
+- [Summary](#summary)
+- [Appendix](#appendix)
 
 ---
 
 <br>
 
-## 1. 실습 개요
+## 1. Lab Overview
 
-- **목표**: xv6 커널 소스를 탐색하고, 시스템 콜(System Call)이 처음부터 끝까지 어떻게 동작하는지 추적한다.
-- **소요 시간**: 약 50분 · 5개 실습 (Lab 0–4)
+- **Objective**: Explore the xv6 kernel source and trace how system calls work from start to finish.
+- **Duration**: Approximately 50 minutes · 5 labs (Lab 0–4)
 
 ```mermaid
 graph LR
-    L0["Lab 0<br/>환경 설정"] --> L1["Lab 1<br/>소스 구조"]
-    L1 --> L2["Lab 2<br/>시스템 콜 추적"]
+    L0["Lab 0<br/>Environment Setup"] --> L1["Lab 1<br/>Source Structure"]
+    L1 --> L2["Lab 2<br/>System Call Tracing"]
     L2 --> L3["Lab 3<br/>struct proc"]
-    L3 --> L4["Lab 4<br/>fork() 심층 분석"]
+    L3 --> L4["Lab 4<br/>fork() Deep Dive"]
     style L0 fill:#e3f2fd
     style L2 fill:#fff3e0
     style L4 fill:#e8f5e9
@@ -45,13 +45,13 @@ graph LR
 
 <br>
 
-## 2. Lab 0: 환경 설정
+## 2. Lab 0: Environment Setup
 
-### 2.1 선행 요건
+### 2.1 Prerequisites
 
-xv6-riscv를 빌드하려면 **RISC-V 크로스 컴파일러**와 **QEMU 에뮬레이터**가 필요하다.
+Building xv6-riscv requires a **RISC-V cross compiler** and a **QEMU emulator**.
 
-> **참고:** **QEMU** = Quick EMUlator — 다른 CPU 아키텍처용 OS 전체를 실행할 수 있는 소프트웨어 에뮬레이터이다. 실제 RISC-V 하드웨어 없이도 x86/ARM 노트북에서 xv6(RISC-V용으로 빌드됨)를 실행할 수 있게 해준다.
+> **Note:** **QEMU** = Quick EMUlator — a software emulator capable of running an entire OS built for a different CPU architecture. It allows running xv6 (built for RISC-V) on an x86/ARM laptop without actual RISC-V hardware.
 
 <div class="grid grid-cols-3 gap-4">
 <div>
@@ -82,45 +82,45 @@ sudo apt install -y git build-essential \
 ### Windows (WSL2)
 
 ```powershell
-# PowerShell (관리자 권한):
+# PowerShell (administrator):
 wsl --install -d Ubuntu
 ```
 
-재시작 후, WSL Ubuntu 터미널에서 왼쪽의 Ubuntu 설치 방법을 따른다.
+After restarting, follow the Ubuntu installation instructions on the left in the WSL Ubuntu terminal.
 
-> `~/`에서 작업할 것. `/mnt/c/`는 **매우 느리다**
+> Work in `~/`. `/mnt/c/` is **very slow**
 
 </div>
 </div>
 
 <div class="mt-4 text-sm">
 
-**xv6 클론** (모든 플랫폼 공통):
+**Clone xv6** (common to all platforms):
 ```bash
 git clone https://github.com/mit-pdos/xv6-riscv.git
 ```
 
-**상세 가이드**: [`setup_xv6_env.md`](../week02/2_lab/setup_xv6_env.md) · **MIT 6.1810 도구**: [pdos.csail.mit.edu/6.828/2024/tools.html](https://pdos.csail.mit.edu/6.828/2024/tools.html) · **xv6 저장소**: [github.com/mit-pdos/xv6-riscv](https://github.com/mit-pdos/xv6-riscv)
+**Detailed guide**: [`setup_xv6_env.md`](../week02/2_lab/setup_xv6_env.md) · **MIT 6.1810 tools**: [pdos.csail.mit.edu/6.828/2024/tools.html](https://pdos.csail.mit.edu/6.828/2024/tools.html) · **xv6 repository**: [github.com/mit-pdos/xv6-riscv](https://github.com/mit-pdos/xv6-riscv)
 
 </div>
 
-> **[컴퓨터구조]** xv6는 RISC-V 아키텍처에서 동작하며, 유저 모드(U-mode)에서 커널 모드(S-mode)로의 전환이 `ecall` 명령어를 통해 이루어진다. 이 구조를 이해하면 이후 시스템 콜 경로를 따라가기가 훨씬 수월하다.
+> **[Computer Architecture]** xv6 runs on the RISC-V architecture, where the transition from user mode (U-mode) to kernel mode (S-mode) is performed via the `ecall` instruction. Understanding this structure makes it much easier to follow the system call path later.
 
 ---
 
-### 2.2 빌드 확인 & 트러블슈팅
+### 2.2 Build Verification & Troubleshooting
 
 <div class="grid grid-cols-2 gap-4">
 <div>
 
-### 빌드 & 실행
+### Build & Run
 
 ```bash
 cd xv6-riscv
 make qemu
 ```
 
-예상 출력:
+Expected output:
 ```
 xv6 kernel is booting
 
@@ -130,29 +130,29 @@ init: starting sh
 $
 ```
 
-xv6 셸에서 `ls`, `echo hello`를 실행해 본다.
-**QEMU 종료**: **Ctrl-A**를 누른 뒤 **X**를 누른다.
+Try running `ls`, `echo hello` in the xv6 shell.
+**Exit QEMU**: Press **Ctrl-A** then **X**.
 
 </div>
 <div>
 
-### 자주 발생하는 문제
+### Common Issues
 
-| 문제 | 해결 방법 |
-|:-----|:---------|
-| `riscv64 version of GCC not found` | 아래를 참고하여 `TOOLPREFIX`를 수동 설정 |
-| QEMU 버전 < 5.0 | QEMU 업그레이드 |
-| macOS 링커 오류 | `brew install riscv64-elf-gcc` 사용 (linux-gnu 아님) |
-| WSL2 "KVM not available" | 무해한 경고 — 무시 |
+| Problem | Solution |
+|:--------|:---------|
+| `riscv64 version of GCC not found` | Manually set `TOOLPREFIX` as shown below |
+| QEMU version < 5.0 | Upgrade QEMU |
+| macOS linker error | Use `brew install riscv64-elf-gcc` (not linux-gnu) |
+| WSL2 "KVM not available" | Harmless warning — ignore |
 
-**TOOLPREFIX** — 자동 감지가 실패할 경우:
+**TOOLPREFIX** — when auto-detection fails:
 ```bash
-# 설치된 도구 확인:
+# Check installed tools:
 ls /usr/bin/riscv64-*
 
-# 명시적으로 설정:
+# Set explicitly:
 make TOOLPREFIX=riscv64-linux-gnu- qemu
-# 또는 macOS의 경우:
+# Or for macOS:
 make TOOLPREFIX=riscv64-elf- qemu
 ```
 
@@ -163,87 +163,87 @@ make TOOLPREFIX=riscv64-elf- qemu
 
 <br>
 
-## 3. Lab 1: 소스 구조
+## 3. Lab 1: Source Structure
 
-| 파일 | 역할 |
+| File | Role |
 |:-----|:-----|
-| `proc.h` | `struct proc` 정의 |
-| `proc.c` | fork, exit, wait, 스케줄러(Scheduler) |
-| `syscall.c` | 시스템 콜(System Call) 디스패치 테이블 |
-| `sysproc.c` | 시스템 콜 핸들러 |
-| `trap.c` | 유저 공간(User Space)에서의 트랩(Trap) 진입 |
-| `usys.pl` | 유저 공간 스텁(Stub) 코드 생성 |
+| `proc.h` | `struct proc` definition |
+| `proc.c` | fork, exit, wait, scheduler |
+| `syscall.c` | System call dispatch table |
+| `sysproc.c` | System call handlers |
+| `trap.c` | Trap entry from user space |
+| `usys.pl` | User-space stub code generator |
 
-> **참고:** **스텁(Stub)**이란 실제 구현을 대리하는 짧은 코드 조각이다. 여기서 유저 공간 스텁은 사용자 프로그램이 `fork()`를 호출하면, 내부적으로 시스템 콜 번호를 레지스터에 넣고 `ecall` 명령어를 실행하는 역할만 수행한다. 즉, 사용자는 일반 함수를 호출하는 것처럼 `fork()`를 쓰지만, 실제로는 스텁이 커널로의 진입을 중개해 주는 것이다. `usys.pl` 스크립트가 이 스텁들을 자동 생성한다.
+> **Note:** A **stub** is a short piece of code that acts as a proxy for the actual implementation. Here, user-space stubs only put the system call number into a register and execute the `ecall` instruction when a user program calls `fork()`. In other words, the user writes `fork()` as if calling a regular function, but the stub actually mediates the entry into the kernel. The `usys.pl` script auto-generates these stubs.
 
 ---
 
 <br>
 
-## 4. Lab 2: 시스템 콜 추적
+## 4. Lab 2: System Call Tracing
 
-### 4.1 시스템 콜 경로
+### 4.1 System Call Path
 
-**`fork()`가 유저 공간에서 커널까지 도달하는 전체 경로:**
+**The full path of `fork()` from user space to the kernel:**
 
 ```
-  유저 프로그램: fork()
+  User program: fork()
          │
          ▼
   usys.S:  li a7, SYS_fork  →  ecall
          │
          ▼
-  trap.c:  usertrap()        ← 모든 유저 트랩 처리
+  trap.c:  usertrap()        ← Handles all user traps
          │
          ▼
-  syscall.c:  syscall()      ← a7 읽기, 디스패치 테이블 조회
+  syscall.c:  syscall()      ← Reads a7, looks up dispatch table
          │
          ▼
-  sysproc.c:  sys_fork()     ← 얇은 래퍼(Wrapper)
+  sysproc.c:  sys_fork()     ← Thin wrapper
          │
          ▼
-  proc.c:  kfork()           ← 실제 작업 수행
+  proc.c:  kfork()           ← Performs the actual work
 ```
 
-**연습**: `sys_fork()`에 `printf`를 추가한 뒤 다시 빌드하여, 올바른 위치를 찾았는지 확인하라.
+**Exercise**: Add a `printf` to `sys_fork()`, rebuild, and verify that you found the correct location.
 
 <div class="mt-4 text-sm opacity-80">
 
-**자료**: `examples/skeletons/lab2_syscall_trace.patch` (TODO 템플릿) · `examples/solutions/lab2_syscall_trace.patch` (정답)
-**테스트 프로그램**: `examples/skeletons/lab2_trace.c` (스켈레톤) · `examples/solutions/lab2_trace.c` (정답)
+**Resources**: `examples/skeletons/lab2_syscall_trace.patch` (TODO template) · `examples/solutions/lab2_syscall_trace.patch` (solution)
+**Test program**: `examples/skeletons/lab2_trace.c` (skeleton) · `examples/solutions/lab2_trace.c` (solution)
 
 </div>
 
-> **참고:** `ecall` 명령어가 실행되면 하드웨어가 자동으로 다음을 수행한다: (1) 현재 PC를 `sepc` 레지스터에 저장, (2) 특권 모드를 S-mode로 전환, (3) `stvec` 레지스터에 설정된 트랩 핸들러 주소로 점프. 이 흐름을 이해하면 `usertrap()` → `syscall()` 경로가 명확해진다.
+> **Note:** When the `ecall` instruction is executed, the hardware automatically performs the following: (1) saves the current PC to the `sepc` register, (2) switches the privilege mode to S-mode, (3) jumps to the trap handler address set in the `stvec` register. Understanding this flow makes the `usertrap()` → `syscall()` path clear.
 
-> **[컴퓨터구조]** 다이어그램에 나오는 RISC-V 어셈블리 명령어 해설:
-> - `li a7, SYS_fork` — **Load Immediate**: 상수 `SYS_fork`(= 1)를 레지스터 `a7`에 넣는다. `a7`은 시스템 콜 번호를 전달하는 레지스터이다
-> - `ecall` — **Environment Call**: CPU에 "커널에 요청이 있다"는 트랩을 발생시킨다. 하드웨어가 자동으로 유저 모드 → 커널 모드로 전환한다
+> **[Computer Architecture]** Explanation of RISC-V assembly instructions in the diagram:
+> - `li a7, SYS_fork` — **Load Immediate**: loads the constant `SYS_fork` (= 1) into register `a7`. `a7` is the register used to convey the system call number
+> - `ecall` — **Environment Call**: triggers a trap to the CPU signaling "there is a request for the kernel." The hardware automatically switches from user mode to kernel mode
 >
-> RISC-V의 레지스터 이름 규약: `a0`~`a7`은 함수 인자/반환값, `t0`~`t6`은 임시값, `s0`~`s11`은 저장 레지스터(callee-saved), `sp`는 스택 포인터, `ra`는 반환 주소이다.
+> RISC-V register naming conventions: `a0`–`a7` are for function arguments/return values, `t0`–`t6` are temporaries, `s0`–`s11` are saved registers (callee-saved), `sp` is the stack pointer, `ra` is the return address.
 
 ---
 
-### 4.2 추적 연습 실행 방법
+### 4.2 How to Run the Tracing Exercise
 
 <div class="grid grid-cols-2 gap-4">
 <div>
 
-### Step 1 — 커널 패치 적용
+### Step 1 — Apply the kernel patch
 
 ```bash
-# 저장소 루트에서:
+# From the repository root:
 cd xv6-riscv
 
-# 정답(또는 스켈레톤) 패치 적용
+# Apply the solution (or skeleton) patch
 git apply ../lectures/week03/2_lab/\
 examples/solutions/lab2_syscall_trace.patch
 ```
 
-### Step 2 — 테스트 프로그램 추가
+### Step 2 — Add the test program
 
 ```bash
-# 테스트 프로그램을 xv6 user/ 디렉토리에 복사
+# Copy the test program to the xv6 user/ directory
 cp ../lectures/week03/2_lab/\
 examples/solutions/lab2_trace.c \
 user/lab2_trace.c
@@ -252,9 +252,9 @@ user/lab2_trace.c
 </div>
 <div>
 
-### Step 3 — Makefile 수정
+### Step 3 — Modify the Makefile
 
-`xv6-riscv/Makefile`을 열고 `UPROGS` 목록을 찾아 다음을 추가한다:
+Open `xv6-riscv/Makefile`, find the `UPROGS` list, and add the following:
 
 ```makefile
 UPROGS=\
@@ -262,20 +262,20 @@ UPROGS=\
   $U/_lab2_trace\
 ```
 
-### Step 4 — 빌드 및 실행
+### Step 4 — Build and run
 
 ```bash
 make clean && make qemu
 ```
 
-xv6 셸 프롬프트에서:
+At the xv6 shell prompt:
 ```
 $ lab2_trace
 ```
 
-커널로부터 `[TRACE] sys_fork() called by ...`가 출력되어야 한다.
+You should see `[TRACE] sys_fork() called by ...` output from the kernel.
 
-**QEMU 종료**: **Ctrl-A**를 누른 뒤 **X**를 누른다.
+**Exit QEMU**: Press **Ctrl-A** then **X**.
 
 </div>
 </div>
@@ -284,11 +284,11 @@ $ lab2_trace
 
 <br>
 
-## 5. Lab 3: struct proc 분석
+## 5. Lab 3: struct proc Analysis
 
-### 5.1 프로세스 상태 머신
+### 5.1 Process State Machine
 
-**프로세스 상태 머신(State Machine)** — `kernel/proc.h`에 정의:
+**Process State Machine** — defined in `kernel/proc.h`:
 
 ```
                   allocproc()        fork()/userinit()        scheduler
@@ -307,122 +307,122 @@ $ lab2_trace
     └──────────────────────── ZOMBIE ◀─────────────────────────────┘
 ```
 
-**주요 필드**: `state`, `pid`, `pagetable`, `trapframe`, `context`, `ofile[]`, `parent`
+**Key fields**: `state`, `pid`, `pagetable`, `trapframe`, `context`, `ofile[]`, `parent`
 
-- **연습**: 각 상태 전이(State Transition)에서 어떤 필드가 변경되는가?
+- **Exercise**: Which fields change at each state transition?
 
-> **[자료구조]** `enum procstate`는 C 언어의 열거형(enum)으로, 각 상태를 정수 상수로 표현한다. 상태 머신(State Machine)은 운영체제뿐 아니라 프로토콜, 게임 로직 등 다양한 분야에서 핵심적으로 사용되는 설계 패턴이다.
+> **[Data Structures]** `enum procstate` is a C enumeration that represents each state as an integer constant. State machines are a design pattern used not only in operating systems but in protocols, game logic, and many other fields.
 
-### 5.2 struct proc 전체 정의
+### 5.2 Full Definition of struct proc
 
 ```c
 struct proc {
   struct spinlock lock;
   enum procstate state;        // UNUSED → USED → RUNNABLE → RUNNING → ZOMBIE
-  void *chan;                  // 슬립 채널 (SLEEPING 상태일 때)
-  int killed;                  // 대기 중인 킬 시그널
-  int xstate;                  // 부모에게 전달할 종료 상태
-  int pid;                     // 프로세스 ID
+  void *chan;                  // Sleep channel (when in SLEEPING state)
+  int killed;                  // Pending kill signal
+  int xstate;                  // Exit status to pass to parent
+  int pid;                     // Process ID
 
-  struct proc *parent;         // 부모 프로세스 (wait_lock으로 보호됨)
+  struct proc *parent;         // Parent process (protected by wait_lock)
 
-  uint64 kstack;               // 커널 스택 가상 주소
-  uint64 sz;                   // 프로세스 메모리 크기 (바이트)
-  pagetable_t pagetable;       // 유저 페이지 테이블(Page Table)
-  struct trapframe *trapframe; // 저장된 유저 레지스터 (trampoline.S에서 사용)
-  struct context context;      // 저장된 커널 레지스터 (swtch.S에서 사용)
-  struct file *ofile[NOFILE];  // 열린 파일 디스크립터
-  struct inode *cwd;           // 현재 작업 디렉토리
-  char name[16];               // 프로세스 이름 (디버깅용)
+  uint64 kstack;               // Kernel stack virtual address
+  uint64 sz;                   // Process memory size (bytes)
+  pagetable_t pagetable;       // User page table
+  struct trapframe *trapframe; // Saved user registers (used by trampoline.S)
+  struct context context;      // Saved kernel registers (used by swtch.S)
+  struct file *ofile[NOFILE];  // Open file descriptors
+  struct inode *cwd;           // Current working directory
+  char name[16];               // Process name (for debugging)
 };
 ```
 
-> **참고:** `struct spinlock lock`은 이 프로세스 구조체에 대한 **스핀락(spinlock)**이다. 스핀락은 다른 CPU 코어가 동시에 같은 `struct proc`를 수정하는 것을 방지하는 가장 단순한 동기화 도구이다. 락을 획득하려는 코어가 `while (lock == 잠김)` 루프를 돌며 대기(spin)하기 때문에 "스핀"락이라 부른다. xv6는 멀티코어를 지원하므로, 프로세스 상태를 변경하기 전에 반드시 이 락을 획득해야 한다. 스핀락과 동기화에 대한 상세한 내용은 9~10주차에서 다룬다.
+> **Note:** `struct spinlock lock` is the **spinlock** for this process structure. A spinlock is the simplest synchronization tool that prevents other CPU cores from simultaneously modifying the same `struct proc`. It is called a "spin" lock because a core trying to acquire it spins in a `while (lock == held)` loop. Since xv6 supports multi-core, this lock must be acquired before changing the process state. Details on spinlocks and synchronization are covered in Weeks 9–10.
 
-> **참고:** **슬립 채널(sleep channel)**은 프로세스가 "무엇을 기다리며 잠들었는지"를 식별하는 **임의의 주소값**이다. 예를 들어 프로세스가 파이프에서 데이터를 기다리며 잠들면 `chan`에 해당 파이프 구조체의 주소가 저장된다. 나중에 데이터가 도착하면 `wakeup(chan)`을 호출하여 해당 주소로 잠든 모든 프로세스를 깨운다. 이 메커니즘은 바쁜 대기(busy wait)를 피하고 CPU를 효율적으로 사용하기 위한 것이며, 9주차에서 `sleep()`/`wakeup()` 구현을 상세히 다룬다.
+> **Note:** A **sleep channel** is an **arbitrary address value** that identifies "what a process is waiting for while sleeping." For example, if a process sleeps while waiting for data on a pipe, the address of that pipe structure is stored in `chan`. Later, when data arrives, `wakeup(chan)` is called to wake all processes sleeping on that address. This mechanism avoids busy waiting and uses the CPU efficiently. The `sleep()`/`wakeup()` implementation is covered in detail in Week 9.
 
-> **[프로그래밍언어]** `struct proc`는 프로세스 하나를 표현하는 C 구조체이다. 각 필드가 프로세스의 서로 다른 측면(스케줄링 상태, 메모리 레이아웃, 열린 파일 등)을 담당한다. Linux 커널에서는 이에 대응하는 `task_struct`가 약 700개 이상의 필드를 가지고 있어, xv6의 간결함이 학습에 유리하다.
+> **[Programming Languages]** `struct proc` is a C structure representing a single process. Each field covers a different aspect of the process (scheduling state, memory layout, open files, etc.). In the Linux kernel, the corresponding `task_struct` has over 700 fields, highlighting the simplicity of xv6 for learning purposes.
 
-> **시험 팁:** `trapframe`은 유저 모드에서 커널 모드로 전환될 때 유저의 레지스터 값을 보존하기 위한 구조체이다. 시스템 콜 완료 후 유저 프로그램이 정확히 이전 상태로 복귀할 수 있도록 하는 핵심 메커니즘이다. 각 필드의 역할을 숙지할 것.
+> **Exam Tip:** `trapframe` is a structure for preserving user register values when transitioning from user mode to kernel mode. It is the core mechanism that allows a user program to resume exactly where it left off after a system call completes. Be sure to understand the role of each field.
 
 ---
 
 <br>
 
-## 6. Lab 4: fork() 구현 심층 분석
+## 6. Lab 4: Deep Dive into fork() Implementation
 
 ```
-  1. allocproc()         ── 새 프로세스 슬롯, pid, kstack, 트랩프레임 확보
+  1. allocproc()         ── Secure new process slot, pid, kstack, trapframe
          │
-  2. uvmcopy()           ── 부모의 페이지 테이블 + 메모리 복사
+  2. uvmcopy()           ── Copy parent's page table + memory
          │
-  3. 트랩프레임 복사         ── 자식도 fork()에서 리턴
+  3. Copy trapframe      ── Child also returns from fork()
          │
-  4. a0 = 0 설정          ── 자식은 fork() 반환값이 0
+  4. Set a0 = 0          ── Child's fork() return value is 0
          │
-  5. ofile[] 복사         ── 열린 파일 디스크립터 공유
+  5. Copy ofile[]        ── Share open file descriptors
          │
-  6. parent 설정,         ── 자식이 실행 가능 상태
+  6. Set parent,         ── Child becomes runnable
      state = RUNNABLE
          │
-  7. 부모에게 자식 PID      ── 반환
+  7. Return child PID    ── To the parent
 ```
 
-**토론 질문**:
-- 왜 자식 프로세스에게 **자체적인** 트랩프레임(Trapframe) 사본이 필요한가?
-- 4단계(`a0 = 0`)를 건너뛰면 어떻게 되는가?
-- 왜 `uvmcopy`는 **모든** 페이지를 복사하는가? (힌트: 12주차 — COW fork)
+**Discussion questions**:
+- Why does the child process need its **own copy** of the trapframe?
+- What happens if step 4 (`a0 = 0`) is skipped?
+- Why does `uvmcopy` copy **all** pages? (Hint: Week 12 — COW fork)
 
-> **참고:** `uvmcopy()`의 내부 동작을 단계별로 풀어보면:
-> 1. 부모의 페이지 테이블을 순회하며 매핑된 모든 유저 페이지를 찾는다
-> 2. 각 페이지마다 새로운 물리 메모리 프레임을 `kalloc()`으로 할당한다
-> 3. 부모 페이지의 내용을 새 프레임에 **바이트 단위로 복사**한다 (`memmove`)
-> 4. 자식의 페이지 테이블에 새 프레임을 동일한 가상 주소로 매핑한다
+> **Note:** Breaking down the internal operation of `uvmcopy()` step by step:
+> 1. Walk the parent's page table to find all mapped user pages
+> 2. For each page, allocate a new physical memory frame with `kalloc()`
+> 3. Copy the contents of the parent's page to the new frame **byte by byte** (`memmove`)
+> 4. Map the new frame to the same virtual address in the child's page table
 >
-> 이 과정은 프로세스 메모리가 클수록 비용이 높아진다. "u"는 user, "vm"은 virtual memory, "copy"는 복사를 의미하여, 이름 그대로 "유저 가상 메모리를 복사하는 함수"이다.
+> This process becomes more expensive as the process memory grows. "u" stands for user, "vm" for virtual memory, and "copy" for copy — as the name suggests, it is "a function that copies user virtual memory."
 
-> **[컴퓨터구조]** `a0` 레지스터는 RISC-V에서 함수 반환값을 전달하는 레지스터이다. `fork()`가 부모에게는 자식 PID를, 자식에게는 0을 반환하는 구조가 바로 이 `trapframe->a0` 값 조작을 통해 구현된다. 동일한 코드가 두 프로세스에서 서로 다른 값을 반환하는 이 메커니즘은 시험 단골 출제 포인트이다.
+> **[Computer Architecture]** The `a0` register in RISC-V is used to convey function return values. The mechanism by which `fork()` returns the child PID to the parent and 0 to the child is implemented through manipulation of `trapframe->a0`. The fact that identical code returns different values in two processes via this mechanism is a frequent exam question.
 
-> **참고:** `uvmcopy()`가 모든 페이지를 복사하는 것은 매우 비효율적이다. 실제 Linux에서는 COW(Copy-On-Write) 기법을 사용하여, fork 시점에는 페이지 테이블 항목만 복사하고 쓰기 시도 시에만 실제 물리 페이지를 복사한다. 이 최적화는 12주차에서 다룬다.
+> **Note:** Having `uvmcopy()` copy all pages is highly inefficient. In real Linux, the COW (Copy-On-Write) technique is used: at fork time, only page table entries are copied, and actual physical pages are copied only when a write is attempted. This optimization is covered in Week 12.
 
-> **참고:** 트랩프레임(trapframe)에 저장되는 대표적인 레지스터들:
-> - `epc` — 트랩 발생 시점의 프로그램 카운터 (돌아갈 주소)
-> - `a0`~`a7` — 함수 인자/시스템 콜 인자/반환값
-> - `sp` — 유저 스택 포인터
-> - `s0`~`s11` — callee-saved 레지스터 (함수 호출 규약에 의해 보존되어야 하는 값)
+> **Note:** Representative registers saved in the trapframe:
+> - `epc` — program counter at the time of the trap (the address to return to)
+> - `a0`–`a7` — function arguments / system call arguments / return values
+> - `sp` — user stack pointer
+> - `s0`–`s11` — callee-saved registers (values that must be preserved per calling convention)
 >
-> fork()에서 자식의 `trapframe->a0 = 0`으로 설정하는 것은, 자식이 커널에서 유저 모드로 복귀할 때 `a0`(반환값 레지스터)에서 0을 읽게 하여 "나는 자식이다"를 인식하게 하는 메커니즘이다.
+> Setting `trapframe->a0 = 0` in fork() ensures that when the child returns from kernel to user mode, it reads 0 from `a0` (the return value register), allowing it to recognize "I am the child."
 
 ---
 
 <br>
 
-## 요약
+## Summary
 
-| 개념 | 핵심 정리 |
-|:-----|:---------|
-| xv6 | 약 10,000줄의 C 코드 — 전체를 읽을 수 있을 만큼 간결한 교육용 OS |
-| 주요 커널 파일 | `proc.h/c` (프로세스), `syscall.c` (디스패치), `sysproc.c` (핸들러), `trap.c` (트랩 진입) |
-| 시스템 콜 경로 | user → `ecall` → `usertrap()` → `syscall()` → 핸들러 → 구현 |
-| struct proc | 커널이 프로세스를 바라보는 완전한 뷰 (스케줄링 상태, 메모리, 파일) |
-| 프로세스 상태 | UNUSED → USED → RUNNABLE → RUNNING → ZOMBIE → UNUSED |
-| fork() | `allocproc` → `uvmcopy` → 트랩프레임 복사 → `a0=0` → 파일 복사 → RUNNABLE |
-| fork() 반환값 | 부모: 자식 PID, 자식: 0 — `trapframe->a0` 조작으로 구현 |
-| COW fork | xv6는 모든 페이지를 복사하지만, Linux는 COW로 최적화 (12주차) |
+| Concept | Key Summary |
+|:--------|:-----------|
+| xv6 | ~10,000 lines of C code — an educational OS small enough to read in its entirety |
+| Key kernel files | `proc.h/c` (processes), `syscall.c` (dispatch), `sysproc.c` (handlers), `trap.c` (trap entry) |
+| System call path | user → `ecall` → `usertrap()` → `syscall()` → handler → implementation |
+| struct proc | The kernel's complete view of a process (scheduling state, memory, files) |
+| Process states | UNUSED → USED → RUNNABLE → RUNNING → ZOMBIE → UNUSED |
+| fork() | `allocproc` → `uvmcopy` → copy trapframe → `a0=0` → copy files → RUNNABLE |
+| fork() return value | Parent: child PID, Child: 0 — implemented via `trapframe->a0` manipulation |
+| COW fork | xv6 copies all pages, but Linux optimizes with COW (Week 12) |
 
 ```
-  오늘 탐색한 내용:
+  What we explored today:
 
-  소스 구조 ──▶ 시스템 콜 경로 ──▶ struct proc 생명주기 ──▶ fork() 구현
+  Source structure ──▶ System call path ──▶ struct proc lifecycle ──▶ fork() implementation
 ```
 
 ---
 
 <br>
 
-## 부록
+## Appendix
 
-- 다음 주제: **스레드(Thread), 스케줄링(Scheduling), 동기화(Synchronization)** — 오늘 탐색한 내용 위에 구축된다.
-- **문의:** *[블라인드 처리됨]*
+- Next topic: **Threads, Scheduling, Synchronization** — built upon what we explored today.
+- **Contact:** *[redacted]*
 
 ---

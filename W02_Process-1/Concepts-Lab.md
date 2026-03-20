@@ -1,35 +1,35 @@
-# 2주차 실습 — 프로세스 시스템 콜
+# Week 2 Lab — Process System Calls
 
-> **최종 수정일:** 2026-03-18
+> **Last Updated:** 2026-03-21
 
 ---
 
-## 목차
+## Table of Contents
 
-- [1. 실습 개요](#1-실습-개요)
-- [2. 실습 1: fork()와 wait()](#2-실습-1-fork와-wait)
-- [3. 실습 2: exec()](#3-실습-2-exec)
-- [4. 실습 3: pipe()](#4-실습-3-pipe)
-- [5. 실습 4: dup2()와 입출력 리디렉션](#5-실습-4-dup2와-입출력-리디렉션)
-- [요약](#요약)
-- [부록](#부록)
+- [1. Lab Overview](#1-lab-overview)
+- [2. Lab 1: fork() and wait()](#2-lab-1-fork-and-wait)
+- [3. Lab 2: exec()](#3-lab-2-exec)
+- [4. Lab 3: pipe()](#4-lab-3-pipe)
+- [5. Lab 4: dup2() and I/O Redirection](#5-lab-4-dup2-and-io-redirection)
+- [Summary](#summary)
+- [Appendix](#appendix)
 
 ---
 
 <br>
 
-## 1. 실습 개요
+## 1. Lab Overview
 
-- **목표**: C 프로그램을 통해 핵심 UNIX 프로세스 시스템 콜을 실습한다.
-- **소요 시간**: 약 50분 · 4개 실습
-- **주제**: `fork()`, `exec()`, `wait()`, `pipe()`, `dup()`
+- **Objective**: Practice core UNIX process system calls through C programs.
+- **Duration**: Approximately 50 minutes · 4 labs
+- **Topics**: `fork()`, `exec()`, `wait()`, `pipe()`, `dup()`
 
 ```mermaid
 graph LR
-    F["fork()<br/>프로세스 복제"] --> E["exec()<br/>이미지 교체"]
-    F --> W["wait()<br/>자식 회수"]
-    F --> P["pipe()<br/>IPC 채널"]
-    P --> D["dup2()<br/>입출력 리디렉션"]
+    F["fork()<br/>Process duplication"] --> E["exec()<br/>Image replacement"]
+    F --> W["wait()<br/>Child reaping"]
+    F --> P["pipe()<br/>IPC channel"]
+    P --> D["dup2()<br/>I/O redirection"]
     style F fill:#e3f2fd
     style E fill:#fff3e0
     style W fill:#e8f5e9
@@ -41,17 +41,17 @@ graph LR
 
 <br>
 
-## 2. 실습 1: fork()와 wait()
+## 2. Lab 1: fork() and wait()
 
-`fork()`는 호출한 프로세스를 복제한다 — 자식 프로세스는 부모의 주소 공간(Address Space) **사본**을 받는다.
+`fork()` duplicates the calling process — the child process receives a **copy** of the parent's address space.
 
 ```c
 pid_t pid = fork();
 if (pid == 0) {
-    // 자식 프로세스
+    // Child process
     printf("Child PID: %d\n", getpid());
 } else {
-    // 부모 프로세스
+    // Parent process
     wait(NULL);
     printf("Parent: child finished\n");
 }
@@ -59,28 +59,28 @@ if (pid == 0) {
 
 ```mermaid
 graph TD
-    P["부모<br/>pid = fork()"] -->|"child_pid 반환"| PW["부모<br/>wait()"]
-    P -->|"0 반환"| C["자식<br/>독립 실행"]
-    C --> CE["자식 종료"]
+    P["Parent<br/>pid = fork()"] -->|"Returns child_pid"| PW["Parent<br/>wait()"]
+    P -->|"Returns 0"| C["Child<br/>Runs independently"]
+    C --> CE["Child exits"]
     CE --> PW
-    PW --> PD["부모 계속 실행"]
+    PW --> PD["Parent continues"]
     style P fill:#e3f2fd
     style C fill:#fff3e0
 ```
 
-- `fork()`는 자식에게 **0**을, 부모에게 **자식 PID**를 반환한다.
-- `wait(NULL)`은 자식 프로세스가 종료될 때까지 블록(Block)한다.
-- **실습**: `wait()`를 제거하면 어떤 일이 발생하는가?
+- `fork()` returns **0** to the child and the **child's PID** to the parent.
+- `wait(NULL)` blocks until a child process terminates.
+- **Exercise**: What happens if you remove `wait()`?
 
-> **참고:** `fork()` 호출 시 부모의 메모리 공간이 자식에게 복사된다. 실제 구현에서는 **COW(Copy-On-Write)** 기법을 사용하여 쓰기가 발생할 때까지 물리 페이지 복사를 지연시킨다. `wait()`를 호출하지 않으면 자식이 종료되어도 PCB가 회수되지 않아 **좀비 프로세스(Zombie Process)**가 된다.
+> **Note:** When `fork()` is called, the parent's memory space is copied to the child. In actual implementations, the **COW (Copy-On-Write)** technique is used to defer physical page copying until a write occurs. If `wait()` is not called, even after the child terminates, the PCB is not reclaimed, and the child becomes a **zombie process**.
 
 ---
 
 <br>
 
-## 3. 실습 2: exec()
+## 3. Lab 2: exec()
 
-`exec()`는 현재 프로세스 이미지를 새로운 프로그램으로 교체한다. PID는 변경되지 **않는다**.
+`exec()` replaces the current process image with a new program. The PID does **not** change.
 
 ```c
 printf("Before exec\n");
@@ -88,48 +88,48 @@ printf("Before exec\n");
 char *args[] = {"ls", "-l", NULL};
 execvp("ls", args);
 
-// exec가 성공하면 여기에 도달하지 않음
+// This line is never reached if exec succeeds
 printf("After exec\n");
 ```
 
 ```mermaid
 graph TD
-    A["프로세스 (my_program)<br/>PID = 42"] -->|"execvp()"| B["프로세스 (ls)<br/>PID = 42"]
-    B --> C["ls 출력..."]
+    A["Process (my_program)<br/>PID = 42"] -->|"execvp()"| B["Process (ls)<br/>PID = 42"]
+    B --> C["ls output..."]
     style A fill:#fce4ec
     style B fill:#e8f5e9
 ```
 
-**일반적인 패턴**: `fork()` + `exec()`
+**Common pattern**: `fork()` + `exec()`
 
 ```mermaid
 graph TD
-    P["부모"] -->|fork| C["자식"]
-    C -->|exec| N["새 프로그램"]
-    P -->|wait| W["자식 회수"]
+    P["Parent"] -->|fork| C["Child"]
+    C -->|exec| N["New program"]
+    P -->|wait| W["Reap child"]
 ```
 
-> **핵심:** `exec()`는 성공 시 호출한 프로세스의 코드·데이터·힙·스택을 새 프로그램으로 완전히 덮어쓰므로, 호출 이후의 코드는 실행되지 않는다. 실패 시에만 반환값 -1을 돌려준다. `fork()` → `exec()` → `wait()` 패턴은 UNIX 셸의 핵심 동작 원리이므로 반드시 숙지해야 한다.
+> **Key Point:** Upon success, `exec()` completely overwrites the calling process's code, data, heap, and stack with the new program, so code after the call is never executed. It returns -1 only on failure. The `fork()` → `exec()` → `wait()` pattern is the core operating principle of UNIX shells and must be thoroughly understood.
 
 ---
 
 <br>
 
-## 4. 실습 3: pipe()
+## 4. Lab 3: pipe()
 
-`pipe()`는 두 파일 디스크립터(File Descriptor) 사이에 **단방향** 통신 채널을 생성한다.
+`pipe()` creates a **unidirectional** communication channel between two file descriptors.
 
 ```c
 int fd[2];
-pipe(fd);  // fd[0]=읽기, fd[1]=쓰기
+pipe(fd);  // fd[0]=read, fd[1]=write
 
 if (fork() == 0) {
-    close(fd[0]);  // 읽기 끝 닫기
+    close(fd[0]);  // Close read end
     char *msg = "hello from child";
     write(fd[1], msg, strlen(msg));
     close(fd[1]);
 } else {
-    close(fd[1]);  // 쓰기 끝 닫기
+    close(fd[1]);  // Close write end
     char buf[64] = {0};
     read(fd[0], buf, sizeof(buf));
     printf("Received: %s\n", buf);
@@ -139,39 +139,39 @@ if (fork() == 0) {
 
 ```mermaid
 graph LR
-    subgraph "자식 (생산자)"
+    subgraph "Child (Producer)"
         CW["write(fd[1])"]
     end
-    subgraph "파이프"
-        BUF["커널 버퍼"]
+    subgraph "Pipe"
+        BUF["Kernel buffer"]
     end
-    subgraph "부모 (소비자)"
+    subgraph "Parent (Consumer)"
         PR["read(fd[0])"]
     end
     CW --> BUF --> PR
     style BUF fill:#fff3e0
 ```
 
-**규칙**:
-- 항상 **사용하지 않는** 쪽을 닫을 것
-- **생산자-소비자(Producer-Consumer)** 패턴을 따른다
-- 쓰기 끝을 닫으면 → 읽기 쪽에서 EOF를 수신한다
+**Rules**:
+- Always close the **unused** end
+- Follows the **producer-consumer** pattern
+- Closing the write end → the read side receives EOF
 
-> **[프로그래밍언어]** 파일 디스크립터(File Descriptor)는 커널이 열린 파일을 식별하기 위해 프로세스에 부여하는 음이 아닌 정수이다. 0=표준입력(stdin), 1=표준출력(stdout), 2=표준에러(stderr)가 기본으로 할당되어 있다. `pipe()`가 생성하는 fd[0], fd[1]도 이 파일 디스크립터 테이블에 등록된다.
+> **[Programming Languages]** A file descriptor is a non-negative integer assigned by the kernel to a process to identify an open file. 0=standard input (stdin), 1=standard output (stdout), and 2=standard error (stderr) are assigned by default. The fd[0] and fd[1] created by `pipe()` are also registered in this file descriptor table.
 
-> **핵심:** 파이프가 `read()`/`write()`라는 파일 I/O 함수로 조작되는 것은 UNIX의 핵심 설계 철학인 **"모든 것은 파일이다(Everything is a file)"**에 기반한다. UNIX에서 일반 파일, 디렉토리, 파이프, 소켓, 장치(키보드, 디스크 등)는 모두 **파일 디스크립터**를 통해 동일한 인터페이스(`open/read/write/close`)로 접근된다. 이 덕분에 한 가지 API만 알면 다양한 자원을 다룰 수 있어 프로그래밍이 간결해진다.
+> **Key Point:** The fact that pipes are manipulated using file I/O functions like `read()`/`write()` is based on the core UNIX design philosophy: **"Everything is a file."** In UNIX, regular files, directories, pipes, sockets, and devices (keyboard, disk, etc.) are all accessed through **file descriptors** using the same interface (`open/read/write/close`). This means that knowing just one API lets you work with many different resources, keeping programming concise.
 
-> **[자료구조]** 파이프(Pipe)는 생산자-소비자 패턴의 대표적 구현이다. 한쪽(자식)이 데이터를 쓰고 다른 쪽(부모)이 읽는 구조로, 커널 내부의 유한 버퍼(Bounded Buffer)를 통해 동기화된다. 버퍼가 가득 차면 `write()`가 블록되고, 비어 있으면 `read()`가 블록된다.
+> **[Data Structures]** A pipe is a classic implementation of the producer-consumer pattern. One side (the child) writes data and the other side (the parent) reads it, synchronized through a bounded buffer inside the kernel. When the buffer is full, `write()` blocks; when it is empty, `read()` blocks.
 
-> **참고:** `close()`를 빠뜨리면 발생하는 구체적 시나리오: 부모가 `fd[1]`(쓰기 끝)을 닫지 않고 `read(fd[0])`를 호출하면, 자식이 쓰기를 마치고 `fd[1]`을 닫아도 부모 자신이 여전히 `fd[1]`을 보유하고 있으므로 커널은 "아직 쓰기 끝이 열려 있다"고 판단한다. 결과적으로 `read()`가 EOF를 받지 못하고 **영원히 블록**되어 프로그램이 멈춘다. 이것이 파이프 프로그래밍에서 가장 흔한 버그이다.
+> **Note:** A specific scenario when `close()` is omitted: if the parent does not close `fd[1]` (the write end) and calls `read(fd[0])`, even after the child finishes writing and closes `fd[1]`, the parent itself still holds `fd[1]`, so the kernel considers "the write end is still open." As a result, `read()` never receives EOF and **blocks forever**, causing the program to hang. This is the most common bug in pipe programming.
 
 ---
 
 <br>
 
-## 5. 실습 4: dup2()와 입출력 리디렉션
+## 5. Lab 4: dup2() and I/O Redirection
 
-`dup2(oldfd, newfd)`는 `newfd`가 `oldfd`와 같은 파일을 가리키도록 한다 — 셸에서 리디렉션에 사용된다.
+`dup2(oldfd, newfd)` makes `newfd` point to the same file as `oldfd` — used for redirection in shells.
 
 ```c
 int fd = open("output.txt",
@@ -179,87 +179,87 @@ int fd = open("output.txt",
 dup2(fd, STDOUT_FILENO);
 close(fd);
 
-// 이 출력은 output.txt로 향함
+// This output goes to output.txt
 printf("Redirected!\n");
 ```
 
-> **참고:** `open()` 함수의 플래그 설명:
-> - `O_WRONLY` — 쓰기 전용으로 열기 (읽기 불가)
-> - `O_CREAT` — 파일이 존재하지 않으면 새로 생성
-> - `O_TRUNC` — 파일이 이미 존재하면 내용을 모두 지우고(truncate) 빈 파일로 만든다
-> - `0644` — 파일 권한 (소유자: 읽기+쓰기, 그룹/기타: 읽기만). 8진수 표기법으로, `rw-r--r--`에 해당한다
+> **Note:** Explanation of the `open()` flags:
+> - `O_WRONLY` — open for writing only (no reading)
+> - `O_CREAT` — create the file if it does not exist
+> - `O_TRUNC` — if the file already exists, truncate its contents to make it empty
+> - `0644` — file permissions (owner: read+write, group/others: read only). In octal notation, this corresponds to `rw-r--r--`
 >
-> 이 조합은 셸에서 `> file.txt` 리디렉션의 동작과 동일하다. `>>` (추가 모드)를 구현하려면 `O_TRUNC` 대신 `O_APPEND`를 사용하면 된다.
+> This combination is equivalent to the `> file.txt` redirection in a shell. To implement `>>` (append mode), use `O_APPEND` instead of `O_TRUNC`.
 
-**`ls > file.txt`의 동작 원리:**
+**How `ls > file.txt` works:**
 
 ```mermaid
 graph TD
-    S["셸"] -->|"1. fork()"| C["자식"]
+    S["Shell"] -->|"1. fork()"| C["Child"]
     C -->|"2. open('file.txt')"| FD["fd = 3"]
     FD -->|"3. dup2(3, 1)"| R["stdout → file.txt"]
-    R -->|"4. exec('ls')"| LS["ls가 stdout에 출력<br/>= file.txt"]
+    R -->|"4. exec('ls')"| LS["ls writes to stdout<br/>= file.txt"]
     style S fill:#e3f2fd
     style LS fill:#e8f5e9
 ```
 
-**연습 문제**: `fork()` + `pipe()` + `dup2()`를 조합하여 `ls | wc -l`을 구현하라.
+**Exercise**: Combine `fork()` + `pipe()` + `dup2()` to implement `ls | wc -l`.
 
-> **참고:** `dup2(oldfd, newfd)` 호출 시 `newfd`가 이미 열려 있으면 자동으로 닫은 후 복제한다. 셸이 `ls > file.txt`를 실행할 때의 전체 순서: (1) `fork()`로 자식 생성 → (2) 자식이 `open()`으로 파일을 열어 fd=3을 얻는다 → (3) `dup2(3, 1)`로 stdout(fd=1)을 파일로 리디렉션한다 → (4) `close(3)`으로 원래 fd를 정리한다 → (5) `exec("ls")`로 프로그램을 교체한다. 이후 `ls`가 `printf()`/`write(1,...)`로 출력하면 자동으로 파일에 기록된다.
+> **Note:** When `dup2(oldfd, newfd)` is called and `newfd` is already open, it is automatically closed before duplication. The full sequence when the shell executes `ls > file.txt`: (1) `fork()` to create a child → (2) the child calls `open()` to open the file, getting fd=3 → (3) `dup2(3, 1)` redirects stdout (fd=1) to the file → (4) `close(3)` cleans up the original fd → (5) `exec("ls")` replaces the program. After this, when `ls` outputs via `printf()`/`write(1,...)`, it is automatically written to the file.
 
-> **참고:** `ls | wc -l` 구현 단계별 가이드:
-> 1. 부모가 `pipe(fd)`를 호출하여 파이프 생성 → `fd[0]`(읽기), `fd[1]`(쓰기)
-> 2. 첫 번째 `fork()` → **자식 1** (ls 역할):
->    - `dup2(fd[1], STDOUT_FILENO)` — stdout을 파이프 쓰기 끝으로 리디렉션
->    - `close(fd[0])`, `close(fd[1])` — 원본 fd를 모두 닫는다
->    - `execlp("ls", "ls", NULL)` — ls 실행
-> 3. 두 번째 `fork()` → **자식 2** (wc 역할):
->    - `dup2(fd[0], STDIN_FILENO)` — stdin을 파이프 읽기 끝으로 리디렉션
->    - `close(fd[0])`, `close(fd[1])` — 원본 fd를 모두 닫는다
->    - `execlp("wc", "wc", "-l", NULL)` — wc -l 실행
-> 4. **부모**: `close(fd[0])`, `close(fd[1])` — 부모도 파이프 fd를 모두 닫는다 (필수!)
-> 5. **부모**: `wait(NULL)` 두 번 호출 — 두 자식 모두 회수
+> **Note:** Step-by-step guide for implementing `ls | wc -l`:
+> 1. The parent calls `pipe(fd)` to create a pipe → `fd[0]` (read), `fd[1]` (write)
+> 2. First `fork()` → **Child 1** (ls role):
+>    - `dup2(fd[1], STDOUT_FILENO)` — redirect stdout to the pipe's write end
+>    - `close(fd[0])`, `close(fd[1])` — close all original fds
+>    - `execlp("ls", "ls", NULL)` — run ls
+> 3. Second `fork()` → **Child 2** (wc role):
+>    - `dup2(fd[0], STDIN_FILENO)` — redirect stdin to the pipe's read end
+>    - `close(fd[0])`, `close(fd[1])` — close all original fds
+>    - `execlp("wc", "wc", "-l", NULL)` — run wc -l
+> 4. **Parent**: `close(fd[0])`, `close(fd[1])` — the parent must also close all pipe fds (required!)
+> 5. **Parent**: call `wait(NULL)` twice — reap both children
 >
-> 핵심: 부모를 포함한 **모든 프로세스**에서 사용하지 않는 파이프 fd를 닫아야 EOF가 정상 전달된다.
+> Key: unused pipe fds must be closed in **all processes** including the parent for EOF to be properly delivered.
 
 ---
 
 <br>
 
-## 요약
+## Summary
 
 ```mermaid
 graph TD
-    subgraph "프로세스 생명주기"
+    subgraph "Process Lifecycle"
         F["fork()"] --> E["exec()"]
         F --> W["wait()"]
         E --> X["exit()"]
         X --> W
     end
-    subgraph "IPC 및 리디렉션"
+    subgraph "IPC & Redirection"
         P["pipe()"] --> D["dup2()"]
-        D --> SH["셸 파이프라인"]
+        D --> SH["Shell pipeline"]
     end
     style F fill:#e3f2fd
     style P fill:#fce4ec
 ```
 
-| 시스템 콜 | 용도 |
-|:----------|:-----|
-| `fork()` | 자식 프로세스 생성 (부모의 사본); 자식에게 0, 부모에게 자식 PID 반환 |
-| `exec()` | 프로세스 이미지를 새 프로그램으로 교체; PID 유지, 성공 시 반환하지 않음 |
-| `wait()` | 자식이 종료될 때까지 블록; 좀비(Zombie) 프로세스 회수 |
-| `pipe()` | 단방향 IPC 채널 생성; fd[0]=읽기, fd[1]=쓰기 |
-| `dup2()` | 파일 디스크립터(File Descriptor) 리디렉션; 셸 리디렉션의 핵심 |
-| 셸 파이프라인 | `cmd1 \| cmd2` = fork + pipe + dup2 + exec (×2) + wait |
+| System Call | Purpose |
+|:------------|:--------|
+| `fork()` | Create a child process (copy of parent); returns 0 to child, child PID to parent |
+| `exec()` | Replace process image with a new program; PID preserved, does not return on success |
+| `wait()` | Block until a child terminates; reap zombie processes |
+| `pipe()` | Create a unidirectional IPC channel; fd[0]=read, fd[1]=write |
+| `dup2()` | Redirect file descriptors; the core of shell redirection |
+| Shell pipeline | `cmd1 \| cmd2` = fork + pipe + dup2 + exec (x2) + wait |
 
 ---
 
 <br>
 
-## 부록
+## Appendix
 
-- 다음 주: xv6 내부에 들어가 이 시스템 콜들을 구현하는 **커널 소스를 읽는다**.
-- **문의:** *[블라인드 처리됨]*
+- Next week: we dive into the xv6 internals to **read the kernel source** that implements these system calls.
+- **Contact:** *[redacted]*
 
 ---

@@ -6,21 +6,21 @@
  */
 
 /*
- * minishell.c - 간단한 셸 구현
+ * minishell.c - Simple shell implementation
  *
- * 지원 기능:
- *   - 단일 명령어 실행: ls -l
- *   - 파이프: cmd1 | cmd2
- *   - 입력 리다이렉션: cmd < file
- *   - 출력 리다이렉션: cmd > file
- *   - 종료: exit
+ * Supported features:
+ *   - Single command execution: ls -l
+ *   - Pipe: cmd1 | cmd2
+ *   - Input redirection: cmd < file
+ *   - Output redirection: cmd > file
+ *   - Exit: exit
  *
- * 컴파일: gcc -Wall -o minishell minishell.c
- * 실행:   ./minishell
+ * Compile: gcc -Wall -o minishell minishell.c
+ * Run:     ./minishell
  *
- * 파싱은 이미 구현되어 있으며, 추가로 다음 함수만 구현하면 됩니다:
- *   1. execute_command()  - 단일 명령어 실행 (리다이렉션 포함)
- *   2. execute_pipe()     - 파이프로 연결된 두 명령어 실행
+ * Parsing is already implemented; only the following functions need to be added:
+ *   1. execute_command()  - Execute a single command (with redirection)
+ *   2. execute_pipe()     - Execute two commands connected by a pipe
  */
 
 #include <stdio.h>
@@ -31,23 +31,23 @@
 #include <sys/wait.h>
 #include <errno.h>
 
-#define MAX_LINE    1024    /* 최대 입력 줄 길이 */
-#define MAX_ARGS    64      /* 최대 인자 개수 */
+#define MAX_LINE    1024    /* Maximum input line length */
+#define MAX_ARGS    64      /* Maximum number of arguments */
 
-/* ===== 명령어 구조체 ===== */
+/* ===== Command Structure ===== */
 
 struct command {
-    char *argv[MAX_ARGS];   /* 인자 목록 (NULL 종료) */
-    char *infile;           /* 입력 리다이렉션 파일명, 없으면 NULL */
-    char *outfile;          /* 출력 리다이렉션 파일명, 없으면 NULL */
+    char *argv[MAX_ARGS];   /* Argument list (NULL-terminated) */
+    char *infile;           /* Input redirection filename, NULL if none */
+    char *outfile;          /* Output redirection filename, NULL if none */
 };
 
 
-/* ===== 파싱 (구현 완료) ===== */
+/* ===== Parsing (Implementation Complete) ===== */
 
 /*
- * 문자열의 앞뒤 공백을 제거합니다.
- * 같은 버퍼 내에서 잘라낸 문자열의 포인터를 반환합니다.
+ * Trims leading and trailing whitespace from a string.
+ * Returns a pointer to the trimmed string within the same buffer.
  */
 static char *trim(char *s)
 {
@@ -62,11 +62,11 @@ static char *trim(char *s)
 }
 
 /*
- * 단일 명령어 세그먼트(파이프 없음)를 struct command로 파싱합니다.
- * < 및 > 리다이렉션을 처리합니다.
+ * Parses a single command segment (no pipe) into a struct command.
+ * Handles < and > redirection.
  *
- * 예시: "sort < input.txt" → argv={"sort", NULL}, infile="input.txt"
- * 예시: "ls -l > out.txt"  → argv={"ls", "-l", NULL}, outfile="out.txt"
+ * Example: "sort < input.txt" -> argv={"sort", NULL}, infile="input.txt"
+ * Example: "ls -l > out.txt"  -> argv={"ls", "-l", NULL}, outfile="out.txt"
  */
 static int parse_command(char *line, struct command *cmd)
 {
@@ -77,7 +77,7 @@ static int parse_command(char *line, struct command *cmd)
 
     while (token != NULL) {
         if (strcmp(token, "<") == 0) {
-            /* 입력 리다이렉션 */
+            /* Input redirection */
             token = strtok(NULL, " \t");
             if (token == NULL) {
                 fprintf(stderr, "minishell: syntax error near '<'\n");
@@ -85,7 +85,7 @@ static int parse_command(char *line, struct command *cmd)
             }
             cmd->infile = token;
         } else if (strcmp(token, ">") == 0) {
-            /* 출력 리다이렉션 */
+            /* Output redirection */
             token = strtok(NULL, " \t");
             if (token == NULL) {
                 fprintf(stderr, "minishell: syntax error near '>'\n");
@@ -105,36 +105,36 @@ static int parse_command(char *line, struct command *cmd)
     cmd->argv[argc] = NULL;
 
     if (argc == 0) {
-        return -1;  /* 빈 명령어 */
+        return -1;  /* Empty command */
     }
 
     return 0;
 }
 
 
-/* ===== 구현 영역 ===== */
+/* ===== Implementation Area ===== */
 
 /*
- * execute_command - 단일 명령어를 실행합니다.
+ * execute_command - Executes a single command.
  *
- * 이 함수는 다음을 수행해야 합니다:
- *   1. fork()로 자식 프로세스 생성
- *   2. 자식에서:
- *      a. cmd->infile이 있으면 입력 리다이렉션 설정 (stdin을 파일로)
- *      b. cmd->outfile이 있으면 출력 리다이렉션 설정 (stdout을 파일로)
- *      c. execvp()로 명령어 실행
- *      d. exec 실패 시 에러 출력 후 exit(127)
- *   3. 부모에서: wait()으로 자식 종료 대기
+ * This function should:
+ *   1. Create a child process with fork()
+ *   2. In the child:
+ *      a. If cmd->infile exists, set up input redirection (stdin to file)
+ *      b. If cmd->outfile exists, set up output redirection (stdout to file)
+ *      c. Execute the command with execvp()
+ *      d. On exec failure, print error and exit(127)
+ *   3. In the parent: wait for child termination with wait()
  *
- * 매개변수:
- *   cmd - 파싱된 명령어 구조체 (argv, infile, outfile 포함)
+ * Parameters:
+ *   cmd - Parsed command structure (contains argv, infile, outfile)
  *
- * 반환값:
- *   자식의 exit status (WEXITSTATUS), 또는 에러 시 -1
+ * Return value:
+ *   Child's exit status (WEXITSTATUS), or -1 on error
  */
 static int execute_command(struct command *cmd)
 {
-    /* TODO 1: fork()로 자식 프로세스를 생성하세요. */
+    /* TODO 1: Create a child process with fork(). */
     pid_t pid = fork();
     if (pid < 0) {
         perror("fork");
@@ -142,9 +142,9 @@ static int execute_command(struct command *cmd)
     }
 
     if (pid == 0) {
-        /* TODO 2 (자식 프로세스): */
+        /* TODO 2 (Child process): */
 
-        /* a. 입력 리다이렉션 */
+        /* a. Input redirection */
         if (cmd->infile != NULL) {
             int fd = open(cmd->infile, O_RDONLY);
             if (fd < 0) {
@@ -155,7 +155,7 @@ static int execute_command(struct command *cmd)
             close(fd);
         }
 
-        /* b. 출력 리다이렉션 */
+        /* b. Output redirection */
         if (cmd->outfile != NULL) {
             int fd = open(cmd->outfile, O_WRONLY | O_CREAT | O_TRUNC, 0644);
             if (fd < 0) {
@@ -166,15 +166,15 @@ static int execute_command(struct command *cmd)
             close(fd);
         }
 
-        /* c. 명령어 실행 */
+        /* c. Execute command */
         execvp(cmd->argv[0], cmd->argv);
 
-        /* d. exec 실패 */
+        /* d. exec failure */
         perror("minishell");
         exit(127);
     }
 
-    /* TODO 3 (부모 프로세스): */
+    /* TODO 3 (Parent process): */
     int status;
     waitpid(pid, &status, 0);
     if (WIFEXITED(status))
@@ -183,40 +183,40 @@ static int execute_command(struct command *cmd)
 }
 
 /*
- * execute_pipe - 파이프로 연결된 두 명령어를 실행합니다.
+ * execute_pipe - Executes two commands connected by a pipe.
  *
- * 셸의 "cmd1 | cmd2" 동작을 구현합니다:
- *   - cmd1의 stdout → pipe → cmd2의 stdin
+ * Implements the shell's "cmd1 | cmd2" behavior:
+ *   - cmd1's stdout -> pipe -> cmd2's stdin
  *
- * 이 함수는 다음을 수행해야 합니다:
- *   1. pipe()로 파이프 생성
- *   2. fork()로 자식1 생성 (cmd1 실행)
- *      - stdout을 pipe의 쓰기 끝으로 dup2
- *      - cmd1->infile이 있으면 입력 리다이렉션도 설정
- *      - execvp로 cmd1 실행
- *   3. fork()로 자식2 생성 (cmd2 실행)
- *      - stdin을 pipe의 읽기 끝으로 dup2
- *      - cmd2->outfile이 있으면 출력 리다이렉션도 설정
- *      - execvp로 cmd2 실행
- *   4. 부모에서 pipe 양쪽 닫기 + 자식 2개 모두 wait
+ * This function should:
+ *   1. Create a pipe with pipe()
+ *   2. Fork child1 with fork() (runs cmd1)
+ *      - dup2 stdout to the write end of the pipe
+ *      - If cmd1->infile exists, also set up input redirection
+ *      - Execute cmd1 with execvp
+ *   3. Fork child2 with fork() (runs cmd2)
+ *      - dup2 stdin to the read end of the pipe
+ *      - If cmd2->outfile exists, also set up output redirection
+ *      - Execute cmd2 with execvp
+ *   4. In parent, close both ends of pipe + wait for both children
  *
- * 매개변수:
- *   cmd1 - 파이프 왼쪽 명령어
- *   cmd2 - 파이프 오른쪽 명령어
+ * Parameters:
+ *   cmd1 - Left-side command of the pipe
+ *   cmd2 - Right-side command of the pipe
  *
- * 반환값:
- *   cmd2의 exit status (WEXITSTATUS), 또는 에러 시 -1
+ * Return value:
+ *   cmd2's exit status (WEXITSTATUS), or -1 on error
  */
 static int execute_pipe(struct command *cmd1, struct command *cmd2)
 {
-    /* TODO 4: pipe()로 파이프를 생성하세요. */
+    /* TODO 4: Create a pipe with pipe(). */
     int fd[2];
     if (pipe(fd) < 0) {
         perror("pipe");
         return -1;
     }
 
-    /* TODO 5: fork()로 자식1을 생성하세요 (cmd1 실행). */
+    /* TODO 5: Fork child1 with fork() (runs cmd1). */
     pid_t pid1 = fork();
     if (pid1 < 0) {
         perror("fork");
@@ -245,7 +245,7 @@ static int execute_pipe(struct command *cmd1, struct command *cmd2)
         exit(127);
     }
 
-    /* TODO 6: fork()로 자식2를 생성하세요 (cmd2 실행). */
+    /* TODO 6: Fork child2 with fork() (runs cmd2). */
     pid_t pid2 = fork();
     if (pid2 < 0) {
         perror("fork");
@@ -274,7 +274,7 @@ static int execute_pipe(struct command *cmd1, struct command *cmd2)
         exit(127);
     }
 
-    /* TODO 7: 부모에서 정리하세요. */
+    /* TODO 7: Clean up in parent. */
     close(fd[0]);
     close(fd[1]);
 
@@ -288,42 +288,42 @@ static int execute_pipe(struct command *cmd1, struct command *cmd2)
 }
 
 
-/* ===== 메인 루프 (구현 완료) ===== */
+/* ===== Main Loop (Implementation Complete) ===== */
 
 int main(void)
 {
     char line[MAX_LINE];
 
     while (1) {
-        /* 프롬프트 출력 */
+        /* Print prompt */
         printf("minishell> ");
         fflush(stdout);
 
-        /* 입력 읽기 */
+        /* Read input */
         if (fgets(line, sizeof(line), stdin) == NULL) {
             printf("\n");
             break;  /* EOF (Ctrl-D) */
         }
 
-        /* 공백 제거 */
+        /* Remove whitespace */
         char *input = trim(line);
         if (*input == '\0')
-            continue;  /* 빈 줄 */
+            continue;  /* Empty line */
 
-        /* 내장 명령어 처리: exit */
+        /* Built-in command handling: exit */
         if (strcmp(input, "exit") == 0)
             break;
 
-        /* 파이프 확인 */
+        /* Check for pipe */
         char *pipe_pos = strchr(input, '|');
 
         if (pipe_pos != NULL) {
-            /* 파이프 문자에서 분리 */
+            /* Split at pipe character */
             *pipe_pos = '\0';
             char *left = input;
             char *right = pipe_pos + 1;
 
-            /* strtok용 복사본 생성 (strtok는 문자열을 수정함) */
+            /* Create copies for strtok (strtok modifies the string) */
             char left_copy[MAX_LINE], right_copy[MAX_LINE];
             strncpy(left_copy, left, sizeof(left_copy) - 1);
             left_copy[sizeof(left_copy) - 1] = '\0';
@@ -338,7 +338,7 @@ int main(void)
 
             execute_pipe(&cmd1, &cmd2);
         } else {
-            /* 단일 명령어 */
+            /* Single command */
             char copy[MAX_LINE];
             strncpy(copy, input, sizeof(copy) - 1);
             copy[sizeof(copy) - 1] = '\0';
