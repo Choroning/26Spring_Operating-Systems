@@ -1,4 +1,4 @@
-# W02 과제 해설 — pingpong & minishell
+# 2주차 과제 해설 — pingpong & minishell
 
 > **최종 수정일:** 2026-03-19
 >
