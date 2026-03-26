@@ -1214,6 +1214,6 @@ int main(int argc, char *argv[])
     - 스레드 로컬 저장소 (TLS)
   - OS별 스레드 구현 (Linux, Windows)
   - 교재: Ch 4 (Sections 4.5 – 4.8)
-- **문의:** *[블라인드 처리됨]*
+
 
 ---

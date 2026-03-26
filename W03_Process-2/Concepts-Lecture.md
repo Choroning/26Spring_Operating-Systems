@@ -1007,6 +1007,6 @@ int main() {
   - Thread libraries (Pthreads, Windows, Java)
   - Implicit threading
   - Practice: multithreaded programming with Pthreads
-- **Contact:** *[redacted]*
+
 
 ---
