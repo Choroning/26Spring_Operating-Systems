@@ -481,6 +481,6 @@ graph LR
 ## Appendix
 
 - Next week: **Processes** — fork, exec, wait, pipe
-- **Contact:** *[redacted]*
+
 
 ---

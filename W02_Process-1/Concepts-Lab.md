@@ -260,6 +260,6 @@ graph TD
 ## Appendix
 
 - Next week: we dive into the xv6 internals to **read the kernel source** that implements these system calls.
-- **Contact:** *[redacted]*
+
 
 ---

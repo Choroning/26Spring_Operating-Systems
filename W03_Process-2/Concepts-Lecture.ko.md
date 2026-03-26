@@ -1007,6 +1007,6 @@ int main() {
   - 스레드 라이브러리 (Pthreads, Windows, Java)
   - 암묵적 스레딩(Implicit Threading)
   - 실습: Pthreads를 이용한 멀티스레드 프로그래밍
-- **문의:** *[블라인드 처리됨]*
+
 
 ---

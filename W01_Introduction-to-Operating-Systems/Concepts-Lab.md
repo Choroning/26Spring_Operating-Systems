@@ -291,6 +291,6 @@ You do **not** need to successfully boot the OS — the **process** is what matt
 
 - **Connection to this course**: Teams of 3–4 will be formed in Week 9, and the final project involves building an OS prototype using coding agents.
 - **Next session — Week 2 Lab**: Process system calls (`fork`, `exec`, `wait`, `pipe`)
-- **Contact:** *[redacted]*
+
 
 ---

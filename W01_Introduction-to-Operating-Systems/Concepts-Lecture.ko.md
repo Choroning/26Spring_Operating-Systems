@@ -481,6 +481,6 @@ graph LR
 ## 부록
 
 - 다음 주: **프로세스(Process)** — fork, exec, wait, pipe
-- **문의:** *[블라인드 처리됨]*
+
 
 ---
