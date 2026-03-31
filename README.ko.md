@@ -70,10 +70,10 @@
 ```plaintext
 26Spring_Operating-Systems
 ├── W01_Introduction-to-Operating-Systems
-│   ├── Concepts-Lab.ko.md
-│   ├── Concepts-Lab.md
-│   ├── Concepts-Lecture.ko.md
-│   └── Concepts-Lecture.md
+│   ├── Concepts_Lab.ko.md
+│   ├── Concepts_Lab.md
+│   ├── Concepts_Lecture.ko.md
+│   └── Concepts_Lecture.md
 ├── W02_Process-1
 │   ├── Assignment
 │   │   ├── minishell.c
@@ -82,16 +82,20 @@
 │   │   └── test_pingpong.sh
 │   ├── Assignment-Explanation.ko.md
 │   ├── Assignment-Explanation.md
-│   ├── Concepts-Lab.ko.md
-│   ├── Concepts-Lab.md
-│   ├── Concepts-Lecture.ko.md
-│   └── Concepts-Lecture.md
+│   ├── Concepts_Lab.ko.md
+│   ├── Concepts_Lab.md
+│   ├── Concepts_Lecture.ko.md
+│   └── Concepts_Lecture.md
 ├── W03_Process-2
-│   ├── Concepts-Lab.ko.md
-│   ├── Concepts-Lab.md
-│   ├── Concepts-Lecture.ko.md
-│   └── Concepts-Lecture.md
+│   ├── Concepts_Lab.ko.md
+│   ├── Concepts_Lab.md
+│   ├── Concepts_Lecture.ko.md
+│   └── Concepts_Lecture.md
 ├── W04_Thread-And-Concurrency-1
+│   ├── Concepts_Lab.ko.md
+│   ├── Concepts_Lab.md
+│   ├── Concepts_Lecture.ko.md
+│   └── Concepts_Lecture.md
 ├── W05_Thread-And-Concurrency-2
 ├── W06_CPU-Scheduling-1
 ├── W07_CPU-Scheduling-2
