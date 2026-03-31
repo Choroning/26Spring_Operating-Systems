@@ -292,6 +292,7 @@ Three considerations for the **logical implementation** of communication links:
 
 > **Note:** Why asymmetric communication is needed: it is useful in the **server pattern**. For example, a web server cannot know in advance which client will send a request, so the asymmetric approach of "receiving from any process (`receive(id, message)`)" is appropriate. After receiving, the `id` is checked to respond to that client with `send(id, response)`. The symmetric approach is suited for fixed 1:1 communication where the partner is predetermined.
 
+- Links are established **automatically** between communicating processes.
 - **Exactly one link** exists between each pair of processes.
 - Drawback: if a process identifier changes, all references must be updated → **limited modularity**
 
@@ -301,8 +302,13 @@ Three considerations for the **logical implementation** of communication links:
 > A **mailbox** (or **port**) is a named message queue managed by the kernel -- like a physical mailbox, any process that knows the name can send to or receive from it.
 
 - `send(A, message)` / `receive(A, message)` — communicate through mailbox A
+- Two processes must **share a common mailbox** for a link to exist.
 - A single link can be associated with **more than two** processes.
 - **Multiple links** can exist between a pair of processes.
+
+> **Mailbox ownership:**
+> - **Process-owned mailbox**: only the owner can receive; the mailbox is destroyed when the process terminates.
+> - **OS-owned mailbox**: exists independently; the OS provides system calls for creation, deletion, send, and receive.
 
 **Multiple receiver problem:** P1 sends a message to mailbox A, and both P2 and P3 call receive(). Who gets it?
 → Solutions: (1) allow at most two processes per link, (2) allow only one receive at a time, (3) system selects arbitrarily
@@ -342,6 +348,8 @@ Messages are stored in a **temporary queue** attached to the communication link.
 | **Bounded capacity** | Maximum of n | Waits if full, otherwise proceeds immediately |
 | **Unbounded capacity** | Unlimited | **Never waits** |
 
+> Zero capacity = no buffering (sender must block). Non-zero capacity = automatic buffering.
+
 ---
 
 <br>
@@ -365,6 +373,8 @@ ftruncate(fd, 4096);
 char *ptr = (char *)mmap(0, 4096, PROT_READ | PROT_WRITE,
                           MAP_SHARED, fd, 0);
 ```
+
+> **`shm_open()` parameters:** `name` — name of the shared memory object (processes access it using the same name). `O_CREAT` — create if it does not exist. `O_RDWR` — allow both reading and writing. Return value — file descriptor (integer).
 
 > **[Computer Architecture]** `mmap()` is a system call that maps a file or shared memory object directly into a process's virtual address space. After mapping, data can be accessed via pointers like regular memory, enabling data exchange without `read()`/`write()` system calls.
 
@@ -483,6 +493,10 @@ Core concept: **everything is a message**
 - **Unidirectional** — bidirectional communication requires a separate reply port.
 - Multiple senders are allowed, but only **one receiver** is permitted.
 
+**Special Ports:**
+- **Task Self port** — used to send messages to the kernel.
+- **Notify port** — used by the kernel to notify the task of events.
+
 **Port creation:**
 
 ```c
@@ -493,7 +507,23 @@ mach_port_allocate(
     &port);                     /* port name */
 ```
 
-**Options when the queue is full:** (1) wait indefinitely, (2) wait with timeout, (3) return immediately, (4) temporary cache (entrust to OS)
+**Message structure:** Fixed-size header containing message size and source/destination port; Variable-size body containing the actual data.
+
+**Sending and receiving messages:**
+
+```c
+/* Sending a message */
+mach_msg(message, MACH_SEND_MSG, size, 0, MACH_PORT_NULL,
+         MACH_MSG_TIMEOUT_NONE, MACH_PORT_NULL);
+
+/* Receiving a message */
+mach_msg(message, MACH_RCV_MSG, 0, size, port,
+         MACH_MSG_TIMEOUT_NONE, MACH_PORT_NULL);
+```
+
+**Options when the queue is full:** (1) wait indefinitely, (2) wait with timeout, (3) return immediately, (4) temporarily cache the message (entrust to OS)
+
+> For the temporary cache option: the message is handed to the OS, and the sender receives a notification when space becomes available. Only one pending message per thread is allowed.
 
 **Performance optimization:** Messages within the same system use **virtual memory mapping** to deliver without actual copying.
 
@@ -515,15 +545,23 @@ A communication mechanism for processes on the same machine in Windows.
 
 *Silberschatz, Figure 3.19 — Advanced local procedure calls in Windows*
 
+> ALPC is not directly exposed through the Windows API. Applications use standard RPC, and ALPC handles the communication internally.
+
 ---
 
 <br>
 
 ## 5. Pipes
 
+Considerations when implementing pipes:
+1. Bidirectional or unidirectional?
+2. If bidirectional, half-duplex or full-duplex?
+3. Is a parent-child relationship required?
+4. Can it communicate over a network?
+
 ### 5.1 Ordinary Pipes
 
-**Pipe** = a **conduit** through which two processes can communicate. One of the oldest IPC mechanisms, present since early UNIX systems.
+**Pipe** = a **conduit** through which two processes can communicate. One of the oldest IPC mechanisms, present since early UNIX systems. A pipe is a special file — accessed via `read()` and `write()`.
 
 - The producer writes to the **write end**, and the consumer reads from the **read end**.
 - **Unidirectional** — bidirectional communication requires two pipes.
@@ -597,6 +635,8 @@ int main(void)
 ls -l | less                          # ls's stdout is piped to less's stdin
 cat file.txt | grep "error" | wc -l   # pipe chain
 ```
+
+> In Windows, pipes are also used: e.g., `dir | more`.
 
 ### 5.2 Named Pipes (FIFO)
 
@@ -674,6 +714,7 @@ find / -name "*.log" 2>/dev/null | xargs grep "ERROR" | sort -u
 
 - Client: assigned a random port greater than 1024
 - Server: listens on a **well-known port** (HTTP=80, SSH=22, FTP=21)
+- Every connection consists of a **unique pair of sockets**.
 
 | Port | Service |
 |:-----|:--------|
@@ -717,6 +758,8 @@ public class DateServer {
 }
 ```
 
+> **Key lines:** `ServerSocket(6013)` — listens on port 6013. `accept()` — blocks until a connection request arrives.
+
 **Socket example — Date Client (Java, Figure 3.28):**
 
 ```java
@@ -741,6 +784,8 @@ public class DateClient {
     }
 }
 ```
+
+> **Key line:** `Socket("127.0.0.1", 6013)` — connects to port 6013 on the local server.
 
 **Sockets in everyday applications:**
 
@@ -817,6 +862,8 @@ interface RemoteService {
 - Internally, the binder framework handles marshalling and inter-process delivery.
 
 > **Note:** Android's binder delivers data with only one copy through the Linux kernel's `/dev/binder` driver, achieving excellent performance. Nearly all system services in Android communicate via binder.
+
+> **Android Service:** A Service is a component with no UI that runs in the background. A client binds to a service with `bindService()`. Communication happens via message passing or RPC.
 
 ### 6.4 Modern RPC: gRPC
 
@@ -933,6 +980,23 @@ int main() {
 
 **Behavior analysis:** When the producer closes the write end, the consumer's `read()` returns 0, terminating the loop.
 
+**Expected output:**
+
+```text
+Produced: 0
+Produced: 10
+Consumed: 0
+Produced: 20
+Consumed: 10
+Produced: 30
+Consumed: 20
+Produced: 40
+Consumed: 30
+Consumed: 40
+```
+
+> The actual output order may be interleaved depending on scheduling.
+
 ### 7.3 Lab 3: POSIX Shared Memory
 
 **Producer:**
@@ -982,6 +1046,12 @@ int main() {
 }
 ```
 
+**Key flags:**
+- `O_CREAT` — create if not exists
+- `O_RDWR` / `O_RDONLY` — read-write / read-only
+- `PROT_READ` / `PROT_WRITE` — memory protection
+- `MAP_SHARED` — changes visible to other processes
+
 **Key API summary:**
 
 | Function | Role |
@@ -991,6 +1061,11 @@ int main() {
 | `mmap(addr, length, prot, flags, fd, offset)` | Map into the address space |
 | `munmap(addr, length)` | Unmap |
 | `shm_unlink(name)` | Delete the shared memory object |
+
+**Lab Key Takeaways:**
+- **Pipe**: `pipe()` creates a unidirectional channel; always close unused ends; EOF is generated when all write ends are closed.
+- **POSIX shared memory**: `shm_open()` + `ftruncate()` + `mmap()` is the standard sequence; fastest IPC method (no kernel copy after setup).
+- **Common consideration**: synchronization is critically important for both methods.
 
 ---
 

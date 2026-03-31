@@ -251,9 +251,13 @@ Modern OSes allow **multi-threaded execution**:
 - A single process can perform multiple tasks simultaneously
 - **Parallel execution** is possible on multi-core systems
 
+> **Example — Multithreaded Word Processor:** Thread 1 manages user input, Thread 2 runs the spell checker — both can run simultaneously! This overcomes the single-thread limitation described above.
+
 **What threads of the same process share:** text section, data section, heap, open files, signals, etc.
 
 **What is independent per thread:** program counter (PC), register set, stack
+
+> In systems that support threads, the PCB is extended to include information for each thread. System-wide changes are needed to support threads.
 
 > Details on threads are covered in **Ch 4**.
 
@@ -286,6 +290,8 @@ Modern OSes allow **multi-threaded execution**:
 
 A proper mix of I/O-bound and CPU-bound processes is important for efficient scheduling.
 
+> **Why a proper mix matters:** If only I/O-bound processes exist, the ready queue empties and the CPU idles. If only CPU-bound processes exist, the wait queue empties and I/O devices idle.
+
 ### 2.3 Scheduling Queues
 
 When a process enters the system, it is placed in a **scheduling queue**.
@@ -308,6 +314,8 @@ A process repeats this cycle until it terminates. Upon termination, it is remove
 **Role of the CPU scheduler:** Select one process from the ready queue and assign it to a CPU core.
 
 **Scheduling frequency:** The CPU scheduler typically runs at least every **100 ms**.
+
+> I/O-bound processes execute for only a few milliseconds before waiting for I/O. CPU-bound processes execute longer, but the scheduler forcibly reclaims the CPU.
 
 **Swapping:**
 - Moving a process from memory to disk (**swap out**) and later reloading it (**swap in**).
@@ -345,6 +353,7 @@ A process repeats this cycle until it terminates. Upon termination, it is remove
 - Early iOS: no multitasking for user apps (only the foreground app ran; others were suspended)
 - From iOS 4: limited multitasking (1 foreground + multiple background)
 - iPad: two foreground apps simultaneously via split screen
+- Later iOS versions introduced richer multitasking support as hardware capabilities improved.
 
 **Android:**
 - Supported multitasking from the start, with no restrictions on background app types.
@@ -373,7 +382,7 @@ A process can create several new processes during its execution.
 
 *Silberschatz, Figure 3.7 — A tree of processes on a typical Linux system*
 
-- **systemd** (pid = 1): the **root parent** of all user processes
+- **systemd** (pid = 1): the **root parent** of all user processes — the first user process created during system boot. It creates processes for additional services such as web servers, SSH servers, etc.
 - In traditional UNIX, **init** (pid = 1) performed this role.
 
 > **[Data Structures]** The process tree is literally a tree structure. The root node is the first process (systemd, pid=1 on Linux), and each node can have child nodes (child processes). The clear parent-child relationship enables systematic process management (termination, resource reclamation, etc.).
@@ -392,6 +401,8 @@ Address space options:
 1. Child is a **duplicate** of the parent — same program and data
 2. A **new program** is loaded into the child
 
+> Resource limits prevent excessive child process creation.
+
 ### 3.2 fork() in UNIX/Linux
 
 In UNIX, new processes are created using the **`fork()`** system call.
@@ -399,6 +410,7 @@ In UNIX, new processes are created using the **`fork()`** system call.
 **How fork() works:**
 1. Creates a new process as a **copy of the calling process's address space**.
 2. **Both** parent and child continue execution from the instruction after fork().
+3. The child inherits the parent's privileges, scheduling attributes, open files, etc.
 
 > **Why copy the entire address space?** This design enables COW (Copy-On-Write) optimization — initially sharing pages and only copying on write, making fork() nearly free when followed immediately by exec().
 
@@ -514,6 +526,8 @@ Why is it designed this way?
 | Waiting for child | `wait()` | `WaitForSingleObject()` |
 | Process info | pid (integer) | `PROCESS_INFORMATION` structure |
 
+> **Windows structures:** `STARTUPINFO` specifies the new process's window size, appearance, and standard I/O handles. `PROCESS_INFORMATION` contains handles and identifiers for the created process and thread.
+
 ### 3.6 Process Termination
 
 **Normal termination:**
@@ -525,6 +539,18 @@ Why is it designed this way?
 1. The child has **exceeded its allocated resources**
 2. The **task assigned to the child is no longer needed**
 3. The **parent is terminating** and the OS does not allow orphan processes
+
+**Process termination code examples:**
+
+```c
+exit(1);  // child returns status to parent
+```
+
+```c
+pid = wait(&status);  // parent collects child's exit status
+```
+
+> To forcibly terminate a process: in Linux, use the `kill` command or the `kill()` system call. In Windows, use the `TerminateProcess()` API.
 
 **Cascading Termination:** A system where all children must be terminated when the parent terminates. Typically initiated by the OS.
 
@@ -539,6 +565,8 @@ Why is it designed this way?
 **Orphan Process:**
 - A child process left behind because its parent **terminated first** without calling `wait()`
 - In UNIX/Linux, init/systemd becomes the new parent of orphan processes and cleans them up
+- **Orphan cleanup procedure:** 1. Parent terminates -> 2. Orphan is adopted by init/systemd -> 3. init/systemd periodically calls wait() -> 4. Process table entry is released.
+- Linux also allows processes other than systemd to inherit and manage orphan processes.
 
 | Aspect | Zombie Process | Orphan Process |
 |:-------|:---------------|:---------------|
@@ -571,6 +599,8 @@ Android determines the termination order based on an **importance hierarchy**:
 | 3 | **Service process** | Performing background activity perceived by the user (e.g., music) | |
 | 4 | **Background process** | Performing activity not visible to the user | |
 | 5 | **Empty process** | Not associated with any app component | Terminated first |
+
+> If a process serves multiple roles, the highest rank applies.
 
 ### 3.9 Chrome Multi-Process Architecture
 

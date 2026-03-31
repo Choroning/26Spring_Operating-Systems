@@ -292,6 +292,7 @@ while (true) {
 
 > **참고:** 비대칭 통신이 필요한 이유: **서버 패턴**에서 유용하다. 예를 들어 웹 서버는 어떤 클라이언트가 요청을 보낼지 미리 알 수 없으므로, "임의의 프로세스로부터 수신(`receive(id, message)`)"하는 비대칭 방식이 적합하다. 수신 후 `id`를 확인하여 해당 클라이언트에게 `send(id, response)`로 응답한다. 반면 대칭 방식은 통신 상대가 고정된 1:1 통신에 적합하다.
 
+- 통신하는 프로세스 사이에 링크가 **자동으로** 설정된다.
 - 각 프로세스 쌍 사이에 **정확히 하나의 링크**가 존재한다.
 - 단점: 프로세스 식별자 변경 시 모든 참조를 수정해야 한다 → **모듈성 제한**
 
@@ -301,8 +302,13 @@ while (true) {
 > **메일박스(mailbox)** 또는 **포트(port)**는 커널이 관리하는 이름 있는 메시지 큐이다. 실제 우편함처럼, 이름을 아는 프로세스라면 누구나 메시지를 보내거나 받을 수 있다.
 
 - `send(A, message)` / `receive(A, message)` — 메일박스 A를 통해 통신
+- 두 프로세스가 링크를 가지려면 **공통 메일박스를 공유**해야 한다.
 - 하나의 링크가 **둘 이상의** 프로세스와 연관될 수 있다.
 - 한 쌍의 프로세스 사이에 **여러 링크**가 존재할 수 있다.
+
+> **메일박스 소유권:**
+> - **프로세스 소유 메일박스(Process-owned mailbox)**: 소유자만 수신 가능; 프로세스 종료 시 메일박스도 파괴된다.
+> - **OS 소유 메일박스(OS-owned mailbox)**: 독립적으로 존재; OS가 생성, 삭제, 송신, 수신을 위한 시스템 콜을 제공한다.
 
 **다중 수신자 문제:** P1이 메일박스 A에 메시지를 보내고, P2와 P3 모두 receive()를 호출하면?
 → 해결: (1) 최대 두 프로세스만 연관 허용, (2) 한 번에 하나만 receive 허용, (3) 시스템이 임의 선택
@@ -342,6 +348,8 @@ while (true) {
 | **유한 용량** | 최대 n개 | 가득 차면 대기, 아니면 즉시 진행 |
 | **무한 용량** | 제한 없음 | **절대 대기하지 않음** |
 
+> 용량 0 = 버퍼링 없음 (송신자가 반드시 블로킹). 용량이 0이 아닌 경우 = 자동 버퍼링(automatic buffering).
+
 ---
 
 <br>
@@ -365,6 +373,8 @@ ftruncate(fd, 4096);
 char *ptr = (char *)mmap(0, 4096, PROT_READ | PROT_WRITE,
                           MAP_SHARED, fd, 0);
 ```
+
+> **`shm_open()` 매개변수:** `name` — 공유 메모리 객체의 이름 (프로세스들이 같은 이름으로 접근). `O_CREAT` — 존재하지 않으면 생성. `O_RDWR` — 읽기와 쓰기 모두 허용. 반환값 — 파일 디스크립터(file descriptor, 정수).
 
 > **[컴퓨터구조]** `mmap()`은 파일이나 공유 메모리 객체를 프로세스의 가상 주소 공간에 직접 매핑하는 시스템 콜이다. 매핑 후에는 포인터를 통해 일반 메모리처럼 접근할 수 있어, `read()`/`write()` 시스템 콜 없이도 데이터를 교환할 수 있다.
 
@@ -483,6 +493,10 @@ Mach — macOS와 iOS의 기반이 되는 마이크로커널이다.
 - **단방향** — 양방향 통신에는 별도의 응답 포트가 필요하다.
 - 다수의 송신자가 허용되지만, **수신자는 하나만** 가능하다.
 
+**특수 포트(Special Ports):**
+- **Task Self 포트** — 커널에 메시지를 보내는 데 사용된다.
+- **Notify 포트** — 커널이 태스크에 이벤트를 알리는 데 사용된다.
+
 **포트 생성:**
 
 ```c
@@ -493,7 +507,23 @@ mach_port_allocate(
     &port);                     /* 포트 이름 */
 ```
 
-**큐가 가득 찬 경우의 옵션:** (1) 무기한 대기, (2) 타임아웃 대기, (3) 즉시 반환, (4) 임시 캐시 (OS에 맡김)
+**메시지 구조:** 고정 크기 헤더(메시지 크기와 송신/수신 포트 포함); 가변 크기 본문(실제 데이터 포함).
+
+**메시지 송수신:**
+
+```c
+/* 메시지 보내기 */
+mach_msg(message, MACH_SEND_MSG, size, 0, MACH_PORT_NULL,
+         MACH_MSG_TIMEOUT_NONE, MACH_PORT_NULL);
+
+/* 메시지 받기 */
+mach_msg(message, MACH_RCV_MSG, 0, size, port,
+         MACH_MSG_TIMEOUT_NONE, MACH_PORT_NULL);
+```
+
+**큐가 가득 찬 경우의 옵션:** (1) 무기한 대기, (2) 타임아웃 대기, (3) 즉시 반환, (4) 메시지를 임시 캐시 (OS에 맡김)
+
+> 임시 캐시 옵션의 경우: 메시지를 OS에 맡기고, 공간이 확보되면 알림을 받는다. 스레드당 대기 중인 메시지는 하나만 허용된다.
 
 **성능 최적화:** 같은 시스템 내의 메시지는 **가상 메모리 매핑**을 사용하여 실제 복사 없이 전달한다.
 
@@ -515,15 +545,23 @@ Windows에서 같은 머신 내의 프로세스 간 통신 메커니즘이다.
 
 *Silberschatz, Figure 3.19 — Windows의 Advanced local procedure calls*
 
+> ALPC는 Windows API를 통해 직접 노출되지 않는다. 애플리케이션은 표준 RPC를 사용하며, ALPC가 내부적으로 통신을 처리한다.
+
 ---
 
 <br>
 
 ## 5. 파이프
 
+파이프 구현 시 고려사항:
+1. 양방향(bidirectional)인가, 단방향(unidirectional)인가?
+2. 양방향이라면 반이중(half-duplex)인가, 전이중(full-duplex)인가?
+3. 부모-자식 관계(parent-child relationship)가 필요한가?
+4. 네트워크를 통해 통신할 수 있는가?
+
 ### 5.1 일반 파이프
 
-**파이프(Pipe)** = 두 프로세스가 통신할 수 있는 **도관(conduit)**이다. 초기 UNIX 시스템부터 존재한 가장 오래된 IPC 메커니즘 중 하나이다.
+**파이프(Pipe)** = 두 프로세스가 통신할 수 있는 **도관(conduit)**이다. 초기 UNIX 시스템부터 존재한 가장 오래된 IPC 메커니즘 중 하나이다. 파이프는 특수 파일(special file)로, `read()`와 `write()`를 통해 접근한다.
 
 - 생산자는 **쓰기 끝(write end)** 에 쓰고, 소비자는 **읽기 끝(read end)** 에서 읽는다.
 - **단방향** — 양방향에는 두 개의 파이프가 필요하다.
@@ -597,6 +635,8 @@ int main(void)
 ls -l | less                          # ls의 stdout이 파이프를 통해 less의 stdin으로 전달
 cat file.txt | grep "error" | wc -l   # 파이프 체인
 ```
+
+> Windows에서도 파이프가 사용된다: 예) `dir | more`.
 
 ### 5.2 명명 파이프 (FIFO)
 
@@ -674,6 +714,7 @@ find / -name "*.log" 2>/dev/null | xargs grep "ERROR" | sort -u
 
 - 클라이언트: 1024보다 큰 임의의 포트 할당
 - 서버: **잘 알려진 포트(well-known port)** 에서 대기 (HTTP=80, SSH=22, FTP=21)
+- 모든 연결은 **고유한 소켓 쌍(unique pair of sockets)**으로 구성된다.
 
 | 포트 | 서비스 |
 |:-----|:------|
@@ -717,6 +758,8 @@ public class DateServer {
 }
 ```
 
+> **핵심 코드:** `ServerSocket(6013)` — 포트 6013에서 대기. `accept()` — 연결 요청이 도착할 때까지 블로킹.
+
 **소켓 예제 — Date 클라이언트 (Java, Figure 3.28):**
 
 ```java
@@ -741,6 +784,8 @@ public class DateClient {
     }
 }
 ```
+
+> **핵심 코드:** `Socket("127.0.0.1", 6013)` — 로컬 서버의 포트 6013에 연결.
 
 **일상 애플리케이션에서의 소켓:**
 
@@ -817,6 +862,8 @@ interface RemoteService {
 - 내부적으로 binder 프레임워크가 마샬링과 프로세스 간 전달을 처리한다.
 
 > **참고:** Android의 binder는 Linux 커널의 `/dev/binder` 드라이버를 통해 한 번의 복사만으로 데이터를 전달하여 성능이 우수하다. Android의 거의 모든 시스템 서비스가 binder를 통해 통신한다.
+
+> **Android Service:** Service는 UI 없이 백그라운드에서 실행되는 컴포넌트이다. 클라이언트는 `bindService()`로 서비스에 바인딩한다. 통신은 메시지 전달(message passing) 또는 RPC를 통해 이루어진다.
 
 ### 6.4 현대 RPC: gRPC
 
@@ -933,6 +980,23 @@ int main() {
 
 **동작 분석:** 생산자가 쓰기 끝을 닫으면, 소비자의 `read()`가 0을 반환하여 루프가 종료된다.
 
+**예상 출력:**
+
+```text
+Produced: 0
+Produced: 10
+Consumed: 0
+Produced: 20
+Consumed: 10
+Produced: 30
+Consumed: 20
+Produced: 40
+Consumed: 30
+Consumed: 40
+```
+
+> 실제 출력 순서는 스케줄링에 따라 인터리브(interleave)될 수 있다.
+
 ### 7.3 실습 3: POSIX 공유 메모리
 
 **생산자:**
@@ -982,6 +1046,12 @@ int main() {
 }
 ```
 
+**주요 플래그:**
+- `O_CREAT` — 존재하지 않으면 생성
+- `O_RDWR` / `O_RDONLY` — 읽기-쓰기 / 읽기 전용
+- `PROT_READ` / `PROT_WRITE` — 메모리 보호(memory protection)
+- `MAP_SHARED` — 변경사항이 다른 프로세스에 보임
+
 **주요 API 요약:**
 
 | 함수 | 역할 |
@@ -991,6 +1061,11 @@ int main() {
 | `mmap(addr, length, prot, flags, fd, offset)` | 주소 공간에 매핑 |
 | `munmap(addr, length)` | 매핑 해제 |
 | `shm_unlink(name)` | 공유 메모리 객체 삭제 |
+
+**실습 핵심 정리:**
+- **파이프(Pipe)**: `pipe()`는 단방향 채널을 생성; 사용하지 않는 끝은 반드시 닫을 것; 모든 쓰기 끝이 닫히면 EOF 발생.
+- **POSIX 공유 메모리**: `shm_open()` + `ftruncate()` + `mmap()`이 표준 순서; 가장 빠른 IPC 방식 (설정 후 커널 복사 없음).
+- **공통 고려사항**: 두 방법 모두 동기화(synchronization)가 매우 중요하다.
 
 ---
 
