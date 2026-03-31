@@ -4,6 +4,16 @@
 
 ---
 
+> **Prerequisites**: W02 Lecture concepts (process, fork, exec, wait). Ability to compile and run C programs.
+>
+> **Learning Objectives**: After completing this lab, you should be able to:
+> 1. Use fork()/wait() to create and manage child processes
+> 2. Replace a process image using exec()
+> 3. Establish inter-process communication using pipe()
+> 4. Implement shell-style I/O redirection using dup2()
+
+---
+
 ## Table of Contents
 
 - [1. Lab Overview](#1-lab-overview)
@@ -70,9 +80,14 @@ graph TD
 
 - `fork()` returns **0** to the child and the **child's PID** to the parent.
 - `wait(NULL)` blocks until a child process terminates.
+
+> **Definition:** In `wait(NULL)`, the `NULL` argument means we do not care about the child's exit status. If you pass a pointer to an `int` instead (e.g., `wait(&status)`), the kernel writes the child's exit status into that variable.
+
 - **Exercise**: What happens if you remove `wait()`?
 
 > **Note:** When `fork()` is called, the parent's memory space is copied to the child. In actual implementations, the **COW (Copy-On-Write)** technique is used to defer physical page copying until a write occurs. If `wait()` is not called, even after the child terminates, the PCB is not reclaimed, and the child becomes a **zombie process**.
+
+> **Definition:** COW (Copy-On-Write) means the parent and child initially share the same physical memory pages after `fork()`. Only when either process tries to **write** to a page does the kernel copy that specific page, saving both memory and time. This is why `fork()` followed immediately by `exec()` is nearly free — the child's pages are about to be replaced anyway.
 
 ---
 
@@ -156,6 +171,8 @@ graph LR
 - Always close the **unused** end
 - Follows the **producer-consumer** pattern
 - Closing the write end → the read side receives EOF
+
+> **Definition:** EOF (End of File) signals that there is no more data to read. For pipes, this occurs when **all** write-end file descriptors are closed. This is why every process that holds a copy of the write-end fd must close it.
 
 > **[Programming Languages]** A file descriptor is a non-negative integer assigned by the kernel to a process to identify an open file. 0=standard input (stdin), 1=standard output (stdout), and 2=standard error (stderr) are assigned by default. The fd[0] and fd[1] created by `pipe()` are also registered in this file descriptor table.
 
@@ -261,5 +278,16 @@ graph TD
 
 - Next week: we dive into the xv6 internals to **read the kernel source** that implements these system calls.
 
+---
+
+<br>
+
+## Self-Check Questions
+
+1. **Pipe EOF:** In a fork+pipe program, the parent forgets to close `fd[1]` before calling `read(fd[0])`. The child writes data and closes `fd[1]`. Will the parent's `read()` ever return? Why or why not?
+2. **dup2 Behavior:** After `dup2(fd, STDOUT_FILENO)`, what happens when the process calls `printf()`? Why is it important to `close(fd)` afterward?
+3. **fork + exec Pattern:** If `exec()` succeeds, will the line `perror("exec failed")` ever execute? What does it mean when you see that error message?
+4. **wait(NULL) vs wait(&status):** Explain the difference. When would you use one over the other?
+5. **Pipeline Implementation:** In the `ls | wc -l` implementation, why must the parent close **both** `fd[0]` and `fd[1]` even though it does not read from or write to the pipe?
 
 ---

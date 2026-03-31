@@ -6,6 +6,16 @@
 
 ---
 
+> **Prerequisites**: W01 OS concepts (definition, dual-mode, system calls). Basic C programming (pointers, functions).
+>
+> **Learning Objectives**: After reading this note, you should be able to:
+> 1. Describe the structure of a process (memory layout, PCB, states)
+> 2. Explain how fork(), exec(), and wait() work together
+> 3. Trace process state transitions through a lifecycle diagram
+> 4. Identify and explain zombie and orphan processes
+
+---
+
 ## Table of Contents
 
 - [1. Process Concepts](#1-process-concepts)
@@ -63,6 +73,8 @@
 
 - From the OS's perspective, there exist both processes executing user code and processes executing OS code.
 - The CPU(s) are **multiplexed** among these processes.
+
+> **Definition:** Multiplexing means the CPU is shared among multiple processes by rapidly switching between them, giving the illusion of simultaneous execution.
 
 > **Exam Tip:** The definition "a program in execution" is the key. An executable file stored on disk is a program (a passive entity), and when it is loaded into memory and given CPU time to run, it becomes a process (an active entity). This distinction is frequently tested on exams.
 
@@ -175,6 +187,8 @@ A process changes **state** during its execution:
 | **Waiting → Ready** | I/O or event completion — the awaited I/O or event has completed |
 | **Running → Terminated** | exit — the process finishes execution and terminates |
 
+> **Definition:** A **time slice** (or quantum) is the fixed amount of CPU time the OS allocates to each process before preempting it.
+
 > **Exam Tip:** Clearly distinguish between Running → Ready (an **involuntary** transition due to time slice expiration) and Running → Waiting (a **voluntary** transition due to an I/O request).
 
 ### 1.7 Process Control Block (PCB)
@@ -196,6 +210,8 @@ The PCB serves as a repository for all data needed to **start or restart** a pro
 | **Memory management info** | Base/limit register values, page table or segment table |
 | **Accounting info** | CPU time used, elapsed real time, time limits, process number |
 | **I/O status info** | List of allocated I/O devices, list of open files |
+
+> **Why these fields?** Among these fields, the **program counter** and **process state** are the most critical — they determine where execution resumes and whether the process is ready to run.
 
 > **[Computer Architecture]** The **base register** stores the **starting address** of memory a process can access, and the **limit register** stores the **size (range)** of that process's memory. When the CPU accesses memory, the hardware automatically checks whether the address falls within the [base, base+limit) range, preventing access to another process's memory. This was the memory protection method before virtual memory (page tables) emerged, and more advanced methods are covered in Week 11.
 
@@ -298,6 +314,8 @@ A process repeats this cycle until it terminates. Upon termination, it is remove
 - Reduces the degree of multiprogramming to relieve memory pressure.
 - Only needed when memory is **overcommitted**. Covered in detail in Ch 9.
 
+> **Definition:** Swapping moves an entire process out of main memory to disk (swap out) and back (swap in) to free memory for other processes.
+
 ### 2.5 Context Switch
 
 **Context:** Represented in a process's PCB. Includes CPU register values, process state, memory management information, etc.
@@ -309,6 +327,8 @@ A process repeats this cycle until it terminates. Upon termination, it is remove
 *Silberschatz, Figure 3.6 — Diagram showing context switch from process to process*
 
 > **Key Point:** The context switch is a core OS mechanism. Users perceive multiple programs running simultaneously because the OS performs context switches between processes extremely quickly. However, no useful work is performed during a context switch — it is pure overhead.
+
+> **Analogy:** Imagine you are taking an exam and need to switch to a different test paper — you save your current answers (register state), put away the current sheet (save PCB), and pick up the new one (restore PCB). The time you spend shuffling papers is wasted (overhead), but it lets you work on multiple tests "simultaneously."
 
 > **Note:** A concrete example: while Process A (word processor) is running and a timer interrupt occurs, the OS (1) saves A's PC, register values, stack pointer, etc. to A's PCB, (2) selects Process B (web browser) from the ready queue, and (3) restores the PC, register values, etc. previously saved in B's PCB to the CPU. This entire process completes within microseconds, making the user perceive A and B as running simultaneously.
 
@@ -379,6 +399,8 @@ In UNIX, new processes are created using the **`fork()`** system call.
 **How fork() works:**
 1. Creates a new process as a **copy of the calling process's address space**.
 2. **Both** parent and child continue execution from the instruction after fork().
+
+> **Why copy the entire address space?** This design enables COW (Copy-On-Write) optimization — initially sharing pages and only copying on write, making fork() nearly free when followed immediately by exec().
 
 **Return values of fork():**
 
@@ -526,6 +548,8 @@ Why is it designed this way?
 | Resolution | Parent calls wait() | init/systemd adopts and manages |
 
 > **Exam Tip:** A **zombie** is when a child dies but the parent does not clean up (wait); an **orphan** is when the parent dies first and the child is left alone. Questions presenting a scenario and asking you to distinguish between zombie and orphan are frequently given.
+
+> **Mnemonic:** Zombie = dead but still listed in the process table (like a zombie that won't lie down). Orphan = parent disappeared, so the child is adopted by init/systemd (like an orphanage taking in a child).
 
 > **Note:** When viewing the process list with `ps aux`, processes with status `Z` are zombie processes. Zombies themselves do not consume CPU or memory, but they occupy process table entries, reducing the number of processes the system can create.
 
@@ -812,5 +836,16 @@ Shell (parent process)
   - Client-server communication: sockets, RPC
   - Textbook: Ch 3, Sections 3.4–3.8
 
+---
+
+<br>
+
+## Self-Check Questions
+
+1. **Process States:** A process is currently waiting for disk I/O to complete. What state is it in? What event will move it to the Ready state?
+2. **fork() Return Values:** After `pid = fork()`, what value does `pid` hold in the parent process and in the child process? How can the child obtain its own PID?
+3. **Zombie vs Orphan:** Process A creates child process B and then enters an infinite loop without calling `wait()`. Process B finishes execution. Is B a zombie or an orphan? What changes if A terminates before B finishes?
+4. **Context Switch Cost:** Why is a context switch considered pure overhead? Name two hardware features that can reduce context switch time.
+5. **fork + exec:** Explain why shells use the `fork()` + `exec()` + `wait()` pattern instead of a single "create-and-run" system call. What advantage does separating fork and exec provide?
 
 ---

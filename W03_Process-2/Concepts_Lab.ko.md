@@ -2,6 +2,14 @@
 
 > **최종 수정일:** 2026-03-21
 
+> **선행 지식**: W02-W03 이론 개념. xv6 빌드 환경 설정 완료 (QEMU + RISC-V 툴체인).
+>
+> **학습 목표**: 이 실습을 완료하면 다음을 할 수 있어야 한다:
+> 1. xv6 소스 코드 구조를 탐색
+> 2. 유저 공간에서 커널까지의 시스템 콜 경로를 추적
+> 3. struct proc의 필드와 목적을 설명
+> 4. xv6에서 fork()의 내부 단계를 서술
+
 ---
 
 ## 목차
@@ -46,6 +54,8 @@ graph LR
 <br>
 
 ## 2. Lab 0: 환경 설정
+
+> **참고:** 2주차에서 이미 xv6 환경을 설정했다면 [3. Lab 1: 소스 구조](#3-lab-1-소스-구조)로 건너뛰어도 된다.
 
 ### 2.1 선행 요건
 
@@ -205,6 +215,8 @@ make TOOLPREFIX=riscv64-elf- qemu
   proc.c:  kfork()           ← 실제 작업 수행
 ```
 
+> **참고:** 여기서 `kfork()`라는 이름을 사용한 것은 유저용 `fork()` 시스템 콜과 커널 내부 구현을 구분하기 위함이다. 실제 xv6 소스에서는 `proc.c`에 `fork()`라는 이름으로 정의되어 있다.
+
 **연습**: `sys_fork()`에 `printf`를 추가한 뒤 다시 빌드하여, 올바른 위치를 찾았는지 확인하라.
 
 <div class="mt-4 text-sm opacity-80">
@@ -328,7 +340,7 @@ struct proc {
 
   uint64 kstack;               // 커널 스택 가상 주소
   uint64 sz;                   // 프로세스 메모리 크기 (바이트)
-  pagetable_t pagetable;       // 유저 페이지 테이블(Page Table)
+  pagetable_t pagetable;       // 유저 페이지 테이블(Page Table, 아래 참고)
   struct trapframe *trapframe; // 저장된 유저 레지스터 (trampoline.S에서 사용)
   struct context context;      // 저장된 커널 레지스터 (swtch.S에서 사용)
   struct file *ofile[NOFILE];  // 열린 파일 디스크립터
@@ -336,6 +348,8 @@ struct proc {
   char name[16];               // 프로세스 이름 (디버깅용)
 };
 ```
+
+> **참고:** `pagetable_t`는 xv6에서 프로세스 페이지 테이블의 루트를 가리키는 포인터의 typedef이다. 가상 주소를 물리 메모리에 매핑하는 역할을 한다. 정의는 `kernel/riscv.h`에 있는 `typedef uint64 *pagetable_t;`이다.
 
 > **참고:** `struct spinlock lock`은 이 프로세스 구조체에 대한 **스핀락(spinlock)**이다. 스핀락은 다른 CPU 코어가 동시에 같은 `struct proc`를 수정하는 것을 방지하는 가장 단순한 동기화 도구이다. 락을 획득하려는 코어가 `while (lock == 잠김)` 루프를 돌며 대기(spin)하기 때문에 "스핀"락이라 부른다. xv6는 멀티코어를 지원하므로, 프로세스 상태를 변경하기 전에 반드시 이 락을 획득해야 한다. 스핀락과 동기화에 대한 상세한 내용은 9~10주차에서 다룬다.
 
@@ -370,8 +384,11 @@ struct proc {
 
 **토론 질문**:
 - 왜 자식 프로세스에게 **자체적인** 트랩프레임(Trapframe) 사본이 필요한가?
+  <details><summary>힌트</summary>fork() 반환 후 부모와 자식이 서로 다른 명령어를 실행할 때 독립적인 레지스터 상태가 필요하다는 점을 생각해 보라.</details>
 - 4단계(`a0 = 0`)를 건너뛰면 어떻게 되는가?
+  <details><summary>힌트</summary>자식의 <code>a0</code> 레지스터에 어떤 값이 남는지 생각해 보라. 부모와 같은 값이 되어 자식이 스스로를 부모로 인식하게 된다.</details>
 - 왜 `uvmcopy`는 **모든** 페이지를 복사하는가? (힌트: 12주차 — COW fork)
+  <details><summary>힌트</summary>xv6는 단순한 접근 방식을 택한다. 실제 Linux 등의 OS는 쓰기가 발생할 때까지 복사를 지연한다 (Copy-On-Write).</details>
 
 > **참고:** `uvmcopy()`의 내부 동작을 단계별로 풀어보면:
 > 1. 부모의 페이지 테이블을 순회하며 매핑된 모든 유저 페이지를 찾는다
@@ -424,5 +441,16 @@ struct proc {
 
 - 다음 주제: **스레드(Thread), 스케줄링(Scheduling), 동기화(Synchronization)** — 오늘 탐색한 내용 위에 구축된다.
 
+---
+
+<br>
+
+## 자가 점검 문제
+
+1. **시스템 콜 경로**: `fork()` 호출이 유저 프로그램에서 커널 구현까지 통과하는 6개의 파일을 순서대로 나열하라. 실제 프로세스 생성 작업을 수행하는 파일은 어느 것인가?
+2. **struct proc 필드**: `struct proc`에서 `fork()` 반환 후 자식 프로세스가 올바른 지점에서 실행을 재개할 수 있게 하는 필드는 무엇인가? 이 필드가 `context`와 분리되어 있는 이유는?
+3. **프로세스 상태**: RUNNING 상태의 프로세스가 `sleep()`을 호출한다. 발생하는 상태 전이와 `struct proc`의 어떤 필드가 변경되는지 설명하라.
+4. **fork() 내부 동작**: `uvmcopy()`가 트랩프레임(trapframe) 복사보다 먼저 호출되어야 하는 이유를 설명하라. 순서가 반대라면 어떤 일이 발생하는가?
+5. **스핀락(spinlock)**: xv6가 `struct proc`를 보호하기 위해 (슬리핑 락이 아닌) 스핀락을 사용하는 이유는 무엇인가? `struct proc`이 접근되는 시점을 고려하라.
 
 ---

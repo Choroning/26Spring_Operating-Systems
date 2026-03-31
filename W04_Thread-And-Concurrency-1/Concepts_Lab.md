@@ -2,6 +2,14 @@
 
 > **Last Updated:** 2026-03-31
 
+> **Prerequisites**: W04 Lecture concepts (threads, Pthreads API). Ability to compile C with `-pthread`.
+>
+> **Learning Objectives**: After completing this lab, you should be able to:
+> 1. Create and join threads using pthread_create/pthread_join
+> 2. Implement data-parallel computation with partial results
+> 3. Avoid the common thread argument-passing pitfall
+> 4. Measure and interpret speedup against Amdahl's Law
+
 ---
 
 ## Table of Contents
@@ -311,5 +319,15 @@ for (int i = 0; i < N; i++)
 
 - Next week: Implicit threading, fork/join, OpenMP, thread cancellation, TLS (Textbook Sections 4.5–4.8)
 
+---
+
+<br>
+
+## Self-Check Questions
+
+1. Why does passing `&i` from a for loop to `pthread_create` cause incorrect behavior?
+2. Why do we use `partial_sum[id]` instead of a single shared `total` variable?
+3. What factors cause real speedup to fall short of ideal speedup?
+4. What happens if the main thread exits before calling `pthread_join` on all child threads?
 
 ---

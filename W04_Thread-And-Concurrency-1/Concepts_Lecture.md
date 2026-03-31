@@ -4,6 +4,15 @@
 >
 > Silberschatz, Operating System Concepts Ch 4 (Sections 4.1 – 4.4)
 
+> **Prerequisites**: W02-W03 Process concepts (process, fork, IPC). Basic C programming.
+>
+> **Learning Objectives**: After reading this note, you should be able to:
+> 1. Explain what a thread is and how it differs from a process
+> 2. Distinguish concurrency from parallelism
+> 3. Compare multithreading models (Many-to-One, One-to-One, Many-to-Many)
+> 4. Write basic multithreaded programs using Pthreads
+> 5. Apply Amdahl's Law to estimate parallel speedup limits
+
 ---
 
 ## Table of Contents
@@ -72,11 +81,17 @@
 
 A **Thread** is the **basic unit of CPU utilization** within a process.
 
+> If a process is a factory, then threads are the workers inside it. They share the same building (code, data, files) but each has their own workstation (stack) and tracks their own progress (PC, registers).
+
 What each thread **owns independently**:
 - Thread ID
 - Program Counter (PC)
 - Register Set
 - **Stack** (function calls, local variables)
+
+> **Program Counter (PC)**: a register that holds the memory address of the next instruction to be executed.
+
+> **Register Set**: the collection of CPU registers (general-purpose, status, etc.) whose values define a thread's execution state.
 
 What threads within the same process **share**:
 - Code section (program code)
@@ -110,9 +125,13 @@ What threads within the same process **share**:
 | Independence | High (one dying has little effect on others) | Low (one dying can affect the entire process) |
 | Communication | IPC required (pipes, sockets, etc.) | Direct communication via global variables |
 
+> **IPC (Inter-Process Communication)** was covered in detail in W03. Since threads share the same address space, they can communicate directly through shared memory without IPC.
+
 > Threads are also called **"Lightweight Processes (LWP)."**
 
 > **[Computer Architecture]** Thread context switching is faster than process switching because the address space is the same, so **no TLB flush is needed**. When switching processes, the page table changes, requiring TLB invalidation, which causes frequent TLB misses and degrades performance.
+>
+> **TLB (Translation Lookaside Buffer)**: a hardware cache that speeds up virtual-to-physical address translation. Thread switches within the same process don't require a TLB flush since they share the same address space.
 
 > **Exam Tip:** "Differences between threads and processes" or "why threads are called lightweight processes" is a frequently tested topic. You should be able to precisely distinguish what is **shared** (code, data, files) and what is **independent** (PC, registers, stack).
 
@@ -214,6 +233,8 @@ What threads within the same process **share**:
 
 > Concurrency without parallelism is possible, but parallelism without concurrency is not
 
+> Concurrency is one person alternating between cooking and laundry (both in progress, but only one at a time). Parallelism is two people — one cooking, one doing laundry — truly working at the same time.
+
 > **Key Point:** The distinction between concurrency and parallelism must be clearly understood. Concurrency is a **logical concept** that includes tasks alternating execution on a single core. Parallelism is a **physical concept** meaning actual simultaneous execution across multiple cores.
 
 ### 3.2 Single-Core vs Multicore Execution Comparison
@@ -274,6 +295,8 @@ $$
 
 - **S** = serial execution fraction (proportion of the serial portion)
 - **N** = number of processing cores
+
+> In this formula, S is the fraction of the program that must execute serially (cannot be parallelized), and N is the number of cores. The denominator represents: serial time (S) + parallel time divided among N cores ((1-S)/N).
 
 Key implications:
 - Even as N approaches infinity, the speedup converges to **1/S**
@@ -352,6 +375,8 @@ Example: A program that is 75% parallel + 25% serial
 - Managed by user-level libraries (without kernel support)
 - Examples: POSIX Pthreads, Windows threads, Java threads
 
+> User-level threads are managed entirely by a library in user space — the library maintains its own thread table and performs context switches without kernel involvement. The kernel is unaware of these threads, which means if one user thread makes a blocking system call, all threads in that process may be blocked.
+
 **Kernel Threads:**
 - **Directly managed** by the OS kernel
 - Supported by virtually all modern OSes: Windows, Linux, macOS
@@ -421,6 +446,8 @@ Advantages:
 
 Disadvantages:
 - **Very complex to implement**
+
+> The complexity arises from needing a user-level scheduler that coordinates with the kernel scheduler, plus mechanisms like upcalls for the kernel to notify the user-level scheduler about events.
 
 > Theoretically the most flexible, but in practice the one-to-one model dominates.
 
@@ -605,6 +632,8 @@ int pthread_create(
 | `start_routine` | Function pointer of the form `void *func(void *param)` |
 | `arg` | Argument to be passed to start_routine (void * type) |
 
+> Reading the declaration `void *(*start_routine)(void*)`: `start_routine` is a pointer to a function that takes a `void *` parameter and returns `void *`. The `void *` type acts as a generic pointer — it can point to any data type.
+
 Return value: 0 on success, error number on failure
 
 ### 6.7 Windows Thread Example (Figure 4.13)
@@ -666,6 +695,8 @@ WaitForMultipleObjects(N, THandles, TRUE, INFINITE);
 <br>
 
 ## 7. Java Threads
+
+> **Note:** Java threads are presented here for comparison with Pthreads. In this course's labs, we primarily use Pthreads. Focus on understanding the concepts; the Java syntax is secondary.
 
 ### 7.1 Java Thread Overview
 
@@ -1100,6 +1131,8 @@ for (int i = 0; i < NUM_THREADS; i++) {
 
 ### 9.6 Observing Race Conditions
 
+> Imagine two people checking the same bank account balance simultaneously and each withdrawing 10,000 won. Both see 50,000 won, both withdraw, but only one withdrawal is recorded — the bank loses money.
+
 What if all threads share a **single global variable** instead of `partial_sum[id]`?
 
 ```c
@@ -1214,5 +1247,17 @@ Execution: `./a.out 10` → "sum = 55"
     - Thread-Local Storage (TLS)
   - OS-specific thread implementations (Linux, Windows)
   - Textbook: Ch 4 (Sections 4.5 – 4.8)
+
+---
+
+<br>
+
+## Self-Check Questions
+
+1. What do threads in the same process share? What does each thread own independently?
+2. Why doesn't a thread switch within the same process require a TLB flush?
+3. If a program has 20% serial code, what is the maximum speedup with 8 cores according to Amdahl's Law? What about with infinite cores?
+4. Explain the difference between concurrency and parallelism with an example.
+5. Why is the one-to-one multithreading model the most widely used in modern operating systems, despite its overhead of creating a kernel thread for each user thread?
 
 ---

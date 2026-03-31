@@ -4,6 +4,14 @@
 >
 > Silberschatz, Operating System Concepts Ch 3 (Sections 3.4 – 3.8)
 
+> **Prerequisites**: W02 Process concepts (process, fork, exec, wait). Understanding of file descriptors.
+>
+> **Learning Objectives**: After reading this note, you should be able to:
+> 1. Compare shared memory and message passing IPC models
+> 2. Explain the producer-consumer problem and bounded buffer
+> 3. Describe how pipes and sockets enable inter-process communication
+> 4. Outline RPC mechanisms and their delivery semantics
+
 ---
 
 ## Table of Contents
@@ -289,6 +297,9 @@ Three considerations for the **logical implementation** of communication links:
 
 **Indirect Communication:**
 - Messages are exchanged through **mailboxes (ports)**.
+
+> A **mailbox** (or **port**) is a named message queue managed by the kernel -- like a physical mailbox, any process that knows the name can send to or receive from it.
+
 - `send(A, message)` / `receive(A, message)` — communicate through mailbox A
 - A single link can be associated with **more than two** processes.
 - **Multiple links** can exist between a pair of processes.
@@ -458,6 +469,8 @@ Compile: `gcc producer.c -o producer -lrt`
 
 > **Key Point:** Shared memory excels when **data volume is large and low latency is required**. However, the programmer must handle **synchronization** directly (Ch 6, 7).
 
+> **Note:** The Mach and Windows ALPC sections (4.2, 4.3) are presented for comparison. Focus on understanding the general message-passing concepts; implementation details are secondary.
+
 ### 4.2 Mach Message Passing
 
 Mach — the microkernel underlying macOS and iOS.
@@ -525,6 +538,8 @@ pipe(fd);
 ```
 - `fd[0]` — **read end**, `fd[1]` — **write end**
 - Children **inherit** the pipe through fork().
+
+> **Note:** This code uses `fork()` covered in Week 2. See W02 Concepts_Lecture for details on how `fork()` creates a child process.
 
 **Code example (Figures 3.21-3.22):**
 
@@ -753,6 +768,8 @@ public class DateClient {
 1. **Stub** — a client-side proxy. It acts on behalf of the server's actual procedure, packing parameters and sending them to the server.
 2. **Marshalling** — converting data into a format suitable for network transmission. Standards like **XDR** are used to resolve Big-endian vs Little-endian differences.
 
+> **Marshalling** is the process of converting data into a standardized format (like XDR or JSON) for transmission between different systems that may have different internal representations.
+
 ![RPC execution flow](../images/figures/p048_fig.png)
 
 *Silberschatz, Figure 3.29 — Execution of a remote procedure call (RPC)*
@@ -766,6 +783,10 @@ public class DateClient {
 > When the client (little-endian) and server (big-endian) use different architectures, the same byte sequence is interpreted differently, corrupting data. To prevent this, RPC marshals data into an intermediate representation like **XDR (External Data Representation)**, ensuring both sides interpret the data identically.
 
 **Execution semantics:**
+
+Network packets can be lost, causing the sender to retransmit. This retransmission can cause the server to receive and execute the same request twice. RPC semantics exist to handle this.
+
+> Network messages can be lost or duplicated -- imagine mailing a letter that might get lost, so you resend it, but the recipient might then receive two copies. RPC semantics define how to handle this.
 
 | | Description |
 |:--|:----------|
@@ -1008,5 +1029,16 @@ int main() {
   - Implicit threading
   - Practice: multithreaded programming with Pthreads
 
+---
+
+<br>
+
+## Self-Check Questions
+
+1. **Shared memory vs Message passing**: A video streaming application needs to pass 4K frames (several MB each) between a decoder process and a renderer process on the same machine. Which IPC model would you choose and why?
+2. **Bounded buffer**: In the circular buffer implementation, why can only `BUFFER_SIZE - 1` items be stored instead of `BUFFER_SIZE`? What would go wrong if we tried to use all slots?
+3. **Pipes and EOF**: After `fork()`, both the parent and child hold copies of `fd[0]` and `fd[1]`. Explain why the reading side blocks forever if the writing side forgets to `close(fd[READ_END])`.
+4. **RPC semantics**: A banking application exposes a `transfer(from, to, amount)` RPC. Should it use "at most once" or "exactly once" semantics? What could go wrong with "at least once"?
+5. **Direct vs Indirect communication**: Give one advantage of indirect communication (mailboxes) over direct communication in a system where new worker processes are frequently created and destroyed.
 
 ---
