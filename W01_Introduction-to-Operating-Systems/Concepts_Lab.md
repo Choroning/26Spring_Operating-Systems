@@ -2,6 +2,14 @@
 
 > **Last Updated:** 2026-03-21
 
+> **Prerequisites**: W01 Lecture concepts (OS definition, dual-mode, system calls).
+>
+> **Learning Objectives**: After completing this lab, you should be able to:
+> 1. Install and authenticate a coding agent (e.g., Gemini CLI, Claude Code)
+> 2. Delegate real tasks to an agent and critically evaluate its output
+> 3. Apply the RALPH technique to iteratively improve agent-generated work
+> 4. Understand how a minimal OS is structured (bootloader, kernel, linker script)
+
 ---
 
 ## Table of Contents
@@ -112,6 +120,8 @@ gemini --version    # or: claude --version
 - Can you authenticate? (Gemini uses a Google account, Claude uses an Anthropic account)
 - Try a simple prompt: `"What is 2 + 2?"` — verify that a response is returned
 
+> **LTS (Long-Term Support)**: LTS is the stable, recommended version of Node.js for most users.
+
 > **[Programming Languages]** `npm` is the package manager for Node.js. If it is not installed, you must first install the LTS version from [the official Node.js website](https://nodejs.org). After installation, you can verify it by running `node --version` and `npm --version` in the terminal.
 
 > **Note:** The `-g` in `npm install -g` stands for **global**, meaning the package is installed system-wide rather than in the current project. With a global installation, you can run commands like `gemini` or `claude` directly from any terminal location. Without `-g`, the package is installed only in the current directory's `node_modules/` and cannot be used as a global command.
@@ -173,6 +183,8 @@ Use an agent to **generate a README.md** for an existing codebase.
 <br>
 
 ## 7. Task 4 — The RALPH Technique
+
+> **Rubric**: A rubric is a structured set of criteria used to evaluate the quality of a deliverable.
 
 Create a **verifiable evaluation rubric** and use it to iteratively improve the quality of the output.
 
@@ -244,6 +256,8 @@ graph LR
     style D fill:#fce4ec
 ```
 
+> **Bootloader / Real Mode / Protected Mode**: When the CPU first starts, it runs in Real Mode, which can only access 1 MB of memory. The bootloader is responsible for switching the CPU to Protected Mode, which enables full memory access and hardware protection features (like memory segmentation and privilege levels). Only then can the kernel be loaded and run.
+
 > **[Computer Architecture]** When a computer is powered on, the BIOS/UEFI loads the boot sector (512 bytes) into memory and executes it. `boot.asm` is this boot sector code, which starts in Real Mode, transitions to Protected Mode, and then loads the kernel (`kernel.c`). `linker.ld` is a linker script that specifies where the kernel code and data are placed in memory.
 
 > **Note:** For regular applications, the OS manages memory layout, but when developing an OS itself, you must specify "where the code is loaded in memory" yourself. The **linker script** is what performs this role. For example, the bootloader must be located at memory address `0x7C00`, and the kernel code must be placed after it — this is specified in the linker script through the starting addresses and ordering of `.text`, `.data`, and `.bss` sections. Without a linker script, the compiler would use arbitrary addresses and booting would fail.
@@ -282,6 +296,18 @@ You do **not** need to successfully boot the OS — the **process** is what matt
 > Coding agents are just tools — understanding the output they generate is still **your** responsibility.
 
 > **Note:** It is important to view agents as "powerful assistants," not "magic tools." If you submit agent-generated code without understanding it, there is no learning benefit. Always ask "Explain why you did it this way," and develop the habit of reading and understanding the generated code yourself.
+
+---
+
+<br>
+
+## Self-Check Questions
+
+1. What is the key difference between a coding agent and a simple code autocompletion tool like Copilot?
+2. Why is it important to ask an agent to "show the plan first" before executing file system operations?
+3. Describe the RALPH technique in your own words. Why does iterating with a rubric produce better results than a single prompt?
+4. When building a mini OS, what is the role of the bootloader, and why must it switch from Real Mode to Protected Mode?
+5. If the agent-generated OS code fails to build, what is the most effective way to ask the agent to fix it?
 
 ---
 

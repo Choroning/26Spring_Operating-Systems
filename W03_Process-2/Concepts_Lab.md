@@ -2,6 +2,14 @@
 
 > **Last Updated:** 2026-03-21
 
+> **Prerequisites**: W02-W03 Lecture concepts. xv6 build environment set up (QEMU + RISC-V toolchain).
+>
+> **Learning Objectives**: After completing this lab, you should be able to:
+> 1. Navigate the xv6 source code structure
+> 2. Trace the system call path from user space to kernel
+> 3. Explain the fields and purpose of struct proc
+> 4. Describe the internal steps of fork() in xv6
+
 ---
 
 ## Table of Contents
@@ -46,6 +54,8 @@ graph LR
 <br>
 
 ## 2. Lab 0: Environment Setup
+
+> **Note:** If you already set up the xv6 environment in Week 2, skip to [Section 3: Lab 1: Source Structure](#3-lab-1-source-structure).
 
 ### 2.1 Prerequisites
 
@@ -205,6 +215,8 @@ make TOOLPREFIX=riscv64-elf- qemu
   proc.c:  kfork()           ← Performs the actual work
 ```
 
+> **Note:** We use `kfork()` here to distinguish the kernel-side implementation from the user-facing `fork()` system call. In the actual xv6 source, the function is named `fork()` in `proc.c`.
+
 **Exercise**: Add a `printf` to `sys_fork()`, rebuild, and verify that you found the correct location.
 
 <div class="mt-4 text-sm opacity-80">
@@ -328,7 +340,7 @@ struct proc {
 
   uint64 kstack;               // Kernel stack virtual address
   uint64 sz;                   // Process memory size (bytes)
-  pagetable_t pagetable;       // User page table
+  pagetable_t pagetable;       // User page table (see note below)
   struct trapframe *trapframe; // Saved user registers (used by trampoline.S)
   struct context context;      // Saved kernel registers (used by swtch.S)
   struct file *ofile[NOFILE];  // Open file descriptors
@@ -336,6 +348,8 @@ struct proc {
   char name[16];               // Process name (for debugging)
 };
 ```
+
+> **Note:** `pagetable_t` in xv6 is a typedef for a pointer to the root of a process's page table -- it maps virtual addresses to physical memory. Its definition is `typedef uint64 *pagetable_t;` in `kernel/riscv.h`.
 
 > **Note:** `struct spinlock lock` is the **spinlock** for this process structure. A spinlock is the simplest synchronization tool that prevents other CPU cores from simultaneously modifying the same `struct proc`. It is called a "spin" lock because a core trying to acquire it spins in a `while (lock == held)` loop. Since xv6 supports multi-core, this lock must be acquired before changing the process state. Details on spinlocks and synchronization are covered in Weeks 9–10.
 
@@ -370,8 +384,11 @@ struct proc {
 
 **Discussion questions**:
 - Why does the child process need its **own copy** of the trapframe?
+  <details><summary>Hint</summary>Think about what happens when parent and child execute different instructions after fork() returns — they need independent register state.</details>
 - What happens if step 4 (`a0 = 0`) is skipped?
+  <details><summary>Hint</summary>Consider what value the child's <code>a0</code> register would hold — it would be the same as the parent's, meaning the child would think it is the parent.</details>
 - Why does `uvmcopy` copy **all** pages? (Hint: Week 12 — COW fork)
+  <details><summary>Hint</summary>xv6 takes the simple approach. Real OSes like Linux defer copying until a write occurs (Copy-On-Write).</details>
 
 > **Note:** Breaking down the internal operation of `uvmcopy()` step by step:
 > 1. Walk the parent's page table to find all mapped user pages
@@ -424,5 +441,16 @@ struct proc {
 
 - Next topic: **Threads, Scheduling, Synchronization** — built upon what we explored today.
 
+---
+
+<br>
+
+## Self-Check Questions
+
+1. **System call path**: List the 6 files (in order) that a `fork()` call passes through, from the user program to the kernel implementation. Which file performs the actual process creation work?
+2. **struct proc fields**: Which field in `struct proc` allows the child process to resume execution at the correct point after `fork()` returns? Why is this field separate from `context`?
+3. **Process states**: A process in RUNNING state calls `sleep()`. Describe the state transitions that occur and which fields of `struct proc` change.
+4. **fork() internals**: Explain why `uvmcopy()` must be called before copying the trapframe. What would happen if the order were reversed?
+5. **spinlock**: Why does xv6 use a spinlock (rather than a sleeping lock) to protect `struct proc`? Consider when `struct proc` is accessed.
 
 ---

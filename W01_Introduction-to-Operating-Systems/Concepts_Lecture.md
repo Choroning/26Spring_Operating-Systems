@@ -2,6 +2,14 @@
 
 > **Last Updated:** 2026-03-21
 
+> **Prerequisites**: No prior OS knowledge required. Basic understanding of computer architecture (CPU, memory, I/O) is helpful.
+>
+> **Learning Objectives**: After reading this note, you should be able to:
+> 1. Define what an operating system is and explain its core roles
+> 2. Explain dual-mode operation and why it exists
+> 3. Describe how system calls bridge user programs and the kernel
+> 4. Outline the major topics covered in this course
+
 ---
 
 ## Table of Contents
@@ -126,6 +134,8 @@
 - The OS sits **between** hardware and applications.
 - It directly controls hardware and provides a **clean interface** to programs.
 
+> **Abstraction** means hiding complex internal details and providing a simplified interface to the layer above. For example, a driver lets you control a car without understanding the engine internals.
+
 > **[Computer Architecture]** A computer system is layered as: hardware → OS → applications → users. Each layer hides the complex details of the layer below and provides a simplified interface upward — this is called **abstraction**. Representative abstractions provided by the OS: processes (CPU), virtual memory (memory), files (disk).
 
 ### 2.3 Two Roles of the OS
@@ -167,6 +177,10 @@ graph LR
 | **Kernel mode** | 0 | OS kernel — full hardware access |
 | **User mode** | 1 | Applications — restricted access |
 
+> **Trap**: A trap is a software-generated interrupt — the program intentionally requests help from the kernel (e.g., via a system call).
+
+> **Analogy:** Think of a bank. Employees (kernel mode) have vault access and can handle any operation. Customers (user mode) can only interact through the counter window (system calls). A customer who tries to jump over the counter is stopped immediately — just as the hardware traps a user-mode program that attempts a privileged instruction.
+
 > **[Computer Architecture]** The mode bit is stored in the CPU's **status register (PSW: Program Status Word)**. In RISC-V, the SPP (Supervisor Previous Privilege) bit in the `sstatus` register serves this role. Since the hardware automatically changes the mode bit upon a trap, software cannot arbitrarily switch to kernel mode.
 
 > **[Computer Architecture]** CPUs have regular instructions and **privileged instructions**. Privileged instructions (e.g., I/O instructions, interrupt control, timer configuration) can only be executed in kernel mode. If execution is attempted in user mode, the hardware generates a **trap** and transfers control to the OS. This is the core mechanism for OS self-protection.
@@ -180,6 +194,8 @@ graph LR
 - **System Call** = the **only way** a user program can request OS services
 - User program → C library → `syscall` instruction (trap) → kernel handles it → return
 - Even a simple `cp in.txt out.txt` command generates **thousands** of system calls.
+
+> **Analogy:** A restaurant. Customers order from a menu (API) — they cannot walk into the kitchen. The waiter (system call) takes the order and delivers it to the kitchen (kernel), which prepares the dish using equipment the customer never touches (hardware). The menu defines what you can order; the system call interface defines what services you can request.
 
 > **[Programming Languages]** The commonly used `printf()` in C is not a system call — it is a C library function. Internally, `printf()` buffers data and then calls the `write()` system call. In other words, library functions execute in user mode, and at the point where actual hardware access is needed, they switch to kernel mode via system calls. On Linux, the `strace` command can be used to view the list of system calls a program invokes.
 
@@ -203,6 +219,8 @@ graph TD
     style DC2 fill:#e8f5e9
     style DC3 fill:#e8f5e9
 ```
+
+> **Bus**: A bus is a communication pathway inside the computer that transfers data between components (CPU, memory, I/O devices).
 
 - Devices notify the CPU of completed work via **interrupts**.
 - **DMA** (Direct Memory Access): a method for transferring large amounts of data without CPU intervention.
@@ -237,6 +255,8 @@ graph TD
 Most modern OSes are **hybrid** — they take a pragmatic approach rather than adhering to pure theory.
 
 ![Tux](../images/tux.png)
+
+> **Context Switching**: Context switching is saving the state (registers, PC, etc.) of the currently running process and restoring the state of another process so it can resume execution.
 
 > **Note:** A monolithic kernel runs all services in kernel space, making it fast, but a single bug can crash the entire system. A microkernel keeps only minimal functionality (IPC, scheduling) in the kernel and runs the rest in user space, making it more stable but incurring greater context-switching overhead. Linux is monolithic but also provides modular flexibility through LKMs.
 
@@ -274,6 +294,8 @@ make qemu    # Boot xv6 in the QEMU emulator
 
 ### 3.1 Processes (Weeks 2–3)
 
+Without processes, the computer could only run one program at a time — you would have to close your browser to open a text editor.
+
 **Process** = a program in execution, with its own memory and state.
 
 ```mermaid
@@ -301,6 +323,8 @@ graph LR
 > **Note:** If processes only ran independently, it would be difficult to build useful systems. Most real systems have multiple processes that cooperate by exchanging data, which is called **Interprocess Communication (IPC)**. IPC mechanisms such as shared memory, message passing, pipes, and sockets are covered in detail in Week 3.
 
 ### 3.2 Threads & Concurrency (Weeks 4–5)
+
+A single-threaded program cannot take advantage of multi-core CPUs. Threads allow a single program to do multiple things in parallel, like downloading a file while updating the UI.
 
 **Thread** = a lightweight execution unit that shares a process's address space
 
@@ -331,6 +355,8 @@ graph TD
 
 ### 3.3 CPU Scheduling (Weeks 6–7)
 
+With dozens of processes competing for a limited number of CPU cores, the OS needs a strategy to decide who runs when — a poor strategy means some programs starve while others hog the CPU.
+
 The OS decides **which process to run next** on the CPU.
 
 ```mermaid
@@ -356,6 +382,8 @@ graph LR
 
 ### 3.4 Synchronization (Week 9)
 
+Without synchronization, concurrent threads can corrupt shared data in subtle ways that are extremely difficult to debug — bugs that appear only once in a million runs.
+
 When multiple threads share data, **coordination** is needed.
 
 ```mermaid
@@ -377,6 +405,8 @@ graph TD
 > **Note:** In the diagram above, the reason balance can become 950: Thread A reads balance (1000), then Thread B also reads the same value (1000). If Thread B stores 950 first and then Thread A stores 1100, the result is 1100; if stored in the opposite order, the result is 950. This nondeterministic outcome is a race condition. To resolve this, **mutual exclusion** over the critical section is needed.
 
 ### 3.5 Deadlocks (Week 10)
+
+Locks solve race conditions, but careless locking introduces a new problem: deadlock, where the entire system freezes because everyone is waiting for everyone else.
 
 **Deadlock** = a state where two or more processes are waiting for each other to release resources
 
@@ -400,6 +430,8 @@ graph LR
 
 ### 3.6 Memory Management (Weeks 11–12)
 
+Without virtual memory, one program could overwrite another's memory, making the entire system unstable. Virtual memory also lets you run programs larger than physical RAM.
+
 **Virtual Memory** gives each process its own independent address space.
 
 ```mermaid
@@ -420,12 +452,16 @@ graph LR
 
 - Same virtual address → **different** physical locations (isolation!)
 - **Page Table**: maps virtual pages to physical frames per process
+> **Lazy Allocation**: Lazy allocation means the OS does not actually allocate physical memory when requested, but waits until the memory is first accessed.
+
 - Enables **COW fork**, **lazy allocation**, **memory-mapped files**, and more
 - In xv6: RISC-V **Sv39** — 3-level page table, 39-bit virtual address
 
 > **[Computer Architecture]** To translate virtual addresses to physical addresses, the page table in memory must be consulted each time, which can double (or more) memory access latency. To solve this, CPUs include a cache called the **TLB (Translation Lookaside Buffer)** that stores recent translation results. COW (Copy-On-Write) fork is an optimization where during `fork()`, only the page table is shared instead of actually copying memory, and physical pages are copied only when a write occurs.
 
 ### 3.7 File Systems & Security (Weeks 13–14)
+
+Without a file system, data would be lost every time the computer powers off, and there would be no organized way to store, retrieve, or share information.
 
 **File Systems** organize persistent data hierarchically.
 
@@ -473,6 +509,18 @@ graph LR
 | xv6 | MIT educational OS; RISC-V, C language, ~10,000 lines; used throughout the semester |
 | Key Topics | Processes, Threads, Scheduling, Synchronization, Memory, File Systems, Security |
 | Textbook | Silberschatz, Operating System Concepts 10th edition |
+
+---
+
+<br>
+
+## Self-Check Questions
+
+1. What is the kernel, and how does it differ from system programs and application programs?
+2. Why does the CPU need two modes (user mode and kernel mode)? What would go wrong with only one mode?
+3. Explain the sequence of events that occur when a user program calls `open()` — from the user program to the kernel and back.
+4. What is the difference between a trap and a hardware interrupt?
+5. Without virtual memory, what problems would arise when running multiple programs simultaneously?
 
 ---
 
