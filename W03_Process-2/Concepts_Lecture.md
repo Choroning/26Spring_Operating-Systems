@@ -6,7 +6,7 @@
 
 > **Prerequisites**: W02 Process concepts (process, fork, exec, wait). Understanding of file descriptors.
 >
-> **Learning Objectives**: After reading this note, you should be able to:
+> **Learning Objectives**:
 > 1. Compare shared memory and message passing IPC models
 > 2. Explain the producer-consumer problem and bounded buffer
 > 3. Describe how pipes and sockets enable inter-process communication

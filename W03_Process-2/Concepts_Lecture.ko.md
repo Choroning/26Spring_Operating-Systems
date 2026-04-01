@@ -6,7 +6,7 @@
 
 > **선행 지식**: W02 프로세스 개념 (process, fork, exec, wait). 파일 디스크립터(file descriptor)에 대한 이해.
 >
-> **학습 목표**: 이 노트를 읽고 나면 다음을 할 수 있어야 한다:
+> **학습 목표**:
 > 1. 공유 메모리(shared memory)와 메시지 전달(message passing) IPC 모델을 비교 설명
 > 2. 생산자-소비자 문제(producer-consumer problem)와 유한 버퍼(bounded buffer)를 설명
 > 3. 파이프(pipe)와 소켓(socket)이 프로세스 간 통신을 가능하게 하는 방식을 서술

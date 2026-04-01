@@ -8,7 +8,7 @@
 
 > **Prerequisites**: W01 OS concepts (definition, dual-mode, system calls). Basic C programming (pointers, functions).
 >
-> **Learning Objectives**: After reading this note, you should be able to:
+> **Learning Objectives**:
 > 1. Describe the structure of a process (memory layout, PCB, states)
 > 2. Explain how fork(), exec(), and wait() work together
 > 3. Trace process state transitions through a lifecycle diagram

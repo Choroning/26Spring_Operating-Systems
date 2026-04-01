@@ -4,7 +4,7 @@
 
 > **Prerequisites**: No prior OS knowledge required. Basic understanding of computer architecture (CPU, memory, I/O) is helpful.
 >
-> **Learning Objectives**: After reading this note, you should be able to:
+> **Learning Objectives**:
 > 1. Define what an operating system is and explain its core roles
 > 2. Explain dual-mode operation and why it exists
 > 3. Describe how system calls bridge user programs and the kernel
