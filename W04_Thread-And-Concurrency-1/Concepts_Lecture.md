@@ -1,4 +1,4 @@
-# W04 Concepts Lecture — Threads and Concurrency (1)
+# Week 4 Concepts Lecture — Threads and Concurrency (1)
 
 > **Last Updated:** 2026-03-25
 >

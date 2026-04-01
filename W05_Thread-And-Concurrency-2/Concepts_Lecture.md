@@ -1,4 +1,4 @@
-# W05 Concepts Lecture — Threads and Concurrency (2)
+# Week 5 Concepts Lecture — Threads and Concurrency (2)
 
 > **Last Updated:** 2026-04-01
 >

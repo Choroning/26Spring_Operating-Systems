@@ -90,8 +90,6 @@ graph LR
 
 Others: **OpenCode** (open-source harness — supports all models including open-source LLMs)
 
-> **Recommendation**: If you have no particular preference, install **Gemini CLI** — it is free and easy to set up.
-
 > **Note:** Gemini CLI is free and can be used without cost concerns for lab exercises. Claude Code excels in complex multi-file projects, and Codex CLI is open-source and customizable. We recommend starting with the free Gemini CLI and trying other agents as needed.
 
 ---
