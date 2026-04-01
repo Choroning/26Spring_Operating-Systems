@@ -6,7 +6,7 @@
 
 > **Prerequisites**: W02-W03 Process concepts (process, fork, IPC). Basic C programming.
 >
-> **Learning Objectives**: After reading this note, you should be able to:
+> **Learning Objectives**:
 > 1. Explain what a thread is and how it differs from a process
 > 2. Distinguish concurrency from parallelism
 > 3. Compare multithreading models (Many-to-One, One-to-One, Many-to-Many)
