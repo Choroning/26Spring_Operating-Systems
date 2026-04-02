@@ -2,7 +2,7 @@
 
 > **Last Updated:** 2026-03-21
 
-> **Prerequisites**: W01 Lecture concepts (OS definition, dual-mode, system calls).
+> **Prerequisites**: Week 1 Lecture concepts (OS definition, dual-mode, system calls).
 >
 > **Learning Objectives**: After completing this lab, you should be able to:
 > 1. Install and authenticate a coding agent (e.g., Gemini CLI, Claude Code)
@@ -89,8 +89,6 @@ graph LR
 | ![OpenAI](../images/openai.png) **Codex CLI** | Paid | OpenAI's agent. An open-source CLI. |
 
 Others: **OpenCode** (open-source harness — supports all models including open-source LLMs)
-
-> **Recommendation**: If you have no particular preference, install **Gemini CLI** — it is free and easy to set up.
 
 > **Note:** Gemini CLI is free and can be used without cost concerns for lab exercises. Claude Code excels in complex multi-file projects, and Codex CLI is open-source and customizable. We recommend starting with the free Gemini CLI and trying other agents as needed.
 

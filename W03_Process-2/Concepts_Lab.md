@@ -2,7 +2,7 @@
 
 > **Last Updated:** 2026-03-21
 
-> **Prerequisites**: W02-W03 Lecture concepts. xv6 build environment set up (QEMU + RISC-V toolchain).
+> **Prerequisites**: Week 2-W03 Lecture concepts. xv6 build environment set up (QEMU + RISC-V toolchain).
 >
 > **Learning Objectives**: After completing this lab, you should be able to:
 > 1. Navigate the xv6 source code structure
