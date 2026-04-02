@@ -94,20 +94,108 @@ graph LR
 | Bounded concurrency | Limit threads to prevent resource exhaustion |
 | Task/execution separation | Decouple *what* runs from *how* it runs |
 
-### Key Code Pattern
+### Data Structures
 
 ```c
-void *worker_thread(void *arg) {
+#define POOL_SIZE   4     /* number of worker threads */
+#define QUEUE_SIZE  16    /* max tasks in queue */
+
+/* A task is simply a function pointer + argument */
+struct task {
+    void (*function)(int);
+    int arg;
+};
+
+/* Thread pool structure */
+struct thread_pool {
+    pthread_t workers[POOL_SIZE];
+
+    struct task queue[QUEUE_SIZE];
+    int head;           /* dequeue index */
+    int tail;           /* enqueue index */
+    int count;          /* current number of tasks */
+
+    pthread_mutex_t lock;
+    pthread_cond_t not_empty;   /* signaled when a task is added */
+    pthread_cond_t not_full;    /* signaled when a task is removed */
+    int shutdown;               /* 1 = pool is shutting down */
+};
+```
+
+### Worker Thread (Consumer)
+
+```c
+void *worker_thread(void *arg)
+{
+    int id = *(int *)arg;
+    printf("[Worker %d] started\n", id);
+
     while (1) {
+        struct task t;
+
         pthread_mutex_lock(&pool.lock);
+
+        /* Wait while queue is empty and not shutting down */
         while (pool.count == 0 && !pool.shutdown)
-            pthread_cond_wait(&pool.not_empty, &pool.lock);  // wait for work
-        if (pool.shutdown && pool.count == 0) { unlock; break; }
-        task = dequeue();
-        pthread_cond_signal(&pool.not_full);  // free slot
+            pthread_cond_wait(&pool.not_empty, &pool.lock);
+
+        if (pool.shutdown && pool.count == 0) {
+            pthread_mutex_unlock(&pool.lock);
+            break;
+        }
+
+        /* Dequeue a task */
+        t = pool.queue[pool.head];
+        pool.head = (pool.head + 1) % QUEUE_SIZE;
+        pool.count--;
+        pthread_cond_signal(&pool.not_full);
+
         pthread_mutex_unlock(&pool.lock);
-        task.function(task.arg);              // execute outside lock
+
+        /* Execute the task outside the lock */
+        printf("[Worker %d] executing task(%d)\n", id, t.arg);
+        t.function(t.arg);
     }
+
+    printf("[Worker %d] exiting\n", id);
+    return NULL;
+}
+```
+
+> **Why `while` instead of `if` for the wait loop?** Condition variables can have **spurious wakeups** — the thread may wake up even though no signal was sent. Using `while` re-checks the condition, ensuring the thread only proceeds when the queue truly has a task.
+
+### Task Submission (Producer)
+
+```c
+void pool_submit(void (*function)(int), int arg)
+{
+    pthread_mutex_lock(&pool.lock);
+
+    while (pool.count == QUEUE_SIZE)
+        pthread_cond_wait(&pool.not_full, &pool.lock);
+
+    pool.queue[pool.tail].function = function;
+    pool.queue[pool.tail].arg = arg;
+    pool.tail = (pool.tail + 1) % QUEUE_SIZE;
+    pool.count++;
+    pthread_cond_signal(&pool.not_empty);
+
+    pthread_mutex_unlock(&pool.lock);
+}
+```
+
+### Graceful Shutdown
+
+```c
+void pool_shutdown(void)
+{
+    pthread_mutex_lock(&pool.lock);
+    pool.shutdown = 1;
+    pthread_cond_broadcast(&pool.not_empty);  /* wake all waiting workers */
+    pthread_mutex_unlock(&pool.lock);
+
+    for (int i = 0; i < POOL_SIZE; i++)
+        pthread_join(pool.workers[i], NULL);
 }
 ```
 
@@ -119,7 +207,7 @@ void *worker_thread(void *arg) {
 
 > **[Data Structures]** The task queue here is a **bounded circular buffer** protected by a mutex. The producer-consumer coordination uses two condition variables (`not_empty` and `not_full`) — the same pattern you studied in concurrent data structures.
 
-> **Key Point:** The worker executes `task.function(task.arg)` **outside** the critical section (`pthread_mutex_unlock` comes first). This maximizes concurrency — the lock is only held while accessing the shared queue, not during task execution.
+> **Key Point:** The worker executes `t.function(t.arg)` **outside** the critical section (`pthread_mutex_unlock` comes first). This maximizes concurrency — the lock is only held while accessing the shared queue, not during task execution.
 
 ---
 
@@ -134,24 +222,62 @@ void *worker_thread(void *arg) {
 OMP_NUM_THREADS=2 ./lab2_openmp_parallel   # control thread count
 ```
 
-### Sequential vs Parallel
+This lab has **three demos** that progressively build on each other.
 
-**Sequential**:
+### Demo 1: Parallel Hello
 
-```c
-for (int i = 0; i < N; i++)
-    sum += array[i];
-```
-
-**Parallel (OpenMP)**:
+The simplest OpenMP program — each thread prints its ID:
 
 ```c
-#pragma omp parallel for reduction(+:sum)
-for (int i = 0; i < N; i++)
-    sum += array[i];
+#pragma omp parallel
+{
+    int tid = omp_get_thread_num();
+    int total = omp_get_num_threads();
+    printf("[Thread %d/%d] Hello from OpenMP!\n", tid, total);
+}
 ```
 
-With just one `#pragma` line, the compiler automatically distributes loop iterations across threads.
+The `#pragma omp parallel` directive creates a **team of threads**. Each thread runs the same block, but `omp_get_thread_num()` gives each a unique ID.
+
+### Demo 2: Parallel For with Speedup
+
+Array initialization parallelized with `#pragma omp parallel for`:
+
+```c
+/* Sequential version */
+t_start = omp_get_wtime();
+for (int i = 0; i < ARRAY_SIZE; i++)
+    array[i] = (double)i * 1.5;
+t_end = omp_get_wtime();
+printf("Sequential: %.4f sec\n", t_end - t_start);
+
+/* Parallel version */
+t_start = omp_get_wtime();
+#pragma omp parallel for
+for (int i = 0; i < ARRAY_SIZE; i++)
+    array[i] = (double)i * 1.5;
+t_end = omp_get_wtime();
+printf("Parallel:   %.4f sec\n", t_end - t_start);
+```
+
+> `omp_get_wtime()` provides portable wall-clock timing. The array has **50 million** elements (`ARRAY_SIZE = 50000000`), large enough to see a clear speedup.
+
+### Demo 3: Reduction
+
+Parallel summation — the most important demo:
+
+```c
+/* Sequential sum */
+double sum_seq = 0.0;
+for (int i = 0; i < ARRAY_SIZE; i++)
+    sum_seq += array[i];
+
+/* Parallel sum with reduction */
+double sum_par = 0.0;
+#pragma omp parallel for reduction(+:sum_par)
+for (int i = 0; i < ARRAY_SIZE; i++)
+    sum_par += array[i];
+```
 
 ### Key Directives
 
@@ -189,7 +315,34 @@ Thread 1: sum += a[1]       Thread 1: local_sum1 += a[1]
 ./lab3_fork_threads
 ```
 
-### What Happens When You fork() with Multiple Threads?
+This lab has **two demos**: the first shows the problem, the second shows the safe pattern.
+
+### Two Variants of fork() Semantics
+
+1. Duplicate **ALL** threads (rarely used)
+2. Duplicate **ONLY** the calling thread (POSIX default)
+
+Rule of thumb:
+- If the child calls `exec()` immediately → fork only caller (safe)
+- If the child continues executing → beware of lost threads/locks
+
+### Demo 1: fork() Copies Only the Calling Thread
+
+The program creates 3 background threads that increment a shared counter, then calls `fork()`:
+
+```c
+volatile int counter = 0;
+
+void *background_work(void *arg)
+{
+    int tid = *(int *)arg;
+    while (1) {
+        counter++;
+        usleep(200000);  /* 200ms */
+    }
+    return NULL;
+}
+```
 
 ```text
 Before fork():                After fork():
@@ -214,17 +367,23 @@ Parent Process                Parent Process       Child Process
 
 If another thread held a mutex at the time of `fork()`, the child inherits a **locked mutex** with no thread to unlock it — **deadlock**.
 
-**Safe pattern**: Call `exec()` immediately after `fork()`:
+### Demo 2: fork() + exec() — The Safe Pattern
 
 ```c
 pid_t pid = fork();
 if (pid == 0) {
-    // Child: call exec() right away
-    execlp("/bin/ls", "ls", NULL);
+    /* Child: call exec() right away */
+    printf("[Child] About to exec 'echo'\n");
+    execlp("echo", "echo", "Hello from exec!", NULL);
+    perror("exec failed");
+    exit(1);
+} else {
+    waitpid(pid, NULL, 0);
+    printf("[Parent] Child finished exec.\n");
 }
 ```
 
-The `exec()` call replaces the entire process image, so the inherited locked-mutex problem disappears.
+The `exec()` call replaces the **entire address space**, so the inherited locked-mutex problem disappears. It doesn't matter that other threads are missing because the whole process image is replaced.
 
 > **[Operating Systems]** Recall from Week 2–3 that `fork()` creates a copy of the calling process. In a single-threaded process, this copies everything. In a multithreaded process, POSIX specifies that only the calling thread is duplicated. This design avoids the complexity of duplicating thread synchronization state, but it means the child is in a fragile state until it calls `exec()`.
 
@@ -244,24 +403,45 @@ The `exec()` call replaces the entire process image, so the inherited locked-mut
 # Each thread's tls_var was 100000 (always correct)
 ```
 
-### Shared Global vs Thread-Local
+This lab has **two demos**: the first compares shared vs TLS variables, the second demonstrates the errno-like pattern.
 
-**Shared global**:
+### TLS Implementation Methods
+
+| Method | Language/Platform |
+|--------|-------------------|
+| `__thread` | GCC extension |
+| `_Thread_local` | C11 standard |
+| `pthread_key_t` | Pthreads API |
+
+### Demo 1: Shared Global vs Thread-Local
 
 ```c
+/* Regular global variable — shared by all threads */
 int shared_var = 0;
 
-// All threads: shared_var++
-// Result: RACE CONDITION — value is less than expected
-```
-
-**Thread-local**:
-
-```c
+/* Thread-local variable — each thread gets its own copy */
 __thread int tls_var = 0;
 
-// Each thread: tls_var++
-// Result: always correct (100000 per thread)
+void *demo1_worker(void *arg)
+{
+    int tid = *(int *)arg;
+
+    for (int i = 0; i < ITERATIONS; i++) {
+        shared_var++;   /* shared — race condition! */
+        tls_var++;      /* thread-local — safe, private copy */
+    }
+
+    printf("[Thread %d] tls_var = %d (expected %d)\n",
+           tid, tls_var, ITERATIONS);
+    return NULL;
+}
+```
+
+After all 4 threads finish (each doing 100,000 iterations):
+
+```text
+shared_var = 287453 (expected 400000)  RACE CONDITION!
+Each thread's tls_var was 100000       (always correct)
 ```
 
 ### How TLS Works
@@ -276,20 +456,40 @@ tls_var:    [ Thread 0 copy ] [ Thread 1 copy ] [ Thread 2 copy ] [ Thread 3 cop
                      ↓ each thread has its own — no conflict
 ```
 
-The `__thread` keyword (GCC extension; C11 uses `_Thread_local`) tells the compiler to create a **separate instance** of the variable for each thread. Each thread reads and writes its own copy, so no synchronization is needed.
+The `__thread` keyword tells the compiler to create a **separate instance** of the variable for each thread. Each thread reads and writes its own copy, so no synchronization is needed.
 
-### Real-World Use Case
+### Demo 2: Per-Thread State (errno Pattern)
 
-The classic example is `errno` — the C library's error code:
+A practical demonstration of TLS mimicking how `errno` works:
 
 ```c
-// errno is TLS — each thread gets its own error code
-// Thread 0 calls read() → errno = EAGAIN
-// Thread 1 calls open() → errno = ENOENT
-// They don't interfere with each other
+__thread int thread_error = 0;
+__thread const char *thread_name = NULL;
+
+void set_error(int code) { thread_error = code; }
+int get_error(void) { return thread_error; }
+
+void *demo2_worker(void *arg)
+{
+    int tid = *(int *)arg;
+    char name_buf[32];
+
+    sprintf(name_buf, "Worker-%d", tid);
+    thread_name = name_buf;
+
+    set_error((tid + 1) * 100);    /* each thread sets its own error code */
+
+    usleep(50000);                 /* sleep so threads overlap */
+
+    printf("[%s] error = %d (expected %d)\n",
+           thread_name, get_error(), (tid + 1) * 100);
+    return NULL;
+}
 ```
 
-> **Key Point:** TLS is useful when you need per-thread global state without the overhead of passing data through function parameters. However, it only works when threads truly need **independent** copies. If threads need to share and coordinate on the same data, you need proper synchronization (mutexes, covered in Chapter 6).
+Each thread sets its own error code via `set_error()` and reads it back via `get_error()`. Despite running concurrently, each thread's value is independent — just like `errno` in the C library.
+
+> **Key Point:** TLS is useful when you need per-thread global state without the overhead of passing data through function parameters. It works for **independent** copies only. If threads need to share and coordinate on the same data, you need proper synchronization (mutexes, covered in Chapter 6).
 
 ---
 
@@ -314,7 +514,7 @@ graph TD
 | Lab | Topic | Key Takeaway |
 |:----|:------|:-------------|
 | Lab 1 | Thread Pool | Workers wait on queue — reuse threads, bound concurrency |
-| Lab 2 | OpenMP | One `#pragma` line → automatic parallelization with `reduction` |
+| Lab 2 | OpenMP | `#pragma omp parallel for reduction(+:var)` → automatic parallelization |
 | Lab 3 | fork() + Threads | Only calling thread copied — call `exec()` right away |
 | Lab 4 | TLS | `__thread` = per-thread copy, no locks needed |
 
@@ -334,8 +534,10 @@ graph TD
 ## Self-Check Questions
 
 1. What are the three benefits of using a thread pool instead of creating a new thread for each task?
-2. What does the `reduction(+:sum)` clause do in OpenMP, and why is it necessary?
-3. When `fork()` is called in a multithreaded program, how many threads does the child process have? Why is this dangerous?
-4. How does `__thread` (TLS) differ from a regular global variable? When would you use each?
+2. Why does the worker thread use `while (pool.count == 0)` instead of `if (pool.count == 0)` before calling `pthread_cond_wait`?
+3. What are the three demos in Lab 2, and what OpenMP directive does each demonstrate?
+4. When `fork()` is called in a multithreaded program, how many threads does the child process have? Why is this dangerous?
+5. What is the difference between Demo 1 and Demo 2 in Lab 4? What real-world system uses the same pattern as Demo 2?
+6. Name three different ways to declare a thread-local variable in C.
 
 ---
