@@ -4,7 +4,7 @@
 >
 > Silberschatz, Operating System Concepts Ch 3 (Sections 3.4 – 3.8)
 
-> **Prerequisites**: W02 Process concepts (process, fork, exec, wait). Understanding of file descriptors.
+> **Prerequisites**: Week 2 Process concepts (process, fork, exec, wait). Understanding of file descriptors.
 >
 > **Learning Objectives**:
 > 1. Compare shared memory and message passing IPC models
@@ -577,7 +577,7 @@ pipe(fd);
 - `fd[0]` — **read end**, `fd[1]` — **write end**
 - Children **inherit** the pipe through fork().
 
-> **Note:** This code uses `fork()` covered in Week 2. See W02 Concepts_Lecture for details on how `fork()` creates a child process.
+> **Note:** This code uses `fork()` covered in Week 2. See Week 2 Concepts_Lecture for details on how `fork()` creates a child process.
 
 **Code example (Figures 3.21-3.22):**
 

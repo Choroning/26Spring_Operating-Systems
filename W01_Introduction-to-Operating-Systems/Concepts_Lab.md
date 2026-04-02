@@ -2,7 +2,7 @@
 
 > **Last Updated:** 2026-03-21
 
-> **Prerequisites**: W01 Lecture concepts (OS definition, dual-mode, system calls).
+> **Prerequisites**: Week 1 Lecture concepts (OS definition, dual-mode, system calls).
 >
 > **Learning Objectives**: After completing this lab, you should be able to:
 > 1. Install and authenticate a coding agent (e.g., Gemini CLI, Claude Code)

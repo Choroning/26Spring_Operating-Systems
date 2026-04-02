@@ -4,7 +4,7 @@
 
 ---
 
-> **Prerequisites**: W02 Lecture concepts (process, fork, exec, wait). Ability to compile and run C programs.
+> **Prerequisites**: Week 2 Lecture concepts (process, fork, exec, wait). Ability to compile and run C programs.
 >
 > **Learning Objectives**: After completing this lab, you should be able to:
 > 1. Use fork()/wait() to create and manage child processes

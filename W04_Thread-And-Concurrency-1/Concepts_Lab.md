@@ -2,7 +2,7 @@
 
 > **Last Updated:** 2026-03-31
 
-> **Prerequisites**: W04 Lecture concepts (threads, Pthreads API). Ability to compile C with `-pthread`.
+> **Prerequisites**: Week 4 Lecture concepts (threads, Pthreads API). Ability to compile C with `-pthread`.
 >
 > **Learning Objectives**: After completing this lab, you should be able to:
 > 1. Create and join threads using pthread_create/pthread_join

@@ -6,7 +6,7 @@
 
 ---
 
-> **Prerequisites**: W01 OS concepts (definition, dual-mode, system calls). Basic C programming (pointers, functions).
+> **Prerequisites**: Week 1 OS concepts (definition, dual-mode, system calls). Basic C programming (pointers, functions).
 >
 > **Learning Objectives**:
 > 1. Describe the structure of a process (memory layout, PCB, states)

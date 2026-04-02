@@ -4,7 +4,7 @@
 >
 > Silberschatz, Operating System Concepts Ch 3 (Sections 3.4 – 3.8)
 
-> **선행 지식**: W02 프로세스 개념 (process, fork, exec, wait). 파일 디스크립터(file descriptor)에 대한 이해.
+> **선행 지식**: 2주차 프로세스 개념 (process, fork, exec, wait). 파일 디스크립터(file descriptor)에 대한 이해.
 >
 > **학습 목표**:
 > 1. 공유 메모리(shared memory)와 메시지 전달(message passing) IPC 모델을 비교 설명
@@ -577,7 +577,7 @@ pipe(fd);
 - `fd[0]` — **읽기 끝**, `fd[1]` — **쓰기 끝**
 - 자식은 fork()를 통해 파이프를 **상속** 받는다.
 
-> **참고:** 이 코드는 2주차에서 다룬 `fork()`를 사용한다. `fork()`가 자식 프로세스를 생성하는 방법에 대한 자세한 내용은 W02 Concepts_Lecture를 참고하라.
+> **참고:** 이 코드는 2주차에서 다룬 `fork()`를 사용한다. `fork()`가 자식 프로세스를 생성하는 방법에 대한 자세한 내용은 2주차 Concepts_Lecture를 참고하라.
 
 **코드 예제 (Figures 3.21-3.22):**
 

@@ -4,7 +4,7 @@
 >
 > Silberschatz, Operating System Concepts Ch 4 (Sections 4.5 – 4.7)
 
-> **Prerequisites**: W04 Thread concepts (thread, Pthreads, Java threads, multithreading models). Understanding of thread pools and basic Java concurrency.
+> **Prerequisites**: Week 4 Thread concepts (thread, Pthreads, Java threads, multithreading models). Understanding of thread pools and basic Java concurrency.
 >
 > **Learning Objectives**:
 > 1. Explain what implicit threading is and why it is needed
@@ -85,7 +85,7 @@
 
 **Implicit Threading** is a strategy that delegates thread creation and management to the **compiler and runtime library**.
 
-> If explicit threading (W04) is like a chef personally managing every worker in the kitchen — assigning tasks, watching timing, handling conflicts — then implicit threading is like hiring a restaurant manager who handles all staffing and scheduling while the chef only decides what dishes to make.
+> If explicit threading (Week 4) is like a chef personally managing every worker in the kitchen — assigning tasks, watching timing, handling conflicts — then implicit threading is like hiring a restaurant manager who handles all staffing and scheduling while the chef only decides what dishes to make.
 
 **Why is it needed?**
 - Applications with hundreds to thousands of threads have emerged
@@ -169,7 +169,7 @@ Request ──→ [ Task Queue ] ──→ │  Thread 3 (busy)   │
 - Set **heuristically** based on CPU count, physical memory, expected concurrent requests
 - Can be dynamically adjusted (e.g., GCD automatically adjusts based on system load)
 
-> **Exam Tip:** The three benefits of thread pools (Speed, Resource bound, Separation of execution and creation) map closely to the four benefits of threads from W04 (Responsiveness, Resource Sharing, Economy, Scalability). Thread pools amplify the Economy benefit further by eliminating repeated creation/destruction overhead.
+> **Exam Tip:** The three benefits of thread pools (Speed, Resource bound, Separation of execution and creation) map closely to the four benefits of threads from Week 4 (Responsiveness, Resource Sharing, Economy, Scalability). Thread pools amplify the Economy benefit further by eliminating repeated creation/destruction overhead.
 
 ### 2.3 Thread Pool — Windows API
 
@@ -224,7 +224,7 @@ public class ThreadPoolExample {
 
 *Figure 4.15 — Creating a thread pool in Java (textbook p.180)*
 
-> This example was introduced in W04's Java Executor Framework section. Here the key difference is **perspective**: in W04 we learned the Executor API as a thread library; now we see thread pools as an **implicit threading technique** where the library manages threads for us.
+> This example was introduced in Week 4's Java Executor Framework section. Here the key difference is **perspective**: in Week 4 we learned the Executor API as a thread library; now we see thread pools as an **implicit threading technique** where the library manages threads for us.
 
 ### 2.5 Java ExecutorService — Details
 
@@ -460,7 +460,7 @@ Sequential    #pragma omp parallel for     Sequential
 
 > **Implicit barrier**: At the end of a `parallel for` region, all threads synchronize — no thread proceeds past the barrier until every thread has finished its iterations. This ensures the sequential code after the parallel region sees complete results.
 
-> **[Computer Architecture]** The `parallel for` pattern maps directly to **data parallelism** from W04. Each thread performs the *same operation* (`c[i] = a[i] + b[i]`) on a *different subset of data*. This is also the model used by GPU computing (CUDA's `<<<blocks, threads>>>` syntax achieves similar partitioning).
+> **[Computer Architecture]** The `parallel for` pattern maps directly to **data parallelism** from Week 4. Each thread performs the *same operation* (`c[i] = a[i] + b[i]`) on a *different subset of data*. This is also the model used by GPU computing (CUDA's `<<<blocks, threads>>>` syntax achieves similar partitioning).
 
 ### 4.3 Additional Features
 
@@ -491,7 +491,7 @@ int main() {
 
 **Compilation**: `gcc -fopenmp program.c -o program`
 
-> **Data sharing attributes are critical for correctness.** Without them, all variables are `shared` by default in a `parallel` region (except for the loop counter in `parallel for`, which is `private` by default). A common bug is accidentally sharing a variable that should be private — this causes race conditions just like the `global_sum` example from W04's lab.
+> **Data sharing attributes are critical for correctness.** Without them, all variables are `shared` by default in a `parallel` region (except for the loop counter in `parallel for`, which is `private` by default). A common bug is accidentally sharing a variable that should be private — this causes race conditions just like the `global_sum` example from Week 4's lab.
 
 ### 4.4 reduction Example
 
@@ -524,7 +524,7 @@ int main() {
 - At the end of the parallel region, all threads' sums are **combined using the + operation**
 - Enables safe summation without race conditions
 
-> Compare this with the W04 lab's race condition on `global_sum`. In that lab, `global_sum += array[i]` caused data loss because multiple threads performed non-atomic read-modify-write on the same variable. OpenMP's `reduction` clause solves this elegantly: each thread gets its own private copy, and the runtime merges them safely at the end. No locks, no race conditions, one line of code.
+> Compare this with the Week 4 lab's race condition on `global_sum`. In that lab, `global_sum += array[i]` caused data loss because multiple threads performed non-atomic read-modify-write on the same variable. OpenMP's `reduction` clause solves this elegantly: each thread gets its own private copy, and the runtime merges them safely at the end. No locks, no race conditions, one line of code.
 
 ---
 
@@ -631,7 +631,7 @@ dispatch_async(queue, { print("I am a closure.") })
 └──────────────────────────────────────────┘
 ```
 
-> This layered architecture shows how GCD abstracts threading all the way from application code down to kernel threads. The developer writes blocks/closures at the top, and 4 layers of abstraction handle everything else. Notice that GCD ultimately sits on top of POSIX threads — even Apple's "magic" threading is built on the same Pthreads we studied in W04.
+> This layered architecture shows how GCD abstracts threading all the way from application code down to kernel threads. The developer writes blocks/closures at the top, and 4 layers of abstraction handle everything else. Notice that GCD ultimately sits on top of POSIX threads — even Apple's "magic" threading is built on the same Pthreads we studied in Week 4.
 
 ---
 
@@ -795,7 +795,7 @@ Five key issues to consider in multithreaded programming:
 
 **Some UNIX systems**: Provide both versions of fork()
 
-> **Key Point:** In practice, `fork()` followed immediately by `exec()` is the most common pattern (W02-W03). In this case, duplicating all threads would be wasteful because `exec()` discards the entire address space anyway. POSIX's `fork()` duplicates only the calling thread, while some systems provide `forkall()` for duplicating all threads.
+> **Key Point:** In practice, `fork()` followed immediately by `exec()` is the most common pattern (Week 2-W03). In this case, duplicating all threads would be wasteful because `exec()` discards the entire address space anyway. POSIX's `fork()` duplicates only the calling thread, while some systems provide `forkall()` for duplicating all threads.
 
 > **Caution:** When fork() duplicates only the calling thread, any mutexes held by other threads remain locked in the child process, but the threads that would unlock them don't exist. This can lead to **deadlocks** in the child process — another reason why fork()+exec() is preferred.
 
@@ -1038,7 +1038,7 @@ static int threadLocalVar;
 
 **Number of LWPs**: A CPU-bound application needs only 1, while an I/O-intensive application needs as many as the number of concurrent blocking I/O operations
 
-> The LWP concept was introduced in W04 as part of the Two-Level Model. Here we see it in its operational context: the LWP is the "communication channel" between the kernel and the user-level thread library. When the kernel needs to inform the thread library about an event (like a thread blocking), it does so through the LWP.
+> The LWP concept was introduced in Week 4 as part of the Two-Level Model. Here we see it in its operational context: the LWP is the "communication channel" between the kernel and the user-level thread library. When the kernel needs to inform the thread library about an event (like a thread blocking), it does so through the LWP.
 
 ### 8.13 Scheduler Activations — Upcall Mechanism
 
@@ -1310,7 +1310,7 @@ int main() {
 
 > This lab computes the partial sum of the harmonic series: 1/1 + 1/2 + 1/3 + ... + 1/10000000. Both sequential and parallel versions should produce the **same result** (or very close — floating-point addition is not perfectly associative, so the order of operations can cause tiny differences). The key observation is the **time difference**: the parallel version should be significantly faster on a multicore machine.
 
-> **Comparison with W04 Lab**: In the W04 lab, we manually partitioned an array across Pthreads and used a `partial_sum[]` array to avoid race conditions. Here, OpenMP's `reduction` clause does all of that automatically in a single directive. This is the power of implicit threading — the same parallelization that took ~50 lines of Pthreads code takes 1 line with OpenMP.
+> **Comparison with Week 4 Lab**: In the Week 4 lab, we manually partitioned an array across Pthreads and used a `partial_sum[]` array to avoid race conditions. Here, OpenMP's `reduction` clause does all of that automatically in a single directive. This is the power of implicit threading — the same parallelization that took ~50 lines of Pthreads code takes 1 line with OpenMP.
 
 ---
 

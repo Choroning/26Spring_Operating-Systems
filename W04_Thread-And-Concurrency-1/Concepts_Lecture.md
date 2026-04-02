@@ -4,7 +4,7 @@
 >
 > Silberschatz, Operating System Concepts Ch 4 (Sections 4.1 – 4.4)
 
-> **Prerequisites**: W02-W03 Process concepts (process, fork, IPC). Basic C programming.
+> **Prerequisites**: Week 2-W03 Process concepts (process, fork, IPC). Basic C programming.
 >
 > **Learning Objectives**:
 > 1. Explain what a thread is and how it differs from a process
@@ -125,7 +125,7 @@ What threads within the same process **share**:
 | Independence | High (one dying has little effect on others) | Low (one dying can affect the entire process) |
 | Communication | IPC required (pipes, sockets, etc.) | Direct communication via global variables |
 
-> **IPC (Inter-Process Communication)** was covered in detail in W03. Since threads share the same address space, they can communicate directly through shared memory without IPC.
+> **IPC (Inter-Process Communication)** was covered in detail in Week 3. Since threads share the same address space, they can communicate directly through shared memory without IPC.
 
 > Threads are also called **"Lightweight Processes (LWP)."**
 
