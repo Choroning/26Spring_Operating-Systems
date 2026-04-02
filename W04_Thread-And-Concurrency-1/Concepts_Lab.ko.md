@@ -323,7 +323,7 @@ for (int i = 0; i < N; i++)
 
 <br>
 
-## 자가 점검 문제
+## 점검 문제
 
 1. for 반복문에서 `&i`를 `pthread_create`에 전달하면 왜 잘못된 동작이 발생하는가?
 2. 왜 하나의 공유 `total` 변수 대신 `partial_sum[id]`를 사용하는가?
