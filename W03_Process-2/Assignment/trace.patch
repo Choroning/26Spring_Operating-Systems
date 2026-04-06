@@ -1,0 +1,450 @@
+diff --git a/Makefile b/Makefile
+index b262c0a..2c89047 100755
+--- a/Makefile
++++ b/Makefile
+@@ -145,6 +145,7 @@ UPROGS=\
+ 	$U/_logstress\
+ 	$U/_forphan\
+ 	$U/_dorphan\
++	$U/_trace_test\
+ 
+ fs.img: mkfs/mkfs README $(UPROGS)
+ 	mkfs/mkfs fs.img README $(UPROGS)
+diff --git a/kernel/defs.h b/kernel/defs.h
+index 122d9ca..2231b69 100755
+--- a/kernel/defs.h
++++ b/kernel/defs.h
+@@ -59,6 +59,7 @@ void            ireclaim(int);
+ void*           kalloc(void);
+ void            kfree(void *);
+ void            kinit(void);
++uint64          freemem_count(void);
+ 
+ // log.c
+ void            initlog(int, struct superblock*);
+@@ -101,6 +102,7 @@ void            yield(void);
+ int             either_copyout(int user_dst, uint64 dst, void *src, uint64 len);
+ int             either_copyin(void *dst, int user_src, uint64 src, uint64 len);
+ void            procdump(void);
++uint64          proc_count(void);
+ 
+ // swtch.S
+ void            swtch(struct context*, struct context*);
+diff --git a/kernel/kalloc.c b/kernel/kalloc.c
+index 0699e7e..7bd93e3 100755
+--- a/kernel/kalloc.c
++++ b/kernel/kalloc.c
+@@ -80,3 +80,21 @@ kalloc(void)
+     memset((char*)r, 5, PGSIZE); // fill with junk
+   return (void*)r;
+ }
++
++// Count the number of bytes of free memory
++uint64
++freemem_count(void)
++{
++  struct run *r;
++  uint64 count = 0;
++
++  acquire(&kmem.lock);
++  r = kmem.freelist;
++  while(r) {
++    count++;
++    r = r->next;
++  }
++  release(&kmem.lock);
++
++  return count * PGSIZE;
++}
+diff --git a/kernel/proc.c b/kernel/proc.c
+index 22a5401..9d62297 100755
+--- a/kernel/proc.c
++++ b/kernel/proc.c
+@@ -169,6 +169,7 @@ freeproc(struct proc *p)
+   p->killed = 0;
+   p->xstate = 0;
+   p->state = UNUSED;
++  p->trace_mask = 0;
+ }
+ 
+ // Create a user page table for a given process, with no user memory,
+@@ -282,6 +283,9 @@ kfork(void)
+   // Cause fork to return 0 in the child.
+   np->trapframe->a0 = 0;
+ 
++  // Copy trace_mask from parent to child
++  np->trace_mask = p->trace_mask;
++
+   // increment reference counts on open file descriptors.
+   for(i = 0; i < NOFILE; i++)
+     if(p->ofile[i])
+@@ -659,6 +663,22 @@ either_copyin(void *dst, int user_src, uint64 src, uint64 len)
+   }
+ }
+ 
++// Count the number of active processes (state != UNUSED)
++uint64
++proc_count(void)
++{
++  struct proc *p;
++  uint64 count = 0;
++
++  for(p = proc; p < &proc[NPROC]; p++) {
++    acquire(&p->lock);
++    if(p->state != UNUSED)
++      count++;
++    release(&p->lock);
++  }
++  return count;
++}
++
+ // Print a process listing to console.  For debugging.
+ // Runs when user types ^P on console.
+ // No lock to avoid wedging a stuck machine further.
+diff --git a/kernel/proc.h b/kernel/proc.h
+index d021857..60559ee 100755
+--- a/kernel/proc.h
++++ b/kernel/proc.h
+@@ -104,4 +104,5 @@ struct proc {
+   struct file *ofile[NOFILE];  // Open files
+   struct inode *cwd;           // Current directory
+   char name[16];               // Process name (debugging)
++  int trace_mask;              // Trace syscall mask
+ };
+diff --git a/kernel/syscall.c b/kernel/syscall.c
+index 076d965..fca98f1 100755
+--- a/kernel/syscall.c
++++ b/kernel/syscall.c
+@@ -101,6 +101,8 @@ extern uint64 sys_unlink(void);
+ extern uint64 sys_link(void);
+ extern uint64 sys_mkdir(void);
+ extern uint64 sys_close(void);
++extern uint64 sys_trace(void);
++extern uint64 sys_sysinfo(void);
+ 
+ // An array mapping syscall numbers from syscall.h
+ // to the function that handles the system call.
+@@ -126,6 +128,35 @@ static uint64 (*syscalls[])(void) = {
+ [SYS_link]    sys_link,
+ [SYS_mkdir]   sys_mkdir,
+ [SYS_close]   sys_close,
++[SYS_trace]   sys_trace,
++[SYS_sysinfo] sys_sysinfo,
++};
++
++// Syscall name string array (for trace output)
++static char *syscall_names[] = {
++[SYS_fork]    "fork",
++[SYS_exit]    "exit",
++[SYS_wait]    "wait",
++[SYS_pipe]    "pipe",
++[SYS_read]    "read",
++[SYS_kill]    "kill",
++[SYS_exec]    "exec",
++[SYS_fstat]   "fstat",
++[SYS_chdir]   "chdir",
++[SYS_dup]     "dup",
++[SYS_getpid]  "getpid",
++[SYS_sbrk]    "sbrk",
++[SYS_pause]   "pause",
++[SYS_uptime]  "uptime",
++[SYS_open]    "open",
++[SYS_write]   "write",
++[SYS_mknod]   "mknod",
++[SYS_unlink]  "unlink",
++[SYS_link]    "link",
++[SYS_mkdir]   "mkdir",
++[SYS_close]   "close",
++[SYS_trace]   "trace",
++[SYS_sysinfo] "sysinfo",
+ };
+ 
+ void
+@@ -139,6 +170,11 @@ syscall(void)
+     // Use num to lookup the system call function for num, call it,
+     // and store its return value in p->trapframe->a0
+     p->trapframe->a0 = syscalls[num]();
++
++    // Trace: if the bit for this syscall is set, print trace info
++    if(p->trace_mask & (1 << num)) {
++      printf("%d: syscall %s -> %d\n", p->pid, syscall_names[num], (int)p->trapframe->a0);
++    }
+   } else {
+     printf("%d %s: unknown sys call %d\n",
+             p->pid, p->name, num);
+diff --git a/kernel/syscall.h b/kernel/syscall.h
+index 3dd926d..65d8104 100755
+--- a/kernel/syscall.h
++++ b/kernel/syscall.h
+@@ -20,3 +20,5 @@
+ #define SYS_link   19
+ #define SYS_mkdir  20
+ #define SYS_close  21
++#define SYS_trace  22
++#define SYS_sysinfo 23
+diff --git a/kernel/sysinfo.h b/kernel/sysinfo.h
+new file mode 100644
+index 0000000..d7eab3f
+--- /dev/null
++++ b/kernel/sysinfo.h
+@@ -0,0 +1,4 @@
++struct sysinfo {
++  uint64 freemem;   // Available memory (bytes)
++  uint64 nproc;     // Number of active processes (state != UNUSED)
++};
+diff --git a/kernel/sysproc.c b/kernel/sysproc.c
+index 419e727..77c0f20 100755
+--- a/kernel/sysproc.c
++++ b/kernel/sysproc.c
+@@ -6,6 +6,7 @@
+ #include "spinlock.h"
+ #include "proc.h"
+ #include "vm.h"
++#include "sysinfo.h"
+ 
+ uint64
+ sys_exit(void)
+@@ -107,3 +108,32 @@ sys_uptime(void)
+   release(&tickslock);
+   return xticks;
+ }
++
++// sys_trace: set the trace mask for the current process
++uint64
++sys_trace(void)
++{
++  int mask;
++
++  argint(0, &mask);
++  myproc()->trace_mask = mask;
++  return 0;
++}
++
++// sys_sysinfo: collect system information and copy to user space
++uint64
++sys_sysinfo(void)
++{
++  uint64 addr;
++  struct sysinfo info;
++  struct proc *p = myproc();
++
++  argaddr(0, &addr);
++
++  info.freemem = freemem_count();
++  info.nproc = proc_count();
++
++  if(copyout(p->pagetable, addr, (char *)&info, sizeof(info)) < 0)
++    return -1;
++  return 0;
++}
+diff --git a/user/trace_test.c b/user/trace_test.c
+new file mode 100755
+index 0000000..4d70901
+--- /dev/null
++++ b/user/trace_test.c
+@@ -0,0 +1,181 @@
++//
++// trace_test.c - Test program for the trace system call
++//
++// Copy this file to xv6-riscv/user/trace_test.c
++// and add $U/_trace_test to UPROGS in Makefile.
++//
++
++#include "kernel/param.h"
++#include "kernel/types.h"
++#include "kernel/stat.h"
++#include "kernel/syscall.h"
++#include "user/user.h"
++
++//
++// Test 1: trace fork
++// Enable tracing for fork, then call fork.
++// Expected: one line of trace output for the fork syscall.
++//
++void
++test_trace_fork(void)
++{
++  int pid;
++
++  printf("=== Test 1: trace fork ===\n");
++  trace(1 << SYS_fork);
++  pid = fork();
++  if(pid < 0){
++    printf("test_trace_fork: fork failed\n");
++    exit(1);
++  }
++  if(pid == 0){
++    // child
++    exit(0);
++  } else {
++    // parent
++    wait(0);
++  }
++  trace(0);  // disable tracing
++  printf("Test 1 PASSED\n\n");
++}
++
++//
++// Test 2: trace read and write
++// Enable tracing for read and write, then perform I/O via a pipe.
++// Expected: trace output for both read and write syscalls.
++//
++void
++test_trace_rw(void)
++{
++  int fds[2];
++  char buf[8];
++
++  printf("=== Test 2: trace read/write ===\n");
++  trace((1 << SYS_read) | (1 << SYS_write));
++
++  if(pipe(fds) < 0){
++    printf("test_trace_rw: pipe failed\n");
++    exit(1);
++  }
++
++  // write then read through the pipe
++  write(fds[1], "hello", 5);
++  read(fds[0], buf, 5);
++
++  close(fds[0]);
++  close(fds[1]);
++
++  trace(0);  // disable tracing
++  printf("Test 2 PASSED\n\n");
++}
++
++//
++// Test 3: trace multiple syscalls
++// Enable tracing for getpid, fork, and write simultaneously.
++//
++void
++test_trace_multi(void)
++{
++  int pid;
++
++  printf("=== Test 3: trace multiple syscalls ===\n");
++  trace((1 << SYS_getpid) | (1 << SYS_fork) | (1 << SYS_write));
++
++  pid = getpid();
++  printf("my pid is %d\n", pid);
++
++  pid = fork();
++  if(pid < 0){
++    printf("test_trace_multi: fork failed\n");
++    exit(1);
++  }
++  if(pid == 0){
++    exit(0);
++  } else {
++    wait(0);
++  }
++
++  trace(0);
++  printf("Test 3 PASSED\n\n");
++}
++
++//
++// Test 4: trace inheritance across fork
++// Parent enables tracing, then forks. Child should inherit the trace mask.
++// Expected: child process also produces trace output.
++//
++void
++test_trace_inherit(void)
++{
++  int pid;
++  int fds[2];
++  char buf[8];
++
++  printf("=== Test 4: trace inheritance ===\n");
++
++  // Enable tracing for read and write before fork
++  trace((1 << SYS_read) | (1 << SYS_write));
++
++  if(pipe(fds) < 0){
++    printf("test_trace_inherit: pipe failed\n");
++    exit(1);
++  }
++
++  pid = fork();
++  if(pid < 0){
++    printf("test_trace_inherit: fork failed\n");
++    exit(1);
++  }
++
++  if(pid == 0){
++    // child: should have inherited trace mask
++    // The write below should produce trace output with child's PID
++    write(fds[1], "hi", 2);
++    close(fds[0]);
++    close(fds[1]);
++    exit(0);
++  } else {
++    // parent: read from pipe (should also produce trace output)
++    read(fds[0], buf, 2);
++    close(fds[0]);
++    close(fds[1]);
++    wait(0);
++  }
++
++  trace(0);
++  printf("Test 4 PASSED\n\n");
++}
++
++//
++// Test 5: trace with no mask (should produce no output)
++//
++void
++test_trace_none(void)
++{
++  printf("=== Test 5: trace disabled ===\n");
++  trace(0);
++
++  // These should NOT produce trace output
++  getpid();
++  fork();
++  wait(0);
++
++  printf("Test 5 PASSED (no trace output above means success)\n\n");
++}
++
++int
++main(int argc, char *argv[])
++{
++  printf("========================================\n");
++  printf("  trace system call test suite\n");
++  printf("========================================\n\n");
++
++  test_trace_fork();
++  test_trace_rw();
++  test_trace_multi();
++  test_trace_inherit();
++  test_trace_none();
++
++  printf("All tests passed!\n");
++  exit(0);
++}
+diff --git a/user/user.h b/user/user.h
+index ac84de9..6d5fdb4 100755
+--- a/user/user.h
++++ b/user/user.h
+@@ -24,6 +24,9 @@ int getpid(void);
+ char* sys_sbrk(int,int);
+ int pause(int);
+ int uptime(void);
++int trace(int);
++struct sysinfo;
++int sysinfo(struct sysinfo*);
+ 
+ // ulib.c
+ int stat(const char*, struct stat*);
+diff --git a/user/usys.pl b/user/usys.pl
+index c5d4c3a..08df9f2 100755
+--- a/user/usys.pl
++++ b/user/usys.pl
+@@ -42,3 +42,5 @@ entry("getpid");
+ entry("sbrk");
+ entry("pause");
+ entry("uptime");
++entry("trace");
++entry("sysinfo");
