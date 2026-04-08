@@ -149,12 +149,12 @@ Process classification based on CPU burst distribution:
 When the CPU becomes idle, the **ready queue** is used to select the next process to run:
 
 ```text
-                    +---------------+
-  new process --->  | Ready Queue   | ---> CPU Scheduler ---> CPU
-                    +---------------+     selection algorithm
+                    +-------------+
+  new process --->  | Ready Queue | ---> CPU Scheduler ---> CPU
+                    +-------------+   selection algorithm
                           ^
                           |
-                    I/O completion, etc.
+                  I/O completion, etc.
 ```
 
 - **CPU Scheduler** = Short-term Scheduler
@@ -330,20 +330,20 @@ Response Time = First Run Time - Arrival Time
 ### 2.5 Scheduling Criteria — Summary
 
 ```text
-+-----------------------------------------------------------+
-|                    Maximize                                |
-|  +--------------------+  +--------------------+           |
-|  | CPU Utilization    |  | Throughput         |           |
-|  +--------------------+  +--------------------+           |
-+-----------------------------------------------------------+
-|                    Minimize                                |
-|  +--------------------+  +--------------------+           |
-|  | Turnaround Time    |  | Waiting Time       |           |
-|  +--------------------+  +--------------------+           |
-|  +--------------------+                                   |
-|  | Response Time      |                                   |
-|  +--------------------+                                   |
-+-----------------------------------------------------------+
++------------------------------------------------+
+|                    Maximize                    |
+|  +-------------------+  +-------------------+  |
+|  | CPU Utilization   |  |    Throughput     |  |
+|  +-------------------+  +-------------------+  |
++------------------------------------------------+
+|                    Minimize                    |
+|  +-------------------+  +-------------------+  |
+|  |  Turnaround Time  |  |   Waiting Time    |  |
+|  +-------------------+  +-------------------+  |
+|  +-------------------+                         |
+|  |   Response Time   |                         |
+|  +-------------------+                         |
++------------------------------------------------+
 ```
 
 - In most cases, the **average** is optimized
@@ -370,7 +370,7 @@ Ready Queue (FIFO):
   head ---> [ P1 ] ---> [ P2 ] ---> [ P3 ] <--- tail
               |
               v
-           CPU allocation
+            CPU allocation
 ```
 
 ### 3.2 FCFS — Example 1 (Arrival Order: P1, P2, P3)
@@ -385,10 +385,10 @@ Process arrival order: P1 -> P2 -> P3 (all arrive at time 0)
 
 ```text
 Gantt Chart:
-+----------------------------+-----+-----+
-|            P1              | P2  | P3  |
-+----------------------------+-----+-----+
-0                            24    27    30
++-------------------------+----+----+
+|            P1           | P2 | P3 |
++-------------------------+----+----+
+0                         24   27   30
 ```
 
 | Process | Waiting Time | Turnaround Time |
@@ -404,10 +404,10 @@ Same processes but different arrival order: P2 -> P3 -> P1
 
 ```text
 Gantt Chart:
-+-----+-----+----------------------------+
-| P2  | P3  |            P1              |
-+-----+-----+----------------------------+
-0     3     6                            30
++----+----+-------------------------+
+| P2 | P3 |            P1           |
++----+----+-------------------------+
+0    3    6                         30
 ```
 
 | Process | Waiting Time | Turnaround Time |
@@ -427,14 +427,14 @@ Gantt Chart:
 ```text
 Scenario: 1 CPU-bound process + multiple I/O-bound processes
 
-Time ->  =====================================================>
+Time ->  ==========================================================>
 
-CPU:  [ CPU-bound (long burst) ........................][ I/O-1 ][ I/O-2 ][ I/O-3 ]
-I/O:  [     idle (I/O device sitting idle)             ][ busy  ][ busy  ][ busy  ]
-                                                       ^
-                                                       |
-                                              I/O-bound processes
-                                              waiting behind CPU-bound
+CPU:  [ CPU-bound (long burst) ..........][ I/O-1 ][ I/O-2 ][ I/O-3 ]
+I/O:  [  idle (I/O device sitting idle)  ][ busy  ][ busy  ][ busy  ]
+                                         ^
+                                         |
+                                I/O-bound processes
+                              waiting behind CPU-bound
 ```
 
 - The CPU-bound process monopolizes the CPU -> I/O-bound processes wait in the ready queue
@@ -479,16 +479,16 @@ Select the process with the **shortest next CPU burst** first:
 
 ```text
 Case 1: Long first (burst: 10, 3)
-+----------+---+
-|   P1(10) |P2 |    P1 wait=0, P2 wait=10  -> average = 5
-+----------+---+
-0          10  13
++-----------+----+
+|   P1(10)  | P2 |   P1 wait=0, P2 wait=10  -> average = 5
++-----------+----+
+0           10   13
 
 Case 2: Short first (burst: 3, 10)  <- SJF
-+---+----------+
-|P2 |  P1(10)  |    P2 wait=0, P1 wait=3   -> average = 1.5
-+---+----------+
-0   3          13
++----+-----------+
+| P2 |   P1(10)  |   P2 wait=0, P1 wait=3   -> average = 1.5
++----+-----------+
+0    3           13
 ```
 
 - Moving the **shorter process** forward: its waiting time **decreases significantly**
@@ -511,10 +511,10 @@ All processes arrive at time 0 (nonpreemptive SJF):
 
 ```text
 Gantt Chart (SJF order: P4 -> P1 -> P3 -> P2):
-+-----+--------+---------+----------+
-| P4  |   P1   |   P3    |    P2    |
-+-----+--------+---------+----------+
-0     3        9         16         24
++----+--------+----------+------------+
+| P4 |   P1   |    P3    |     P2     |
++----+--------+----------+------------+
+0    3        9         16            24
 ```
 
 | Process | Waiting Time |
@@ -604,7 +604,7 @@ Starting with alpha = 0.5, tau(0) = 10:
 Prediction differences for varying alpha on the same burst sequence (tau_0 = 10, bursts = [6, 4, 6]):
 
 ```text
-                   alpha = 0.2    alpha = 0.5    alpha = 0.8
+               alpha = 0.2    alpha = 0.5    alpha = 0.8
 tau(0) = 10        10             10             10
 t(0) = 6
 tau(1)             9.2            8.0            6.8
@@ -670,10 +670,10 @@ How it works:
 
 ```text
 Gantt Chart:
-+----+----------+------------+------------------+--------------------+
-| P1 |    P2    |     P4     |       P1         |        P3          |
-+----+----------+------------+------------------+--------------------+
-0    1          5            10                 17                   26
++----+----------+------------+-----------------+--------------------+
+| P1 |    P2    |     P4     |       P1        |         P3         |
++----+----------+------------+-----------------+--------------------+
+0    1          5            10                17                   26
 ```
 
 | Process | Arrival | Burst | Completion | Turnaround | Waiting |
@@ -695,7 +695,7 @@ Comparing Nonpreemptive SJF with the same data (P1:0,8 / P2:1,4 / P3:2,9 / P4:3,
 ```text
 Nonpreemptive SJF:
 +------------------+----------+------------+--------------------+
-|       P1         |    P2    |     P4     |        P3          |
+|        P1        |    P2    |     P4     |         P3         |
 +------------------+----------+------------+--------------------+
 0                  8         12           17                   26
 ```
@@ -758,10 +758,10 @@ All processes arrive at time 0, time quantum = 4ms:
 
 ```text
 Gantt Chart:
-+------+-----+-----+------+------+------+------+------+------+
-|  P1  | P2  | P3  |  P1  |  P1  |  P1  |  P1  |  P1  |  P1  |
-+------+-----+-----+------+------+------+------+------+------+
-0      4     7    10     14     18     22     26     30
++------+----+----+------+------+------+------+------+------+
+|  P1  | P2 | P3 |  P1  |  P1  |  P1  |  P1  |  P1  |  P1  |
++------+----+----+------+------+------+------+------+------+
+0      4    7    10     14     18     22     26     30
 ```
 
 - P1: Runs 4ms then preempted -> P2: 3ms (< q) voluntarily returns -> P3: 3ms returns -> P1 repeats
@@ -832,10 +832,10 @@ q = 3ms, all processes arrive at time 0:
 
 ```text
 Gantt Chart (q = 3):
-+-----+-----+-----+-----+-----+-----+-----+-----+
-| P1  | P2  | P3  | P4  | P1  | P2  | P4  | P1  |
-+-----+-----+-----+-----+-----+-----+-----+-----+
-0     3     6     9    12    15    17    20    22
++-----+-----+-----+-----+-----+-----+-----+----+
+| P1  | P2  | P3  | P4  | P1  | P2  | P4  | P1 |
++-----+-----+-----+-----+-----+-----+-----+----+
+0     3     6     9     12    15    17    20   22
 ```
 
 - P3 has burst=3=q -> completes in one turn
