@@ -435,13 +435,6 @@ struct proc {
 
 ---
 
-<br>
-
-## 부록
-
-- 다음 주제: **스레드(Thread), 스케줄링(Scheduling), 동기화(Synchronization)** — 오늘 탐색한 내용 위에 구축된다.
-
----
 
 <br>
 

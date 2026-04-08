@@ -1337,24 +1337,6 @@ int main() {
 
 ---
 
-<br>
-
-## Appendix
-
-- **Next Week — Week 6: CPU Scheduling 1 (Ch 5)**
-  - Basic concepts of CPU Scheduling
-    - CPU-I/O Burst Cycle
-    - CPU Scheduler and Dispatcher
-  - Scheduling Criteria
-    - CPU utilization, throughput, turnaround time, waiting time, response time
-  - Scheduling Algorithms
-    - FCFS (First-Come, First-Served)
-    - SJF (Shortest-Job-First)
-    - Priority Scheduling
-    - Round-Robin (RR)
-  - Multilevel Queue Scheduling
-
----
 
 <br>
 

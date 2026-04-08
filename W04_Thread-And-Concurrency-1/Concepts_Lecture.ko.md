@@ -1233,22 +1233,6 @@ int main(int argc, char *argv[])
 
 ---
 
-<br>
-
-## 부록
-
-- **다음 주 — 5주차: 스레드와 동시성 2 (Ch 4 후반)**
-  - 암묵적 스레딩 (Implicit Threading)
-    - 스레드 풀, Fork-Join, OpenMP, Grand Central Dispatch (GCD)
-  - 스레딩 이슈
-    - 멀티스레드 프로그램에서의 fork() / exec()
-    - 시그널 처리
-    - 스레드 취소
-    - 스레드 로컬 저장소 (TLS)
-  - OS별 스레드 구현 (Linux, Windows)
-  - 교재: Ch 4 (Sections 4.5 – 4.8)
-
----
 
 <br>
 

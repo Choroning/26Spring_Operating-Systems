@@ -315,14 +315,6 @@ for (int i = 0; i < N; i++)
 
 <br>
 
-## 부록
-
-- 다음 주: 암묵적 스레딩(Implicit Threading), fork/join, OpenMP, 스레드 취소(Thread Cancellation), TLS (교재 4.5–4.8절)
-
----
-
-<br>
-
 ## 점검 문제
 
 1. for 반복문에서 `&i`를 `pthread_create`에 전달하면 왜 잘못된 동작이 발생하는가?

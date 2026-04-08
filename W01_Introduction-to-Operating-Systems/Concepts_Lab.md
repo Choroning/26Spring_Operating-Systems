@@ -308,13 +308,3 @@ You do **not** need to successfully boot the OS — the **process** is what matt
 5. If the agent-generated OS code fails to build, what is the most effective way to ask the agent to fix it?
 
 ---
-
-<br>
-
-## Appendix
-
-- **Connection to this course**: Teams of 3–4 will be formed in Week 9, and the final project involves building an OS prototype using coding agents.
-- **Next session — Week 2 Lab**: Process system calls (`fork`, `exec`, `wait`, `pipe`)
-
-
----

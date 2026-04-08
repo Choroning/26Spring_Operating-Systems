@@ -522,15 +522,6 @@ graph TD
 
 <br>
 
-## Appendix
-
-- Previous week: Pthreads fundamentals — thread creation, data parallelism, argument passing, Amdahl's Law (Textbook Sections 4.1–4.4)
-- Next week: CPU Scheduling — scheduling criteria, FCFS, SJF, Priority, Round-Robin (Textbook Chapter 5)
-
----
-
-<br>
-
 ## Self-Check Questions
 
 1. What are the three benefits of using a thread pool instead of creating a new thread for each task?

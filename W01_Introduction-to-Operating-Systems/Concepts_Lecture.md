@@ -523,12 +523,3 @@ Without a file system, data would be lost every time the computer powers off, an
 5. Without virtual memory, what problems would arise when running multiple programs simultaneously?
 
 ---
-
-<br>
-
-## Appendix
-
-- Next week: **Processes** — fork, exec, wait, pipe
-
-
----
