@@ -69,8 +69,8 @@ if (pid == 0) {
 
 ```mermaid
 graph TD
-    P["부모<br/>pid = fork()"] -->|"child_pid 반환"| PW["부모<br/>wait()"]
-    P -->|"0 반환"| C["자식<br/>독립 실행"]
+    P["부모<br/>pid = fork()"] --> |"child_pid 반환"| PW["부모<br/>wait()"]
+    P --> |"0 반환"| C["자식<br/>독립 실행"]
     C --> CE["자식 종료"]
     CE --> PW
     PW --> PD["부모 계속 실행"]
@@ -119,9 +119,9 @@ graph TD
 
 ```mermaid
 graph TD
-    P["부모"] -->|fork| C["자식"]
-    C -->|exec| N["새 프로그램"]
-    P -->|wait| W["자식 회수"]
+    P["부모"] --> |fork| C["자식"]
+    C        --> |exec| N["새 프로그램"]
+    P        --> |wait| W["자식 회수"]
 ```
 
 > **핵심:** `exec()`는 성공 시 호출한 프로세스의 코드·데이터·힙·스택을 새 프로그램으로 완전히 덮어쓰므로, 호출 이후의 코드는 실행되지 않는다. 실패 시에만 반환값 -1을 돌려준다. `fork()` → `exec()` → `wait()` 패턴은 UNIX 셸의 핵심 동작 원리이므로 반드시 숙지해야 한다.
@@ -212,10 +212,10 @@ printf("Redirected!\n");
 
 ```mermaid
 graph TD
-    S["셸"] -->|"1. fork()"| C["자식"]
-    C -->|"2. open('file.txt')"| FD["fd = 3"]
-    FD -->|"3. dup2(3, 1)"| R["stdout → file.txt"]
-    R -->|"4. exec('ls')"| LS["ls가 stdout에 출력<br/>= file.txt"]
+    S["셸"] --> |"1. fork()"| C["자식"]
+    C      --> |"2. open('file.txt')"| FD["fd = 3"]
+    FD     --> |"3. dup2(3, 1)"| R["stdout → file.txt"]
+    R      --> |"4. exec('ls')"| LS["ls가 stdout에 출력<br/>= file.txt"]
     style S fill:#e3f2fd
     style LS fill:#e8f5e9
 ```

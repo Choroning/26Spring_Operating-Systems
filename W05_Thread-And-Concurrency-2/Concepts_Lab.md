@@ -294,9 +294,9 @@ Without reduction:           With reduction(+:sum):
 
 Thread 0: sum += a[0]       Thread 0: local_sum0 += a[0]
 Thread 1: sum += a[1]       Thread 1: local_sum1 += a[1]
-         ↓                           ↓
-   RACE CONDITION!           sum = local_sum0 + local_sum1
-                                   (safe merge at end)
+         ↓                               ↓
+   RACE CONDITION!          sum = local_sum0 + local_sum1
+                                (safe merge at end)
 ```
 
 > **[Programming Languages]** OpenMP is a **declarative** parallelism model — you tell the compiler *what* to parallelize, not *how*. The runtime decides thread count, scheduling, and synchronization. This contrasts with the **imperative** `pthread_create` approach from Week 4 where you manage every detail yourself.

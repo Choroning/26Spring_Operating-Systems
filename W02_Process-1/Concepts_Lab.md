@@ -119,9 +119,9 @@ graph TD
 
 ```mermaid
 graph TD
-    P["Parent"] -->|fork| C["Child"]
-    C -->|exec| N["New program"]
-    P -->|wait| W["Reap child"]
+    P["Parent"] --> |fork| C["Child"]
+    C           --> |exec| N["New program"]
+    P           --> |wait| W["Reap child"]
 ```
 
 > **Key Point:** Upon success, `exec()` completely overwrites the calling process's code, data, heap, and stack with the new program, so code after the call is never executed. It returns -1 only on failure. The `fork()` → `exec()` → `wait()` pattern is the core operating principle of UNIX shells and must be thoroughly understood.
@@ -212,10 +212,10 @@ printf("Redirected!\n");
 
 ```mermaid
 graph TD
-    S["Shell"] -->|"1. fork()"| C["Child"]
-    C -->|"2. open('file.txt')"| FD["fd = 3"]
-    FD -->|"3. dup2(3, 1)"| R["stdout → file.txt"]
-    R -->|"4. exec('ls')"| LS["ls writes to stdout<br/>= file.txt"]
+    S["Shell"] --> |"1. fork()"| C["Child"]
+    C          --> |"2. open('file.txt')"| FD["fd = 3"]
+    FD         --> |"3. dup2(3, 1)"| R["stdout → file.txt"]
+    R          --> |"4. exec('ls')"| LS["ls writes to stdout<br/>= file.txt"]
     style S fill:#e3f2fd
     style LS fill:#e8f5e9
 ```
