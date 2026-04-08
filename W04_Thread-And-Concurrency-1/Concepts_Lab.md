@@ -82,22 +82,22 @@ pthread_join(tid, NULL);                 // Wait for a thread to finish
 ```text
 Main Thread          Thread 0        Thread 1        Thread 2        Thread 3
     |
-    |--create()----> Start
-    |--create()-------------------> Start
-    |--create()----------------------------------> Start
-    |--create()---------------------------------------------------> Start
-    |                  |              |              |              |
-    |             (concurrent execution — order decided by scheduler)
-    |                  |              |              |              |
-    |                  |              |         printf("Hello 2!")  |
-    |             printf("Hello 0!") |              |              |
-    |                  |              |              |         printf("Hello 3!")
-    |                  |         printf("Hello 1!") |              |
-    |                  |              |              |              |
-    |--join(T0)------> Done          |              |              |
-    |--join(T1)--------------------> Done           |              |
-    |--join(T2)----------------------------------> Done            |
-    |--join(T3)---------------------------------------------------> Done
+    |--create()-----> Start
+    |--create()---------------------> Start
+    |--create()-------------------------------------> Start
+    |--create()------------------------------------------------------> Start
+    |                   |               |               |                |
+    |                  (concurrent execution — order decided by scheduler)
+    |                   |               |               |                |
+    |                   |               |       printf("Hello 2!")       |
+    |           printf("Hello 0!")      |               |                |
+    |                   |               |               |        printf("Hello 3!")
+    |                   |         printf("Hello 1!")    |                |
+    |                   |               |               |                |
+    |--join(T0)-----> Done              |               |                |
+    |--join(T1)----------------------> Done             |                |
+    |--join(T2)--------------------------------------> Done              |
+    |--join(T3)------------------------------------------------------> Done
     |
  "All threads finished."
 ```
@@ -219,14 +219,14 @@ Thread received id = 3
 Main (loop)              Thread 0             Thread 1
     |
   i = 0
-    |--create(&i)------> Start
-  i = 1                    |
-    |--create(&i)------------------------------> Start
-  i = 2                    |                      |
-    :                 id = *(&i)             id = *(&i)
-    :                 Reads 2!               Reads 2!
-    :                      |                      |
-    :               Both get id=2 instead of 0, 1!
+    |--create(&i)-------> Start
+  i = 1                     |
+    |--create(&i)----------------------------> Start
+  i = 2                     |                    |
+    :                   id = *(&i)           id = *(&i)
+    :                    Reads 2!             Reads 2!
+    :                       |                    |
+    :                   Both get id=2 instead of 0, 1!
 ```
 
 **Solution**: Store each value in a **separate memory location** (`tids[i]`), so each thread's pointer remains stable even as the loop advances.

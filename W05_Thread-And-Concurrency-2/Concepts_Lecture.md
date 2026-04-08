@@ -114,14 +114,14 @@
 ```text
 ┌──────────────────────────────────────┐
 │          Application Code            │
-│    (identify parallel tasks)         │
+│      (identify parallel tasks)       │
 ├──────────────────────────────────────┤
 │     Compiler / Runtime Library       │
-│  (create threads, assign tasks,      │
-│   manage scheduling)                 │
+│   (create threads, assign tasks,     │
+│        manage scheduling)            │
 ├──────────────────────────────────────┤
-│         Operating System             │
-│    (kernel thread management)        │
+│          Operating System            │
+│     (kernel thread management)       │
 └──────────────────────────────────────┘
 ```
 
@@ -147,7 +147,7 @@
 - After task completion, the thread is **returned** to the pool for reuse
 
 ```text
-Request ──→ [ Task Queue ] ──→ ┌─ Thread 1 (busy) ─┐
+Request ──→ [ Task Queue ] ──→ ┌─ Thread 1 (busy) ──┐
 Request ──→ [ Task Queue ] ──→ │  Thread 2 (idle)   │ ──→ Execute
 Request ──→ [ Task Queue ] ──→ │  Thread 3 (busy)   │
                                │  Thread 4 (idle)   │
@@ -231,15 +231,15 @@ public class ThreadPoolExample {
 **ExecutorService interface structure**:
 
 ```text
-      Executor (interface)
-          │
-          ▼
+       Executor (interface)
+           │
+           ▼
     ExecutorService (interface)
-          │
-    ┌─────┴─────┐
-    │            │
-execute()    submit()    shutdown()
-(Runnable)   (Callable)  (shutdown request)
+           │
+    ┌──────┴──────┐
+    │             │
+execute()      submit()    shutdown()
+(Runnable)    (Callable)  (shutdown request)
 ```
 
 **execute() vs submit()**:
@@ -314,8 +314,8 @@ int sum = pool.invoke(task);
 
 ```text
       ForkJoinTask<V> (abstract)
-              │
-      ┌───────┴────────┐
+               │
+      ┌────────┴────────┐
       │                 │
 RecursiveTask<V>   RecursiveAction
   (returns V)      (returns void)
@@ -450,8 +450,8 @@ for (i = 0; i < N; i++) {
 **Execution model**:
 
 ```text
-Sequential    #pragma omp parallel for     Sequential
-   code    ─→  ┌─ Thread 0: i=0..249  ─┐ ─→  code
+Sequential     #pragma omp parallel for      Sequential
+   code    ─→  ┌─ Thread 0: i=0..249   ─┐ ─→    code
                │  Thread 1: i=250..499  │
                │  Thread 2: i=500..749  │
                └─ Thread 3: i=750..999 ─┘
@@ -767,19 +767,19 @@ Five key issues to consider in multithreaded programming:
 2. **Duplicate only the calling thread** — new process is single-threaded
 
 ```text
-  Parent Process                  Child Process (Option 1)
-  ┌─────────────┐                ┌─────────────┐
-  │ Thread 1    │   fork()       │ Thread 1'   │
-  │ Thread 2 ───┼──────────→    │ Thread 2'   │  All threads duplicated
-  │ Thread 3    │                │ Thread 3'   │
-  └─────────────┘                └─────────────┘
+  Parent Process              Child Process (Option 1)
+  ┌─────────────┐             ┌─────────────┐
+  │ Thread 1    │   fork()    │ Thread 1'   │
+  │ Thread 2 ───┼──────────→  │ Thread 2'   │  All threads duplicated
+  │ Thread 3    │             │ Thread 3'   │
+  └─────────────┘             └─────────────┘
 
-  Parent Process                  Child Process (Option 2)
-  ┌─────────────┐                ┌─────────────┐
-  │ Thread 1    │   fork()       │             │
-  │ Thread 2 ───┼──────────→    │ Thread 2'   │  Only calling thread duplicated
-  │ Thread 3    │                │             │
-  └─────────────┘                └─────────────┘
+  Parent Process              Child Process (Option 2)
+  ┌─────────────┐             ┌─────────────┐
+  │ Thread 1    │   fork()    │             │
+  │ Thread 2 ───┼──────────→  │ Thread 2'   │  Only calling thread
+  │ Thread 3    │             │             │      duplicated
+  └─────────────┘             └─────────────┘
 ```
 
 **Selection criteria:**
@@ -1048,9 +1048,9 @@ static int threadLocalVar;
 
 ```text
 1. Thread A blocks on an I/O request
-   ┌──────────────────────────────────────┐
-   │ Kernel: "Thread A is blocking"       │ ──→ Upcall
-   └──────────────────────────────────────┘
+   ┌───────────────────────────────────┐
+   │ Kernel: "Thread A is blocking"    │ ──→ Upcall
+   └───────────────────────────────────┘
 
 2. Kernel allocates a new virtual processor (LWP)
 
@@ -1059,9 +1059,9 @@ static int threadLocalVar;
    - Schedules another eligible thread on the new LWP
 
 4. When the blocking event completes:
-   ┌──────────────────────────────────────┐
-   │ Kernel: "Thread A is ready"          │ ──→ Upcall
-   └──────────────────────────────────────┘
+   ┌───────────────────────────────────┐
+   │ Kernel: "Thread A is ready"       │ ──→ Upcall
+   └───────────────────────────────────┘
 
 5. Thread library transitions Thread A back to runnable state
 ```
@@ -1106,15 +1106,15 @@ static int threadLocalVar;
 - Connection: ETHREAD → KTHREAD → TEB
 
 ```text
-  Kernel Space                          User Space
-  ┌─────────────┐                      ┌─────────────┐
-  │  ETHREAD    │                      │    TEB      │
-  │ - start addr│    ┌─────────────┐   │ - thread ID │
-  │ - process   │──→ │  KTHREAD    │──→│ - user stack│
-  │   pointer   │    │ - scheduling│   │ - TLS array │
-  └─────────────┘    │ - kernel    │   └─────────────┘
-                     │   stack     │
-                     └─────────────┘
+  Kernel Space                            User Space
+  ┌──────────────┐                        ┌──────────────┐
+  │  ETHREAD     │                        │  TEB         │
+  │ - start addr │    ┌──────────────┐    │ - thread ID  │
+  │ - process    │──→ │  KTHREAD     │──→ │ - user stack │
+  │   pointer    │    │ - scheduling │    │ - TLS array  │
+  └──────────────┘    │ - kernel     │    └──────────────┘
+                      │   stack      │
+                      └──────────────┘
 ```
 
 > **Exam Tip:** "ETHREAD → KTHREAD → TEB" is the key chain to remember. ETHREAD and KTHREAD are in kernel space (protected), while TEB is in user space (accessible to the application). The TLS array in the TEB is how Windows implements Thread-Local Storage at the OS level.
@@ -1130,14 +1130,14 @@ static int threadLocalVar;
 
 ```text
   ┌─ task_struct ──────────────────────────┐
-  │                                         │
-  │  *files  ──→ [open file table]          │
-  │  *signal ──→ [signal handling info]     │
-  │  *mm     ──→ [memory descriptors]       │
-  │  *fs     ──→ [filesystem info]          │
-  │  pid, state, priority, ...              │
-  │                                         │
-  └─────────────────────────────────────────┘
+  │                                        │
+  │  *files  ──→ [open file table]         │
+  │  *signal ──→ [signal handling info]    │
+  │  *mm     ──→ [memory descriptors]      │
+  │  *fs     ──→ [filesystem info]         │
+  │  pid, state, priority, ...             │
+  │                                        │
+  └────────────────────────────────────────┘
 ```
 
 > **Key Point:** Linux's design is elegantly simple: a "process" and a "thread" are both just a `task_struct`. The difference between them is **how much they share**. A new process (via `fork()`) gets its own copies of everything. A new thread (via `clone()` with sharing flags) shares pointers to the parent's data structures. This unified model avoids maintaining separate code paths for process and thread management.
@@ -1178,16 +1178,17 @@ Key clone flags:
 
 ```text
   fork() — No sharing                clone() — With sharing flags
-  ┌──────────┐  ┌──────────┐        ┌──────────┐  ┌──────────┐
-  │ Parent   │  │ Child    │        │ Parent   │  │ Child    │
-  │ task_    │  │ task_    │        │ task_    │  │ task_    │
-  │ struct   │  │ struct   │        │ struct   │  │ struct   │
-  │          │  │          │        │          │  │          │
-  │ *mm ─→[A]│  │ *mm ─→[A']│      │ *mm ──┐  │  │ *mm ──┐  │
-  │ *files→[B]│  │*files→[B']│      │ *files─┤  │  │*files─┤  │
-  └──────────┘  └──────────┘        └───────┼──┘  └──────┼──┘
-   Different copies                         └──→ [SHARED] ←┘
-                                           Same data structures shared
+  ┌───────────┐  ┌───────────┐        ┌───────────┐  ┌───────────┐
+  │ Parent    │  │ Child     │        │ Parent    │  │ Child     │
+  │ task_     │  │ task_     │        │ task_     │  │ task_     │
+  │ struct    │  │ struct    │        │ struct    │  │ struct    │
+  │           │  │           │        │           │  │           │
+  │ *mm ─→[A] │  │ *mm ─→[A']│        │ *mm ───┐  │  │ *mm ───┐  │
+  │ *files→[B]│  │*files→[B']│        │ *files─┤  │  │ *files─┤  │
+  └───────────┘  └───────────┘        └────────┼──┘  └────────┼──┘
+       Different copies                        └─→ [SHARED] ←─┘
+                                             Same data structures
+                                                    shared
 ```
 
 **Extension of clone() — Containers**: By using specific flags to isolate namespaces, containers (Docker, LXC) can be created (Ch 18)
