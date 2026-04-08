@@ -1093,18 +1093,6 @@ int main() {
 
 ---
 
-<br>
-
-## 부록
-
-- **다음 주 — 4주차: 스레드와 동시성 (Ch 4)**
-  - 스레드의 개념과 필요성
-  - 멀티스레드 모델 (Many-to-One, One-to-One, Many-to-Many)
-  - 스레드 라이브러리 (Pthreads, Windows, Java)
-  - 암묵적 스레딩(Implicit Threading)
-  - 실습: Pthreads를 이용한 멀티스레드 프로그래밍
-
----
 
 <br>
 

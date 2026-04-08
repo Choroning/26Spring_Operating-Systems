@@ -1093,18 +1093,6 @@ int main() {
 
 ---
 
-<br>
-
-## Appendix
-
-- **Next week — Week 4: Threads and Concurrency (Ch 4)**
-  - Thread concepts and motivation
-  - Multithreading models (Many-to-One, One-to-One, Many-to-Many)
-  - Thread libraries (Pthreads, Windows, Java)
-  - Implicit threading
-  - Practice: multithreaded programming with Pthreads
-
----
 
 <br>
 

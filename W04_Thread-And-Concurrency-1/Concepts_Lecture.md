@@ -1233,22 +1233,6 @@ Execution: `./a.out 10` → "sum = 55"
 
 ---
 
-<br>
-
-## Appendix
-
-- **Next Week — Week 5: Threads and Concurrency 2 (Ch 4 second half)**
-  - Implicit Threading
-    - Thread Pools, Fork-Join, OpenMP, Grand Central Dispatch (GCD)
-  - Threading Issues
-    - fork() / exec() in multithreaded programs
-    - Signal handling
-    - Thread cancellation
-    - Thread-Local Storage (TLS)
-  - OS-specific thread implementations (Linux, Windows)
-  - Textbook: Ch 4 (Sections 4.5 – 4.8)
-
----
 
 <br>
 

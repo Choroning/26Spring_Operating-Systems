@@ -435,13 +435,6 @@ struct proc {
 
 ---
 
-<br>
-
-## Appendix
-
-- Next topic: **Threads, Scheduling, Synchronization** — built upon what we explored today.
-
----
 
 <br>
 

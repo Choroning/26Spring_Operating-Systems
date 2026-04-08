@@ -1337,24 +1337,6 @@ int main() {
 
 ---
 
-<br>
-
-## 부록
-
-- **다음 주 — Week 6: CPU 스케줄링 1 (Ch 5)**
-  - CPU 스케줄링 기본 개념
-    - CPU-I/O 버스트 사이클
-    - CPU 스케줄러와 디스패처
-  - 스케줄링 기준
-    - CPU 이용률, 처리량, 반환 시간, 대기 시간, 응답 시간
-  - 스케줄링 알고리즘
-    - FCFS (First-Come, First-Served)
-    - SJF (Shortest-Job-First)
-    - 우선순위 스케줄링
-    - 라운드 로빈 (RR)
-  - 다단계 큐 스케줄링
-
----
 
 <br>
 

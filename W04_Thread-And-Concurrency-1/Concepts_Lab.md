@@ -315,14 +315,6 @@ for (int i = 0; i < N; i++)
 
 <br>
 
-## Appendix
-
-- Next week: Implicit threading, fork/join, OpenMP, thread cancellation, TLS (Textbook Sections 4.5–4.8)
-
----
-
-<br>
-
 ## Self-Check Questions
 
 1. Why does passing `&i` from a for loop to `pthread_create` cause incorrect behavior?
