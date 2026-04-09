@@ -67,6 +67,8 @@ if (pid == 0) {
 }
 ```
 
+> **용어 정의:** `pid_t`는 프로세스 ID에 사용되는 정수 타입의 typedef이다 (`<sys/types.h>`에 정의됨). 시스템마다 PID 크기가 다를 수 있으므로 이식성을 위해 `int` 대신 사용한다.
+
 ```mermaid
 graph TD
     P["부모<br/>pid = fork()"] --> |"child_pid 반환"| PW["부모<br/>wait()"]
@@ -141,7 +143,7 @@ pipe(fd);  // fd[0]=읽기, fd[1]=쓰기
 if (fork() == 0) {
     close(fd[0]);  // 읽기 끝 닫기
     char *msg = "hello from child";
-    write(fd[1], msg, strlen(msg));
+    write(fd[1], msg, strlen(msg));  /* strlen(msg) 사용 — 아래 참고 참조 */
     close(fd[1]);
 } else {
     close(fd[1]);  // 쓰기 끝 닫기
@@ -151,6 +153,8 @@ if (fork() == 0) {
     close(fd[0]);
 }
 ```
+
+> **참고:** 여기서 `sizeof(msg)`가 아닌 `strlen(msg)`를 사용한다 — `msg`는 포인터이므로 `sizeof`를 쓰면 문자열 길이가 아닌 포인터 크기(4 또는 8바이트)가 반환되기 때문이다.
 
 ```mermaid
 graph LR
@@ -192,7 +196,7 @@ graph LR
 
 ```c
 int fd = open("output.txt",
-    O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    O_WRONLY | O_CREAT | O_TRUNC, 0644);  /* O_WRONLY|O_CREAT|O_TRUNC = 쓰기 전용, 없으면 생성, 내용 비움 */
 dup2(fd, STDOUT_FILENO);
 close(fd);
 

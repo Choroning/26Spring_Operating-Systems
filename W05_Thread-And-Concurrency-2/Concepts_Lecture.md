@@ -175,6 +175,8 @@ Request ──→ [ Task Queue ] ──→ │  Thread 3 (busy)   │
 
 Windows provides a thread pool API, used similarly to `Thread_Create()`:
 
+Windows uses its own type names: `DWORD` = 32-bit unsigned integer, `PVOID` = `void *`, `ULONG` = unsigned long — all defined in the Windows SDK.
+
 ```c
 // Define a function to be executed as a separate thread
 DWORD WINAPI PoolFunction(PVOID Param) {
@@ -390,7 +392,7 @@ Thread 4:  (empty)  (empty)  (empty) ← steals Task F from Thread 3
 - In the textbook example, THRESHOLD = 1000
 - In practice, the optimal value should be determined through **timing experiments**
 
-> **Key Point:** Work stealing is what makes fork-join efficient in practice. Without it, if tasks are unevenly distributed, some threads would sit idle while others are overloaded. Work stealing uses a **double-ended queue (deque)** — the owning thread pushes/pops from one end, while thieves steal from the other end, minimizing contention.
+> **Key Point:** Work stealing is what makes fork-join efficient in practice. Without it, if tasks are unevenly distributed, some threads would sit idle while others are overloaded. Work stealing uses a **double-ended queue (deque)** — the owning thread pushes/pops from one end, while thieves steal from the other end, minimizing contention. Using a deque lets the owner push/pop tasks from one end (LIFO, no contention) while a thief steals from the other end (FIFO). Since owner and thief rarely touch the same end, a simple compare-and-swap suffices — no heavy lock needed.
 
 > **[Algorithms]** The work-stealing strategy achieves **load balancing** without a central scheduler. Each thread acts independently: do your own work first, then steal from others. This decentralized approach scales well because it avoids the bottleneck of a single task queue shared by all threads.
 
@@ -575,6 +577,8 @@ int main() {
 
 **In C/C++/Objective-C: Block** — defines a self-contained unit of work using `^{ }` syntax
 
+A **Block** in C/Objective-C is an anonymous function — a piece of code you write inline and pass as a value, similar to a lambda in Java. The `^` symbol marks the start of a block. Blocks can capture variables from their surrounding scope automatically.
+
 ```c
 // block definition
 ^{ printf("I am a block"); }
@@ -682,6 +686,8 @@ parallel_for(size_t(0), n, [=](size_t i) {
 **How it works**:
 - First two parameters: iteration space (0 to n-1)
 - Third parameter: **C++ lambda function** `[=](size_t i)` → executed for each `i`
+
+A lambda is an anonymous function written inline. In C++, `[=](size_t i) { ... }` means: 'a function taking parameter `i`, capturing all local variables by value.' `size_t` is an unsigned integer type used for sizes and indices.
 - TBB splits loop iterations into **chunks**
 - Creates multiple tasks and assigns them to available threads
 - Similar approach to Java's Fork-Join
@@ -691,6 +697,8 @@ parallel_for(size_t(0), n, [=](size_t i) {
 ### 6.3 parallel_reduce Example
 
 **Implementing array summation with `parallel_reduce`**:
+
+`blocked_range<int>(0, n)` tells TBB 'the iteration space is indices 0 to n-1.' TBB splits this range into sub-ranges and gives each thread one; inside the lambda, `r.begin()` and `r.end()` give the start and end of that thread's slice.
 
 ```cpp
 #include <tbb/tbb.h>
@@ -817,6 +825,8 @@ Five key issues to consider in multithreaded programming:
 | **Cause** | Triggered by the process itself | Generated externally |
 | **Delivered to** | The process that performed the action | Delivered to another process |
 | **Examples** | Illegal memory access, div by 0 | `Ctrl+C`, timer expire |
+
+(Here 'synchronous' means the signal was caused by the running thread's own action — like dividing by zero — not by something external)
 
 > **Synchronous signals** are the result of a thread's own actions — like dividing by zero or accessing invalid memory. The thread "caused" the signal, so delivery is straightforward. **Asynchronous signals** come from outside the process (the user pressing Ctrl+C, a timer expiring, another process sending a signal), which is where the multithreading complication arises: *which* thread should receive it?
 
@@ -1034,6 +1044,8 @@ static int threadLocalVar;
 - Appears as a **virtual processor** to the user-level thread library
 - Each LWP is **attached to one kernel thread**
 
+An LWP (Lightweight Process) is an OS-managed execution slot between user threads and kernel threads. Think of it as a 'slot' that the kernel scheduler sees — the user-level thread library assigns user threads to available LWP slots, each backed by a real kernel thread.
+
 *Silberschatz, Figure 4.20 — Lightweight process (LWP)*
 
 **Number of LWPs**: A CPU-bound application needs only 1, while an I/O-intensive application needs as many as the number of concurrent blocking I/O operations
@@ -1221,6 +1233,7 @@ void multiply_parallel(int num_threads) {
     omp_set_num_threads(num_threads);
     double start = omp_get_wtime();
 
+    /* collapse(2): merge the i and j loops into one parallel iteration space */
     #pragma omp parallel for collapse(2)
     for (int i = 0; i < N; i++)
         for (int j = 0; j < N; j++) {

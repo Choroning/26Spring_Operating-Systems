@@ -119,7 +119,7 @@ terminate();                  // Terminates after the last CPU burst
 
 ### 1.3 CPU Burst Distribution
 
-The distribution of CPU burst lengths follows an **exponential or hyperexponential** decay pattern:
+The distribution of CPU burst lengths follows an **exponential or hyperexponential** (hyperexponential — a distribution with a heavier tail than a plain exponential, meaning bursts cluster even more strongly at the short end) decay pattern:
 
 - **Short CPU bursts** are very frequent — most bursts are short
 - **Long CPU bursts** occur rarely
@@ -161,6 +161,7 @@ When the CPU becomes idle, the **ready queue** is used to select the next proces
 - The ready queue does not have to be FIFO
   - Can be implemented as a FIFO queue, **priority queue**, tree, linked list, etc.
 - Records in the queue are typically **PCBs (Process Control Blocks)**
+  - Recall: A PCB (Process Control Block) stores all state information for a process — registers, program counter, priority, etc. — so that it can be resumed exactly where it left off after a context switch.
 - The internal order of the queue is determined by the scheduling algorithm
 
 > **Key Point:** The "ready queue" is not necessarily a queue in the data structure sense. It's a collection of processes that are ready to run. The scheduling algorithm determines how that collection is ordered — FCFS uses a FIFO queue, SJF uses a priority queue sorted by burst length, etc. The name "ready queue" is a historical convention.
@@ -204,6 +205,8 @@ Preemptive scheduling is powerful but has **caveats**:
 - Preemption while modifying shared data -> another process reads inconsistent data
 - -> **Synchronization mechanisms** (mutex, semaphore, etc.) are needed (covered in detail in Chapter 6)
 
+A **race condition** occurs when two processes read and write shared data at the same time, potentially leaving it in an invalid state. A **mutex** (mutual exclusion lock) prevents this by allowing only one process at a time into a **critical section** — the portion of code that accesses shared data.
+
 **2. Preemption in Kernel Mode**
 - Preemption during kernel data structure modification within a system call -> kernel inconsistency
 - **Nonpreemptive kernel**: Defer context switch until system call completes (simple but unsuitable for real-time)
@@ -221,7 +224,7 @@ Preemptive scheduling is powerful but has **caveats**:
 Three roles of the Dispatcher:
 1. Perform **context switch** (save current process state -> restore new process state)
 2. Switch to **user mode**
-3. Jump to the appropriate location (**PC**) of the new process
+3. Jump to the appropriate location (PC — Program Counter, the register holding the address of the next instruction) of the new process
 
 *Silberschatz, Figure 5.3 — The role of the dispatcher*
 
@@ -383,6 +386,8 @@ Process arrival order: P1 -> P2 -> P3 (all arrive at time 0)
 | P2 | 3 ms |
 | P3 | 3 ms |
 
+A **Gantt chart** in scheduling is a horizontal bar diagram where each bar shows which process is using the CPU during a given time interval; the numbers along the bottom are timestamps.
+
 ```text
 Gantt Chart:
 +-------------------------+----+----+
@@ -496,7 +501,7 @@ Case 2: Short first (burst: 3, 10)  <- SJF
 - Result: The overall average waiting time **decreases**
 - Generalizing this shows that SJF is **provably optimal**
 
-> **[Algorithms]** The proof generalizes via exchange argument: in any schedule that is not SJF-ordered, you can find an adjacent pair where a longer job precedes a shorter one. Swapping them reduces total waiting time without affecting other jobs. Repeating this yields the SJF order — a sorting argument that's equivalent to proving that sorting by burst time minimizes total weighted completion time.
+> **[Algorithms]** The proof works by showing that in any non-SJF schedule, you can always swap two adjacent jobs to reduce total waiting time — repeating such swaps eventually yields the SJF order (this technique is called the exchange argument). In any schedule that is not SJF-ordered, you can find an adjacent pair where a longer job precedes a shorter one. Swapping them reduces total waiting time without affecting other jobs — a sorting argument that's equivalent to proving that sorting by burst time minimizes total weighted completion time.
 
 ### 4.3 SJF — Example (Nonpreemptive)
 
@@ -537,6 +542,8 @@ Solution: **Prediction** based on past burst history
 - Use **Exponential Averaging** for prediction
 
 ### 4.5 Exponential Averaging — Formula
+
+The idea is to form a **weighted average** between the most recent observed burst and the previous prediction, so that neither history nor the latest measurement is ignored entirely.
 
 Formula for predicting the next CPU burst:
 
@@ -885,10 +892,12 @@ Data: P1(0,24), P2(0,3), P3(0,3) — all arrive at time 0
 |----------------|------|-----|------|-----|
 | Preemption | No | No | **Yes** | **Yes** |
 | Optimal WT | No | **Yes** | **Yes** (preemptive) | No |
-| Starvation | No | Possible | Possible | **No** |
+| Starvation* | No | Possible | Possible | **No** |
 | Response Time | Poor | Moderate | Moderate | **Excellent** |
 | Implementation complexity | Very simple | Burst prediction needed | Burst prediction needed | Timer needed |
 | Convoy Effect | **Occurs** | None | None | None |
+
+**Starvation** means a process waits indefinitely because higher-priority or shorter processes keep arriving and always get scheduled first.
 
 > This table is a high-value exam reference. Note the trade-offs: SJF/SRTF are optimal for waiting time but can cause starvation (long processes may wait indefinitely if short processes keep arriving). RR prevents starvation and has excellent response time but has higher average waiting time. FCFS is simple but has the worst overall characteristics. These trade-offs motivate the more advanced algorithms in Week 7 (priority scheduling, multilevel queues).
 
@@ -1001,7 +1010,7 @@ def round_robin(processes, quantum):
     for p in procs:
         p.remaining = p.burst
 
-    queue = deque()
+    queue = deque()  # deque = double-ended queue; popleft() removes from front in O(1), efficient for FIFO ready queue
     time = 0
     idx = 0
     timeline = []

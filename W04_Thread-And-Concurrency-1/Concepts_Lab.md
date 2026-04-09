@@ -160,9 +160,11 @@ void *sum_array(void *arg)
 }
 ```
 
+The `arg` parameter is cast to `struct thread_arg *` — a simple struct holding the thread's assigned ID: `struct thread_arg { int id; };`. This struct is defined in the full source file.
+
 > **Why `partial_sum[id]` instead of a shared variable?**
 > - Each thread writes to **its own index** — no conflict.
-> - If all threads wrote to a single `total` variable, a **race condition** would occur (covered in Chapter 6).
+> - If all threads wrote to a single `total` variable, a **race condition** would occur (covered in Chapter 6). A **race condition** is a bug where the program's output depends on the unpredictable timing of concurrent threads accessing shared data — covered in detail in Chapter 6.
 
 > **[Data Structures]** The divide-and-conquer approach here is similar to merge sort: split the data, process each part independently, and combine the results. The key difference is that the "split" and "process" phases run **in parallel** across multiple cores.
 
@@ -231,7 +233,7 @@ Main (loop)              Thread 0             Thread 1
 
 **Solution**: Store each value in a **separate memory location** (`tids[i]`), so each thread's pointer remains stable even as the loop advances.
 
-> **Exam Tip:** This argument-passing pitfall is a frequently tested topic. The root cause is that `pthread_create` is **asynchronous** — the new thread may not run immediately. By the time it dereferences the pointer, the pointed-to value may have changed. This is a race condition between the main thread's loop and each child thread's pointer dereference.
+> **Exam Tip:** This argument-passing pitfall is a frequently tested topic. `pthread_create` is **asynchronous** — the new thread may start running at any later point, not necessarily before the next line of the calling code executes. The root cause is that the new thread may not run immediately. By the time it dereferences the pointer, the pointed-to value may have changed. This is a race condition between the main thread's loop and each child thread's pointer dereference.
 
 ---
 

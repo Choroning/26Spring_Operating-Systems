@@ -117,6 +117,8 @@
 
 ### 2.1 Definition
 
+The kernel is the core program that starts when your computer boots and never stops running — it manages all hardware resources and provides services to applications.
+
 - **One program running at all times** on the computer = the **Kernel**
 - Everything else is either a **system program** or an **application program**
 
@@ -181,7 +183,11 @@ graph LR
 
 > **Analogy:** Think of a bank. Employees (kernel mode) have vault access and can handle any operation. Customers (user mode) can only interact through the counter window (system calls). A customer who tries to jump over the counter is stopped immediately — just as the hardware traps a user-mode program that attempts a privileged instruction.
 
+> **Definition:** A **register** is a tiny, ultra-fast memory slot built directly into the CPU, used to hold values the CPU is currently working with. A **status register** is a special register that stores flags indicating the CPU's current state (e.g., which mode it is in).
+
 > **[Computer Architecture]** The mode bit is stored in the CPU's **status register (PSW: Program Status Word)**. In RISC-V, the SPP (Supervisor Previous Privilege) bit in the `sstatus` register serves this role. Since the hardware automatically changes the mode bit upon a trap, software cannot arbitrarily switch to kernel mode.
+
+Privileged instructions are CPU instructions that could harm the system if misused — so hardware physically prevents them from executing outside kernel mode.
 
 > **[Computer Architecture]** CPUs have regular instructions and **privileged instructions**. Privileged instructions (e.g., I/O instructions, interrupt control, timer configuration) can only be executed in kernel mode. If execution is attempted in user mode, the hardware generates a **trap** and transfers control to the OS. This is the core mechanism for OS self-protection.
 
@@ -193,13 +199,14 @@ graph LR
 
 - **System Call** = the **only way** a user program can request OS services
 - User program → C library → `syscall` instruction (trap) → kernel handles it → return
+- The `syscall` instruction is a special CPU-level command (not a C function) that tells the hardware to stop executing user code and immediately hand control to the OS kernel.
 - Even a simple `cp in.txt out.txt` command generates **thousands** of system calls.
 
 > **Analogy:** A restaurant. Customers order from a menu (API) — they cannot walk into the kitchen. The waiter (system call) takes the order and delivers it to the kitchen (kernel), which prepares the dish using equipment the customer never touches (hardware). The menu defines what you can order; the system call interface defines what services you can request.
 
 > **[Programming Languages]** The commonly used `printf()` in C is not a system call — it is a C library function. Internally, `printf()` buffers data and then calls the `write()` system call. In other words, library functions execute in user mode, and at the point where actual hardware access is needed, they switch to kernel mode via system calls. On Linux, the `strace` command can be used to view the list of system calls a program invokes.
 
-> **Note:** System calls are identified by **system call numbers**. When a user program invokes a system call, the corresponding number is stored in a designated register (RISC-V uses `a7`, x86 uses `eax`) and then a trap occurs. The kernel reads this number and looks up the corresponding handler function in the **system call table**. In the Week 3 lab, you will directly examine the xv6 system call table (`syscall.c`).
+> **Note:** System calls are identified by **system call numbers**. When a user program invokes a system call, the corresponding number is stored in a designated register (RISC-V uses `a7`, x86 uses `eax`) and then a trap occurs. (`a7` and `eax` are names of specific CPU registers — think of them as named slots that the hardware knows to check for the system call number) The kernel reads this number and looks up the corresponding handler function in the **system call table**. In the Week 3 lab, you will directly examine the xv6 system call table (`syscall.c`).
 
 ### 2.6 How a Computer System Works
 
@@ -225,6 +232,8 @@ graph TD
 - Devices notify the CPU of completed work via **interrupts**.
 - **DMA** (Direct Memory Access): a method for transferring large amounts of data without CPU intervention.
 
+An ISR (Interrupt Service Routine) is the kernel function that runs in response to a specific interrupt. The IVT (Interrupt Vector Table) is a lookup table that maps each interrupt number to its corresponding ISR.
+
 > **[Computer Architecture]** An **interrupt** is a mechanism by which a device signals the CPU, saying "I've finished my task — please handle it." The CPU pauses its current work and executes the corresponding Interrupt Service Routine (ISR) by consulting the Interrupt Vector Table (IVT). Without **DMA**, the CPU would have to transfer data byte by byte, which is highly inefficient. The DMA controller handles data transfer instead, and upon completion, notifies the CPU via an interrupt.
 
 ### 2.7 Storage-Device Hierarchy
@@ -241,7 +250,7 @@ graph TD
 | **SSD** | < 4 TB | ~50 us | **OS** |
 | **HDD** | < 20 TB | ~5 ms | **OS** |
 
-> **[Computer Architecture]** Higher levels are faster, more expensive, and smaller in capacity. This hierarchy works because of the **locality** principle. **Temporal locality**: recently accessed data is likely to be accessed again soon. **Spatial locality**: data near recently accessed data is likely to be accessed soon. The OS manages storage devices at and below main memory, actively leveraging this hierarchy in virtual memory (Weeks 11–12).
+> **[Computer Architecture]** Higher levels are faster, more expensive, and smaller in capacity. This hierarchy works because of the **locality** principle. **Temporal locality**: recently accessed data is likely to be accessed again soon. **Spatial locality**: data near recently accessed data is likely to be accessed soon. Think of reading a book — after reading page 50, you are likely to read page 51 next (spatial locality) and may re-read page 50 again soon (temporal locality). Cache memory exploits this predictability. The OS manages storage devices at and below main memory, actively leveraging this hierarchy in virtual memory (Weeks 11–12).
 
 ### 2.8 OS Structure
 
@@ -256,9 +265,9 @@ Most modern OSes are **hybrid** — they take a pragmatic approach rather than a
 
 ![Tux](../images/tux.png)
 
-> **Context Switching**: Context switching is saving the state (registers, PC, etc.) of the currently running process and restoring the state of another process so it can resume execution.
+> **Context Switching**: Context switching is saving the state (registers, PC (Program Counter — the register that tracks which instruction the CPU will execute next), etc.) of the currently running process and restoring the state of another process so it can resume execution.
 
-> **Note:** A monolithic kernel runs all services in kernel space, making it fast, but a single bug can crash the entire system. A microkernel keeps only minimal functionality (IPC, scheduling) in the kernel and runs the rest in user space, making it more stable but incurring greater context-switching overhead. Linux is monolithic but also provides modular flexibility through LKMs.
+> **Note:** A monolithic kernel runs all services in kernel space, making it fast, but a single bug can crash the entire system. A microkernel keeps only minimal functionality (IPC (Inter-Process Communication — how separate programs pass data to each other), scheduling) in the kernel and runs the rest in user space, making it more stable but incurring greater context-switching overhead. Linux is monolithic but also provides modular flexibility through LKMs.
 
 ### 2.9 xv6
 
@@ -277,7 +286,7 @@ make qemu    # Boot xv6 in the QEMU emulator
 ```
 
 > **Note:** To build xv6, the following tools must be pre-installed:
-> - **RISC-V cross compiler**: `riscv64-unknown-elf-gcc` (or `riscv64-linux-gnu-gcc`) — needed to generate RISC-V binaries on an x86/ARM host
+> - **RISC-V cross compiler**: `riscv64-unknown-elf-gcc` (or `riscv64-linux-gnu-gcc`) — needed to generate RISC-V binaries on an x86/ARM host. A cross compiler is needed because your laptop likely runs x86 (Intel/AMD), but xv6 targets RISC-V — the cross compiler translates C source code into RISC-V machine code that your laptop cannot run natively.
 > - **QEMU**: `qemu-system-riscv64` — emulates RISC-V hardware to run xv6
 > - **make, git**: build system and source control
 >
@@ -315,7 +324,7 @@ graph LR
 
 - Key system calls: **`fork()`**, **`exec()`**, **`wait()`**, **`exit()`**
 - `fork()` creates a **copy** of the current process (parent → child).
-- `exec()` **replaces** the process image with a new program.
+- `exec()` **replaces** the process image with a new program. A process image is the complete contents of a running process in memory — its code, data, stack, and state. `exec()` discards all of this and loads an entirely new program in its place.
 - In xv6: `kernel/proc.c` — process table and state transitions
 
 > **Note:** When `fork()` returns 0, it is the child process; when it returns a positive value (the child's PID), it is the parent process. This return value is used to branch the execution flow between parent and child. The pattern of calling `exec()` after `fork()` is the fundamental way Unix/Linux shells execute commands.
@@ -455,7 +464,7 @@ graph LR
 > **Lazy Allocation**: Lazy allocation means the OS does not actually allocate physical memory when requested, but waits until the memory is first accessed.
 
 - Enables **COW fork**, **lazy allocation**, **memory-mapped files**, and more
-- In xv6: RISC-V **Sv39** — 3-level page table, 39-bit virtual address
+- In xv6: RISC-V **Sv39** (Sv39 is the name RISC-V gives to its virtual memory scheme — details will be covered in Weeks 11–12; for now, just note that virtual addresses are 39 bits wide) — 3-level page table, 39-bit virtual address
 
 > **[Computer Architecture]** To translate virtual addresses to physical addresses, the page table in memory must be consulted each time, which can double (or more) memory access latency. To solve this, CPUs include a cache called the **TLB (Translation Lookaside Buffer)** that stores recent translation results. COW (Copy-On-Write) fork is an optimization where during `fork()`, only the page table is shared instead of actually copying memory, and physical pages are copied only when a write occurs.
 

@@ -121,7 +121,7 @@ What threads within the same process **share**:
 |----------|---------|--------|
 | Creation cost | **High** (memory and resource allocation) | **Low** (only stack and registers needed) |
 | Context switching | **Slow** (address space switch) | **Fast** (same address space) |
-| Memory sharing | Isolated by default (IPC required) | **Naturally shared** (code, data) |
+| Memory sharing | Isolated by default (IPC (Inter-Process Communication) required — pipes, sockets, etc.) | **Naturally shared** (code, data) |
 | Independence | High (one dying has little effect on others) | Low (one dying can affect the entire process) |
 | Communication | IPC required (pipes, sockets, etc.) | Direct communication via global variables |
 
@@ -129,7 +129,7 @@ What threads within the same process **share**:
 
 > Threads are also called **"Lightweight Processes (LWP)."**
 
-> **[Computer Architecture]** Thread context switching is faster than process switching because the address space is the same, so **no TLB flush is needed**. When switching processes, the page table changes, requiring TLB invalidation, which causes frequent TLB misses and degrades performance.
+> **[Computer Architecture]** Thread context switching is faster than process switching because the address space is the same, so **no TLB flush is needed**. When switching processes, the page table changes, requiring TLB invalidation, which causes frequent TLB misses and degrades performance. A page table is the OS's mapping from a program's logical addresses to physical RAM locations; each process has its own, so switching processes forces the CPU to load a different one.
 >
 > **TLB (Translation Lookaside Buffer)**: a hardware cache that speeds up virtual-to-physical address translation. Thread switches within the same process don't require a TLB flush since they share the same address space.
 
@@ -385,6 +385,8 @@ Example: A program that is 75% parallel + 25% serial
 
 > **Key Point:** A common source of confusion with the terms "user threads" and "kernel threads" is that Pthreads and Java threads are ultimately mapped to kernel threads for execution. Here, "user threads" refers to **threads created and managed through user-level APIs**, while "kernel threads" refers to **threads that the kernel's scheduler recognizes and directly schedules**. The mapping model (many-to-one, one-to-one, many-to-many) determines the relationship between the two.
 
+> Note: The examples listed (Pthreads, Java threads) are called "user threads" because they are created via user-level APIs. However, on modern Linux, each user thread maps one-to-one to a kernel thread — we will see why in Section 5.
+
 ---
 
 <br>
@@ -447,7 +449,7 @@ Advantages:
 Disadvantages:
 - **Very complex to implement**
 
-> The complexity arises from needing a user-level scheduler that coordinates with the kernel scheduler, plus mechanisms like upcalls for the kernel to notify the user-level scheduler about events.
+> The complexity arises from needing a user-level scheduler that coordinates with the kernel scheduler, plus mechanisms like upcalls for the kernel to notify the user-level scheduler about events. An upcall is a mechanism where the kernel sends a notification to a user-level scheduler — for example, alerting it that a thread is about to block so the scheduler can switch to a different user thread.
 
 > Theoretically the most flexible, but in practice the one-to-one model dominates.
 
@@ -638,6 +640,8 @@ Return value: 0 on success, error number on failure
 
 ### 6.7 Windows Thread Example (Figure 4.13)
 
+Windows defines its own type aliases: `DWORD` (32-bit unsigned integer), `HANDLE` (opaque OS resource identifier), `LPVOID` (equivalent to `void *`), and `WINAPI` (calling-convention keyword — treat it as decoration).
+
 ```c
 #include <windows.h>
 #include <stdio.h>
@@ -740,6 +744,8 @@ What the `start()` method does:
 
 **Method 2: Lambda expressions (Java 8+)**
 
+A lambda expression is a compact, anonymous function written inline — it eliminates the need to define a whole class. A functional interface is any interface with exactly one abstract method, which lets Java infer what the lambda should implement.
+
 Runnable is a **functional interface** with only one abstract method → lambda can be used
 
 ```java
@@ -836,7 +842,7 @@ Executor service = new SomeExecutor();
 service.execute(new Task());
 ```
 
-> **Producer-consumer model**: Tasks (Runnables) are produced, and threads consume them for execution
+> **Producer-consumer model**: Tasks (Runnables) are produced, and threads consume them for execution. The producer-consumer model is a pattern where one part of the program generates work items (producer) and another part executes them (consumer) — here, your code produces `Runnable` tasks and the thread pool's threads consume and run them.
 
 > **[Programming Languages]** The Executor pattern is an example of the **Strategy Pattern**. By separating the task (what to do) from the execution strategy (how to execute), the same task can be run in various ways: single thread, thread pool, scheduling, etc.
 

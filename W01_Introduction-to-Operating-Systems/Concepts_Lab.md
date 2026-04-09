@@ -258,7 +258,7 @@ graph LR
 
 > **[Computer Architecture]** When a computer is powered on, the BIOS/UEFI loads the boot sector (512 bytes) into memory and executes it. `boot.asm` is this boot sector code, which starts in Real Mode, transitions to Protected Mode, and then loads the kernel (`kernel.c`). `linker.ld` is a linker script that specifies where the kernel code and data are placed in memory.
 
-> **Note:** For regular applications, the OS manages memory layout, but when developing an OS itself, you must specify "where the code is loaded in memory" yourself. The **linker script** is what performs this role. For example, the bootloader must be located at memory address `0x7C00`, and the kernel code must be placed after it — this is specified in the linker script through the starting addresses and ordering of `.text`, `.data`, and `.bss` sections. Without a linker script, the compiler would use arbitrary addresses and booting would fail.
+> **Note:** For regular applications, the OS manages memory layout, but when developing an OS itself, you must specify "where the code is loaded in memory" yourself. The **linker script** is what performs this role. For example, the bootloader must be located at memory address `0x7C00`, and the kernel code must be placed after it — this is specified in the linker script through the starting addresses and ordering of `.text`, `.data`, and `.bss` sections. `.text` holds executable code, `.data` holds initialized variables, and `.bss` holds uninitialized variables. `0x7C00` is the memory address where the BIOS places the boot sector — a hardware convention established decades ago. Without a linker script, the compiler would use arbitrary addresses and booting would fail.
 
 ### 8.1 What to Observe
 

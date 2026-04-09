@@ -217,6 +217,8 @@ int out = 0;   /* 다음 읽기 위치 (소비자) */
 - 버퍼 가득 참: `((in + 1) % BUFFER_SIZE) == out`
 - 이 방식에서는 최대 **BUFFER_SIZE - 1** 개의 항목만 저장 가능하다.
 
+> **참고:** 실제로 `item`은 생산자가 생성하는 데이터이다 — 예를 들어: `typedef struct { int value; } item;`은 센서 값이나 메시지를 나타낼 수 있다.
+
 > **[자료구조]** 이 구조는 원형 큐(Circular Queue)와 동일하다. `in`은 rear, `out`은 front에 해당하며, 한 칸을 비워두는 이유는 빈 상태와 가득 찬 상태를 구분하기 위해서이다.
 
 **생산자 코드 (Figure 3.12):**
@@ -376,6 +378,8 @@ char *ptr = (char *)mmap(0, 4096, PROT_READ | PROT_WRITE,
 
 > **`shm_open()` 매개변수:** `name` — 공유 메모리 객체의 이름 (프로세스들이 같은 이름으로 접근). `O_CREAT` — 존재하지 않으면 생성. `O_RDWR` — 읽기와 쓰기 모두 허용. 반환값 — 파일 디스크립터(file descriptor, 정수).
 
+> **참고:** `ftruncate(fd, SIZE)`는 새로 생성된 공유 메모리 객체의 크기를 `SIZE` 바이트로 설정한다. 새 `shm_open` 객체는 기본 길이가 0이므로, 쓰기 전에 이 단계가 필수이다.
+
 > **[컴퓨터구조]** `mmap()`은 파일이나 공유 메모리 객체를 프로세스의 가상 주소 공간에 직접 매핑하는 시스템 콜이다. 매핑 후에는 포인터를 통해 일반 메모리처럼 접근할 수 있어, `read()`/`write()` 시스템 콜 없이도 데이터를 교환할 수 있다.
 
 **생산자 (Figure 3.16):**
@@ -400,7 +404,7 @@ int main()
     char *ptr;
 
     fd = shm_open(name, O_CREAT | O_RDWR, 0666);
-    ftruncate(fd, SIZE);
+    ftruncate(fd, SIZE);  /* 아래 참고 */
     ptr = (char *)mmap(0, SIZE, PROT_READ | PROT_WRITE,
                         MAP_SHARED, fd, 0);
 
@@ -499,6 +503,8 @@ Mach — macOS와 iOS의 기반이 되는 마이크로커널이다.
 
 **포트 생성:**
 
+> **참고:** 아래 Mach 코드는 Mach 고유 타입을 사용한다: `mach_port_t`는 포트에 대한 핸들(메시지용 파일 디스크립터와 유사)이고, `mach_task_self()`는 호출 태스크에 대한 참조를 반환한다(`getpid()`와 유사). 이 API를 외울 필요는 없다.
+
 ```c
 mach_port_t port;
 mach_port_allocate(
@@ -538,7 +544,7 @@ Windows에서 같은 머신 내의 프로세스 간 통신 메커니즘이다.
 
 **메시지 전달 방식 (크기에 따라):**
 1. **소형 (≤256 bytes)** — 포트의 메시지 큐 사용, 복사로 전달
-2. **대형** — **섹션 객체(section object, 공유 메모리)** 사용
+2. **대형** — **섹션 객체(section object, 공유 메모리)** 사용 (섹션 객체(Section Object)는 Windows의 커널 관리 공유 메모리 영역으로, POSIX의 `shm_open` + `mmap` 조합과 대략 동일하다)
 3. **초대형** — 서버가 클라이언트의 주소 공간을 직접 읽기/쓰기
 
 ![Windows ALPC](../images/figures/p035_fig.png)
@@ -651,7 +657,7 @@ cat file.txt | grep "error" | wc -l   # 파이프 체인
 
 ```c
 /* 생성 */
-mkfifo("/tmp/my_fifo", 0666);
+mkfifo("/tmp/my_fifo", 0666);  /* 아래 참고 */
 
 /* 쓰기 프로세스 */
 int fd = open("/tmp/my_fifo", O_WRONLY);
@@ -661,6 +667,8 @@ write(fd, "Hello", 6);
 int fd = open("/tmp/my_fifo", O_RDONLY);
 read(fd, buf, 6);
 ```
+
+> **참고:** `0666`은 8진수 Unix 권한 마스크로, 모든 사용자(소유자, 그룹, 기타)가 읽기·쓰기 가능함을 의미한다.
 
 **UNIX vs Windows 명명 파이프:**
 
@@ -728,6 +736,8 @@ find / -name "*.log" 2>/dev/null | xargs grep "ERROR" | sort -u
 통신 방식:
 - **TCP** — 연결 지향, 신뢰성 있는 바이트 스트림
 - **UDP** — 비연결, 신뢰성 보장 없음, 빠름
+
+> **참고:** 연결 지향(Connection-Oriented) 프로토콜(TCP)은 데이터를 보내기 전에 핸드셰이크로 가상 회선을 설정한다 — 전화를 걸어 상대가 받은 후 통화하는 것과 같다. 비연결(Connectionless) 프로토콜(UDP)은 사전 설정 없이 패킷을 바로 보낸다 — 확인 없이 우편함에 편지를 넣는 것과 같다.
 
 > **[컴퓨터네트워크]** 소켓은 전송 계층(Transport Layer)에서 동작하며, TCP 소켓은 연결 지향적으로 `connect()` → `send()`/`recv()` → `close()` 순서로 사용하고, UDP 소켓은 비연결형으로 `sendto()`/`recvfrom()`을 사용한다.
 
@@ -842,7 +852,7 @@ public class DateClient {
 
 **바인딩 방법:**
 - **고정 포트 주소:** 컴파일 시 RPC에 고정 포트 번호 할당. 단순하지만 유연하지 않다.
-- **동적 바인딩:** OS가 매치메이커 데몬을 제공하여, 클라이언트가 먼저 서비스 포트를 조회한 뒤 실제 RPC를 호출한다.
+- **동적 바인딩:** OS가 매치메이커 데몬을 제공하여, 클라이언트가 먼저 서비스 포트를 조회한 뒤 실제 RPC를 호출한다. 데몬(Daemon, '디먼'으로 발음)은 요청에 응답하기 위해 지속적으로 실행되는 백그라운드 프로세스이다 — 항상 안내 데스크에 앉아 있는 접수원과 같다.
 
 ### 6.3 Android RPC
 

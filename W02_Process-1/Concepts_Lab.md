@@ -67,6 +67,8 @@ if (pid == 0) {
 }
 ```
 
+> **Definition:** `pid_t` is a typedef for an integer type (defined in `<sys/types.h>`) used for process IDs. It is used instead of `int` to ensure portability across systems where PID sizes may vary.
+
 ```mermaid
 graph TD
     P["Parent<br/>pid = fork()"] -->|"Returns child_pid"| PW["Parent<br/>wait()"]
@@ -141,7 +143,7 @@ pipe(fd);  // fd[0]=read, fd[1]=write
 if (fork() == 0) {
     close(fd[0]);  // Close read end
     char *msg = "hello from child";
-    write(fd[1], msg, strlen(msg));
+    write(fd[1], msg, strlen(msg));  /* strlen(msg), not sizeof(msg) — see note below */
     close(fd[1]);
 } else {
     close(fd[1]);  // Close write end
@@ -151,6 +153,8 @@ if (fork() == 0) {
     close(fd[0]);
 }
 ```
+
+> **Note:** `strlen(msg)` is used here — not `sizeof(msg)` — because `msg` is a pointer, and `sizeof` on a pointer gives the pointer's byte size (4 or 8 bytes), not the string length.
 
 ```mermaid
 graph LR
@@ -192,7 +196,7 @@ graph LR
 
 ```c
 int fd = open("output.txt",
-    O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    O_WRONLY | O_CREAT | O_TRUNC, 0644);  /* O_WRONLY|O_CREAT|O_TRUNC = write-only, create if missing, clear contents */
 dup2(fd, STDOUT_FILENO);
 close(fd);
 

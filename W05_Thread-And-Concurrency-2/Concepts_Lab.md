@@ -101,6 +101,9 @@ graph LR
 #define QUEUE_SIZE  16    /* max tasks in queue */
 
 /* A task is simply a function pointer + argument */
+/* void (*function)(int) is a function pointer — it stores the address of
+   a function that takes one int parameter and returns nothing (void).
+   This allows each task to specify which function to run. */
 struct task {
     void (*function)(int);
     int arg;
@@ -123,6 +126,8 @@ struct thread_pool {
 ```
 
 ### Worker Thread (Consumer)
+
+A **condition variable** (`pthread_cond_t`) lets a thread sleep until a condition becomes true. `pthread_cond_wait(&cv, &lock)` atomically releases the lock and puts the thread to sleep; it re-acquires the lock before returning.
 
 ```c
 void *worker_thread(void *arg)
@@ -459,6 +464,8 @@ tls_var:    [ Thread 0 copy ] [ Thread 1 copy ] [ Thread 2 copy ] [ Thread 3 cop
 The `__thread` keyword tells the compiler to create a **separate instance** of the variable for each thread. Each thread reads and writes its own copy, so no synchronization is needed.
 
 ### Demo 2: Per-Thread State (errno Pattern)
+
+`errno` is a global variable in the C library that stores an error code whenever a system call fails (e.g., `errno = ENOENT` means 'file not found'). Without TLS, concurrent threads would overwrite each other's `errno`, so modern C libraries use TLS to give each thread its own private copy.
 
 A practical demonstration of TLS mimicking how `errno` works:
 

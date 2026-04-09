@@ -116,6 +116,8 @@ git clone https://github.com/mit-pdos/xv6-riscv.git
 
 > **[Computer Architecture]** xv6 runs on the RISC-V architecture, where the transition from user mode (U-mode) to kernel mode (S-mode) is performed via the `ecall` instruction. Understanding this structure makes it much easier to follow the system call path later.
 
+> **Note:** U-mode (User mode) is where normal programs run with restricted privileges; S-mode (Supervisor mode) is the privileged level where the kernel runs — the CPU enforces strict rules about which operations each mode can perform.
+
 ---
 
 ### 2.2 Build Verification & Troubleshooting
@@ -349,6 +351,12 @@ struct proc {
 };
 ```
 
+> **Note:** `context` saves callee-saved kernel registers used when the scheduler switches between processes inside the kernel (via `swtch.S`), while `trapframe` saves the full user-mode register state when entering the kernel from user space. They serve different switches: kernel↔kernel vs. user↔kernel.
+
+> **Note:** (`inode` = the kernel's internal descriptor for a file or directory, storing metadata like size, permissions, and disk location — covered in file-system weeks)
+
+> **Note:** `ofile[]` holds kernel-side file objects. The file descriptor number that user programs use (e.g., `fd = 3`) is simply the index into this array.
+
 > **Note:** `pagetable_t` in xv6 is a typedef for a pointer to the root of a process's page table -- it maps virtual addresses to physical memory. Its definition is `typedef uint64 *pagetable_t;` in `kernel/riscv.h`.
 
 > **Note:** `struct spinlock lock` is the **spinlock** for this process structure. A spinlock is the simplest synchronization tool that prevents other CPU cores from simultaneously modifying the same `struct proc`. It is called a "spin" lock because a core trying to acquire it spins in a `while (lock == held)` loop. Since xv6 supports multi-core, this lock must be acquired before changing the process state. Details on spinlocks and synchronization are covered in Weeks 9–10.
@@ -366,7 +374,7 @@ struct proc {
 ## 6. Lab 4: Deep Dive into fork() Implementation
 
 ```
-  1. allocproc()         ── Secure new process slot, pid, kstack, trapframe
+  1. allocproc()         ── Secure new process slot, pid, kstack*, trapframe
          │
   2. uvmcopy()           ── Copy parent's page table + memory
          │
@@ -381,6 +389,8 @@ struct proc {
          │
   7. Return child PID    ── To the parent
 ```
+
+> **Note:** The kernel stack (`kstack`) is a private stack region in kernel memory used when this process executes inside the kernel (e.g., during a system call). It is completely separate from the user stack to prevent user code from tampering with kernel execution.
 
 **Discussion questions**:
 - Why does the child process need its **own copy** of the trapframe?

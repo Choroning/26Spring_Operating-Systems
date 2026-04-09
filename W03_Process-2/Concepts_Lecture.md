@@ -217,6 +217,8 @@ int out = 0;   /* Next read position (consumer) */
 - Buffer full: `((in + 1) % BUFFER_SIZE) == out`
 - With this approach, at most **BUFFER_SIZE - 1** items can be stored.
 
+> **Note:** In practice, `item` would be whatever data the producer generates — for example: `typedef struct { int value; } item;` could represent a sensor reading or a message.
+
 > **[Data Structures]** This structure is identical to a circular queue. `in` corresponds to rear, `out` to front, and the reason for leaving one slot empty is to distinguish between the empty and full states.
 
 **Producer code (Figure 3.12):**
@@ -376,6 +378,8 @@ char *ptr = (char *)mmap(0, 4096, PROT_READ | PROT_WRITE,
 
 > **`shm_open()` parameters:** `name` — name of the shared memory object (processes access it using the same name). `O_CREAT` — create if it does not exist. `O_RDWR` — allow both reading and writing. Return value — file descriptor (integer).
 
+> **Note:** `ftruncate(fd, SIZE)` sets the size of the newly created shared memory object to `SIZE` bytes. A new `shm_open` object has zero length by default, so this step is mandatory before writing.
+
 > **[Computer Architecture]** `mmap()` is a system call that maps a file or shared memory object directly into a process's virtual address space. After mapping, data can be accessed via pointers like regular memory, enabling data exchange without `read()`/`write()` system calls.
 
 **Producer (Figure 3.16):**
@@ -400,7 +404,7 @@ int main()
     char *ptr;
 
     fd = shm_open(name, O_CREAT | O_RDWR, 0666);
-    ftruncate(fd, SIZE);
+    ftruncate(fd, SIZE);  /* see note below */
     ptr = (char *)mmap(0, SIZE, PROT_READ | PROT_WRITE,
                         MAP_SHARED, fd, 0);
 
@@ -499,6 +503,8 @@ Core concept: **everything is a message**
 
 **Port creation:**
 
+> **Note:** The Mach code below uses Mach-specific types: `mach_port_t` is a handle to a port (like a file descriptor for messages), and `mach_task_self()` returns a reference to the calling task (analogous to `getpid()` in POSIX). You are not expected to memorize this API.
+
 ```c
 mach_port_t port;
 mach_port_allocate(
@@ -538,7 +544,7 @@ A communication mechanism for processes on the same machine in Windows.
 
 **Message delivery methods (by size):**
 1. **Small (<=256 bytes)** — uses the port's message queue, delivered by copying
-2. **Large** — uses a **section object (shared memory)**
+2. **Large** — uses a **section object (shared memory)** (a section object is Windows' kernel-managed shared memory region — roughly equivalent to POSIX's `shm_open` + `mmap` combination)
 3. **Very large** — server directly reads/writes the client's address space
 
 ![Windows ALPC](../images/figures/p035_fig.png)
@@ -651,7 +657,7 @@ Overcomes the limitations of ordinary pipes:
 
 ```c
 /* Creation */
-mkfifo("/tmp/my_fifo", 0666);
+mkfifo("/tmp/my_fifo", 0666);  /* see note below */
 
 /* Writer process */
 int fd = open("/tmp/my_fifo", O_WRONLY);
@@ -661,6 +667,8 @@ write(fd, "Hello", 6);
 int fd = open("/tmp/my_fifo", O_RDONLY);
 read(fd, buf, 6);
 ```
+
+> **Note:** `0666` is a Unix permission mask in octal — it means the file is readable and writable by all users (owner, group, and others).
 
 **UNIX vs Windows named pipes:**
 
@@ -728,6 +736,8 @@ find / -name "*.log" 2>/dev/null | xargs grep "ERROR" | sort -u
 Communication methods:
 - **TCP** — connection-oriented, reliable byte stream
 - **UDP** — connectionless, no reliability guarantee, fast
+
+> **Note:** A connection-oriented protocol (TCP) first performs a handshake to establish a virtual circuit before sending data — like picking up the phone before talking. A connectionless protocol (UDP) sends packets directly without prior setup, like dropping a letter in a mailbox with no confirmation.
 
 > **[Computer Networks]** Sockets operate at the transport layer. TCP sockets are connection-oriented, used in the sequence `connect()` → `send()`/`recv()` → `close()`, while UDP sockets are connectionless, using `sendto()`/`recvfrom()`.
 
@@ -842,7 +852,7 @@ Network packets can be lost, causing the sender to retransmit. This retransmissi
 
 **Binding methods:**
 - **Fixed port address:** Assigns a fixed port number to the RPC at compile time. Simple but inflexible.
-- **Dynamic binding:** The OS provides a matchmaker daemon; the client first queries the service port, then makes the actual RPC call.
+- **Dynamic binding:** The OS provides a matchmaker daemon; the client first queries the service port, then makes the actual RPC call. A daemon (pronounced 'dee-mon') is a background process that runs continuously, waiting to respond to requests — like a receptionist always at the front desk.
 
 ### 6.3 Android RPC
 

@@ -100,7 +100,7 @@ Text and data are **fixed** in size, while stack and heap **dynamically** expand
 ### 1.3 Dynamic Growth of Stack and Heap
 
 **Stack growth:**
-- Each time a function is called, an **activation record** (function parameters, local variables, return address) is pushed onto the stack.
+- Each time a function is called, an **activation record** (function parameters, local variables, return address) is pushed onto the stack. An activation record — also called a **stack frame** — is the block of memory pushed onto the stack each time a function is called; it holds the function's local variables, parameters, and the address to return to when the function finishes.
 - When a function returns, the activation record is popped.
 - The stack grows **from high addresses toward low addresses** (downward).
 
@@ -138,6 +138,8 @@ The `size` command can be used to check the size of each section:
 | text | data | bss | dec | hex |
 |:-----|:-----|:----|:----|:----|
 | 1158 | 284 | 8 | 1450 | 5aa |
+
+The `dec` and `hex` columns show the total size of all sections combined, in decimal and hexadecimal respectively. Run `size ./your_program` after compiling to see these values for your own programs.
 
 - **data**: initialized global variables, **bss** (block started by symbol): uninitialized global variables
 
@@ -205,7 +207,7 @@ The PCB serves as a repository for all data needed to **start or restart** a pro
 |:------|:------------|
 | **Process state** | Current state (new, ready, running, waiting, terminated) |
 | **Program counter** | Address of the next instruction to execute |
-| **CPU registers** | Accumulator, index registers, stack pointer, general-purpose registers, condition codes, etc. |
+| **CPU registers** | Accumulator, index registers, stack pointer, general-purpose registers, condition codes (flags set by the CPU after arithmetic operations, e.g., zero flag, carry flag — indicating properties of the last result), etc. |
 | **CPU scheduling info** | Process priority, scheduling queue pointers, other parameters |
 | **Memory management info** | Base/limit register values, page table or segment table |
 | **Accounting info** | CPU time used, elapsed real time, time limits, process number |
@@ -236,6 +238,8 @@ struct mm_struct *mm;          /* address space (memory management) */
 ```c
 current->state = new_state;  // Change the current process's state
 ```
+
+> **Note:** The `->` operator accesses a field through a pointer — `current->state` means "look at the `state` field of the struct that `current` points to."
 
 > **[Data Structures]** The reason the Linux kernel manages processes as a doubly linked list is that insertions and deletions of processes occur frequently, making O(1) insertion/deletion performance important. Managing them with an array would incur O(n) movement cost on insertion/deletion.
 
@@ -320,7 +324,7 @@ A process repeats this cycle until it terminates. Upon termination, it is remove
 **Swapping:**
 - Moving a process from memory to disk (**swap out**) and later reloading it (**swap in**).
 - Reduces the degree of multiprogramming to relieve memory pressure.
-- Only needed when memory is **overcommitted**. Covered in detail in Ch 9.
+- Only needed when memory is **overcommitted** (i.e., the total memory demanded by all running processes exceeds the available physical RAM). Covered in detail in Ch 9.
 
 > **Definition:** Swapping moves an entire process out of main memory to disk (swap out) and back (swap in) to free memory for other processes.
 
@@ -384,6 +388,8 @@ A process can create several new processes during its execution.
 
 - **systemd** (pid = 1): the **root parent** of all user processes — the first user process created during system boot. It creates processes for additional services such as web servers, SSH servers, etc.
 - In traditional UNIX, **init** (pid = 1) performed this role.
+
+> **Definition:** `systemd` (or `init` in older systems) is the first user-space program the Linux kernel launches at boot — it then starts all other services, so every user process is ultimately a descendant of PID 1.
 
 > **[Data Structures]** The process tree is literally a tree structure. The root node is the first process (systemd, pid=1 on Linux), and each node can have child nodes (child processes). The clear parent-child relationship enables systematic process management (termination, resource reclamation, etc.).
 
@@ -554,6 +560,8 @@ pid = wait(&status);  // parent collects child's exit status
 
 **Cascading Termination:** A system where all children must be terminated when the parent terminates. Typically initiated by the OS.
 
+> **Note:** Linux does **not** implement cascading termination by default — orphaned children are re-parented to init/systemd instead (see Section 3.7).
+
 ### 3.7 Zombie and Orphan Processes
 
 **Zombie Process:**
@@ -580,6 +588,8 @@ pid = wait(&status);  // parent collects child's exit status
 > **Mnemonic:** Zombie = dead but still listed in the process table (like a zombie that won't lie down). Orphan = parent disappeared, so the child is adopted by init/systemd (like an orphanage taking in a child).
 
 > **Note:** When viewing the process list with `ps aux`, processes with status `Z` are zombie processes. Zombies themselves do not consume CPU or memory, but they occupy process table entries, reducing the number of processes the system can create.
+
+> **Definition:** A **signal** is a software notification the OS sends to a process to trigger a specific action. `SIGCHLD` is automatically sent to a parent whenever one of its children terminates.
 
 > **Note:** How to remove zombie processes:
 > 1. **Send SIGCHLD signal to the parent**: `kill -SIGCHLD <parent_PID>` — prompts the parent to call `wait()` in its signal handler
@@ -729,7 +739,7 @@ int main() {
 
 - **l** (list): passed as a variadic argument list — `execlp("ls", "ls", "-l", NULL)`
 - **v** (vector): passed as a string array — `execvp("ls", args)`
-- **p** (path): searches for the executable in the PATH environment variable
+- **p** (path): searches for the executable in the PATH environment variable. The `PATH` environment variable is a colon-separated list of directories the OS searches when you type a command name without a full path (e.g., typing `ls` works because `/bin` is in PATH).
 - **e** (environment): explicitly specifies environment variables
 
 ### 4.5 Detailed Behavior of wait()
@@ -763,6 +773,8 @@ int main() {
 - `WIFEXITED(status)`: checks if the child terminated normally
 - `WEXITSTATUS(status)`: extracts the exit status value (0-255)
 - `WIFSIGNALED(status)`: checks if the child was terminated by a signal
+
+> **Note:** The OS encodes multiple pieces of information (normal exit vs signal kill, exit code, signal number) into different bit ranges of the single `status` integer. The `W*` macros extract the specific piece you need, so you never have to inspect the bits manually.
 
 ### 4.6 How a Simple Shell Works
 
