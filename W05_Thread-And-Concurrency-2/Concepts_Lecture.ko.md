@@ -1,6 +1,6 @@
 # 5주차 이론 — 스레드와 동시성 (2)
 
-> **최종 수정일:** 2026-04-01
+> **최종 수정일:** 2026-04-09
 >
 > Silberschatz, Operating System Concepts Ch 4 (Sections 4.5 – 4.7)
 

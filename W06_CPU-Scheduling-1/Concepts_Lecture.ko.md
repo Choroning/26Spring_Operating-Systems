@@ -1,6 +1,6 @@
 # 6주차 이론 — CPU 스케줄링 (1)
 
-> **최종 수정일:** 2026-04-08
+> **최종 수정일:** 2026-04-09
 >
 > Silberschatz, Operating System Concepts Ch 5 (Sections 5.1 – 5.3)
 

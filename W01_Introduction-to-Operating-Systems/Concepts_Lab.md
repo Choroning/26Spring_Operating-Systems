@@ -1,6 +1,6 @@
 # Week 1 Lab — Coding Agents
 
-> **Last Updated:** 2026-03-21
+> **Last Updated:** 2026-04-09
 
 > **Prerequisites**: Week 1 Lecture concepts (OS definition, dual-mode, system calls).
 >
