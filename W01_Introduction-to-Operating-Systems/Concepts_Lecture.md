@@ -526,9 +526,23 @@ Without a file system, data would be lost every time the computer powers off, an
 ## Self-Check Questions
 
 1. What is the kernel, and how does it differ from system programs and application programs?
+
+   > **Answer:** The **kernel** is the core of the OS — resident in memory from boot to shutdown, responsible for hardware resource allocation and servicing system calls. **System programs** (shells, compilers, utilities) ship with the OS but run in user mode and provide the user environment. **Application programs** are ordinary user-installed software. Only the kernel runs in kernel mode.
+
 2. Why does the CPU need two modes (user mode and kernel mode)? What would go wrong with only one mode?
+
+   > **Answer:** Dual-mode isolates user processes from privileged instructions (I/O, memory-mapping changes, halt) so that buggy or malicious programs cannot corrupt kernel data or other processes. With a single mode, any program could overwrite another process's memory, directly drive devices, or disable interrupts — one faulty program would crash the whole system.
+
 3. Explain the sequence of events that occur when a user program calls `open()` — from the user program to the kernel and back.
+
+   > **Answer:** ① User calls the libc `open()` wrapper → ② wrapper places the syscall number and arguments in registers and executes a trap instruction (e.g., RISC-V `ecall`) → ③ CPU switches to kernel mode and jumps to the trap handler → ④ `sys_open()` allocates a file descriptor and looks up the inode → ⑤ result is placed in a register and the kernel executes `sret` to return to user mode → ⑥ the wrapper returns the value to the user program.
+
 4. What is the difference between a trap and a hardware interrupt?
+
+   > **Answer:** A **trap** is a **synchronous** event raised by software — a system call or an exception (divide-by-zero, page fault) — always tied to a specific instruction. A **hardware interrupt** is an **asynchronous** signal from an external device (timer, disk, keyboard) that arrives independent of the currently executing instruction.
+
 5. Without virtual memory, what problems would arise when running multiple programs simultaneously?
+
+   > **Answer:** ① Two programs using the same physical addresses would overwrite each other's memory. ② No program can exceed physical memory size. ③ No isolation — one program could read/modify another's data or kernel memory. ④ Memory fragmentation would quickly waste free space since relocation is impossible.
 
 ---

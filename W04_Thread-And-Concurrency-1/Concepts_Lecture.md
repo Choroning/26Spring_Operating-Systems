@@ -1245,9 +1245,23 @@ Execution: `./a.out 10` → "sum = 55"
 ## Self-Check Questions
 
 1. What do threads in the same process share? What does each thread own independently?
+
+   > **Answer:** **Shared**: code segment, data segment, heap, open file descriptors, signal handlers, and process ID. **Per-thread (independent)**: thread ID, program counter, register set, and stack.
+
 2. Why doesn't a thread switch within the same process require a TLB flush?
+
+   > **Answer:** Threads in the same process share the **same address space** (same page table), so virtual-to-physical mappings are identical. Existing TLB entries remain valid, so no flush is needed. A process context switch, by contrast, changes address space and requires either a TLB flush or ASID tagging.
+
 3. If a program has 20% serial code, what is the maximum speedup with 8 cores according to Amdahl's Law? What about with infinite cores?
+
+   > **Answer:** `Speedup = 1 / (S + (1-S)/N)`. With S = 0.2, N = 8: `1 / (0.2 + 0.8/8) = 1/0.3 ≈ 3.33×`. With N → ∞: `1 / 0.2 = 5×`. No matter how many cores, the serial portion bounds speedup at **5×**.
+
 4. Explain the difference between concurrency and parallelism with an example.
+
+   > **Answer:** **Concurrency** is logically overlapping multiple tasks (possibly on a single core via time-sharing). **Parallelism** is physically running tasks at the same time (requires multiple cores). Example: on a single core, a browser interleaves playing music and loading a page — concurrency only. On a quad-core CPU, four threads running compute simultaneously — true parallelism.
+
 5. Why is the one-to-one multithreading model the most widely used in modern operating systems, despite its overhead of creating a kernel thread for each user thread?
+
+   > **Answer:** ① If one thread makes a blocking system call, the others keep running in the kernel — solving Many-to-One's fatal limitation. ② Multiple threads can genuinely run in parallel on multicore CPUs. ③ The kernel scheduler can adjust each thread's priority individually. The per-thread overhead has been reduced by making kernel thread structures lightweight, so the benefits far outweigh the cost.
 
 ---

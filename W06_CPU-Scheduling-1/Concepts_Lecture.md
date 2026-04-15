@@ -1100,14 +1100,45 @@ Test data: P1(0,10), P2(1,5), P3(2,8), P4(3,6) — compare results across all 3 
 ## Self-Check Questions
 
 1. What is the CPU-I/O burst cycle? Explain how it forms the basis for CPU scheduling.
+
+   > **Answer:** Process execution alternates between **CPU bursts** (instruction execution) and **I/O bursts** (waiting on devices). Because the CPU should not sit idle while one process waits on I/O, the OS must have a policy for picking which other process to run — this is CPU scheduling. The observed burst distribution (many short, few long) is the theoretical basis for algorithms like SJF.
+
 2. What are the four circumstances under which CPU scheduling decisions are made? Which of these are present only in preemptive scheduling?
+
+   > **Answer:** ① Running → Waiting (e.g., I/O request); ② Running → Ready (timer interrupt); ③ Waiting → Ready (I/O completion); ④ Terminates. **Scheduling choices in ② and ③ exist only in preemptive systems**; nonpreemptive keeps the current process running in those cases.
+
 3. Distinguish between preemptive and nonpreemptive scheduling. Why do all modern operating systems use preemptive scheduling?
+
+   > **Answer:** **Nonpreemptive**: scheduling occurs only when a process voluntarily releases the CPU (termination or I/O wait). **Preemptive**: the OS can forcibly reclaim the CPU (e.g., via timer interrupt). Modern OSes require preemption to ① guarantee responsiveness for interactive use, ② prevent a runaway loop from monopolizing the CPU, and ③ support real-time and multitasking workloads.
+
 4. What is the difference between the CPU Scheduler and the Dispatcher? What are the three functions of the Dispatcher?
+
+   > **Answer:** The **Scheduler** decides *which* ready process runs next (the policy). The **Dispatcher** performs the hand-off to that process (the mechanism). Three functions of the Dispatcher: ① perform the context switch, ② switch to user mode, ③ jump to the new process's PC to resume its execution.
+
 5. List and explain the five scheduling criteria. Which should be maximized and which minimized?
+
+   > **Answer:** **Maximize**: **CPU utilization** (fraction of time CPU does useful work) and **throughput** (processes completed per unit time). **Minimize**: **turnaround time** (submit → complete), **waiting time** (time in ready queue), and **response time** (submit → first output).
+
 6. Given three processes with burst times 24, 3, and 3 (all arriving at time 0), calculate the average waiting time under FCFS and SJF. What is the convoy effect?
+
+   > **Answer:** **FCFS** (P1,P2,P3 order): waiting = 0, 24, 27 → avg = 51/3 = **17 ms**. **SJF** (shortest first, P2,P3,P1): waiting = 6, 0, 3 → avg = 9/3 = **3 ms**. The **convoy effect** is FCFS's tendency to pile short I/O-bound processes behind a long CPU-bound process, leaving both CPU and I/O devices underutilized as a result.
+
 7. Why is SJF optimal? If it is optimal, why isn't it used in practice? Explain exponential averaging and how it addresses this limitation.
+
+   > **Answer:** SJF is **provably optimal** for average waiting time because running the shortest job first always reduces the collective wait. It can't be used directly because future CPU-burst lengths are unknown. **Exponential averaging** predicts them from history: `τ(n+1) = α·t(n) + (1-α)·τ(n)` where `t(n)` is the most recent burst and `α ∈ [0,1]` weights recency. The prediction can then be used as the "short" metric.
+
 8. Given processes P1(0,8), P2(1,4), P3(2,9), P4(3,5), draw the Gantt chart and compute average waiting time for both SJF and SRTF.
+
+   > **Answer:**
+   > - **SJF (nonpreemptive)**: 0–8 P1 → of arrived {P2(4),P3(9),P4(5)} pick P2 → 8–12 P2 → 12–17 P4 → 17–26 P3. Waiting: P1=0, P2=7, P3=15, P4=9. Avg = 31/4 = **7.75 ms**.
+   > - **SRTF (preemptive)**: 0–1 P1(rem 7) | 1–5 P2(rem 4 < 7, preempts) | 5–... shortest remaining now P4(5, arrived 3) → 5–10 P4 → 10–17 P1(rem 7) → 17–26 P3(9). Waiting: P1=(10-1)=9, P2=0, P3=15, P4=2. Avg = 26/4 = **6.5 ms**.
+
 9. How does Round-Robin scheduling guarantee fairness? What is the maximum waiting time for a process with n processes and quantum q?
+
+   > **Answer:** Every process runs for at most one quantum before being moved to the back of the queue, so no process can monopolize the CPU or starve. Maximum wait before next run = **(n−1)·q** (all other processes each use a full quantum).
+
 10. What happens when the time quantum in Round-Robin is very large? Very small? What is the rule of thumb for choosing an appropriate quantum?
+
+    > **Answer:** **Too large**: RR degenerates into FCFS — poor responsiveness. **Too small**: context-switch overhead dominates real work — throughput collapses. Rule of thumb: set quantum so **about 80% of CPU bursts finish within one quantum** (typically 10–100 ms).
 
 ---

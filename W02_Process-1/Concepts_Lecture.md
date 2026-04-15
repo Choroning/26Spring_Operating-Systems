@@ -874,9 +874,23 @@ Shell (parent process)
 ## Self-Check Questions
 
 1. **Process States:** A process is currently waiting for disk I/O to complete. What state is it in? What event will move it to the Ready state?
+
+   > **Answer:** The process is in the **Waiting (Blocked)** state. When the disk raises an I/O-completion interrupt, the kernel's ISR marks the waiting process as **Ready** and places it back on the ready queue for the scheduler to pick.
+
 2. **fork() Return Values:** After `pid = fork()`, what value does `pid` hold in the parent process and in the child process? How can the child obtain its own PID?
+
+   > **Answer:** In the **parent**, `pid` holds the child's PID (a positive integer). In the **child**, `pid` is **0**. The child can retrieve its own PID by calling `getpid()`.
+
 3. **Zombie vs Orphan:** Process A creates child process B and then enters an infinite loop without calling `wait()`. Process B finishes execution. Is B a zombie or an orphan? What changes if A terminates before B finishes?
+
+   > **Answer:** B becomes a **zombie** — it has exited but its PCB and exit status persist because the parent never called `wait()`. If instead **A terminates first**, B is reparented to `init` (PID 1); B is then an **orphan**, and init automatically calls `wait()` when B exits, preventing the zombie state.
+
 4. **Context Switch Cost:** Why is a context switch considered pure overhead? Name two hardware features that can reduce context switch time.
+
+   > **Answer:** During a context switch the CPU saves/restores registers and address-space state — no user work is performed, so the time is pure overhead. Hardware features that help: ① **multiple register sets / register windows** (SPARC) so registers need not be spilled to memory; ② **tagged TLB with ASIDs (Address Space Identifiers)** so the TLB need not be flushed when switching address spaces.
+
 5. **fork + exec:** Explain why shells use the `fork()` + `exec()` + `wait()` pattern instead of a single "create-and-run" system call. What advantage does separating fork and exec provide?
+
+   > **Answer:** Between `fork()` and `exec()`, the child (a copy of the parent) can reconfigure its environment — redirect file descriptors with `dup2()`, set environment variables, change working directory, install signal handlers — before loading the new program. A single combined `spawn()` call would require the parent to pre-specify every possible customization as options. The fork/exec split provides a simple, composable interface: "customize, then load".
 
 ---

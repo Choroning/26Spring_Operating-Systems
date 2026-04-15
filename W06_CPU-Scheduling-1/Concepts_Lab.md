@@ -378,10 +378,27 @@ graph TD
 ## Self-Check Questions
 
 1. Why does `struct context` only store callee-saved registers? What happens to the caller-saved registers during a context switch?
+
+   > **Answer:** `swtch` is a C function call, so by the RISC-V ABI the caller has already spilled/handled the caller-saved registers before the call. Only the **callee-saved registers** (s0–s11, sp, ra) must be preserved across the call, so `struct context` only needs to hold those.
+
 2. What does `allocproc()` set `p->context.ra` to, and why? What happens on the first `swtch` into a new process?
+
+   > **Answer:** `allocproc()` sets `ra` to the address of **`forkret`**. When the scheduler first `swtch`es into the new process's kernel thread, `ret` (which uses `ra`) jumps to `forkret`, which releases the initial lock and sets up the path back to user mode via `usertrapret`.
+
 3. Why do we use `CPUS=1` when tracing the scheduler? What changes when we use `CPUS=3`?
+
+   > **Answer:** On a single CPU, scheduling events serialize in a clean order, making `printf` traces easy to follow. With `CPUS=3`, multiple CPUs run `swtch`, mutate state, and interleave `printf` output concurrently — the order no longer reflects causality, making the trace confusing.
+
 4. What causes the xv6 scheduler to produce round-robin behavior? What subtle bias exists in the current implementation?
+
+   > **Answer:** The scheduler walks the **`proc[]` array linearly** looking for a RUNNABLE entry, which naturally cycles through processes. **Bias**: processes near the front of the array are found (and therefore scheduled) first, so xv6's RR is not strictly fair — it favors low-index slots rather than giving every process exactly equal turns.
+
 5. In Exercise 4, why does `cat` go to sleep before `echo` writes to the pipe? What would happen if `echo` ran first?
+
+   > **Answer:** `cat`'s first `read()` on the empty pipe has no data to return, so `cat` enters `sleep(channel)` and waits. If `echo` runs first, the data is already in the pipe buffer when `cat`'s `read()` is called, so `read()` returns immediately without sleeping — the sleep-wake code path wouldn't be exercised.
+
 6. Explain why `wakeup()` does not immediately switch to the woken process. How does this differ from `pthread_cond_signal`?
+
+   > **Answer:** `wakeup()` only changes the waiter's state SLEEPING → RUNNABLE and queues it; the current process keeps running until a scheduling point (timer, `yield`). Switching immediately could break the caller's critical section. `pthread_cond_signal` behaves the same way in spirit — it signals a waiter to eventually run, but the scheduler decides when.
 
 ---

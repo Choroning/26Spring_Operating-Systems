@@ -1140,19 +1140,67 @@ Notice how short jobs (P3, P5) finish entirely in Q0 (top priority, fast respons
 ## Self-Check Questions
 
 1. What is priority scheduling, and how does it relate to SJF? Which convention does Silberschatz use — smaller or larger number for higher priority?
+
+   > **Answer:** Each process is assigned an integer priority; the scheduler runs the highest-priority ready process. SJF is a special case where priority = inverse of predicted next CPU burst. **Silberschatz convention: smaller number = higher priority** (Linux real-time tasks reverse this).
+
 2. What is starvation in priority scheduling? Describe aging and explain precisely how it resolves starvation. Given priorities 0 (high) to 127 (low) and a 1-unit-per-second increase, how long does a priority-127 process take to reach the highest priority?
+
+   > **Answer:** **Starvation**: a low-priority process never runs because higher-priority processes keep arriving. **Aging**: increase a waiting process's priority gradually with time, so it eventually reaches the top. With 1/sec from 127 → 0: **127 seconds ≈ 2 minutes**.
+
 3. Compare Multilevel Queue and Multilevel Feedback Queue (MLFQ). What exactly is the key difference, and why does it matter? List the five MLFQ design parameters.
+
+   > **Answer:** **Key difference**: MLFQ allows processes to **move between queues** based on observed behavior, so it auto-classifies I/O-bound vs CPU-bound; Multilevel Queue has fixed assignment. Five parameters: ① number of queues, ② per-queue algorithm, ③ demotion criteria, ④ promotion (aging) criteria, ⑤ initial queue placement for new processes.
+
 4. In the MLFQ example from the lecture (Q0: RR q=8, Q1: RR q=16, Q2: FCFS), classify a process with burst = 12 ms and burst = 30 ms — which queues will each visit, and when does each complete (ignore contention)?
+
+   > **Answer:**
+   > - **12 ms**: Q0 uses 8 ms, quantum exhausted, demoted → Q1 runs 4 ms, completes. Queues visited: **Q0 → Q1**. Completion at **12 ms**.
+   > - **30 ms**: Q0 8 + Q1 16 + Q2 6 = 30. Queues visited: **Q0 → Q1 → Q2**. Completion at **30 ms**.
+
 5. Distinguish PCS and SCS in thread scheduling. Why do Linux and macOS only support PTHREAD_SCOPE_SYSTEM?
+
+   > **Answer:** **PCS** (Process-Contention Scope): the thread library schedules among threads within one process (Many-to-One, Many-to-Many models). **SCS** (System-Contention Scope): the kernel schedules among all threads system-wide (One-to-One model). Linux and macOS use One-to-One exclusively, so only SCS is meaningful.
+
 6. Compare the common-ready-queue and per-processor-queue designs in SMP. Which do modern systems use, and how do they address the downsides of that choice?
+
+   > **Answer:** Common queue: automatic load balancing ✔ / lock contention, cache-unfriendly ✘. Per-processor queue: no locks, cache-friendly ✔ / load imbalance ✘. Modern systems use **per-processor queues** and resolve imbalance via **push/pull load balancing**.
+
 7. What is processor affinity, and why does it exist? Distinguish soft affinity and hard affinity. How does affinity conflict with load balancing, and how is the conflict resolved?
+
+   > **Answer:** Affinity is the tendency to keep a process on the same CPU to preserve cache state. **Soft**: OS tries but doesn't guarantee. **Hard**: process (or admin) explicitly pins to specific CPUs. Conflict: balancing wants to migrate; affinity wants to stay. The OS migrates only when imbalance is large enough that the rebalance benefit outweighs the cache-warmup cost.
+
 8. Explain NUMA and why NUMA-aware scheduling matters for performance. How does Linux CFS handle NUMA?
+
+   > **Answer:** NUMA (Non-Uniform Memory Access): each CPU socket has local memory (fast) and can reach remote memory (slow via interconnect). NUMA-aware scheduling places a process near its allocated memory — otherwise memory-bound workloads can slow 2×. Linux CFS uses a **scheduling-domain hierarchy** (same-L2 → same-L3 → cross-NUMA), preferring cheap migrations and only crossing NUMA on extreme imbalance.
+
 9. State the periodic task model (t, d, p). For P1(t=20, p=50) and P2(t=35, p=100), compute total CPU utilization and decide whether RM will succeed (show the utilization bound).
+
+   > **Answer:** **t**: processing time per period, **d**: deadline, **p**: period (with `0 ≤ t ≤ d ≤ p`). Utilization = 20/50 + 35/100 = 0.4 + 0.35 = **75%**. RM bound for N=2 = 2(√2-1) ≈ **82.8%**. 75% < 82.8% → **RM guarantees all deadlines**.
+
 10. Given P1(t=25, p=50) and P2(t=35, p=80), show that RM fails but EDF succeeds. Walk through the time-step reasoning for both algorithms.
+
+    > **Answer:** Utilization = 0.5 + 0.4375 = 93.75% > 82.8% → RM may fail.
+    > - **RM**: 0–25 P1 → 25–50 P2(25 ms of 35) → 50 P1 preempts → 50–75 P1 → 75–85 P2(last 10 ms). P2's deadline = 80 but it finishes at 85 → **deadline miss**.
+    > - **EDF**: 0–25 P1 (dl 50) → 25–50 P2 (dl 80) → at 50, P1 new period (dl 100) vs P2 (dl 80). P2 is closer → P2 keeps running → 50–60 P2 completes → 60–85 P1 completes. **All deadlines met**.
+
 11. Compare RM and EDF on: priority type, utilization bound, overhead, optimality. Why is RM still preferred in safety-critical systems despite lower utilization?
+
+    > **Answer:** RM: **fixed** priority (by period), bound ≈ 69.3% (N→∞), **low** overhead, optimal among fixed-priority. EDF: **dynamic** priority (by deadline), bound 100%, **higher** overhead, theoretically optimal overall. **RM preferred in safety-critical**: its static nature makes **formal proof and certification tractable**. EDF's dynamic priorities are harder to analyze worst-case, which is a liability where "failure = people die".
+
 12. Explain the vruntime mechanism in CFS. Why does an I/O-bound task naturally get good response time without any explicit I/O boost?
+
+    > **Answer:** vruntime is a weighted cumulative record of each task's "fair share of CPU used"; CFS always picks the **minimum-vruntime** task. While an I/O-bound task is blocked, its vruntime does not advance, while other runnable tasks' vruntimes climb. When it wakes, it has the smallest vruntime and is picked immediately — no explicit boost needed.
+
 13. Why does CFS use a red-black tree keyed by vruntime? What operations does it need to support, and what are their complexities?
+
+    > **Answer:** Required operations: ① find-min (next task) — cached as `rb_leftmost`, **O(1)**; ② arbitrary insert (new/waking task) — **O(log N)**; ③ arbitrary delete (task blocks) — **O(log N)**; ④ priority update — **O(log N)**. A heap provides O(1) min but arbitrary delete is awkward; RB-trees support all required operations cleanly.
+
 14. Describe Windows priority classes and the priority boost mechanism. Why does Windows boost the priority of a thread that just completed I/O?
+
+    > **Answer:** Six classes (REALTIME 24, HIGH 13, ABOVE_NORMAL 10, NORMAL 8, BELOW_NORMAL 6, IDLE 4), each with seven relative levels. Boost: on certain events, the thread's priority is raised temporarily (keyboard I/O large boost, disk I/O medium, etc.). The I/O-completion boost ① improves **interactive responsiveness** (blocked threads run soon after their data arrives) and ② keeps **I/O devices busy** (the thread can promptly issue the next I/O).
+
 15. Name the four scheduling-algorithm evaluation methods in order of increasing cost and accuracy. State Little's formula and explain what each symbol means.
+
+    > **Answer:** Deterministic Modeling → Queueing Model → Simulation → Implementation. **Little's formula: n = λ · W**, where **n** = average queue length (processes waiting), **λ** = average arrival rate, **W** = average waiting time.
 
 ---

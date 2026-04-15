@@ -451,9 +451,23 @@ struct proc {
 ## Self-Check Questions
 
 1. **System call path**: List the 6 files (in order) that a `fork()` call passes through, from the user program to the kernel implementation. Which file performs the actual process creation work?
+
+   > **Answer:** ① `user/sh.c` (user-side call) → ② `user/usys.S` (syscall trap stub) → ③ `kernel/syscall.c` (dispatcher) → ④ `kernel/sysproc.c` (`sys_fork`) → ⑤ `kernel/proc.c` (`fork()` implementation) → ⑥ `kernel/vm.c` (`uvmcopy()` duplicates the page table). The actual process-creation work is done in **`kernel/proc.c`'s `fork()`**.
+
 2. **struct proc fields**: Which field in `struct proc` allows the child process to resume execution at the correct point after `fork()` returns? Why is this field separate from `context`?
+
+   > **Answer:** The **`trapframe`** field. It stores the complete user-register state (PC, sp, a0..a7, etc.) captured at the moment of the syscall, so the child resumes at the instruction after `fork()`. `context` is different: it holds the callee-saved registers used by `swtch()` between the kernel-side scheduler thread and the process's kernel thread. The two serve distinct transitions (user↔kernel vs kernel↔kernel) and must be stored separately.
+
 3. **Process states**: A process in RUNNING state calls `sleep()`. Describe the state transitions that occur and which fields of `struct proc` change.
+
+   > **Answer:** RUNNING → **SLEEPING**. The updated fields: `state = SLEEPING`, `chan = <wait channel>` (used to match `wakeup()`). After updating, the process calls `sched()` to hand control back to the scheduler.
+
 4. **fork() internals**: Explain why `uvmcopy()` must be called before copying the trapframe. What would happen if the order were reversed?
+
+   > **Answer:** `uvmcopy()` allocates a fresh page table and copies every physical page — it can **fail** (out of memory) and is by far the most expensive step. Putting it first means the expensive/failure-prone work happens before any partial initialization of the child, keeping the error-cleanup path simple. If trapframe copy came first and then `uvmcopy()` failed, the child would already have partial state that must be torn down in a careful order.
+
 5. **spinlock**: Why does xv6 use a spinlock (rather than a sleeping lock) to protect `struct proc`? Consider when `struct proc` is accessed.
+
+   > **Answer:** `struct proc` is touched by the scheduler, interrupt handlers, and other CPUs concurrently. A sleeping lock would `sleep()` the caller on contention, but the scheduler itself — the code that lives to run `sleep()` and `wakeup()` — needs this lock, which would deadlock. Interrupt handlers also cannot sleep. The critical sections are short, so busy-waiting on a spinlock is the only safe choice.
 
 ---
