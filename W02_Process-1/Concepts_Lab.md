@@ -22,7 +22,7 @@
 - [4. Lab 3: pipe()](#4-lab-3-pipe)
 - [5. Lab 4: dup2() and I/O Redirection](#5-lab-4-dup2-and-io-redirection)
 - [Summary](#summary)
-- [Appendix](#appendix)
+- [Self-Check Questions](#self-check-questions)
 
 ---
 

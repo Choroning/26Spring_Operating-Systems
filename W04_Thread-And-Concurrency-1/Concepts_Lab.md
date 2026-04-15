@@ -20,7 +20,7 @@
 - [4. Lab 3: Thread Argument Pitfall](#4-lab-3-thread-argument-pitfall)
 - [5. Lab 4: Speedup and Amdahl's Law](#5-lab-4-speedup-and-amdahls-law)
 - [Summary](#summary)
-- [Appendix](#appendix)
+- [Self-Check Questions](#self-check-questions)
 
 ---
 

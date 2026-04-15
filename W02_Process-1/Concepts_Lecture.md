@@ -53,7 +53,7 @@
   - [4.5 Detailed Behavior of wait()](#45-detailed-behavior-of-wait)
   - [4.6 How a Simple Shell Works](#46-how-a-simple-shell-works)
 - [Summary](#summary)
-- [Appendix](#appendix)
+- [Self-Check Questions](#self-check-questions)
 
 ---
 

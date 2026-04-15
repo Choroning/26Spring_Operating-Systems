@@ -20,7 +20,7 @@
 - [4. Lab 3: fork() in Multithreaded Programs](#4-lab-3-fork-in-multithreaded-programs)
 - [5. Lab 4: Thread-Local Storage (TLS)](#5-lab-4-thread-local-storage-tls)
 - [Summary](#summary)
-- [Appendix](#appendix)
+- [Self-Check Questions](#self-check-questions)
 
 ---
 

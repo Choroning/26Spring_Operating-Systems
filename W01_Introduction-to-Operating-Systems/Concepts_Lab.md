@@ -25,7 +25,7 @@
 - [8. Task 5 — Build a Mini OS](#8-task-5--build-a-mini-os)
   - [8.1 What to Observe](#81-what-to-observe)
 - [Summary](#summary)
-- [Appendix](#appendix)
+- [Self-Check Questions](#self-check-questions)
 
 ---
 

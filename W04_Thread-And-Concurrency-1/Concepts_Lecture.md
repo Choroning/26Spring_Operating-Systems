@@ -69,7 +69,7 @@
   - [9.7 Pthreads Integer Summation (Textbook Example Variant)](#97-pthreads-integer-summation-textbook-example-variant)
   - [9.8 Lab Key Takeaways](#98-lab-key-takeaways)
 - [Summary](#summary)
-- [Appendix](#appendix)
+- [Self-Check Questions](#self-check-questions)
 
 ---
 
