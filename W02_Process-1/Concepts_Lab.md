@@ -282,9 +282,23 @@ graph TD
 ## Self-Check Questions
 
 1. **Pipe EOF:** In a fork+pipe program, the parent forgets to close `fd[1]` before calling `read(fd[0])`. The child writes data and closes `fd[1]`. Will the parent's `read()` ever return? Why or why not?
+
+   > **Answer:** No — the parent's `read()` will **block forever**. `read()` on a pipe only returns EOF (0) when **all** write-end file descriptors are closed. Because the parent still holds its own copy of `fd[1]`, the kernel considers the pipe still writable. The parent must close its `fd[1]` too.
+
 2. **dup2 Behavior:** After `dup2(fd, STDOUT_FILENO)`, what happens when the process calls `printf()`? Why is it important to `close(fd)` afterward?
+
+   > **Answer:** `STDOUT_FILENO` (1) now points to the same open-file entry as `fd`, so `printf()` output goes to that file (or pipe) instead of the terminal. Closing `fd` afterward releases the redundant descriptor: otherwise the descriptor slot is wasted and the underlying file stays open (delaying flushes/cleanup) longer than needed.
+
 3. **fork + exec Pattern:** If `exec()` succeeds, will the line `perror("exec failed")` ever execute? What does it mean when you see that error message?
+
+   > **Answer:** **No** — a successful `exec()` replaces the entire process image, so control never returns to the code after the call. Seeing the error message means `exec()` itself failed (bad path, missing permissions, wrong architecture, etc.).
+
 4. **wait(NULL) vs wait(&status):** Explain the difference. When would you use one over the other?
+
+   > **Answer:** `wait(NULL)` waits for a child to terminate but **discards** the exit status. `wait(&status)` fills `status` with the child's termination info; use `WIFEXITED(status)` / `WEXITSTATUS(status)` to inspect it. Use `&status` whenever the parent needs to know whether the child succeeded or failed; use `NULL` only when you're just reaping the child.
+
 5. **Pipeline Implementation:** In the `ls | wc -l` implementation, why must the parent close **both** `fd[0]` and `fd[1]` even though it does not read from or write to the pipe?
+
+   > **Answer:** The parent does not use the pipe, but as long as it holds either end, the kernel will not signal EOF to the read end. In particular, if the parent keeps `fd[1]` open, `wc` will never see EOF and will block forever. Closing both ends in the parent ensures "when the writer (`ls`) finishes, the reader (`wc`) observes EOF and exits."
 
 ---

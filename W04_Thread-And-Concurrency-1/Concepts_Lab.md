@@ -320,8 +320,19 @@ for (int i = 0; i < N; i++)
 ## Self-Check Questions
 
 1. Why does passing `&i` from a for loop to `pthread_create` cause incorrect behavior?
+
+   > **Answer:** All threads share the same memory address `&i`, and the loop keeps mutating `i` after each `pthread_create` call. By the time a thread reads `*arg`, the loop may have moved on — so multiple threads often see the same (or stale) value of `i`, causing a race condition on the thread ID. The fix is to give each thread its own copy, e.g., `int tid[N]; tid[i] = i; pthread_create(..., &tid[i]);`.
+
 2. Why do we use `partial_sum[id]` instead of a single shared `total` variable?
+
+   > **Answer:** Multiple threads doing `total += x` concurrently have a non-atomic read-modify-write cycle, which creates a **race condition** and loses updates. Writing to `partial_sum[id]` gives each thread its own slot with no contention; the main thread sums the partials after `join` — safe and correct.
+
 3. What factors cause real speedup to fall short of ideal speedup?
+
+   > **Answer:** ① Serial portions of the code (Amdahl's Law); ② thread creation/join overhead; ③ cache misses and false sharing; ④ memory-bus or shared-resource contention; ⑤ lock/wait time; ⑥ OS scheduling delays and context-switch overhead.
+
 4. What happens if the main thread exits before calling `pthread_join` on all child threads?
+
+   > **Answer:** When the process exits, **all threads are forcibly terminated** — work in progress is lost, buffered I/O may not flush, and resources (file handles, network sockets) are abruptly closed. Results cannot be trusted. Always `pthread_join` (or detach deliberately) before letting `main()` return.
 
 ---

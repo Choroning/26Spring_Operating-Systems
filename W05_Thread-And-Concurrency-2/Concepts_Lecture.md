@@ -1357,14 +1357,50 @@ int main() {
 ## Self-Check Questions
 
 1. What is implicit threading and why has it become necessary? Name the five techniques covered in this chapter.
+
+   > **Answer:** **Implicit threading** delegates thread creation and management to compilers or runtime libraries rather than the programmer. It became necessary as multicore CPUs spread and manual threading grew error-prone and hard to scale. Five techniques: ① **Thread Pools**, ② **Fork-Join**, ③ **OpenMP**, ④ **Grand Central Dispatch (GCD)**, ⑤ **Intel TBB**.
+
 2. Explain the three benefits of thread pools. How does a thread pool differ from creating a new thread per request?
+
+   > **Answer:** ① Eliminates per-request thread creation/destruction cost; ② caps the number of live threads, preventing resource exhaustion under load; ③ decouples request handling from thread management. Per-request creation risks OS resource exhaustion during traffic spikes; a pool reuses a fixed set of workers via a task queue.
+
 3. What is work stealing in the Fork-Join model, and why is it important for performance?
+
+   > **Answer:** When a worker finishes its queue and has no work, it **steals a task** from the tail of another (busy) worker's deque. This keeps all cores busy even when work is unevenly distributed across workers — preserving throughput and scalability under load imbalance.
+
 4. Write a simple OpenMP program that parallelizes array summation using `reduction`. What happens without the `reduction` clause?
+
+   > **Answer:**
+   > ```c
+   > int sum = 0;
+   > #pragma omp parallel for reduction(+:sum)
+   > for (int i = 0; i < N; i++)
+   >     sum += arr[i];
+   > ```
+   > Without `reduction`, multiple threads write concurrently to the shared `sum` — a race condition — so the result is non-deterministic and usually incorrect. `reduction(+:sum)` gives each thread a private partial sum and merges them at the end safely.
+
 5. When a multithreaded process calls `fork()`, should all threads be duplicated or only the calling thread? Explain the reasoning for both cases.
+
+   > **Answer:** POSIX **duplicates only the calling thread** by default. Duplicating all threads risks orphaned locks: if another thread held a mutex at `fork()`, the child inherits a locked mutex it can never unlock. The safe pattern is to `fork()` and immediately `exec()` a fresh image. Duplicating all threads is only useful in rare cases where the full thread pool must continue in the child — and the program must carefully manage all locks around `fork()`.
+
 6. What are the four options for delivering signals in a multithreaded environment?
+
+   > **Answer:** ① Deliver to the thread to which the signal applies (synchronous signals like SIGSEGV); ② deliver to every thread in the process; ③ deliver to a specified subset of threads; ④ deliver to a single designated "signal-handling" thread.
+
 7. Compare asynchronous and deferred thread cancellation. Why does Pthreads default to deferred cancellation?
+
+   > **Answer:** **Asynchronous**: the target thread is terminated immediately — may leave locks held and resources un-freed, which is dangerous. **Deferred**: the target is terminated only when it reaches a defined cancellation point (e.g., `pthread_testcancel`) — giving it a chance to release resources cleanly. Pthreads defaults to deferred because it is safer.
+
 8. What is Thread-Local Storage (TLS) and how does it differ from local variables?
+
+   > **Answer:** **TLS** is a per-thread global variable — a value that persists across function calls for the lifetime of the thread, with each thread seeing its own independent copy. Local variables live on the stack and vanish when the enclosing function returns (and each recursive call gets its own). In C, TLS can be declared with `__thread`, `_Thread_local` (C11), or the Pthreads API (`pthread_key_create`).
+
 9. Describe the three Windows thread data structures (ETHREAD, KTHREAD, TEB) and their locations.
+
+   > **Answer:** **ETHREAD** (Executive Thread Block) — high-level Executive data (pointer to owning process, etc.), in **kernel space**. **KTHREAD** (Kernel Thread Block) — scheduling and synchronization info (state, priority, kernel stack), in **kernel space**. **TEB** (Thread Environment Block) — per-thread data accessible from user mode (TLS, exception list, last error), in **user space**.
+
 10. How does Linux's `clone()` system call unify process and thread creation? What do the sharing flags control?
+
+    > **Answer:** `clone()` is a single syscall that implements both `fork()` and `pthread_create()`; the difference lies in which resources the child **shares** with the parent, controlled by flags: `CLONE_VM` (address space), `CLONE_FS` (filesystem), `CLONE_FILES` (file descriptor table), `CLONE_SIGHAND` (signal handlers), `CLONE_THREAD` (same thread group). All flags on ≈ `pthread_create`; all off ≈ `fork`.
 
 ---

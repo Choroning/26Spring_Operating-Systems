@@ -532,10 +532,27 @@ graph TD
 ## Self-Check Questions
 
 1. What are the three benefits of using a thread pool instead of creating a new thread for each task?
+
+   > **Answer:** ① No per-task creation/destruction cost; ② bounds the number of live threads, preventing resource exhaustion under load; ③ cleanly separates task submission from thread management. Creating a thread per task risks bringing down the process on traffic spikes.
+
 2. Why does the worker thread use `while (pool.count == 0)` instead of `if (pool.count == 0)` before calling `pthread_cond_wait`?
+
+   > **Answer:** Because of **spurious wakeups** (the kernel/library may wake a waiter even without a signal) and because `pthread_cond_broadcast` can wake multiple threads that then race for the same condition. Re-testing the predicate with `while` ensures the condition is still true after waking; `if` would proceed with a false condition and cause bugs.
+
 3. What are the three demos in Lab 2, and what OpenMP directive does each demonstrate?
+
+   > **Answer:** Typically: **Demo 1** — `#pragma omp parallel for` (loop parallelism); **Demo 2** — `#pragma omp parallel for reduction(+:x)` (safe accumulation); **Demo 3** — `#pragma omp sections` or `#pragma omp task` (task-based parallelism). Refer to the lab body for the exact mapping used.
+
 4. When `fork()` is called in a multithreaded program, how many threads does the child process have? Why is this dangerous?
+
+   > **Answer:** The child has **only the calling thread** (POSIX default). Danger: if another thread held a mutex at the moment of `fork()`, the child inherits it locked with no owner thread to release it — deadlock. Library-internal locks (e.g., inside `malloc`) are notorious for this; the standard recommendation is to `exec()` immediately after `fork()`.
+
 5. What is the difference between Demo 1 and Demo 2 in Lab 4? What real-world system uses the same pattern as Demo 2?
+
+   > **Answer:** Demo 1 delivers signals to **every** thread (default behavior). Demo 2 uses a **dedicated signal-handling thread** while all other threads block the signal via `sigprocmask` — keeping signal logic in one place. Real-world systems using this pattern include **nginx** and many JVM implementations.
+
 6. Name three different ways to declare a thread-local variable in C.
+
+   > **Answer:** ① `__thread int x;` (GCC/Clang extension), ② `_Thread_local int x;` (C11 standard), ③ `pthread_key_create(&key, NULL); pthread_setspecific(key, ptr);` (POSIX API).
 
 ---

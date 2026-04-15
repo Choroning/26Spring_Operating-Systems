@@ -302,9 +302,23 @@ You do **not** need to successfully boot the OS — the **process** is what matt
 ## Self-Check Questions
 
 1. What is the key difference between a coding agent and a simple code autocompletion tool like Copilot?
+
+   > **Answer:** Copilot autocompletes a single code fragment at the cursor. A **coding agent** invokes multi-step tools (read/write files, build, test, run commands) and autonomously plans, executes, and verifies work against a goal. Agents operate on the entire project state, not a single line.
+
 2. Why is it important to ask an agent to "show the plan first" before executing file system operations?
+
+   > **Answer:** File-system actions can be irreversible (deletes, overwrites). If the agent misunderstands intent, the damage is hard to undo. Reviewing the plan first lets the user catch scope errors (wrong paths, unintended deletes) before any disk change is made.
+
 3. Describe the RALPH technique in your own words. Why does iterating with a rubric produce better results than a single prompt?
+
+   > **Answer:** RALPH (Rubric-Aligned Loop Prompt Hardening) defines explicit evaluation criteria (a rubric), then has the agent produce, self-evaluate against the rubric, and revise iteratively. A single prompt relies on one guess; a rubric-driven loop steers each revision toward measurable criteria, so the output quality converges rather than drifting.
+
 4. When building a mini OS, what is the role of the bootloader, and why must it switch from Real Mode to Protected Mode?
+
+   > **Answer:** The bootloader is the tiny program the firmware runs first — it loads the kernel into memory and transfers control. On x86, Real Mode is 16-bit and limited to 1 MB addressing. Any modern kernel needs 32/64-bit addresses and memory protection, so the bootloader must enable Protected Mode before jumping to the kernel.
+
 5. If the agent-generated OS code fails to build, what is the most effective way to ask the agent to fix it?
+
+   > **Answer:** Feed back the full error output, the exact command that failed, and the environment (OS, compiler version). Define a clear success condition (e.g., "fix this error and keep existing tests passing"). The more concrete the context, the less the agent has to guess at the root cause.
 
 ---

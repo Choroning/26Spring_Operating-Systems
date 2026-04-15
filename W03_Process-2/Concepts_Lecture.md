@@ -1109,9 +1109,23 @@ int main() {
 ## Self-Check Questions
 
 1. **Shared memory vs Message passing**: A video streaming application needs to pass 4K frames (several MB each) between a decoder process and a renderer process on the same machine. Which IPC model would you choose and why?
+
+   > **Answer:** **Shared memory**. 4K frames are several MB, so message passing would incur huge kernel-buffer copy costs (user → kernel → user) on every frame. Shared memory lets both processes map the same physical frame and access it with zero copies — ideal for high-bandwidth, low-latency streaming. Synchronization (who is producing / consuming) is handled separately via semaphores or mutexes.
+
 2. **Bounded buffer**: In the circular buffer implementation, why can only `BUFFER_SIZE - 1` items be stored instead of `BUFFER_SIZE`? What would go wrong if we tried to use all slots?
+
+   > **Answer:** Because "empty" and "full" would be indistinguishable — both would satisfy `head == tail`. Leaving one slot unused lets the code distinguish them unambiguously: full = `(head + 1) % BUFFER_SIZE == tail`, empty = `head == tail`. Using all slots would require an extra counter or flag, complicating the implementation.
+
 3. **Pipes and EOF**: After `fork()`, both the parent and child hold copies of `fd[0]` and `fd[1]`. Explain why the reading side blocks forever if the writing side forgets to `close(fd[READ_END])`.
+
+   > **Answer:** EOF is only signalled when **all** write-end file descriptors are closed. If any process (parent or child) still holds an open `fd[WRITE_END]`, the kernel treats the pipe as still writable and the `read()` blocks indefinitely. The writing side must close every descriptor it doesn't actively use. *(Note: the typical cause is forgetting to close the **write end** in the reader, not the read end in the writer — the principle is symmetric.)*
+
 4. **RPC semantics**: A banking application exposes a `transfer(from, to, amount)` RPC. Should it use "at most once" or "exactly once" semantics? What could go wrong with "at least once"?
+
+   > **Answer:** **Exactly once**. "At least once" can retransmit on network failures and execute the transfer twice, causing a double withdrawal/deposit. "At most once" can fail to execute the transfer at all on a single lost message. Banking tolerates neither duplication nor omission, so the server must deduplicate retries using a unique transaction ID.
+
 5. **Direct vs Indirect communication**: Give one advantage of indirect communication (mailboxes) over direct communication in a system where new worker processes are frequently created and destroyed.
+
+   > **Answer:** Senders don't need to know a worker's PID or address — they just post to a named mailbox. As workers are added or removed, sender code stays unchanged. Multiple workers can share a mailbox to provide natural load balancing (each pulls the next message).
 
 ---
