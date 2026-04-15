@@ -42,7 +42,7 @@
   - [3.7 File Systems & Security (Weeks 13–14)](#37-file-systems--security-weeks-1314)
   - [3.8 Course Roadmap](#38-course-roadmap)
 - [Summary](#summary)
-- [Appendix](#appendix)
+- [Self-Check Questions](#self-check-questions)
 
 ---
 

@@ -46,7 +46,7 @@
   - [7.2 Lab 2: Producer-Consumer (Using pipe)](#72-lab-2-producer-consumer-using-pipe)
   - [7.3 Lab 3: POSIX Shared Memory](#73-lab-3-posix-shared-memory)
 - [Summary](#summary)
-- [Appendix](#appendix)
+- [Self-Check Questions](#self-check-questions)
 
 ---
 

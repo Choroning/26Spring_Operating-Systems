@@ -27,7 +27,7 @@
   - [5.2 Full Definition of struct proc](#52-full-definition-of-struct-proc)
 - [6. Lab 4: Deep Dive into fork() Implementation](#6-lab-4-deep-dive-into-fork-implementation)
 - [Summary](#summary)
-- [Appendix](#appendix)
+- [Self-Check Questions](#self-check-questions)
 
 ---
 
