@@ -87,24 +87,33 @@ This repository contains bilingual study materials and system-level code develop
 │   ├── Concepts_Lecture.ko.md
 │   └── Concepts_Lecture.md
 ├── W03_Process-2
+│   ├── Assignment
+│   │   ├── trace_test.c
+│   │   └── trace.patch
+│   ├── Assignment-Report.pdf
 │   ├── Concepts_Lab.ko.md
 │   ├── Concepts_Lab.md
 │   ├── Concepts_Lecture.ko.md
 │   └── Concepts_Lecture.md
-├── W04_Thread-And-Concurrency-1
-│   ├── Concepts_Lab.ko.md
-│   ├── Concepts_Lab.md
-│   ├── Concepts_Lecture.ko.md
-│   └── Concepts_Lecture.md
-├── W05_Thread-And-Concurrency-2
 ├── W06_CPU-Scheduling-1
+│   ├── Concepts_Lab.ko.md
+│   ├── Concepts_Lab.md
+│   ├── Concepts_Lecture.ko.md
+│   └── Concepts_Lecture.md
 ├── W07_CPU-Scheduling-2
+│   ├── Concepts_Lecture.ko.md
+│   └── Concepts_Lecture.md
 ├── W09_Synchronization
+│   ├── Concepts_Lecture.ko.md
+│   └── Concepts_Lecture.md
 ├── W10_Deadlocks
 ├── W11_Main-Memory
 ├── W12_Virtual-Memory
 ├── W13_Storage-Management
-├── W14_Security-And-Protection
+├── W14_Security-Protection
+├── Preparation
+│   ├── Mid_SummarySheet.ko.md
+│   └── Mid_Total.ko.md
 ├── images
 │   ├── *.png                          (lecture diagrams and icons)
 │   ├── cropped
