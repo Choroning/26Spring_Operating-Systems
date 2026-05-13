@@ -184,6 +184,8 @@ If both threads run this pattern in lockstep, each acquires its first lock, fail
 
 **Fix — random backoff**: insert a randomized delay before retrying. This is exactly the **CSMA/CD collision-resolution** strategy from Ethernet (binary exponential backoff). Breaking the symmetry of the retry pattern is what gets one thread through.
 
+> **[Computer Networks]** Binary exponential backoff: after the k-th consecutive collision, each station picks a random retry slot from `[0, 2^k − 1]`. The retry window *doubles* every collision, so the probability that two contenders pick the same slot drops exponentially. Originally specified in Ethernet (IEEE 802.3) for resolving carrier-sense collisions on a shared medium; the same idea is reused in Wi-Fi, TCP retransmission timers, and — here — software retry loops.
+
 ---
 
 <br>
@@ -223,6 +225,8 @@ A **Resource-Allocation Graph** represents the current allocation state as a dir
 
 When a request is granted, the request edge `Ti → Rj` flips to an assignment edge `Rj → Ti`. When the resource is released, the assignment edge is removed.
 
+> **[Data Structures]** A RAG is just a directed graph. Detecting whether a deadlock has formed reduces to **directed-cycle detection**, which is the standard DFS with three-color marking (white = unvisited, grey = on the current DFS stack, black = fully explored) — a back-edge to a grey node closes a cycle. Cycle detection runs in O(V+E); for the RAG, that becomes O(n²) in the typical dense case used later (§5.3, §6.1).
+
 ### 2.3 RAG — Cycles and Deadlock
 
 The relationship between cycles in the RAG and deadlock depends on whether resources have multiple instances:
@@ -238,6 +242,8 @@ The relationship between cycles in the RAG and deadlock depends on whether resou
 **Example 1 — Cycle and deadlock.** T1 holds R2, waits for R1; T2 holds R1 and R2, waits for R3; T3 holds R3 and additionally requests R2. Two cycles form (`T1→R1→T2→R3→T3→R2→T1` and `T2→R3→T3→R2→T2`) → **deadlock**.
 
 **Example 2 — Cycle but no deadlock.** A cycle exists, but a fourth thread T4 holds a different instance of one of the cycle's resources. T4 can release it, satisfying one of the cycle's waits, breaking the cycle.
+
+  Concretely: suppose R has 2 instances, T1 holds R₁ and waits for R₂'s instance held by T2, T2 holds R₂'s instance and waits for R₁'s instance held by T1 — but T4 (outside the cycle) holds R₂'s *other* instance. When T4 finishes and releases its R instance, the OS hands it to T2 (the next R-waiter), T2 completes, releases its R instance to T1, T1 completes. The cycle visible in the graph never resolves into deadlock because the cycle's wait condition can be satisfied by a node *outside* the cycle.
 
 ---
 
@@ -346,7 +352,9 @@ lock(first_mutex);    // F = 1     ✗
 F(R0) < F(R1) < ... < F(Rn) < F(R0)
 ```
 
-So F(R0) < F(R0), a contradiction. Therefore no cycle can form, and deadlock cannot occur.
+So F(R0) < F(R0) — a contradiction. Therefore no cycle can form, and deadlock cannot occur. ∎
+
+> **[Discrete Mathematics]** Two properties of `<` on ℤ make this proof work. **Transitivity**: if a < b and b < c, then a < c — so chaining n separate inequalities yields F(R0) < F(R0). **Irreflexivity**: no integer is less than itself, so F(R0) < F(R0) is *impossible* — that's where the contradiction lives. Together these say `<` is a **strict total order**, the same algebraic structure used elsewhere this term (e.g., scheduling priority comparisons, sorting).
 
 > **Caveat**: Defining a lock order is necessary but not sufficient — **programmers must adhere to it**. The compiler/runtime does not enforce it. Tools like lockdep (§4.6) catch violations at test time.
 
@@ -381,7 +389,7 @@ Thread B: transaction(savings, checking, 50.0)
 → Deadlock possible!
 ```
 
-**Standard fix**: derive the order from a stable property of the lock itself — e.g., **compare lock addresses** and always acquire the lock with the lower address first. In Java the analogue is `System.identityHashCode(Object)`.
+**Standard fix**: derive the order from a stable property of the lock itself — e.g., **compare lock addresses** and always acquire the lock with the lower address first. Why this works: at runtime every lock object lives at a unique, immutable memory address (a non-negative integer); addresses give a **total order** with exactly the same mathematical properties as the static F mapping in §4.4, so the same theorem applies — no two callers can ever request locks in opposite orders. In Java, where objects don't expose their address, `System.identityHashCode(Object)` plays the same role (still unique-per-object and stable for the object's lifetime).
 
 ### 4.6 Linux lockdep Tool
 
@@ -418,6 +426,8 @@ Prevention is heavy-handed — it removes deadlock by structurally restricting w
 > **Safe State**: there exists a **safe sequence** ⟨T1, T2, ..., Tn⟩ such that for every Ti, its remaining resource needs can be satisfied by `Available + ∑ Allocation(Tj for j < i)`.
 >
 > **Unsafe State**: no safe sequence exists.
+
+> **[Discrete Mathematics]** Vector notation used throughout this section: when X and Y are vectors of the same length, **`X ≤ Y` means component-wise** — `X[j] ≤ Y[j]` for every index j. Likewise `+` and `−` on vectors are component-wise. Note that vector `≤` is a **partial order**, not a total one — two vectors can be **incomparable** (e.g., `(1,3) ≰ (2,2)` and `(2,2) ≰ (1,3)`). The Banker's Algorithm depends on this distinction: a request that fails `Request ≤ Available` is not "greater than" — it is simply unsatisfiable in some component.
 
 ```text
 Safe ⊂ Not-deadlocked (Safe → deadlock impossible)
@@ -474,6 +484,19 @@ When every resource type has **exactly one instance**, augment the RAG with **cl
 
 The RAG-based algorithm fails for **multi-instance** resources. The Banker's Algorithm generalizes the idea: it is named for the principle that a banker should never lend out cash if doing so would make it impossible to satisfy every customer's maximum line of credit.
 
+> **Banking metaphor mapping** — keep this in mind as the variables get formal:
+>
+> | OS concept | Bank concept |
+> |---|---|
+> | Threads T1..Tn | Customers |
+> | Resource type Rj | A currency (e.g., USD, KRW) |
+> | Available[j] | Cash on hand in that currency |
+> | Max[i][j] | Customer i's credit limit |
+> | Allocation[i][j] | Customer i's outstanding loan |
+> | Need[i][j] = Max − Allocation | Customer i's remaining credit line |
+>
+> The bank's solvency rule "no loan that could deny any customer's full credit line" is exactly the Safety check.
+
 Each thread declares its **maximum** demand for each resource type up front. On each request, the OS checks whether granting it leaves the system Safe.
 
 ```text
@@ -515,7 +538,7 @@ Determines whether the *current* allocation state is safe:
    Otherwise → Unsafe State
 ```
 
-**Time complexity**: O(m · n²).
+**Time complexity**: O(m · n²). *Derivation:* the outer "find any i" loop runs at most **n** times (one Finish flag flips per pass; once all are true we exit), and each pass scans up to **n** candidate threads; testing `Need_i ≤ Work` is **m** component-wise comparisons. Total ≤ n × n × m = O(m · n²).
 
 ### 5.6 Resource-Request Algorithm
 
@@ -535,6 +558,8 @@ When thread Ti makes a request vector `Request_i`:
      Safe   → confirm allocation
      Unsafe → roll back step 3; Ti must wait
 ```
+
+> **[Data Structures]** Why "pretend → check → maybe rollback" is rigorous, not hand-wavy: the entire system state for the purposes of Safety is captured in the three vectors `Available`, `Allocation_i`, `Need_i`. Step 3 modifies *only* these vectors. If the check fails we apply the inverse arithmetic (`+ Request_i` where we subtracted, `− Request_i` where we added) to restore the exact pre-pretend state — no external side effects, no race condition. This is a **purely functional transformation**: the pretend acts on what is effectively a snapshot, and we either commit the new snapshot or discard it. The same pattern shows up in transactional data structures (persistent trees, copy-on-write structures) and software transactional memory.
 
 ### 5.7 Banker's Algorithm Worked Example
 
@@ -605,7 +630,7 @@ For **single-instance** resources, contract the RAG into a **Wait-for Graph**:
 Ti → Rq → Tj  is replaced by  Ti → Tj
 ```
 
-A **cycle** in the wait-for graph means deadlock. Cycle detection is O(n²) in the number of threads.
+A **cycle** in the wait-for graph means deadlock. Cycle detection runs in **O(V+E)** via DFS (the 3-color back-edge test from §2.2); for the wait-for graph V = n and the graph can be near-dense with up to n² edges, so the worst-case bound becomes **O(n²)** in the number of threads.
 
 > **Why this works for single-instance only**: with multi-instance resources, even if Ti is waiting for a resource Tj holds, there may be a *third* thread holding another instance of the same resource that will release it.
 
@@ -661,7 +686,10 @@ Walking the algorithm: T0 (Request 0,0,0) → T2 → T3 → T1 → T4 all finish
 **Example B — Deadlock.** From state A, T2 now requests one more C → Request[T2]=(0,0,1):
 
 ```text
-Step 1: T0 finishes → Work = (0,1,0)
+Initial Work = Available = (0,0,0); Finish = [F,F,F,F,F]
+
+Step 1: T0 has Request (0,0,0) ≤ Work (0,0,0) → T0 finishes
+        Work = (0,0,0) + Allocation_T0 = (0,0,0) + (0,1,0) = (0,1,0)
 Step 2: any of T1/T2/T3/T4?
    T1 (2,0,2) ≤ (0,1,0)? No
    T2 (0,0,1) ≤ (0,1,0)? No  (C: 1 > 0)
@@ -775,6 +803,8 @@ for (int i = 0; i < N; i++)
 ```
 
 ### 8.2 Lab: Safety Algorithm in C
+
+The function returns `true` iff the current state is safe. The `safe_seq[]` parameter is an **output array** (a classic C idiom: the caller owns the buffer, the callee writes thread indices into it in the order they would finish in a safe sequence). On a safe state the caller can read `safe_seq[0..N-1]` to recover one valid execution order; on an unsafe state the contents are partial and should be ignored.
 
 ```c
 bool safety_algorithm(int safe_seq[]) {
