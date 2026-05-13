@@ -428,7 +428,7 @@ Two strategies for when the hardware switches between hardware threads:
 | Pros | Simpler hardware design | Very fast switching; high core utilization |
 | Cons | Pipeline flush overhead is wasteful | More complex hardware |
 
-> **What is a "pipeline"?** Modern CPUs process instructions in an assembly-line fashion: while instruction 1 is being executed, instruction 2 is being decoded, instruction 3 is being fetched, and so on — typically 5 to 20 stages deep. This "pipeline" is what lets a CPU complete roughly one instruction per cycle despite each instruction actually taking many cycles. A **pipeline flush** means throwing away all the partially-processed instructions in the pipeline (e.g., when switching threads, you can't keep the old thread's in-flight instructions). Every flush wastes the work already done on those stages — hence the high cost of coarse-grained switching.
+> **[Computer Architecture]** What is a "pipeline"? Modern CPUs process instructions in an assembly-line fashion: while instruction 1 is being executed, instruction 2 is being decoded, instruction 3 is being fetched, and so on — typically 5 to 20 stages deep. This "pipeline" is what lets a CPU complete roughly one instruction per cycle despite each instruction actually taking many cycles. A **pipeline flush** means throwing away all the partially-processed instructions in the pipeline (e.g., when switching threads, you can't keep the old thread's in-flight instructions). Every flush wastes the work already done on those stages — hence the high cost of coarse-grained switching.
 
 Modern Intel / SPARC designs use **fine-grained** (or a hybrid) to keep cores busy at instruction-cycle granularity.
 
@@ -832,7 +832,7 @@ CFS stores runnable tasks in a **Red-Black Tree** keyed by **vruntime**.
 - Insertion/deletion: **O(log N)**.
 - When a task **blocks** (e.g., waits for I/O), it's **removed** from the tree. When it becomes runnable again, it's **inserted** back.
 
-> **Why a red-black tree and not a heap?** A heap gives O(1) min-find and O(log N) insert, same as the leftmost-cached RB-tree. But CFS also needs to **remove arbitrary elements** (when a task blocks) and **update priorities** — and RB-trees support these operations in O(log N) with cleaner invariants than heaps.
+> **[Data Structures]** Why a red-black tree and not a heap? A heap gives O(1) min-find and O(log N) insert, same as the leftmost-cached RB-tree. But CFS also needs to **remove arbitrary elements** (when a task blocks — you don't know where in the heap it lives without an external index) and **update priorities** (vruntime grows as the task runs) — and RB-trees support these in O(log N) with cleaner invariants than heaps. The "leftmost-cached" trick stores a pointer to the smallest element so `next_task = leftmost` runs in O(1).
 
 ### 6.7 CFS — Load Balancing and NUMA
 

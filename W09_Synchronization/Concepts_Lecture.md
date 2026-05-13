@@ -230,7 +230,7 @@ If a CPU executes ② before ①, both processes may pass the entry check and en
 
 **Fix**: insert **memory barriers** (next section) that prevent the hardware and compiler from reordering across the boundary. With proper barriers, Peterson's algorithm does work correctly on modern hardware — but in practice, programmers use higher-level primitives (locks, atomics) that hide this complexity.
 
-> **Takeaway**: An algorithm that is provably correct on an idealized memory model can fail catastrophically on real hardware. The "memory model" of a machine — which reorderings it permits — is now part of the programming model that synchronization code must respect.
+> **[Computer Architecture]** An algorithm that is provably correct on an idealized **sequentially-consistent** memory model can fail catastrophically on real hardware that implements a **relaxed (weak) memory model**. A machine's memory model — which load/store reorderings the CPU and compiler are *allowed* to perform — is part of the architecture specification: x86 is relatively strong (TSO — Total Store Order); ARM and POWER are much weaker. Synchronization code must explicitly respect this with **memory barriers** (next section) or with higher-level primitives that insert barriers internally.
 
 ---
 
@@ -260,7 +260,7 @@ Without the barriers, Thread 2's write to `x` could become visible **after** the
 - Memory barriers are a **very low-level** primitive used mostly by **kernel and library writers**. Most application programmers use locks or atomics, which insert the necessary barriers internally.
 - With appropriate barriers, **Peterson's Solution works correctly on modern hardware**.
 
-> **The mental model that helps**: think of each CPU as having a "store buffer" between it and main memory. Stores enter the buffer and drain in some order. A memory barrier is the instruction that says "drain my store buffer before I do anything else, and don't let later operations overtake earlier ones."
+> **[Computer Architecture]** Mental model for memory barriers: think of each CPU core as having a **store buffer** between its pipeline and the cache-coherent memory system. A `store` instruction *retires* into this buffer immediately so the pipeline can keep moving; the buffer drains to memory later in some order chosen by the hardware. That delayed drain is what lets one core's writes appear out-of-order to another core. A memory barrier (`mfence`/`sfence` on x86, `dmb`/`dsb` on ARM) is the instruction that says "drain my store buffer before I do anything else, and don't let later operations overtake earlier ones."
 
 ### 3.2 test_and_set
 
