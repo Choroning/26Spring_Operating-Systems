@@ -111,6 +111,8 @@ The CPU can directly access only two kinds of storage:
    +-----------+
 ```
 
+> **Prerequisite — the memory hierarchy** (computer architecture): each level trades capacity for latency. **"Transparent to ISA"** means the cache is managed entirely by hardware — neither the OS nor the running program issues explicit loads/stores to it; the CPU automatically fills cache lines on demand and evicts them under its own policy. Only the **register file** and **main memory** are exposed to the load/store instructions in the instruction set, which is why OS textbooks talk about "directly addressable" storage as if cache did not exist.
+
 Everything on disk must be **loaded into memory** before the CPU can touch it. This is exactly why memory is a scarce, contended resource.
 
 ### 1.3 Base and Limit Registers
@@ -169,7 +171,7 @@ With **compile-time** or **load-time** binding, logical = physical. With **execu
 
 ### 2.4 MMU — Memory-Management Unit
 
-The **MMU** is the hardware that performs logical-to-physical translation. In the simplest scheme (dynamic relocation) it just adds a **relocation register** to every logical address:
+The **MMU** is the hardware that performs logical-to-physical translation. In the simplest scheme (dynamic relocation) it just adds a **relocation register** to every logical address. *(Note: in this simplest design the relocation register is the same physical register as the **base register** introduced in §1.3 — the two names emphasize different roles. As "base", it sets the lower bound for the limit check; as "relocation", it is the addend that shifts the user's view of 0…max up to the actual physical range.)*
 
 ```text
   logical addr  -->  +-----+
@@ -350,7 +352,7 @@ Consequences:
 
 ### 4.2 Address Translation Principle
 
-Let page size be 2^n and the logical address space be 2^m bits. Split the address:
+Let page size be 2^n and the logical address space be 2^m bytes (on a 32-bit architecture, m = 32; on x86-64, m = 48 — see §9.3). Split the address:
 
 ```text
 Logical Address (m bits)
@@ -371,6 +373,8 @@ Physical Address
 ```
 
 **Key invariant**: the page offset `d` passes through unchanged — pages and frames are the same size, so the position within them is identical.
+
+> **Why `(f << n) | d` equals `f × page_size + d`** (bit manipulation reminder from computer architecture): shifting an integer left by `n` bits multiplies it by 2ⁿ. Since page size = 2ⁿ, `f << n` is exactly `f × page_size`. The lower `n` bits of `f << n` are all zero, so OR-ing the `n`-bit offset `d` into them is the same as adding `d`. Splitting the address into (page #, offset) is thus a *no-cost* division and modulus by the page size — done by wiring, not arithmetic.
 
 ### 4.3 Paging Hardware and Free-Frame Management
 
@@ -418,6 +422,8 @@ Two implementation strategies:
 
 The **TLB** is a small, very fast **associative memory** that caches recent translations.
 
+> **What "associative memory" means** (computer architecture — also called **Content-Addressable Memory / CAM**): a regular RAM takes an *address* in and returns the *value* at that address. A CAM works the other way around — you give it a *value* (here, a page number), and dedicated comparator hardware checks **every stored key in parallel** in a single cycle, returning the slot index (and stored data) of whichever entry matches. The same hardware idea underlies cache tag arrays. Parallel comparison is what makes TLB lookup essentially free, but it is also expensive in transistors per entry, which is why a TLB has only tens to a couple thousand entries.
+
 - Size: typically 32 to 1,024 entries.
 - Each entry: **(page #, frame #)** plus protection bits.
 - Lookup compares the input page # against **all keys in parallel** — single-cycle.
@@ -446,6 +452,8 @@ When the TLB is full, an entry must be evicted (LRU, round-robin, random). Some 
 
 Without help, a context switch must **flush the entire TLB**, because TLB entries from process P1 would otherwise mis-translate process P2's addresses. The cost is a flood of TLB misses every time the scheduler switches processes.
 
+> **Order of magnitude**: a 1,024-entry TLB with ~100 ns per miss can spend roughly **100 µs** rewarming after a flush — comparable to a full Linux time slice on busy servers. Multiply by the context-switch rate (often thousands per second) and unmitigated TLB flushes become a serious source of overhead. This is the gap ASID is designed to close.
+
 **ASID** tags each TLB entry with a process identifier:
 
 ```text
@@ -471,7 +479,10 @@ Quantify TLB performance. Let:
 EAT = α · (T + M) + (1 − α) · (T + 2M)
 ```
 
-(On a miss, we pay T for the TLB lookup, then *two* memory accesses: PT entry + data.)
+> **Where the formula comes from** (expected-value over two events):
+> - On a **hit** (probability α) we pay T (the TLB lookup itself, always paid) + M (one memory access to fetch the actual data) → `T + M`.
+> - On a **miss** (probability 1 − α) we pay T (the unsuccessful TLB lookup) + M (read the page-table entry from memory) + M (then read the actual data) → `T + 2M`.
+> - Multiply each case by its probability and sum. This is the standard expected-value technique from discrete probability.
 
 **Numerical examples** (M = 100 ns, T = 10 ns):
 
@@ -564,7 +575,7 @@ Logical address (32-bit, 4KB pages, two-level):
   d   →  page offset
 ```
 
-This is the classical **forward-mapped** page table. The huge win: inner page tables for **unused address-space regions are not allocated**. A typical process uses only a small fraction of its 4GB; we only spend memory on the used parts.
+This is the classical **forward-mapped** page table. The huge win: inner page tables for **unused address-space regions are not allocated**. Mechanically (in data-structures terms), the outer table is an array of 1024 pointers; each pointer either references an inner page table (4 KB, 1024 entries) or is **null/invalid**. Walking a null outer entry traps to the OS as "no mapping"; the corresponding 4 MB of virtual address space costs zero physical memory for the page table itself. A typical process uses only a small fraction of its 4 GB virtual space, so most outer entries stay null and we pay only for the used branches.
 
 ### 7.3 Hierarchical Paging Falls Apart in 64-bit
 
@@ -597,7 +608,7 @@ hash(p) → chain of (p, f, next) entries
 walk the chain until p matches
 ```
 
-Each bucket holds collisions in a linked list. This works well for **sparse** address spaces (most of the 64-bit range is unused), because the table size is proportional to actually used pages, not to theoretical maximum.
+Each bucket holds collisions in a linked list — this is the standard **separate-chaining** collision resolution from data structures: the entry stored at the bucket head has the form `(virtual_page, frame, next)`, with `next` linking to the next collision in the same bucket. To translate page `p` you compute `hash(p)`, walk the linked list at that bucket, and stop on the node whose stored virtual_page equals `p`. Average lookup is O(1) when the load factor is kept low; worst case is O(chain length). This works well for **sparse** address spaces (most of the 64-bit range is unused), because the table size is proportional to actually used pages, not to theoretical maximum.
 
 A **clustered page table** stores mappings for several consecutive pages in one entry, amortizing hash-table overhead. This is especially well suited to 64-bit sparse address spaces.
 
@@ -615,7 +626,7 @@ Inverted PT:
 ```
 
 - **Pro**: total size is proportional to physical memory, not virtual memory — huge savings.
-- **Con**: lookups are by *virtual* address, so the OS must search the whole table. Use a **hash table** to make lookups O(1) on average.
+- **Con**: lookups are by *virtual* address, so the OS must search the whole table. The fix is an **auxiliary hash table** layered *on top of* the inverted table: hash `(pid, virtual_page)` to obtain the **frame index** (= row in the inverted table). This is structurally different from the hashed page table in §7.4 — there the hash *replaces* the page table; here it accelerates lookup into a separate structure indexed by frame.
 - **Limitation**: each frame maps to exactly one (pid, vpage). Shared pages — where the same frame appears in multiple processes' page tables — are awkward to express.
 
 ### 7.6 Comparison
@@ -691,7 +702,7 @@ Alternative strategies:
 
 The 64-bit extension architecture (originally AMD64, adopted by Intel).
 
-- **48-bit virtual address space** = 256 TB. (The unused top bits must be a sign-extension of bit 47 — "canonical addresses".)
+- **48-bit virtual address space** = 256 TB. (The unused top bits must be a sign-extension of bit 47 — "canonical addresses". *What this means*: only the low 48 bits of a 64-bit pointer carry information; bits 48–63 must all match bit 47, i.e. **all 0s or all 1s**. Any non-canonical pointer triggers a #GP general-protection fault when dereferenced. This design reserves the unused top bits so that future CPUs can widen the address space without breaking software that assumed garbage bits there.)
 - **52-bit physical address** via PAE-style extension = 4 PB.
 - Page sizes: **4 KB**, **2 MB**, **1 GB**.
 - 4-level page table (PML4 → PDPT → PD → PT). Modern parts add a 5th level for 57-bit VAs.
@@ -741,6 +752,8 @@ typedef struct Block {
     struct Block* next;
 } Block;
 ```
+
+> **Why a singly-linked list?** (data-structures perspective): a sorted-by-address linked list is the natural fit because the operations are (1) walk the list to find a hole — sequential access, O(n); (2) split a block — pointer surgery, O(1); (3) coalesce after release — check the neighbor pointers, O(1). **First-fit can short-circuit** the walk on the first match, so its expected cost is much smaller than n on a fragmented list; **Best-fit and Worst-fit** must scan the entire list to be sure they have found the smallest / largest sufficient hole — O(n) every time. This asymmetry is the algorithmic reason First-fit is typically faster than the other two, independent of fragmentation quality.
 
 ### 10.2 Lab Functions and Example I/O
 
