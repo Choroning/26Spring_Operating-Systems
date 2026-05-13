@@ -182,7 +182,9 @@ void *do_work_one(void *param) {
 
 If both threads run this pattern in lockstep, each acquires its first lock, fails the `trylock`, releases, and retries — forever.
 
-**Fix — random backoff**: insert a randomized delay before retrying. This is exactly the **CSMA/CD collision-resolution** strategy from Ethernet (binary exponential backoff): after the k-th consecutive collision, each station picks a random retry slot from `[0, 2^k − 1]`. The retry window doubles every collision, so the probability that two contenders pick the same slot drops exponentially — the symmetry of the retry pattern is broken statistically, and one of them gets through.
+**Fix — random backoff**: insert a randomized delay before retrying. This is exactly the **CSMA/CD collision-resolution** strategy from Ethernet (binary exponential backoff). Breaking the symmetry of the retry pattern is what gets one thread through.
+
+> **[Computer Networks]** Binary exponential backoff: after the k-th consecutive collision, each station picks a random retry slot from `[0, 2^k − 1]`. The retry window *doubles* every collision, so the probability that two contenders pick the same slot drops exponentially. Originally specified in Ethernet (IEEE 802.3) for resolving carrier-sense collisions on a shared medium; the same idea is reused in Wi-Fi, TCP retransmission timers, and — here — software retry loops.
 
 ---
 
@@ -223,7 +225,7 @@ A **Resource-Allocation Graph** represents the current allocation state as a dir
 
 When a request is granted, the request edge `Ti → Rj` flips to an assignment edge `Rj → Ti`. When the resource is released, the assignment edge is removed.
 
-> **Connection to data structures**: A RAG is just a directed graph. Detecting whether a deadlock has formed reduces to **directed-cycle detection**, which is the standard DFS with three-color marking (white = unvisited, grey = on the current DFS stack, black = fully explored) — a back-edge to a grey node closes a cycle. Cycle detection runs in O(V+E); for the RAG, that becomes O(n²) in the typical dense case used later (§5.3, §6.1).
+> **[Data Structures]** A RAG is just a directed graph. Detecting whether a deadlock has formed reduces to **directed-cycle detection**, which is the standard DFS with three-color marking (white = unvisited, grey = on the current DFS stack, black = fully explored) — a back-edge to a grey node closes a cycle. Cycle detection runs in O(V+E); for the RAG, that becomes O(n²) in the typical dense case used later (§5.3, §6.1).
 
 ### 2.3 RAG — Cycles and Deadlock
 
@@ -344,13 +346,15 @@ lock(second_mutex);   // F = 5
 lock(first_mutex);    // F = 1     ✗
 ```
 
-**Proof by contradiction.** Suppose a circular wait exists: T0 → T1 → ... → Tn → T0, where each Ti holds Ri and is waiting for R(i+1). The lock-order rule forces F(Ri) < F(R(i+1)) for each step. Chaining the inequalities around the cycle, **by transitivity of `<` on the integers** (a strict total order — discrete-math prerequisite):
+**Proof by contradiction.** Suppose a circular wait exists: T0 → T1 → ... → Tn → T0, where each Ti holds Ri and is waiting for R(i+1). The lock-order rule forces F(Ri) < F(R(i+1)) for each step. Chaining the inequalities around the cycle:
 
 ```text
 F(R0) < F(R1) < ... < F(Rn) < F(R0)
 ```
 
-So F(R0) < F(R0). But `<` is **irreflexive** (no integer is less than itself), so this is a contradiction. Therefore no cycle can form, and deadlock cannot occur. ∎
+So F(R0) < F(R0) — a contradiction. Therefore no cycle can form, and deadlock cannot occur. ∎
+
+> **[Discrete Mathematics]** Two properties of `<` on ℤ make this proof work. **Transitivity**: if a < b and b < c, then a < c — so chaining n separate inequalities yields F(R0) < F(R0). **Irreflexivity**: no integer is less than itself, so F(R0) < F(R0) is *impossible* — that's where the contradiction lives. Together these say `<` is a **strict total order**, the same algebraic structure used elsewhere this term (e.g., scheduling priority comparisons, sorting).
 
 > **Caveat**: Defining a lock order is necessary but not sufficient — **programmers must adhere to it**. The compiler/runtime does not enforce it. Tools like lockdep (§4.6) catch violations at test time.
 
@@ -423,7 +427,7 @@ Prevention is heavy-handed — it removes deadlock by structurally restricting w
 >
 > **Unsafe State**: no safe sequence exists.
 
-> **Vector notation reminder** (used throughout this section): when X and Y are vectors of the same length, **`X ≤ Y` means component-wise** — `X[j] ≤ Y[j]` for every index j. Likewise `+` and `−` on vectors are component-wise. (This is the standard convention from discrete math / linear algebra, repeated here because the Banker's Algorithm depends on it.)
+> **[Discrete Mathematics]** Vector notation used throughout this section: when X and Y are vectors of the same length, **`X ≤ Y` means component-wise** — `X[j] ≤ Y[j]` for every index j. Likewise `+` and `−` on vectors are component-wise. Note that vector `≤` is a **partial order**, not a total one — two vectors can be **incomparable** (e.g., `(1,3) ≰ (2,2)` and `(2,2) ≰ (1,3)`). The Banker's Algorithm depends on this distinction: a request that fails `Request ≤ Available` is not "greater than" — it is simply unsatisfiable in some component.
 
 ```text
 Safe ⊂ Not-deadlocked (Safe → deadlock impossible)
@@ -555,7 +559,7 @@ When thread Ti makes a request vector `Request_i`:
      Unsafe → roll back step 3; Ti must wait
 ```
 
-> **Why "pretend → check → maybe rollback" is rigorous, not hand-wavy**: the entire system state for the purposes of Safety is captured in the three vectors `Available`, `Allocation_i`, `Need_i`. Step 3 modifies *only* these vectors. If the check fails we apply the inverse arithmetic (`+ Request_i` where we subtracted, `− Request_i` where we added) to restore the exact pre-pretend state — no external side effects, no race condition. This is the data-structures concept of a **purely functional transformation**: the pretend is just a temporary copy, and we either commit it or discard it.
+> **[Data Structures]** Why "pretend → check → maybe rollback" is rigorous, not hand-wavy: the entire system state for the purposes of Safety is captured in the three vectors `Available`, `Allocation_i`, `Need_i`. Step 3 modifies *only* these vectors. If the check fails we apply the inverse arithmetic (`+ Request_i` where we subtracted, `− Request_i` where we added) to restore the exact pre-pretend state — no external side effects, no race condition. This is a **purely functional transformation**: the pretend acts on what is effectively a snapshot, and we either commit the new snapshot or discard it. The same pattern shows up in transactional data structures (persistent trees, copy-on-write structures) and software transactional memory.
 
 ### 5.7 Banker's Algorithm Worked Example
 

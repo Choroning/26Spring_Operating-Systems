@@ -111,7 +111,7 @@ The CPU can directly access only two kinds of storage:
    +-----------+
 ```
 
-> **Prerequisite — the memory hierarchy** (computer architecture): each level trades capacity for latency. **"Transparent to ISA"** means the cache is managed entirely by hardware — neither the OS nor the running program issues explicit loads/stores to it; the CPU automatically fills cache lines on demand and evicts them under its own policy. Only the **register file** and **main memory** are exposed to the load/store instructions in the instruction set, which is why OS textbooks talk about "directly addressable" storage as if cache did not exist.
+> **[Computer Architecture]** The diagram above is the canonical **memory hierarchy** — each level trades capacity for latency. **"Transparent to ISA"** means the cache is managed entirely by hardware: neither the OS nor the running program issues explicit loads/stores to it; the CPU automatically fills cache lines on demand and evicts them under its own policy. Only the **register file** and **main memory** are exposed to the load/store instructions in the instruction set, which is why OS textbooks talk about "directly addressable" storage as if cache did not exist.
 
 Everything on disk must be **loaded into memory** before the CPU can touch it. This is exactly why memory is a scarce, contended resource.
 
@@ -374,7 +374,7 @@ Physical Address
 
 **Key invariant**: the page offset `d` passes through unchanged — pages and frames are the same size, so the position within them is identical.
 
-> **Why `(f << n) | d` equals `f × page_size + d`** (bit manipulation reminder from computer architecture): shifting an integer left by `n` bits multiplies it by 2ⁿ. Since page size = 2ⁿ, `f << n` is exactly `f × page_size`. The lower `n` bits of `f << n` are all zero, so OR-ing the `n`-bit offset `d` into them is the same as adding `d`. Splitting the address into (page #, offset) is thus a *no-cost* division and modulus by the page size — done by wiring, not arithmetic.
+> **[Computer Architecture]** Why `(f << n) | d` equals `f × page_size + d`: shifting an integer left by `n` bits multiplies it by 2ⁿ. Since page size = 2ⁿ, `f << n` is exactly `f × page_size`. The lower `n` bits of `f << n` are all zero, so OR-ing the `n`-bit offset `d` into them is the same as adding `d`. Splitting the address into (page #, offset) is thus a *no-cost* division and modulus by the page size — done by wiring, not arithmetic. This is why page sizes are always powers of two: it lets the MMU peel off the offset by routing wires, never invoking a divider circuit.
 
 ### 4.3 Paging Hardware and Free-Frame Management
 
@@ -422,7 +422,7 @@ Two implementation strategies:
 
 The **TLB** is a small, very fast **associative memory** that caches recent translations.
 
-> **What "associative memory" means** (computer architecture — also called **Content-Addressable Memory / CAM**): a regular RAM takes an *address* in and returns the *value* at that address. A CAM works the other way around — you give it a *value* (here, a page number), and dedicated comparator hardware checks **every stored key in parallel** in a single cycle, returning the slot index (and stored data) of whichever entry matches. The same hardware idea underlies cache tag arrays. Parallel comparison is what makes TLB lookup essentially free, but it is also expensive in transistors per entry, which is why a TLB has only tens to a couple thousand entries.
+> **[Computer Architecture]** "Associative memory" is also called **Content-Addressable Memory (CAM)**. A regular RAM takes an *address* in and returns the *value* at that address. A CAM works the other way around — you give it a *value* (here, a page number), and dedicated comparator hardware checks **every stored key in parallel** in a single cycle, returning the slot index (and stored data) of whichever entry matches. The same hardware idea underlies cache tag arrays. Parallel comparison is what makes TLB lookup essentially free, but it is also expensive in transistors per entry, which is why a TLB has only tens to a couple thousand entries.
 
 - Size: typically 32 to 1,024 entries.
 - Each entry: **(page #, frame #)** plus protection bits.
@@ -479,10 +479,10 @@ Quantify TLB performance. Let:
 EAT = α · (T + M) + (1 − α) · (T + 2M)
 ```
 
-> **Where the formula comes from** (expected-value over two events):
+> **[Discrete Mathematics]** Where the formula comes from — the standard **expected-value** technique from discrete probability, `E[X] = ∑ P(case) · cost(case)`:
 > - On a **hit** (probability α) we pay T (the TLB lookup itself, always paid) + M (one memory access to fetch the actual data) → `T + M`.
 > - On a **miss** (probability 1 − α) we pay T (the unsuccessful TLB lookup) + M (read the page-table entry from memory) + M (then read the actual data) → `T + 2M`.
-> - Multiply each case by its probability and sum. This is the standard expected-value technique from discrete probability.
+> - Multiply each case by its probability and sum.
 
 **Numerical examples** (M = 100 ns, T = 10 ns):
 
@@ -753,7 +753,7 @@ typedef struct Block {
 } Block;
 ```
 
-> **Why a singly-linked list?** (data-structures perspective): a sorted-by-address linked list is the natural fit because the operations are (1) walk the list to find a hole — sequential access, O(n); (2) split a block — pointer surgery, O(1); (3) coalesce after release — check the neighbor pointers, O(1). **First-fit can short-circuit** the walk on the first match, so its expected cost is much smaller than n on a fragmented list; **Best-fit and Worst-fit** must scan the entire list to be sure they have found the smallest / largest sufficient hole — O(n) every time. This asymmetry is the algorithmic reason First-fit is typically faster than the other two, independent of fragmentation quality.
+> **[Data Structures]** Why a singly-linked list? An address-sorted linked list is the natural fit because the operations are (1) walk the list to find a hole — sequential access, O(n); (2) split a block — pointer surgery, O(1); (3) coalesce after release — check the neighbor pointers, O(1). **First-fit can short-circuit** the walk on the first match, so its expected cost is much smaller than n on a fragmented list; **Best-fit and Worst-fit** must scan the entire list to be sure they have found the smallest / largest sufficient hole — O(n) every time. This asymmetry is the algorithmic reason First-fit is typically faster than the other two, independent of fragmentation quality. Production allocators (e.g., glibc's ptmalloc) replace the list with size-segregated bins + balanced trees to drop allocation to O(log n).
 
 ### 10.2 Lab Functions and Example I/O
 
