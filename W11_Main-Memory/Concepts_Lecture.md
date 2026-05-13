@@ -1,10 +1,10 @@
-# Week 11 Concepts Lecture — Main Memory
+# Week 11 Lecture — Main Memory
 
 > **Last Updated:** 2026-05-13
 >
 > Silberschatz, Operating System Concepts Ch 9 (Main Memory)
 
-> **Prerequisites**: Week 1–3 (process/PCB, context switch). Familiarity with assembly addressing and the basic CPU/memory hierarchy from a computer-architecture course will help. From [[concepts_lecture_w10]] you already know how the kernel manages shared resources; this week the resource is **physical memory** itself.
+> **Prerequisites**: Week 1–3 (process/PCB, context switch). Familiarity with assembly addressing and the basic CPU/memory hierarchy from a computer-architecture course will help. From Week 10 lecture you already know how the kernel manages shared resources; this week the resource is **physical memory** itself.
 >
 > **Learning Objectives**:
 > 1. Explain why the CPU can only directly address **registers and main memory**, not disk
@@ -660,7 +660,7 @@ The modern equivalent operates at **page granularity**:
 - **Page in**: load specific pages from backing store on demand.
 - Only the *needed* pages move, not the whole process. Faster, finer, much more efficient.
 
-This is the foundation of **virtual memory** — covered in detail in [[concepts_lecture_w12]].
+This is the foundation of **virtual memory** — covered in detail in Week 12 lecture.
 
 ### 8.3 Swapping on Mobile Systems
 

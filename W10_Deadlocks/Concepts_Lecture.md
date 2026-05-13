@@ -1,10 +1,10 @@
-# Week 10 Concepts Lecture — Deadlocks
+# Week 10 Lecture — Deadlocks
 
 > **Last Updated:** 2026-05-13
 >
 > Silberschatz, Operating System Concepts Ch 8 (Deadlocks)
 
-> **Prerequisites**: Week 4–5 Threads & Concurrency, Week 9 Synchronization. You should already understand mutex locks, semaphores, critical sections, and the basics of thread scheduling. From [[concepts_lecture_w09]] you know what a deadlock *example* looks like; this week formalizes the conditions and gives algorithms to prevent, avoid, detect, and recover from it.
+> **Prerequisites**: Week 4–5 Threads & Concurrency, Week 9 Synchronization. You should already understand mutex locks, semaphores, critical sections, and the basics of thread scheduling. From Week 09 lecture you know what a deadlock *example* looks like; this week formalizes the conditions and gives algorithms to prevent, avoid, detect, and recover from it.
 >
 > **Learning Objectives**:
 > 1. Distinguish **deadlock** from **livelock** and recognize each in pthread code
@@ -154,7 +154,7 @@ Time 4: thread_two requests first_mutex  → blocked!  (held by T1)
 Result: both threads wait forever → Deadlock!
 ```
 
-> **Why this is so dangerous**: Deadlock does **not** always occur — it depends on CPU scheduling. The code can pass thousands of test runs and only deadlock in production. It is a textbook example of a [[heisenbug]] — timing-sensitive, intermittent, and very hard to reproduce.
+> **Why this is so dangerous**: Deadlock does **not** always occur — it depends on CPU scheduling. The code can pass thousands of test runs and only deadlock in production. It is a textbook example of a heisenbug — timing-sensitive, intermittent, and very hard to reproduce.
 
 ### 1.4 Livelock
 
@@ -275,7 +275,7 @@ Linux and Windows largely **ignore** deadlock in the general-purpose kernel. The
 
 - Deadlocks are **rare** in well-written code (especially with good lock-ordering conventions).
 - The cost of *preventing* every possible deadlock at the OS level (declaring max claims, running Banker's at every request) would be prohibitive.
-- It is cheaper to push responsibility to **kernel and application developers** — and to provide *debugging tools* like [[lockdep]] to find ordering violations.
+- It is cheaper to push responsibility to **kernel and application developers** — and to provide *debugging tools* like lockdep to find ordering violations.
 
 This is named after the (false) image of an ostrich burying its head in the sand — the OS pretends the problem does not exist.
 

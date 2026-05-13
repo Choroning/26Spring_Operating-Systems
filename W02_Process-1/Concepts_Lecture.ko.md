@@ -1,6 +1,6 @@
 # 2주차 이론 — 프로세스 (1)
 
-> **최종 수정일:** 2026-04-09
+> **최종 수정일:** 2026-05-13
 >
 > Silberschatz, Operating System Concepts Ch 3 (Sections 3.1 – 3.3)
 

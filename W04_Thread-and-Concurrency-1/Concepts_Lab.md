@@ -1,6 +1,6 @@
 # Week 4 Lab — Pthreads: Thread Creation, Data Parallelism, and Speedup
 
-> **Last Updated:** 2026-04-09
+> **Last Updated:** 2026-05-13
 
 > **Prerequisites**: Week 4 Lecture concepts (threads, Pthreads API). Ability to compile C with `-pthread`.
 >
