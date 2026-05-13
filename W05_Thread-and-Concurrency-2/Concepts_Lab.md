@@ -1,6 +1,6 @@
 # Week 5 Lab — Implicit Threading and Threading Issues
 
-> **Last Updated:** 2026-04-09
+> **Last Updated:** 2026-05-13
 
 > **Prerequisites**: Week 5 Lecture concepts (implicit threading, threading issues). Ability to compile C with `-pthread` and `-fopenmp`.
 >

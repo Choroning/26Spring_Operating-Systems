@@ -1,6 +1,6 @@
-# Week 5 Concepts Lecture — Threads and Concurrency (2)
+# Week 5 Lecture — Threads and Concurrency (2)
 
-> **Last Updated:** 2026-04-09
+> **Last Updated:** 2026-05-13
 >
 > Silberschatz, Operating System Concepts Ch 4 (Sections 4.5 – 4.7)
 

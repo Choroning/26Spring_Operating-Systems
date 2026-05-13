@@ -1,6 +1,6 @@
 # Week 6 Lab — Context Switching
 
-> **Last Updated:** 2026-04-09
+> **Last Updated:** 2026-05-13
 
 > **Prerequisites**: Week 6 Lecture concepts (CPU scheduling). A working xv6-riscv build environment.
 >

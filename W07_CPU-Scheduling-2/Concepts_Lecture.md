@@ -1,6 +1,6 @@
-# Week 7 Concepts Lecture — CPU Scheduling (2)
+# Week 7 Lecture — CPU Scheduling (2)
 
-> **Last Updated:** 2026-04-15
+> **Last Updated:** 2026-05-13
 >
 > Silberschatz, Operating System Concepts Ch 5 (Sections 5.3.4 – 5.8)
 

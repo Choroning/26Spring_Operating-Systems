@@ -1,6 +1,6 @@
 # Week 1 Lecture — Introduction to Operating Systems
 
-> **Last Updated:** 2026-04-09
+> **Last Updated:** 2026-05-13
 
 > **Prerequisites**: No prior OS knowledge required. Basic understanding of computer architecture (CPU, memory, I/O) is helpful.
 >
