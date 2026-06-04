@@ -124,9 +124,17 @@ This repository contains bilingual study materials and system-level code develop
 │   ├── Concepts_Lecture.ko.md
 │   └── Concepts_Lecture.md
 ├── W10_Deadlocks
+│   ├── Concepts_Lecture.ko.md
+│   └── Concepts_Lecture.md
 ├── W11_Main-Memory
+│   ├── Concepts_Lecture.ko.md
+│   └── Concepts_Lecture.md
 ├── W12_Virtual-Memory
+│   ├── Concepts_Lecture.ko.md
+│   └── Concepts_Lecture.md
 ├── W13_Storage-Management
+│   ├── Concepts_Lecture.ko.md
+│   └── Concepts_Lecture.md
 ├── W14_Security-Protection
 ├── Preparation
 │   ├── Mid_SummarySheet.ko.md
