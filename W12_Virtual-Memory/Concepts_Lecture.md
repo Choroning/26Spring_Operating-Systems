@@ -1,6 +1,6 @@
 # Week 12 Lecture — Virtual Memory
 
-> **Last Updated:** 2026-05-26
+> **Last Updated:** 2026-06-04
 >
 > Silberschatz, Operating System Concepts Ch 10 (Virtual Memory)
 
@@ -192,7 +192,7 @@ The whole sequence — typically 5–10 ms on a spinning disk, hundreds of μs o
 
 ### 1.7 Pure Demand Paging and Hardware Requirements
 
-**Pure demand paging** is the extreme strategy: start the process with **no** pages in memory. Even the first instruction triggers a page fault. As execution proceeds, **locality of reference** rapidly populates the working set, and the fault rate plummets.
+**Pure demand paging** is the extreme strategy: start the process with **no** pages in memory. Even the first instruction triggers a page fault. As execution proceeds, **locality of reference** (defined precisely via the locality model in §5.7) rapidly populates the working set, and the fault rate plummets.
 
 The **hardware required** to support demand paging:
 
@@ -249,6 +249,8 @@ $$
 - To keep slowdown within 10% ($\text{EAT} \leq 220$): $p < 0.0000025 \approx 1/400\,000$.
 
 > **The lesson:** page faults must be **extremely rare** — fewer than one per ~400,000 references — for demand paging to feel free. This is why everything else in this lecture (good replacement, working sets, locality) matters: a small jump in fault rate translates to a huge jump in effective access time.
+
+> **[Computer Architecture]** This EAT formula is the *same* expected-value technique you saw for the **TLB** in Week 11 (`α·(T+M) + (1−α)·(T+2M)`), just one rung lower on the **memory hierarchy**. The TLB version balanced a cache hit (cycles) against a memory access (≈100 ns); this version balances a memory access (≈100 ns) against a disk/SSD fault (millions of cycles). The numbers are brutal here precisely because each step down the hierarchy — register → cache → DRAM → SSD → disk — costs roughly **two orders of magnitude** more latency. A TLB miss merely doubles a fast operation; a page fault replaces a 100 ns operation with an 8 ms one, which is why the tolerable miss rate collapses from ~2% (TLB) to ~0.00025% (page fault).
 
 ### 1.11 Swap Space Utilization
 
@@ -464,30 +466,30 @@ The **OPT** algorithm replaces the page that **will not be used for the longest 
 
 **OPT trace** — 3 frames, same string as FIFO:
 
-| Ref | F1    | F2    | F3    | Fault? | Reason |
-|-----|-------|-------|-------|--------|--------|
-| 7   | 7     | -     | -     | F      |        |
-| 0   | 7     | 0     | -     | F      |        |
-| 1   | 7     | 0     | 1     | F      |        |
-| 2   | **2** | 0     | 1     | F      | 7 next used at #18 (farthest) |
+| Ref | F1    | F2    | F3    | Fault? | Reason (victim = farthest next use) |
+|-----|-------|-------|-------|--------|-------------------------------------|
+| 7   | **7** | -     | -     | F      |        |
+| 0   | 7     | **0** | -     | F      |        |
+| 1   | 7     | 0     | **1** | F      |        |
+| 2   | **2** | 0     | 1     | F      | next use: 7→#18, 0→#5, 1→#14 — evict 7 |
 | 0   | 2     | 0     | 1     |        |        |
-| 3   | 2     | 0     | **3** | F      | 1 next used at #14 (farthest) |
+| 3   | 2     | 0     | **3** | F      | next use: 2→#9, 0→#7, 1→#14 — evict 1 |
 | 0   | 2     | 0     | 3     |        |        |
-| 4   | 2     | 0     | **4** | F      | replace 3 (next #10), keeping 2 (#9), 0 (#12) — wait, replace which? See note. |
-| 2   | 2     | 0     | 4     |        |        |
-| 3   | 2     | 0     | **3** | F      | 4 is no longer used |
-| 0   | 2     | 0     | 3     |        |        |
+| 4   | 2     | **4** | 3     | F      | next use: 2→#9, 0→#11, 3→#10 — evict 0 |
+| 2   | 2     | 4     | 3     |        |        |
+| 3   | 2     | 4     | 3     |        |        |
+| 0   | 2     | **0** | 3     | F      | next use: 2→#13, 4→never, 3→#12 — evict 4 |
 | 3   | 2     | 0     | 3     |        |        |
 | 2   | 2     | 0     | 3     |        |        |
-| 1   | 2     | **1** | 3     | F      |        |
-| 2   | 2     | 1     | 3     |        |        |
-| 0   | 2     | 1     | 3     |        |        |
-| 1   | 2     | 1     | 3     |        |        |
-| 7   | **7** | 1     | 3     | F      |        |
-| 0   | 7     | 1     | 3     |        |        |
-| 1   | 7     | 1     | 3     |        |        |
+| 1   | 2     | 0     | **1** | F      | next use: 2→#15, 0→#16, 3→never — evict 3 |
+| 2   | 2     | 0     | 1     |        |        |
+| 0   | 2     | 0     | 1     |        |        |
+| 1   | 2     | 0     | 1     |        |        |
+| 7   | **7** | 0     | 1     | F      | next use: 2→never, 0→#19, 1→#20 — evict 2 |
+| 0   | 7     | 0     | 1     |        |        |
+| 1   | 7     | 0     | 1     |        |        |
 
-(Wait — slide-listed reasoning says step (8) `Ref 4` evicts 3 because of distance; the exact victim depends on which of the three resident pages has the most-distant next use, and the worked example follows the CLRS/Silberschatz table.) **Total: 9 page faults** — six fewer than FIFO.
+**Total: 9 page faults** — six fewer than FIFO. At every fault the victim is the resident page whose **next use lies farthest in the future** (a page never used again counts as infinitely far). Reference positions are 1-indexed against the string `7 0 1 2 0 3 0 4 2 3 0 3 2 1 2 0 1 7 0 1`.
 
 ### 3.8 LRU (Least Recently Used)
 
@@ -542,6 +544,8 @@ True LRU needs to know the **relative recency** of every resident page. Two hard
 
 Both demand hardware help; without it, doing this in software via interrupts would slow memory access by an order of magnitude.
 
+> **[Data Structures]** Method 2 is exactly a **doubly linked list** used as a recency-ordered queue, and the "six pointer updates" figure is the standard cost of an unlink-then-push-to-front: detaching a node touches its predecessor's and successor's pointers, and reinserting at the head touches the old head, the new node's two links, and the head pointer. The reason a doubly (not singly) linked list is required is that LRU must **remove a node from the middle** in O(1) — and you can only splice out an interior node in constant time if it carries a back-pointer to its predecessor. Pairing this list with a hash map from page number → node is precisely the textbook **LRU cache** design (O(1) lookup, O(1) move-to-front, O(1) evict-from-tail).
+
 ### 3.10 Stack Algorithms and Why They Avoid Belady
 
 A replacement algorithm is a **stack algorithm** if, for every reference string, the set of resident pages with $n$ frames is **always a subset** of the set with $n + 1$ frames.
@@ -578,6 +582,8 @@ True LRU requires hardware that updates a clock or stack on **every** memory ref
 
 LRU-approximation algorithms use this single bit (or a few bits) to make replacement decisions that approximate LRU at a fraction of the cost.
 
+> **[Computer Architecture]** The **reference bit** and the **dirty (modify) bit** live in the same **page-table entry** the MMU already walks on every translation (Week 11) — the hardware sets them as a *side effect* of the access it is performing anyway, so they cost nothing extra at access time. This is the deep reason real systems approximate LRU instead of implementing it exactly: maintaining true recency order (the §3.9 counter or stack) would require the MMU to perform an *additional* write — updating a timestamp or splicing a list node — on **every single memory reference**, which the datapath cannot afford. A single bit the hardware flips for free is the most the architecture is willing to give us, and the clock algorithm is built to extract maximum signal from exactly that one bit.
+
 ### 4.2 Additional-Reference-Bits
 
 Maintain an **8-bit byte** (shift register) per page, updated by the OS on a periodic timer interrupt (say, every 100 ms):
@@ -589,14 +595,19 @@ On each timer tick:
   3. Clear the hardware reference bit (ready for the next interval).
 ```
 
-```
-Example histories:
-  11000100  →  used in 2 of the 3 most-recent intervals, then once more later
-  01110111  →  not used recently but more historical use
+Read the byte left-to-right: the **MSB (bit 7) is the most recent interval**, and each step to the right is one interval further into the past (bit 0 = oldest tracked interval). A `1` in a position means "referenced during that interval."
 
-Compared as unsigned integers, 11000100 > 01110111
-→ the second page is the better eviction candidate (smaller history value)
 ```
+Bit position:  7 6 5 4 3 2 1 0   ← MSB = most recent interval, LSB = oldest
+Example histories:
+  1 1 0 0 0 1 0 0   →  used in the last 2 intervals, idle for 3, then used once long ago
+  0 1 1 1 0 1 1 1   →  NOT used in the most-recent interval, but heavier use further back
+
+Compared as unsigned integers, 11000100 (196) > 01110111 (119)
+→ the second page is the better eviction candidate (smaller value = less recent use)
+```
+
+Because the most-recent interval sits in the highest-value bit, ordinary unsigned comparison automatically ranks "recently used" above "used long ago" — the larger the integer, the more recent the activity.
 
 - Victim: page with the **smallest** byte value (= least recent use).
 - Ties broken by FIFO order.
@@ -616,6 +627,8 @@ On replacement need:
 ```
 
 Implemented as a **circular queue** with a hand pointer: the algorithm looks exactly like a clock with a sweeping hand — hence the name **Clock Algorithm**.
+
+> **[Data Structures]** The "hand" is just an index/pointer into a **circular buffer** (or a circular singly linked list whose tail links back to the head). Advancing the hand is the classic `i = (i + 1) % n` wrap-around — there is no front or back, so unlike the plain FIFO queue of §3.5 nothing is ever shifted or re-enqueued; clearing a reference bit is an O(1) in-place mutation and the hand simply moves on. The whole structure is what makes "give the page a second chance" cost nothing: a real FIFO would have to dequeue and re-append the survivor, whereas the circular list leaves it in place and only moves the cursor.
 
 - Worst case (all bits = 1): one full revolution clears every bit; the next pass falls back to plain FIFO.
 - Frequently-used pages always have ref bit = 1 by the time the hand reaches them → effectively *never* replaced.
@@ -680,9 +693,9 @@ Several complementary techniques layered on top of any replacement policy:
 
 ### 5.1 Minimum Frames and Where the Bound Comes From
 
-Each process needs at least a **minimum number of frames** to execute *any* instruction without thrashing on the first try.
+Each process needs at least a **minimum number of frames** so that any *single* instruction — together with every page its operands touch — can run to completion after a page-fault restart. If even one instruction needed more distinct pages than the process owns, the restart would fault again on the same instruction forever, and it could never make progress.
 
-- The minimum is **determined by the architecture**: the maximum number of distinct pages any single instruction can reference.
+- The minimum is **determined by the architecture**: the maximum number of distinct pages any single instruction can reference (the instruction's own page plus all of its operand pages).
 - Indirect addressing increases the bound. Example: 1 level of indirect addressing → minimum **3 frames** (instruction page, operand-pointer page, operand page).
 
 The **maximum** is bounded by the available physical memory.
@@ -1009,14 +1022,15 @@ def fifo(ref_string, num_frames):
     frames = []
     faults = 0
     for page in ref_string:
-        if page not in frames:
+        fault = page not in frames     # decide BEFORE mutating `frames`
+        if fault:
             faults += 1
             if len(frames) < num_frames:
                 frames.append(page)
             else:
-                frames.pop(0)        # evict oldest
+                frames.pop(0)          # evict oldest
                 frames.append(page)
-        print(f"Ref: {page}  Frames: {frames}  {'* Fault' if page not in frames else ''}")
+        print(f"Ref: {page}  Frames: {frames}  {'* Fault' if fault else ''}")
     return faults
 ```
 
@@ -1099,7 +1113,7 @@ Total Page Faults: 15
 
 5. **FIFO vs LRU vs OPT:** Run all three on reference string `1 2 3 4 1 2 5 1 2 3 4 5` with 4 frames. Tabulate fault counts.
 
-   > **Answer:** **FIFO (4 frames)** — per the §3.6 trace, **10 faults**. **LRU (4 frames)**: 1,2,3,4 (4F, fill). Then 1,2 hit; 5 fault (LRU=3, evict 3) — frames {1,2,4,5}. 1,2 hit; 3 fault (LRU=4, evict 4) — {1,2,3,5}. 4 fault (LRU=5, evict 5) — {1,2,3,4}. 5 fault (LRU=1, evict 1) — {2,3,4,5}. **8 faults**. **OPT (4 frames)**: 1,2,3,4 fault (4). 1,2 hit. 5 fault — replace 3 (not used until later position) or 4? Future after step 7 is `1 2 3 4 5`: 4 next-use is later than 3, evict 4 — {1,2,3,5}. 1,2 hit. 3 hit. 4 fault — evict 5 (5 only used once more, far) actually 5 is reused later but 1,2 are not... best is replace 5? Future after "3 4 5": evict 1 (last use was step 5, all of 1,2 won't reappear) — {2,3,4,5} after evicting 1. 5 hit. **Total OPT ≈ 6 faults**. Comparison: FIFO 10 > LRU 8 > OPT 6 — and notice FIFO suffers Belady's anomaly here (9 with 3 frames, 10 with 4), while LRU/OPT are monotone.
+   > **Answer:** **FIFO (4 frames)** — per the §3.6 trace, **10 faults**. **LRU (4 frames)**: 1,2,3,4 (4F, fill). Then 1,2 hit; 5 fault (LRU=3, evict 3) — frames {1,2,4,5}. 1,2 hit; 3 fault (LRU=4, evict 4) — {1,2,3,5}. 4 fault (LRU=5, evict 5) — {1,2,3,4}. 5 fault (LRU=1, evict 1) — {2,3,4,5}. **8 faults**. **OPT (4 frames)**: always evict the resident page whose **next use is farthest in the future**. 1,2,3,4 fault (4) → {1,2,3,4}. 1,2 hit. **5 faults** — remaining string is `1 2 3 4 5`; next uses are 1→next, 2→next, 3→#10, 4→#11, so evict 4 (farthest) → {1,2,3,5}. 1,2 hit. 3 hit. **4 faults** — remaining string is `4 5`; next uses are 1→never, 2→never, 3→never, 5→#12, so evict any never-used page, say 1 → {2,3,4,5} (equivalently 2 or 3). 5 hit. **Total OPT = 6 faults**. Comparison: FIFO 10 > LRU 8 > OPT 6 — and notice FIFO suffers Belady's anomaly here (9 with 3 frames, 10 with 4), while LRU/OPT are monotone.
 
 6. **Belady's anomaly:** Why does FIFO suffer it while LRU does not? Use the stack-algorithm property to justify.
 
@@ -1127,4 +1141,4 @@ Total Page Faults: 15
 
 12. **Program structure:** You have a 4 KB-page system and a `double M[1024][1024]` (each row = 8 KB = 2 pages). Compare the page-fault behavior of `for i, for j: M[i][j] = 0` versus `for j, for i: M[i][j] = 0`.
 
-    > **Answer:** **Row-major access (`for i, for j`):** writes M[i][0], M[i][1], …, M[i][1023] in order. Each row is 2 pages; after 4 KB worth of writes (512 doubles), it walks onto the next page. Across the whole matrix: $1024 \text{ rows} \times 2 \text{ pages} = 2048$ pages — **2048 page faults** assuming no caching effects. **Column-major access (`for j, for i`):** writes M[0][j], M[1][j], …, M[1023][j] — each access is in a different row, so a different page (or pages). Per outer iteration of $j$, we touch 2048 pages (one per row, possibly two if $j$ straddles a page boundary). If we don't have 2048+ frames, every access faults: **up to 1024 × 1024 = ~10⁶ faults**. Speedup factor: **~500× more faults** for column-major. This is exactly why row-major access in C is non-negotiable for large arrays — the OS cannot recover from a row vs. column mismatch.
+    > **Answer:** **Row-major access (`for i, for j`):** writes M[i][0], M[i][1], …, M[i][1023] in order. Each row is 2 pages; after 4 KB worth of writes (512 doubles), it walks onto the next page. Across the whole matrix: $1024 \text{ rows} \times 2 \text{ pages} = 2048$ pages — **2048 page faults**, one per page, *regardless* of how many frames the process has (you can never beat one fault per distinct page). **Column-major access (`for j, for i`):** writes M[0][j], M[1][j], …, M[1023][j] — each access is in a different row, hence a different page. Per outer iteration of $j$ we sweep all 2048 pages. The cost now depends critically on the resident frame budget: **if the process has 2048+ frames** the whole matrix stays resident after the first sweep, so it *also* faults only ~2048 times (the same as row-major). The disaster occurs **only when fewer than 2048 frames are resident** — then no page survives long enough to be reused on the next $j$, every one of the inner accesses re-faults, and you reach **up to 1024 × 1024 = ~10⁶ faults**, a **~500×** blow-up. (This is the same 1-row-=-1-page reasoning as §8.2, applied to a 2-pages-per-row matrix; §8.2's 16,384-vs-128 example likewise assumes the working set does not fit.) This is exactly why row-major access in C is non-negotiable for large arrays: row-major is fault-optimal at *any* frame budget, while column-major degrades catastrophically the moment the array no longer fits in RAM.

@@ -1,6 +1,6 @@
 # Week 13 Lecture — Storage Management
 
-> **Last Updated:** 2026-05-26
+> **Last Updated:** 2026-06-04
 >
 > Silberschatz, Operating System Concepts Ch 11 (Mass-Storage Structure)
 
@@ -186,6 +186,8 @@ Typical breakdown:
 
 > **The single most important number on this slide is 82 IOPS.** It explains why databases use indices (to turn random access into sequential), why filesystems batch writes (to amortize seek), and why SSDs feel transformative — they kill the seek penalty entirely.
 
+> **[Computer Architecture]** This is the bottom of the **memory hierarchy** you met in Week 11 — register → cache → main memory → disk, each level trading capacity for latency. The architecture course quantifies this in *cycles*: a register access is ~1 cycle and a DRAM access is tens to hundreds, but a single HDD access at ~12 ms is on the order of **tens of millions of CPU cycles**. That cliff between DRAM and disk is exactly why the OS treats "is it already in memory?" (page-fault handling, the page cache) as the central performance question, and why the 82-IOPS ceiling — not raw CPU speed — bounds so many real workloads.
+
 ---
 
 <br>
@@ -324,6 +326,8 @@ Linux's **initrd** uses a RAM drive as a temporary root filesystem during early 
 
 > **Why NVMe is dramatically faster than SATA:** NVMe rides directly on the **PCIe** bus instead of going through the SATA protocol stack. That means lower latency, much higher queue depth (64 K commands per queue, 64 K queues), and parallelism that matches what modern SSDs can actually deliver.
 
+> **[Computer Architecture]** The path `CPU → HBA → bus → Device Controller → Media` is the **I/O subsystem** from your architecture course. The CPU does not copy bytes one at a time; it programs the controller and lets **DMA (Direct Memory Access)** stream the block straight into main memory, then raises an **interrupt** on completion. The HBA and device controller are the same "I/O controllers on a shared bus" model used to reason about memory-mapped I/O and interrupt-driven transfer — storage is just one device class hanging off that bus, which is also why bus topology (PCIe lanes vs. the legacy SATA link) directly caps throughput.
+
 ### 3.2 Logical Block Address (LBA)
 
 The OS does not care about cylinders or pages. It addresses the device as a **1-dimensional array of logical blocks** numbered 0, 1, 2, ...
@@ -409,6 +413,8 @@ Total movement:
 $(53-37) + (37-14) + (14-0) + (0-65) + (65-67) + \dots$
 $= 16 + 23 + 14 + 65 + 2 + 31 + 24 + 2 + 59 = \mathbf{236\ cylinders}$
 
+> **Note:** every term above is an **absolute distance** (the magnitude of head movement). A term like `(0-65)` is shorthand for the move from cylinder 0 up to 65 and contributes `|0-65| = 65`, never a negative value — head movement is never negative.
+
 Much better than FCFS's 640.
 
 > **Why "elevator"?** A real elevator with one going up, one going down doesn't bounce randomly between floors — it scans up to the top, then down to the bottom. Same idea.
@@ -466,7 +472,7 @@ Same setup as above: queue `98, 183, 37, 122, 14, 124, 65, 67`, head 53, disk 0�
 | SCAN (down)   | **236**        | Bidirectional service, efficient             |
 | C-SCAN (up)   | **382**        | Uniform waiting time across cylinders        |
 | LOOK (down)   | **208**        | Improved SCAN, no end-of-disk excursion      |
-| C-LOOK (up)   | **330**        | Improved C-SCAN, no end-of-disk excursion    |
+| C-LOOK (up)   | **322**        | Improved C-SCAN, no end-of-disk excursion    |
 
 **Algorithm choice heuristics:**
 
@@ -709,6 +715,8 @@ When the counter drops to 0, the slot is reclaimable. This is essentially a tiny
 | Method          | Description                                     | Protocol              |
 |-----------------|-------------------------------------------------|-----------------------|
 | **Host-Attached** | Direct connection via SATA / SAS / NVMe         | AHCI, NVMe            |
+
+- **AHCI (Advanced Host Controller Interface).** The standard host-controller register interface for talking to **SATA** devices — it defines how the OS driver issues commands, manages the command queue (NCQ), and handles hot-plug. NVMe is its successor for PCIe-attached SSDs; AHCI remains the SATA-era equivalent.
 | **NAS**         | File-system access over a network               | NFS, CIFS/SMB         |
 | **Cloud Storage** | Internet-based storage service                  | REST API (S3, etc.)   |
 | **SAN**         | Block-level access over a **dedicated** network | Fibre Channel, iSCSI  |
@@ -894,9 +902,11 @@ Simplest redundancy. Twice the cost, but very fast rebuild and high reliability.
 | Fault tolerance  | 1 disk                            |
 | Recovery         | Reverse-XOR using parity          |
 
-**Recovery:** if Disk 1 dies, $A_2 = A_1 \oplus A_3 \oplus A_p$.
+**Recovery:** if Disk 1 dies, $A_2 = A_1 \oplus A_3 \oplus A_p$. This works because **XOR is its own inverse** ($a \oplus b \oplus b = a$): since $A_p = A_1 \oplus A_2 \oplus A_3$, XOR-ing all the *surviving* disks (here $A_1, A_3, A_p$) cancels every term except the lost one, reconstructing it exactly.
 
 **Problem — parity bottleneck.** Every write also writes the parity disk → the parity disk gets hammered while the data disks idle. Small writes need read-modify-write (4 disk accesses). This is why RAID 4 is rare in practice.
+
+> **[Discrete Mathematics]** Bitwise XOR makes the set of $n$-bit strings into an **abelian group** under $\oplus$, with the all-zeros string as identity and **every element its own inverse**. The three properties you proved in discrete math — associativity, commutativity, and self-inverse ($a \oplus a = 0$) — are exactly what makes parity recovery work: you can reorder and regroup the XOR of the surviving disks however you like and the lost block's contribution is the only one that survives. The same algebra also lets a *small* write update parity incrementally as $A_p' = A_p \oplus A_{\text{old}} \oplus A_{\text{new}}$ without re-reading the whole stripe.
 
 ### 9.7 RAID 5 — Distributed Parity
 
@@ -941,6 +951,8 @@ Simplest redundancy. Twice the cost, but very fast rebuild and high reliability.
 - P and Q must be computed by **different** mathematical operations — if they were identical, the redundancy wouldn't give extra recovery information.
 - Write overhead is higher than RAID 5 (two parity updates per write).
 - **Standard for large-capacity arrays**, where the long rebuild time after a single failure makes a second failure during rebuild a realistic threat.
+
+> **[Discrete Mathematics]** Plain XOR cannot tolerate *two* failures: with two unknowns you need two **independent** equations, and a second XOR equation would be linearly dependent on the first. RAID 6 therefore computes Q over a **Galois field** $GF(2^8)$ — finite-field arithmetic where bytes are treated as polynomials over $GF(2)$ reduced modulo an irreducible polynomial. Each data block is multiplied by a distinct field constant before summing, so P and Q form two linearly-independent equations. Recovering two lost blocks is then just **solving a 2×2 linear system over the field** — the finite-field analogue of Gaussian elimination, guaranteed solvable because nonzero field elements are invertible.
 
 ### 9.9 RAID 0+1 vs RAID 1+0 (RAID 10)
 
@@ -1080,7 +1092,7 @@ for name, fn in [
     print(f"{name}: distance={dist}, path={seq}")
 ```
 
-Expected totals: **FCFS 640, SCAN 236, C-SCAN 382, LOOK 208, C-LOOK 330**.
+Expected totals: **FCFS 640, SCAN 236, C-SCAN 382, LOOK 208, C-LOOK 322**.
 
 **Extension:** visualize the head movement path for each algorithm with matplotlib.
 

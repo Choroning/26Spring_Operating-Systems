@@ -1,6 +1,6 @@
 # Week 10 Lecture — Deadlocks
 
-> **Last Updated:** 2026-05-13
+> **Last Updated:** 2026-06-04
 >
 > Silberschatz, Operating System Concepts Ch 8 (Deadlocks)
 
@@ -154,7 +154,7 @@ Time 4: thread_two requests first_mutex  → blocked!  (held by T1)
 Result: both threads wait forever → Deadlock!
 ```
 
-> **Why this is so dangerous**: Deadlock does **not** always occur — it depends on CPU scheduling. The code can pass thousands of test runs and only deadlock in production. It is a textbook example of a heisenbug — timing-sensitive, intermittent, and very hard to reproduce.
+> **Why this is so dangerous**: Deadlock does **not** always occur — it depends on CPU scheduling. The code can pass thousands of test runs and only deadlock in production. It is a textbook example of a **heisenbug** — a bug whose behavior changes (often disappearing) the moment you try to observe it, e.g., adding logging or a debugger perturbs the timing — making it timing-sensitive, intermittent, and very hard to reproduce.
 
 ### 1.4 Livelock
 
@@ -180,6 +180,8 @@ void *do_work_one(void *param) {
 }
 ```
 
+> **Note on `trylock` return value**: real POSIX `pthread_mutex_trylock` returns **0 on success** (and a non-zero error code such as `EBUSY` on failure), so a literal C `if (pthread_mutex_trylock(...))` would run the body on *failure*. The snippet above follows the textbook's simplified convention where the branch is illustrative (treat it as "if I got the second lock, do the work"); don't internalize the bare return value as truthy-on-success.
+
 If both threads run this pattern in lockstep, each acquires its first lock, fails the `trylock`, releases, and retries — forever.
 
 **Fix — random backoff**: insert a randomized delay before retrying. This is exactly the **CSMA/CD collision-resolution** strategy from Ethernet (binary exponential backoff). Breaking the symmetry of the retry pattern is what gets one thread through.
@@ -202,12 +204,18 @@ Deadlock requires **all four** of the following to hold *simultaneously*:
 4. **Circular Wait** — there is a chain T0 → T1 → T2 → ... → Tn → T0 where each Ti waits for a resource held by T(i+1).
 
 ```text
-Circular Wait sketch:
-  T0 ──(waits for R1, held by T1)──→ T1
-   ↑                                  │
-  (waits for R3, held by T2)   (waits for R2, held by T2)
-   │                                  ↓
-  T2 ←───────────────────────────── T2
+Circular Wait sketch — clean 3-thread cycle
+(T0 holds R0, T1 holds R1, T2 holds R2; each thread waits for the next one's resource):
+
+        ┌──(waits for R1, held by T1)──┐
+        │                              ↓
+       T0                             T1
+        ↑                              │
+        │                              │ (waits for R2, held by T2)
+        │                              ↓
+        └──(waits for R0, held by T0)─ T2
+
+  Cycle:  T0 → T1 → T2 → T0   (length 3; break any one wait and it dissolves)
 ```
 
 > **A subtlety**: Circular Wait actually **implies** Hold and Wait (you cannot be in a cycle without holding something). The four conditions are not independent, but listing them all is pedagogically useful because each suggests a different *prevention* lever.
@@ -538,7 +546,7 @@ Determines whether the *current* allocation state is safe:
    Otherwise → Unsafe State
 ```
 
-**Time complexity**: O(m · n²). *Derivation:* the outer "find any i" loop runs at most **n** times (one Finish flag flips per pass; once all are true we exit), and each pass scans up to **n** candidate threads; testing `Need_i ≤ Work` is **m** component-wise comparisons. Total ≤ n × n × m = O(m · n²).
+**Time complexity**: O(m · n²). *Derivation:* at most **n** Finish flags can flip in total over the whole run (one per thread, and once all are true we exit), so the outer "find any i" loop makes at most **n** passes; each pass scans up to **n** candidate threads, and testing `Need_i ≤ Work` is **m** component-wise comparisons. Total ≤ n × n × m = O(m · n²).
 
 ### 5.6 Resource-Request Algorithm
 
