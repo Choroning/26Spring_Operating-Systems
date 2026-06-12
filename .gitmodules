@@ -1,3 +1,9 @@
 [submodule "xv6-riscv"]
 	path = xv6-riscv
 	url = https://github.com/mit-pdos/xv6-riscv.git
+[submodule "GarbageCollector_GCOS"]
+	path = GarbageCollector_GCOS
+	url = https://github.com/Choroning/GarbageCollector_GCOS.git
+[submodule "GarbageCollector_OS"]
+	path = GarbageCollector_OS
+	url = https://github.com/Choroning/GarbageCollector_OS.git
