@@ -1,13 +1,9 @@
 # Week 2 Lecture — Process (1)
 
-> **Last Updated:** 2026-05-13
+> **Last Updated:** 2026-06-19
 >
-> Silberschatz, Operating System Concepts Ch 3 (Sections 3.1 – 3.3)
+> Operating System Concepts, Silberschatz - Ch 3 (3.1–3.3)
 
----
-
-> **Prerequisites**: Week 1 OS concepts (definition, dual-mode, system calls). Basic C programming (pointers, functions).
->
 > **Learning Objectives**:
 > 1. Describe the structure of a process (memory layout, PCB, states)
 > 2. Explain how fork(), exec(), and wait() work together
@@ -84,7 +80,7 @@ A process's memory layout is divided into several **sections**:
 
 ![Process layout in memory](../images/figures/p002_fig.png)
 
-*Silberschatz, Figure 3.1 — Layout of a process in memory*
+*Silberschatz Figure 3.1 — Layout of a process in memory*
 
 - **Text** — executable code
 - **Data** — global variables
@@ -176,7 +172,7 @@ A process changes **state** during its execution:
 
 ![Process state diagram](../images/figures/p005_fig.png)
 
-*Silberschatz, Figure 3.2 — Diagram of process state*
+*Silberschatz Figure 3.2 — Diagram of process state*
 
 **State transition details:**
 
@@ -199,7 +195,7 @@ Each process is represented in the OS by a **PCB (Process Control Block)**. It i
 
 ![Process Control Block](../images/figures/p005_fig2.png)
 
-*Silberschatz, Figure 3.3 — Process Control Block (PCB)*
+*Silberschatz Figure 3.3 — Process Control Block (PCB)*
 
 The PCB serves as a repository for all data needed to **start or restart** a process.
 
@@ -305,11 +301,11 @@ When a process enters the system, it is placed in a **scheduling queue**.
 
 ![Ready queue and wait queues](../images/figures/p008_fig.png)
 
-*Silberschatz, Figure 3.4 — Ready queue and wait queues*
+*Silberschatz Figure 3.4 — Ready queue and wait queues*
 
 ![Queueing diagram](../images/figures/p009_fig.png)
 
-*Silberschatz, Figure 3.5 — Queueing-diagram representation of process scheduling*
+*Silberschatz Figure 3.5 — Queueing-diagram representation of process scheduling*
 
 A process repeats this cycle until it terminates. Upon termination, it is removed from all queues, and its PCB and resources are deallocated.
 
@@ -336,7 +332,7 @@ A process repeats this cycle until it terminates. Upon termination, it is remove
 
 ![Context switch diagram](../images/figures/p010_fig.png)
 
-*Silberschatz, Figure 3.6 — Diagram showing context switch from process to process*
+*Silberschatz Figure 3.6 — Diagram showing context switch from process to process*
 
 > **Key Point:** The context switch is a core OS mechanism. Users perceive multiple programs running simultaneously because the OS performs context switches between processes extremely quickly. However, no useful work is performed during a context switch — it is pure overhead.
 
@@ -384,7 +380,7 @@ A process can create several new processes during its execution.
 
 ![Linux process tree](../images/figures/p012_fig.png)
 
-*Silberschatz, Figure 3.7 — A tree of processes on a typical Linux system*
+*Silberschatz Figure 3.7 — A tree of processes on a typical Linux system*
 
 - **systemd** (pid = 1): the **root parent** of all user processes — the first user process created during system boot. It creates processes for additional services such as web servers, SSH servers, etc.
 - In traditional UNIX, **init** (pid = 1) performed this role.

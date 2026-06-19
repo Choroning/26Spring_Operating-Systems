@@ -1,11 +1,9 @@
 # Week 6 Lecture — CPU Scheduling (1)
 
-> **Last Updated:** 2026-05-13
+> **Last Updated:** 2026-06-19
 >
-> Silberschatz, Operating System Concepts Ch 5 (Sections 5.1 – 5.3)
+> Operating System Concepts, Silberschatz - Ch 5 (5.1–5.3)
 
-> **Prerequisites**: Week 5 Thread and Concurrency concepts. Understanding of process states (ready, running, waiting) and context switching.
->
 > **Learning Objectives**:
 > 1. Understand the CPU-I/O Burst Cycle and explain the need for scheduling
 > 2. Distinguish between Preemptive vs Nonpreemptive scheduling
@@ -95,6 +93,10 @@
 
 Process execution consists of a repeating cycle of **CPU bursts** and **I/O bursts**:
 
+![Silberschatz Figure 5.1 — Alternating sequence of CPU and I/O bursts](../images/figures/p002_fig5_1.png)
+
+*Silberschatz Figure 5.1 — Alternating sequence of CPU and I/O bursts*
+
 - **CPU burst**: The interval during which the CPU executes instructions
 - **I/O burst**: The interval during which the process waits for I/O completion
 - In the final CPU burst, the process requests **termination via a system call**
@@ -124,7 +126,9 @@ The distribution of CPU burst lengths follows an **exponential or hyperexponenti
 - **Short CPU bursts** are very frequent — most bursts are short
 - **Long CPU bursts** occur rarely
 
-*Silberschatz, Figure 5.2 — Histogram of CPU-burst durations*
+![Silberschatz Figure 5.2 — Histogram of CPU-burst durations](../images/figures/p003_fig5_2.png)
+
+*Silberschatz Figure 5.2 — Histogram of CPU-burst durations*
 
 > This distribution is crucial because it validates the design of algorithms like SJF: since most bursts are short, prioritizing short bursts means most processes get served quickly, and only the rare long-burst processes wait longer.
 
@@ -226,7 +230,9 @@ Three roles of the Dispatcher:
 2. Switch to **user mode**
 3. Jump to the appropriate location (PC — Program Counter, the register holding the address of the next instruction) of the new process
 
-*Silberschatz, Figure 5.3 — The role of the dispatcher*
+![Silberschatz Figure 5.3 — The role of the dispatcher](../images/figures/p005_fig5_3.png)
+
+*Silberschatz Figure 5.3 — The role of the dispatcher*
 
 > **Scheduler vs Dispatcher**: The scheduler **decides** which process runs next; the dispatcher **executes** that decision. Think of the scheduler as a manager who picks which employee works next, and the dispatcher as the HR person who handles the actual paperwork and office reassignment. The distinction matters because they are separate components with different responsibilities.
 
@@ -601,7 +607,9 @@ Starting with alpha = 0.5, tau(0) = 10:
 | 6 | 13 | **11** | 0.5*13 + 0.5*9 |
 | 7 | - | **12** | 0.5*13 + 0.5*11 |
 
-*Silberschatz, Figure 5.4 — Prediction of the length of the next CPU burst*
+![Silberschatz Figure 5.4 — Prediction of the length of the next CPU burst](../images/figures/p010_fig5_4.png)
+
+*Silberschatz Figure 5.4 — Prediction of the length of the next CPU burst*
 
 - Even when the actual burst changes suddenly, the predicted value gradually follows
 - When the same value repeats consecutively, the prediction converges
@@ -806,7 +814,9 @@ When q = 100 (all bursts < 100):
 
 **If q is very small** (e.g., q = 1ms):
 
-*Silberschatz, Figure 5.5 — How a smaller time quantum increases context switches*
+![Silberschatz Figure 5.5 — How a smaller time quantum increases context switches](../images/figures/p013_fig5_5.png)
+
+*Silberschatz Figure 5.5 — How a smaller time quantum increases context switches*
 
 - Context switch count **increases dramatically** -> overhead grows
 - If context switch time exceeds 10% of the quantum -> **inefficient**
@@ -816,7 +826,9 @@ When q = 100 (all bursts < 100):
 
 Effect of q on turnaround time (3 processes, each burst = 10):
 
-*Silberschatz, Figure 5.6 — How turnaround time varies with the time quantum*
+![Silberschatz Figure 5.6 — How turnaround time varies with the time quantum](../images/figures/p014_fig5_6.png)
+
+*Silberschatz Figure 5.6 — How turnaround time varies with the time quantum*
 
 **Rule of Thumb**:
 - Ideally, **80%** of CPU bursts should finish within the time quantum

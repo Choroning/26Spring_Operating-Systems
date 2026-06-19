@@ -1,11 +1,9 @@
 # Week 7 Lecture — CPU Scheduling (2)
 
-> **Last Updated:** 2026-05-13
+> **Last Updated:** 2026-06-19
 >
-> Silberschatz, Operating System Concepts Ch 5 (Sections 5.3.4 – 5.8)
+> Operating System Concepts, Silberschatz - Ch 5 (5.3.4–5.8)
 
-> **Prerequisites**: Week 6 CPU Scheduling (1). You should already understand FCFS, SJF, SRTF, RR, and the five scheduling criteria (CPU utilization, throughput, turnaround, waiting, response time).
->
 > **Learning Objectives**:
 > 1. Understand Priority Scheduling and the Starvation / Aging mechanism
 > 2. Compare Multilevel Queue vs Multilevel Feedback Queue (MLFQ)
@@ -201,7 +199,9 @@ The ready queue is split into multiple **separate queues**, each for a different
      +-----------------------------+
      Lowest priority
 ```
-*Silberschatz, Figure 5.8 — Multilevel queue scheduling*
+![Silberschatz Figure 5.8 — Multilevel queue scheduling](../images/figures/p017_fig5_8.png)
+
+*Silberschatz Figure 5.8 — Multilevel queue scheduling*
 
 **Scheduling between queues** (two common policies):
 - **Fixed priority**: A lower queue runs only when **all higher queues are empty**. *(Risk: starvation of lower queues.)*
@@ -233,7 +233,9 @@ The **key difference** from a plain multilevel queue: **processes can move betwe
  --> |   Q2   | -------> CPU
      +--------+
 ```
-*Silberschatz, Figure 5.9 — Multilevel feedback queues*
+![Silberschatz Figure 5.9 — Multilevel feedback queues](../images/figures/p018_fig5_9.png)
+
+*Silberschatz Figure 5.9 — Multilevel feedback queues*
 
 **Movement rules:**
 - **Demotion**: If a process uses its **entire time quantum** in a given queue, it is demoted to a lower queue. *(Interpretation: it's CPU-bound; demoting it keeps it out of the way of short, responsive processes.)*
@@ -382,7 +384,9 @@ Two high-level scheduling approaches:
 
 Under SMP, there are two main ways to organize ready queues:
 
-*Silberschatz, Figure 5.11 — Organization of ready queues*
+![Silberschatz Figure 5.11 — Organization of ready queues](../images/figures/p023_fig5_11.png)
+
+*Silberschatz Figure 5.11 — Organization of ready queues*
 
 | Approach | Pros | Cons |
 |----------|------|------|
@@ -398,8 +402,13 @@ Under SMP, there are two main ways to organize ready queues:
 - A cache miss can cost **tens to hundreds of CPU cycles**.
 - In memory-intensive workloads, a core can spend **up to 50% of its time stalled** on memory access.
 
-*Silberschatz, Figure 5.12 — Memory stall*
-*Silberschatz, Figure 5.13 — Multithreaded multicore system*
+![Silberschatz Figure 5.12 — Memory stall](../images/figures/p024_fig5_12.png)
+
+*Silberschatz Figure 5.12 — Memory stall*
+
+![Silberschatz Figure 5.13 — Multithreaded multicore system](../images/figures/p024_fig5_13.png)
+
+*Silberschatz Figure 5.13 — Multithreaded multicore system*
 
 **The solution — hardware multithreading**: When one thread enters a memory stall, the core **switches to another hardware thread** that has work ready. This keeps the execution units busy and dramatically improves core utilization.
 
@@ -409,7 +418,9 @@ Under SMP, there are two main ways to organize ready queues:
 
 Multiple **hardware threads** placed on a single physical core.
 
-*Silberschatz, Figure 5.14 — Chip multithreading*
+![Silberschatz Figure 5.14 — Chip multithreading](../images/figures/p025_fig5_14.png) ![Silberschatz Figure 5.14 — Chip multithreading (detail)](../images/figures/p025_fig5_14_1.png)
+
+*Silberschatz Figure 5.14 — Chip multithreading*
 
 Examples:
 - **Intel Hyper-Threading (SMT)** — 2 hardware threads per core.
@@ -436,7 +447,9 @@ Modern Intel / SPARC designs use **fine-grained** (or a hybrid) to keep cores bu
 
 On a **multithreaded multicore** processor, scheduling happens at two levels:
 
-*Silberschatz, Figure 5.15 — Two levels of scheduling*
+![Silberschatz Figure 5.15 — Two levels of scheduling](../images/figures/p026_fig5_15.png)
+
+*Silberschatz Figure 5.15 — Two levels of scheduling*
 
 **Level 1 (OS scheduler)**: Assigns **software threads** to **logical processors** (hardware threads). Uses CFS, Windows scheduler, etc.
 
@@ -465,7 +478,9 @@ On Linux, hard affinity is set via the `sched_setaffinity()` system call (or the
 
 **NUMA (Non-Uniform Memory Access)** — a multi-socket architecture where each CPU (socket) has its own **local memory bank**, but can also access other sockets' memory **across an interconnect**.
 
-*Silberschatz, Figure 5.16 — NUMA and CPU scheduling*
+![Silberschatz Figure 5.16 — NUMA and CPU scheduling](../images/figures/p028_fig5_16.png)
+
+*Silberschatz Figure 5.16 — NUMA and CPU scheduling*
 
 - **Local memory access**: fast (low latency).
 - **Remote memory access**: slow (must traverse the interconnect).
@@ -528,7 +543,9 @@ A system with cores that have the **same instruction set** but **different clock
 
 **Event Latency** = total time from event occurrence to service completion.
 
-*Silberschatz, Figure 5.17 — Event latency*
+![Silberschatz Figure 5.17 — Event latency](../images/figures/p029_fig5_17.png)
+
+*Silberschatz Figure 5.17 — Event latency*
 
 For real-time systems, two components of latency matter:
 
@@ -545,7 +562,9 @@ For hard real-time, both latencies must be **bounded** at a few microseconds.
 
 Real-time workloads are commonly modeled as **periodic tasks** — the same work repeats every *p* units of time.
 
-*Silberschatz, Figure 5.20 — Periodic task*
+![Silberschatz Figure 5.20 — Periodic task](../images/figures/p032_fig5_20.png)
+
+*Silberschatz Figure 5.20 — Periodic task*
 
 - **t** — processing time (CPU burst per period).
 - **d** — deadline (by when the task's work for this period must be done).
@@ -740,7 +759,9 @@ The scheduler only admits new work when **sufficient shares are available** → 
 
 ### 6.2 Linux Priority Ranges
 
-*Silberschatz, Figure 5.26 — Scheduling priorities on a Linux system*
+![Silberschatz Figure 5.26 — Scheduling priorities on a Linux system](../images/figures/p040_fig5_26.png)
+
+*Silberschatz Figure 5.26 — Scheduling priorities on a Linux system*
 
 - **Smaller number means higher priority** (follows textbook convention).
 - Real-time tasks (0–99) **always preempt** normal tasks (100–139).
@@ -838,7 +859,9 @@ CFS stores runnable tasks in a **Red-Black Tree** keyed by **vruntime**.
 
 CFS load balancing uses a **scheduling domain hierarchy** to match the machine's memory topology.
 
-*Silberschatz, Figure 5.27 — NUMA-aware load balancing with Linux CFS scheduler*
+![Silberschatz Figure 5.27 — NUMA-aware load balancing with Linux CFS scheduler](../images/figures/p040_fig5_27.png)
+
+*Silberschatz Figure 5.27 — NUMA-aware load balancing with Linux CFS scheduler*
 
 **Strategy — from low-cost to high-cost migrations:**
 1. **Within a domain** (cores sharing L2 cache) — cheap, migrate freely.

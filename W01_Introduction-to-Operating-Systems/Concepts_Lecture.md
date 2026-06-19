@@ -1,9 +1,9 @@
 # Week 1 Lecture — Introduction to Operating Systems
 
-> **Last Updated:** 2026-05-13
-
-> **Prerequisites**: No prior OS knowledge required. Basic understanding of computer architecture (CPU, memory, I/O) is helpful.
+> **Last Updated:** 2026-06-19
 >
+> Operating System Concepts, Silberschatz - Ch 1, 2
+
 > **Learning Objectives**:
 > 1. Define what an operating system is and explain its core roles
 > 2. Explain dual-mode operation and why it exists
@@ -106,7 +106,7 @@
 | **Period 2** | Lecture (Part 2) |
 | **Period 3** | Hands-on Lab |
 
-- Textbook: Silberschatz, **Operating System Concepts** 10th edition
+- Textbook: Operating System Concepts, Silberschatz
 - Lab reference: **xv6** (RISC-V), MIT 6.1810
 
 ---
@@ -131,7 +131,7 @@ The kernel is the core program that starts when your computer boots and never st
 
 ![Computer system components](../images/cropped/ch01_p02-02_fig.png)
 
-*Silberschatz, Figure 1.1 — Abstract view of the components of a computer system*
+*Silberschatz Figure 1.1 — Abstract view of the components of a computer system*
 
 - The OS sits **between** hardware and applications.
 - It directly controls hardware and provides a **clean interface** to programs.
@@ -195,7 +195,7 @@ Privileged instructions are CPU instructions that could harm the system if misus
 
 ![System call processing](../images/cropped/ch02_p11-11_fig.png)
 
-*Silberschatz, Figure 2.6 — The handling of a user application invoking the open() system call*
+*Silberschatz Figure 2.6 — The handling of a user application invoking the open() system call*
 
 - **System Call** = the **only way** a user program can request OS services
 - User program → C library → `syscall` instruction (trap) → kernel handles it → return
@@ -240,7 +240,7 @@ An ISR (Interrupt Service Routine) is the kernel function that runs in response 
 
 ![Storage-device hierarchy](../images/cropped/ch01_p11-11_fig.png)
 
-*Silberschatz, Figure 1.6 — Storage-device hierarchy*
+*Silberschatz Figure 1.6 — Storage-device hierarchy*
 
 | Level | Size | Access Time | Managed By |
 |:------|:-----|:-----------|:-----------|
@@ -265,6 +265,8 @@ Most modern OSes are **hybrid** — they take a pragmatic approach rather than a
 
 ![Tux](../images/tux.png)
 
+*Tux*
+
 > **Context Switching**: Context switching is saving the state (registers, PC (Program Counter — the register that tracks which instruction the CPU will execute next), etc.) of the currently running process and restoring the state of another process so it can resume execution.
 
 > **Note:** A monolithic kernel runs all services in kernel space, making it fast, but a single bug can crash the entire system. A microkernel keeps only minimal functionality (IPC (Inter-Process Communication — how separate programs pass data to each other), scheduling) in the kernel and runs the rest in user space, making it more stable but incurring greater context-switching overhead. Linux is monolithic but also provides modular flexibility through LKMs.
@@ -278,6 +280,8 @@ Most modern OSes are **hybrid** — they take a pragmatic approach rather than a
 - We will **read, modify, and extend** xv6 throughout the semester.
 
 ![RISC-V Logo](../images/riscv_logo.png)
+
+*RISC-V Logo*
 
 ```bash
 git clone https://github.com/mit-pdos/xv6-riscv
@@ -517,7 +521,7 @@ Without a file system, data would be lost every time the computer powers off, an
 | OS Structure | Monolithic, Microkernel, Hybrid, Loadable Modules; most modern OSes are hybrid |
 | xv6 | MIT educational OS; RISC-V, C language, ~10,000 lines; used throughout the semester |
 | Key Topics | Processes, Threads, Scheduling, Synchronization, Memory, File Systems, Security |
-| Textbook | Silberschatz, Operating System Concepts 10th edition |
+| Textbook | Operating System Concepts, Silberschatz |
 
 ---
 

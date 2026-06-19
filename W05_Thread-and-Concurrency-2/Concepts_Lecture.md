@@ -1,11 +1,9 @@
 # Week 5 Lecture — Threads and Concurrency (2)
 
-> **Last Updated:** 2026-05-13
+> **Last Updated:** 2026-06-19
 >
-> Silberschatz, Operating System Concepts Ch 4 (Sections 4.5 – 4.7)
+> Operating System Concepts, Silberschatz - Ch 4 (4.5–4.7)
 
-> **Prerequisites**: Week 4 Thread concepts (thread, Pthreads, Java threads, multithreading models). Understanding of thread pools and basic Java concurrency.
->
 > **Learning Objectives**:
 > 1. Explain what implicit threading is and why it is needed
 > 2. Compare five implicit threading techniques (Thread Pool, Fork-Join, OpenMP, GCD, Intel TBB)
@@ -274,7 +272,9 @@ execute()      submit()    shutdown()
 - The library determines the number of threads and assigns tasks to them
 - A variant of a synchronous thread pool
 
-*Silberschatz, Figure 4.16 — Fork-join parallelism*
+![Silberschatz Figure 4.16 — Fork-join parallelism](../images/figures/fig4_16.png)
+
+*Silberschatz Figure 4.16 — Fork-join parallelism*
 
 > The fork-join model is like a team leader delegating subtasks. The leader (parent thread) "forks" work to team members, then waits at a meeting point for everyone to "join" back with their results. The fork-join library is the project manager who decides how many people to hire and how to assign tasks efficiently.
 
@@ -294,7 +294,9 @@ Task(problem):
         return combined results
 ```
 
-*Silberschatz, Figure 4.17 — Fork-join in Java*
+![Silberschatz Figure 4.17 — Fork-join in Java](../images/figures/fig4_17.png)
+
+*Silberschatz Figure 4.17 — Fork-join in Java*
 
 > **[Algorithms]** This is the same pattern as merge sort and quicksort. The key insight is that divide-and-conquer naturally maps to fork-join: each recursive call becomes a forked task, and the merge step is the join. The difference is that fork-join **actually runs subtasks in parallel** across threads, whereas a regular recursive call executes sequentially on the stack.
 
@@ -323,7 +325,9 @@ RecursiveTask<V>   RecursiveAction
   (returns V)      (returns void)
 ```
 
-*Silberschatz, Figure 4.19 — UML class diagram for Fork-Join*
+![Silberschatz Figure 4.19 — UML class diagram for Fork-Join](../images/figures/fig4_19.png)
+
+*Silberschatz Figure 4.19 — UML class diagram for Fork-Join*
 
 > `RecursiveTask<V>` is used when you need to return a computed result (like a sum), while `RecursiveAction` is used for side-effect-only tasks (like sorting in place).
 
@@ -1046,7 +1050,9 @@ static int threadLocalVar;
 
 An LWP (Lightweight Process) is an OS-managed execution slot between user threads and kernel threads. Think of it as a 'slot' that the kernel scheduler sees — the user-level thread library assigns user threads to available LWP slots, each backed by a real kernel thread.
 
-*Silberschatz, Figure 4.20 — Lightweight process (LWP)*
+![Silberschatz Figure 4.20 — Lightweight process (LWP)](../images/figures/fig4_20.png)
+
+*Silberschatz Figure 4.20 — Lightweight process (LWP)*
 
 **Number of LWPs**: A CPU-bound application needs only 1, while an I/O-intensive application needs as many as the number of concurrent blocking I/O operations
 
@@ -1111,7 +1117,9 @@ An LWP (Lightweight Process) is an OS-managed execution slot between user thread
 
 ### 9.2 Windows Threads — Data Structures
 
-*Silberschatz, Figure 4.21 — Windows thread data structures*
+![Silberschatz Figure 4.21 — Windows thread data structures](../images/figures/fig4_21.png)
+
+*Silberschatz Figure 4.21 — Windows thread data structures*
 
 - ETHREAD, KTHREAD → **accessible only by the kernel** (kernel space)
 - TEB → **accessible in user mode** (user space)
@@ -1169,7 +1177,9 @@ thread = clone(CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND)
   → Almost everything shared (= thread creation)
 ```
 
-*Silberschatz, Figure 4.22 — clone() flags*
+![Silberschatz Figure 4.22 — clone() flags](../images/figures/fig4_22.png)
+
+*Silberschatz Figure 4.22 — clone() flags*
 
 Key clone flags:
 
