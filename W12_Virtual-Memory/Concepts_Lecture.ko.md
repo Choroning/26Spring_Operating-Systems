@@ -807,9 +807,9 @@ Free 메모리가 결정적으로 낮아져 reaper가 따라가지 못하면 **L
 
 **증상 그래프:** 다중 프로그래밍 정도가 오르면 CPU 사용률 처음엔 상승(좋음), 임계점 넘으면 **갑자기 붕괴**. 그 붕괴가 thrashing.
 
-![Silberschatz Figure 10.20 — Thrashing](../images/figures/p032_fig10.20.png)
+![Silberschatz Figure 10.20 — 스래싱(Thrashing)](../images/figures/p032_fig10.20.png)
 
-*Silberschatz Figure 10.20 — Thrashing*
+*Silberschatz Figure 10.20 — 스래싱(Thrashing)*
 
 > **왜 이것이 OS의 정석적 병리인가:** thrashing은 *추상화가 깨지는* 순간이다. 가상 메모리의 핵심은 프로그램이 RAM보다 클 수 있다는 것 — 단, *active* 풋프린트가 들어맞을 때만. 그 풋프린트를 가용 프레임을 넘어 밀면 시스템은 계산 대신 페이지 셔플링에 시간을 쓴다.
 

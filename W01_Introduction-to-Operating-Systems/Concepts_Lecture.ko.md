@@ -263,9 +263,9 @@ ISR(인터럽트 서비스 루틴)은 특정 인터럽트에 대응하여 실행
 
 대부분의 현대 OS는 **하이브리드(Hybrid)** — 순수한 이론보다는 실용적 접근을 취한다.
 
-![Tux](../images/tux.png)
+![Tux (리눅스 마스코트)](../images/tux.png)
 
-*Tux*
+*Tux (리눅스 마스코트)*
 
 > **컨텍스트 스위칭(Context Switching)** 이란 현재 실행 중인 프로세스의 상태(레지스터, PC(프로그램 카운터 — CPU가 다음에 실행할 명령어의 위치를 추적하는 레지스터) 등)를 저장하고 다른 프로세스의 상태를 복원하여 실행을 재개하는 것을 뜻한다.
 
@@ -279,9 +279,9 @@ ISR(인터럽트 서비스 루틴)은 특정 인터럽트에 대응하여 실행
 - 구현 내용: 프로세스, 가상 메모리, 파일 시스템, 셸
 - 학기 내내 xv6를 **읽고, 수정하고, 확장** 할 예정이다.
 
-![RISC-V Logo](../images/riscv_logo.png)
+![RISC-V 로고](../images/riscv_logo.png)
 
-*RISC-V Logo*
+*RISC-V 로고*
 
 ```bash
 git clone https://github.com/mit-pdos/xv6-riscv

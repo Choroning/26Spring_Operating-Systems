@@ -769,9 +769,9 @@ NAS 단점: 저장 I/O가 일반 LAN 트래픽과 대역폭 경쟁; 부하 하�
 
 **Storage-Area Network.** 서버와 저장 장치를 **전용** 고성능 네트워크로 연결.
 
-![Silberschatz Figure 11.13 — Storage-area network](../images/figures/p024_fig11.13.png)
+![Silberschatz Figure 11.13 — 저장 영역 네트워크(SAN)](../images/figures/p024_fig11.13.png)
 
-*Silberschatz Figure 11.13 — Storage-area network*
+*Silberschatz Figure 11.13 — 저장 영역 네트워크(SAN)*
 
 | 항목              | NAS                  | SAN                   |
 |-------------------|----------------------|-----------------------|

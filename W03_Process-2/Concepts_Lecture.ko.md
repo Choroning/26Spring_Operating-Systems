@@ -547,7 +547,7 @@ Windows에서 같은 머신 내의 프로세스 간 통신 메커니즘이다.
 
 ![Windows ALPC](../images/figures/p035_fig.png)
 
-*Silberschatz Figure 3.19 — Windows의 Advanced local procedure calls*
+*Silberschatz Figure 3.19 — Windows의 고급 로컬 프로시저 호출(ALPC)*
 
 > ALPC는 Windows API를 통해 직접 노출되지 않는다. 애플리케이션은 표준 RPC를 사용하며, ALPC가 내부적으로 통신을 처리한다.
 
