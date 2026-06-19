@@ -1,6 +1,6 @@
 # 5주차 이론 — 스레드와 동시성 (2)
 
-> **최종 수정일:** 2026-05-13
+> **최종 수정일:** 2026-06-19
 >
 > Silberschatz, Operating System Concepts Ch 4 (Sections 4.5 – 4.7)
 
@@ -273,6 +273,8 @@ execute()      submit()   shutdown()
 - 라이브러리가 스레드 수를 결정하고 태스크를 배정한다
 - 동기 스레드 풀의 변형이다
 
+![Silberschatz Figure 4.16 — Fork-join 병렬처리](../images/figures/fig4_16.png)
+
 *Silberschatz, Figure 4.16 — Fork-join 병렬처리*
 
 > Fork-Join 모델은 팀 리더가 하위 업무를 위임하는 것과 같다. 리더(부모 스레드)가 팀원들에게 작업을 "fork"하고, 모든 사람이 결과를 가지고 "join"할 만남의 장소에서 기다린다. Fork-Join 라이브러리는 몇 명을 고용하고 어떻게 업무를 효율적으로 배분할지 결정하는 프로젝트 매니저이다.
@@ -292,6 +294,8 @@ Task(problem):
         result2 = join(subtask2)
         return 결합된 결과
 ```
+
+![Silberschatz Figure 4.17 — Java에서의 Fork-join](../images/figures/fig4_17.png)
 
 *Silberschatz, Figure 4.17 — Java에서의 Fork-join*
 
@@ -321,6 +325,8 @@ int sum = pool.invoke(task);
 RecursiveTask<V>   RecursiveAction
   (V를 반환)           (반환값 없음)
 ```
+
+![Silberschatz Figure 4.19 — Fork-Join UML 클래스 다이어그램](../images/figures/fig4_19.png)
 
 *Silberschatz, Figure 4.19 — Fork-Join UML 클래스 다이어그램*
 
@@ -1045,6 +1051,8 @@ static int threadLocalVar;
 
 LWP(경량 프로세스)는 사용자 스레드와 커널 스레드 사이에 있는 OS 관리 실행 슬롯이다. 커널 스케줄러가 인식하는 '슬롯'으로 생각하면 된다 — 사용자 수준 스레드 라이브러리가 사용자 스레드를 가용한 LWP 슬롯에 할당하고, 각 슬롯은 실제 커널 스레드에 의해 뒷받침된다.
 
+![Silberschatz Figure 4.20 — 경량 프로세스 (LWP)](../images/figures/fig4_20.png)
+
 *Silberschatz, Figure 4.20 — 경량 프로세스 (LWP)*
 
 **LWP 수**: CPU 바운드 애플리케이션은 1개만 필요하고, I/O 집약적 애플리케이션은 동시 블로킹 I/O 연산 수만큼 필요하다
@@ -1110,6 +1118,8 @@ LWP(경량 프로세스)는 사용자 스레드와 커널 스레드 사이에 �
 
 ### 9.2 Windows 스레드 — 자료 구조
 
+![Silberschatz Figure 4.21 — Windows 스레드 자료 구조](../images/figures/fig4_21.png)
+
 *Silberschatz, Figure 4.21 — Windows 스레드 자료 구조*
 
 - ETHREAD, KTHREAD → **커널만 접근 가능** (커널 공간)
@@ -1167,6 +1177,8 @@ fork() = clone(플래그 없음)
 thread = clone(CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND)
   → 거의 모든 것을 공유 (= 스레드 생성)
 ```
+
+![Silberschatz Figure 4.22 — clone() 플래그](../images/figures/fig4_22.png)
 
 *Silberschatz, Figure 4.22 — clone() 플래그*
 

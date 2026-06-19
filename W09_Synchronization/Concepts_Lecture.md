@@ -1,6 +1,6 @@
 # Week 9 Lecture — Synchronization
 
-> **Last Updated:** 2026-05-13
+> **Last Updated:** 2026-06-19
 >
 > Silberschatz, Operating System Concepts Ch 6 (Synchronization Tools), Ch 7 (Synchronization Examples)
 
@@ -225,6 +225,8 @@ turn = j;           /* ② */
 ```
 
 If a CPU executes ② before ①, both processes may pass the entry check and enter the CS simultaneously — **mutual exclusion is broken**. The same effect can arise from a compiler reordering (since the two writes target unrelated memory).
+
+![The effects of instruction reordering in Peterson's solution](../images/figures/fig6_4_peterson_reorder.png)
 
 *Silberschatz Figure 6.4 — The effects of instruction reordering in Peterson's solution.*
 
@@ -584,6 +586,8 @@ monitor monitor_name {
 }
 ```
 
+![Schematic view of a monitor](../images/figures/fig6_12_monitor_schematic.png)
+
 *Silberschatz Figure 6.12 — Schematic view of a monitor.*
 
 Key properties:
@@ -614,6 +618,8 @@ Two essential differences from semaphores:
 - **Signal and wait** — P waits, Q runs immediately. (Original Hoare definition.)
 - **Signal and continue** — P continues until it leaves the monitor; Q runs afterward.
 - **Compromise** — P leaves the monitor immediately after signaling; Q resumes.
+
+![Monitor with condition variables](../images/figures/fig6_13_monitor_conditions.png)
 
 *Silberschatz Figure 6.13 — Monitor with condition variables.*
 
@@ -894,6 +900,8 @@ Rules:
 - Pick up only one chopstick at a time.
 - Both left and right chopsticks must be available before eating begins.
 - After eating, put both chopsticks down.
+
+![The dining philosophers](../images/figures/fig7_5_dining_philosophers.png)
 
 *Silberschatz Figure 7.5 — The dining philosophers.*
 

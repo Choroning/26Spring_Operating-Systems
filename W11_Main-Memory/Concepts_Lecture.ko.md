@@ -1,6 +1,6 @@
 # 11주차 이론 — 주 메모리 (Main Memory)
 
-> **최종 수정일:** 2026-06-04
+> **최종 수정일:** 2026-06-19
 >
 > Silberschatz, Operating System Concepts Ch 9 (Main Memory)
 
@@ -126,6 +126,10 @@ CPU가 직접 접근 가능한 저장소는 두 종류입니다:
 
 구체적 예: Base = 300040, Limit = 120900 이면 접근 가능 범위는 `300040 ~ 420939`.
 
+![Silberschatz Figure 9.1 — base와 limit 레지스터가 논리 주소 공간을 정의](../images/figures/p003_fig9.1.png)
+
+![Silberschatz Figure 9.2 — base와 limit 레지스터를 이용한 하드웨어 주소 보호](../images/figures/p004_fig9.2.png)
+
 이 레지스터는 **커널 모드**에서 특권 명령어로만 적재 가능 — 그렇지 않으면 악의적 사용자 프로세스가 자기 한계를 올려버릴 수 있음.
 
 ---
@@ -155,6 +159,8 @@ CPU가 직접 접근 가능한 저장소는 두 종류입니다:
              --(run)------>  physical reference (MMU)
 ```
 
+![Silberschatz Figure 9.3 — 사용자 프로그램의 다단계 처리](../images/figures/p005_fig9.3.png)
+
 - **심볼릭** 주소(변수명) → **재배치 가능** (모듈 시작 기준 오프셋) → **절대** (물리 주소).
 
 ### 2.3 논리 주소 vs 물리 주소
@@ -179,6 +185,8 @@ CPU가 직접 접근 가능한 저장소는 두 종류입니다:
                      | MMU |  + relocation_register  -->  physical addr  -->  DRAM
                      +-----+
 ```
+
+![Silberschatz Figure 9.5 — 재배치 레지스터를 이용한 동적 재배치](../images/figures/p007_fig9.5.png)
 
 사용자 프로그램은 *오직* 논리 주소 0…max만 봅니다. MMU가 CPU와 버스 사이의 경로에 있기 때문에 물리 주소를 위조할 방법이 없습니다.
 
@@ -269,9 +277,13 @@ CPU가 직접 접근 가능한 저장소는 두 종류입니다:
 
 보호는 **재배치 레지스터 + Limit 레지스터**로 강제: 모든 논리 주소에 재배치 레지스터를 더한 뒤 Limit 레지스터로 검사. OS 디스패처가 컨텍스트 전환 시 두 레지스터 값을 적재.
 
+![Silberschatz Figure 9.6 — 재배치 레지스터와 limit 레지스터에 대한 하드웨어 지원](../images/figures/p009_fig9.6.png)
+
 ### 3.2 가변 분할 방식
 
 프로세스마다 필요에 맞는 **가변 크기 분할**을 부여. 프로세스가 종료되면 홀이 생기고, **인접 홀은 합쳐(coalesce)** 더 큰 빈 블록을 형성.
+
+![Silberschatz Figure 9.7 — 가변 분할](../images/figures/p010_fig9.7.png)
 
 문제: 현재 홀 목록이 주어졌을 때, 크기 n의 새 요청을 **어떤 홀에** 할당할 것인가? — **동적 저장소 할당 문제(Dynamic Storage-Allocation Problem)**.
 
@@ -385,6 +397,8 @@ Before                  After
 - **외부 단편화 제거** — 임의의 빈 프레임이 임의의 페이지를 담을 수 있음.
 - **내부 단편화는 남음** — 각 프로세스의 마지막 페이지가 거의 100% 채워지지 않음; 평균 반 페이지 낭비.
 
+![Silberschatz Figure 9.9 — 논리 메모리와 물리 메모리의 페이징 모델](../images/figures/p014_fig9.9.png)
+
 ### 4.2 주소 변환 원리
 
 페이지 크기가 2^n, 논리 주소 공간이 2^m 바이트라 하자(32비트 아키텍처에서는 m = 32, x86-64에서는 m = 48 — §9.3 참조). 주소를 분할:
@@ -415,7 +429,13 @@ Physical Address
 
 모든 CPU 메모리 참조마다 MMU가 **현재 프로세스의 페이지 테이블**을 참조해 변환. 각 프로세스는 자기 테이블을 유지 — 컨텍스트 전환은 페이지 테이블 베이스 주소(PTBR) 적재를 포함.
 
+![Silberschatz Figure 9.8 — 페이징 하드웨어](../images/figures/p013_fig9.8.png)
+
+![Silberschatz Figure 9.10 — 4바이트 페이지를 쓰는 32바이트 메모리의 페이징 예](../images/figures/p015_fig9.10.png)
+
 OS는 **프리 프레임 리스트**를 유지. 프로세스가 생성되거나 확장될 때 리스트에서 프레임을 꺼내 페이지 테이블에 기록.
+
+![Silberschatz Figure 9.11 — 할당 전후의 프리 프레임](../images/figures/p016_fig9.11.png)
 
 ### 4.4 내부 단편화와 페이지 크기 트레이드오프
 
@@ -480,6 +500,8 @@ CPU --p,d--> TLB에서 p 검색
               |
           f + d --> 물리 주소 --> DRAM
 ```
+
+![Silberschatz Figure 9.12 — TLB를 갖춘 페이징 하드웨어](../images/figures/p019_fig9.12.png)
 
 TLB가 가득 차면 항목을 추방(LRU, round-robin, random). 일부 항목은 **wired down**(추방 불가) — 보통 커널 코드/데이터, OS 응답성 유지 목적.
 
@@ -550,9 +572,13 @@ EAT = α · (T + M) + (1 − α) · (T + 2M)
 
 이 비트는 프로세스의 실제 주소 공간 사용량이 이론적 최대보다 훨씬 작은 일반적 상황을 처리. 페이지 테이블을 실제 사용 부분으로 축소하기 위해 하드웨어는 **PTLR (Page-Table Length Register)** 를 노출해 실제 길이를 제한.
 
+![Silberschatz Figure 9.13 — 페이지 테이블의 유효(v)/무효(i) 비트](../images/figures/p021_fig9.13.png)
+
 ### 6.2 공유 페이지
 
 같은 코드를 실행하는 두 프로세스는 읽기 전용 텍스트 페이지의 프레임을 **공유** 가능, 단 코드가 **재진입(reentrant)** 이어야 함(자기 수정 명령어 없음, 프로세스별 전역 상태 없음).
+
+![Silberschatz Figure 9.14 — 페이징 환경에서의 표준 C 라이브러리 공유](../images/figures/p022_fig9.14.png)
 
 ```text
 예 — libc text 2MB를 쓰는 40명 사용자의 텍스트 에디터:
@@ -610,6 +636,10 @@ Logical address (32-bit, 4KB 페이지, 2단계):
   d   →  페이지 오프셋
 ```
 
+![Silberschatz Figure 9.15 — 2단계 페이지 테이블 방식](../images/figures/p024_fig9.15.png)
+
+![Silberschatz Figure 9.16 — 2단계 32비트 페이징 아키텍처의 주소 변환](../images/figures/p025_fig9.16.png)
+
 이것이 고전적 **forward-mapped page table(순방향 매핑 페이지 테이블)** — *가상 페이지 번호로 인덱싱*하는 전통적 페이지 테이블입니다(가상 주소에서 출발해 테이블 단계를 "앞으로" 워크하여 프레임에 도달). 이는 프레임 번호로 인덱싱되어 특정 가상 페이지를 찾으려면 검색해야 하는 **역(inverted) 페이지 테이블**(§7.5)과 반대 방향입니다. 큰 이득: 사용하지 않는 주소 공간 영역의 내부 페이지 테이블은 **메모리에 적재되지 않음**. 자료구조 관점에서 본 메커니즘: 외부 테이블은 1024개 포인터의 배열이고, 각 포인터는 내부 페이지 테이블(4 KB, 1024 항목)을 가리키거나 **null/invalid**. null 외부 항목을 워크하면 OS로 트랩("매핑 없음"); 해당 4 MB 가상 주소 공간은 페이지 테이블 자체에 물리 메모리를 *전혀* 쓰지 않음. 보통 프로세스는 4 GB 가상 공간의 작은 부분만 사용하므로 대부분의 외부 항목이 null로 남고, 실제 쓰이는 가지에만 비용을 지불합니다.
 
 ### 7.3 64비트에서 계층적 페이징의 한계
@@ -648,6 +678,8 @@ hash(p) → (p, f, next) 항목 체인
 체인 워크하면서 p 일치 찾기
 ```
 
+![Silberschatz Figure 9.17 — 해시 페이지 테이블](../images/figures/p025_fig9.17.png)
+
 각 버킷은 충돌을 연결 리스트로 보관 — 자료구조의 표준 **분리 연쇄(separate chaining)** 충돌 해소 방식: 버킷 헤드에 저장되는 항목 형태가 `(가상 페이지, 프레임, next)` 이고 `next` 가 같은 버킷의 다음 충돌을 연결. 페이지 `p` 변환 시 `hash(p)` 를 계산하고 그 버킷의 연결 리스트를 워크하여 저장된 가상 페이지가 `p` 와 일치하는 노드에서 멈춤. 적재율(load factor)을 낮게 유지하면 평균 조회 O(1), 최악은 O(체인 길이). **희소** 주소 공간(64비트 범위 대부분이 미사용)에 적합 — 테이블 크기가 실제 사용 페이지에 비례.
 
 **클러스터 페이지 테이블(clustered page table)** 은 인접 페이지 여러 개의 매핑을 한 항목에 저장해 해시 오버헤드를 분산. 64비트 희소 주소 공간에 특히 잘 맞음.
@@ -664,6 +696,8 @@ Inverted PT:
      1     | (P1, 0x000A)
      ...
 ```
+
+![Silberschatz Figure 9.18 — 역(inverted) 페이지 테이블](../images/figures/p026_fig9.18.png)
 
 - **장점**: 전체 크기가 물리 메모리에 비례, 가상 메모리가 아님 — 크게 절약.
 - **단점**: 조회는 *가상* 주소로 하므로 OS가 전체 테이블 검색해야 함. 해법은 역 테이블 *위에 얹는* **보조 해시 테이블**: `(pid, 가상 페이지)` 를 해시해서 **프레임 인덱스**(= 역 테이블의 행)를 얻음. §7.4의 해시 페이지 테이블과는 구조적으로 다름 — 거기서는 해시가 페이지 테이블을 *대체*하지만, 여기서는 프레임으로 인덱싱되는 별개 구조의 조회를 가속할 뿐입니다.
@@ -688,6 +722,8 @@ Inverted PT:
 
 전체 프로세스를 메모리에서 **백킹 스토어**(이 목적으로 디스크에 예약된 영역)로 **swap out**; 다시 스케줄될 때 **swap in**.
 
+![Silberschatz Figure 9.19 — 디스크를 백킹 스토어로 사용하는 두 프로세스의 표준 스와핑](../images/figures/p028_fig9.19.png)
+
 - 시스템 과부하 시 다른 프로세스를 위한 메모리 확보.
 - **매우 비쌈**: 전체 프로세스 디스크 전송에 초 단위 소요, 타임 슬라이스보다 훨씬 큼.
 - 현대 OS에서는 거의 쓰지 않음.
@@ -699,6 +735,8 @@ Inverted PT:
 - **Page out**: 특정 페이지를 메모리에서 백킹 스토어로.
 - **Page in**: 특정 페이지를 백킹 스토어에서 요청 시 적재.
 - *필요한* 페이지만 이동, 전체 프로세스 아님. 더 빠르고 정밀하고 효율적.
+
+![Silberschatz Figure 9.20 — 페이징을 이용한 스와핑](../images/figures/p030_fig9.20.png)
 
 이것이 **가상 메모리**의 기반 — 12주차 강의에서 자세히 다룸.
 
@@ -730,6 +768,12 @@ Inverted PT:
 - 페이징이 선형 주소를 물리 주소로 매핑.
 - 페이지 크기: **4 KB** (**PSE — Page Size Extension**으로 **4 MB** 거대 페이지).
 
+![Silberschatz Figure 9.21 — IA-32의 논리 주소에서 물리 주소로의 변환](../images/figures/p031_fig9.21.png)
+
+![Silberschatz Figure 9.22 — IA-32 세그멘테이션](../images/figures/p032_fig9.22.png)
+
+![Silberschatz Figure 9.23 — IA-32의 페이징](../images/figures/p033_fig9.23.png)
+
 ### 9.2 IA-32 PAE
 
 **PAE (Page Address Extension)** 로 32비트 프로세서가 4GB 이상의 물리 RAM 접근 가능.
@@ -737,6 +781,8 @@ Inverted PT:
 - 페이지 테이블 항목 **32비트 → 64비트** 확장.
 - 물리 프레임 번호 20→**24비트** (+ 12비트 오프셋 = 36비트 물리 주소 ⇒ 64GB).
 - Linux와 macOS는 PAE 지원; 32비트 일반 사용자 Windows는 어차피 4GB로 제한.
+
+![Silberschatz Figure 9.24 — 페이지 주소 확장(PAE)](../images/figures/p034_fig9.24.png)
 
 ### 9.3 x86-64
 
@@ -748,6 +794,8 @@ Inverted PT:
 - 4단계 페이지 테이블 (PML4 → PDPT → PD → PT). 최신 칩은 57비트 VA를 위해 5단계 추가.
 - 세그멘테이션은 사실상 비활성 (평탄 64비트 주소 공간).
 
+![Silberschatz Figure 9.25 — x86-64 선형 주소](../images/figures/p034_fig9.25.png)
+
 ### 9.4 ARMv8
 
 모바일/임베디드 분야의 지배적 64비트 아키텍처.
@@ -755,6 +803,10 @@ Inverted PT:
 - 최대 **4단계** 계층적 페이징 (translation granule 4 KB, 16 KB, 64 KB).
 - **2단계 TLB**: 명령어/데이터 별도 micro-TLB + 더 큰 main TLB.
 - **ASID** 하드웨어 지원 — 컨텍스트 전환 시 플러시 회피.
+
+![Silberschatz Figure 9.26 — ARM 4-KB 변환 그래뉼](../images/figures/p036_fig9.26.png)
+
+![Silberschatz Figure 9.27 — ARM 4단계 계층적 페이징](../images/figures/p036_fig9.27.png)
 
 ### 9.5 비교
 

@@ -1,6 +1,6 @@
 # Week 10 Lecture — Deadlocks
 
-> **Last Updated:** 2026-06-04
+> **Last Updated:** 2026-06-19
 >
 > Silberschatz, Operating System Concepts Ch 8 (Deadlocks)
 
@@ -233,6 +233,8 @@ A **Resource-Allocation Graph** represents the current allocation state as a dir
 
 When a request is granted, the request edge `Ti → Rj` flips to an assignment edge `Rj → Ti`. When the resource is released, the assignment edge is removed.
 
+![Silberschatz Figure 8.4 — Resource-allocation graph (no deadlock)](../images/figures/fig8_4_rag_no_deadlock.png)
+
 > **[Data Structures]** A RAG is just a directed graph. Detecting whether a deadlock has formed reduces to **directed-cycle detection**, which is the standard DFS with three-color marking (white = unvisited, grey = on the current DFS stack, black = fully explored) — a back-edge to a grey node closes a cycle. Cycle detection runs in O(V+E); for the RAG, that becomes O(n²) in the typical dense case used later (§5.3, §6.1).
 
 ### 2.3 RAG — Cycles and Deadlock
@@ -249,7 +251,11 @@ The relationship between cycles in the RAG and deadlock depends on whether resou
 
 **Example 1 — Cycle and deadlock.** T1 holds R2, waits for R1; T2 holds R1 and R2, waits for R3; T3 holds R3 and additionally requests R2. Two cycles form (`T1→R1→T2→R3→T3→R2→T1` and `T2→R3→T3→R2→T2`) → **deadlock**.
 
+![Silberschatz Figure 8.5 — Resource-allocation graph with a deadlock](../images/figures/fig8_5_rag_deadlock.png)
+
 **Example 2 — Cycle but no deadlock.** A cycle exists, but a fourth thread T4 holds a different instance of one of the cycle's resources. T4 can release it, satisfying one of the cycle's waits, breaking the cycle.
+
+![Silberschatz Figure 8.6 — Cycle but no deadlock](../images/figures/fig8_6_rag_cycle_no_deadlock.png)
 
   Concretely: suppose R has 2 instances, T1 holds R₁ and waits for R₂'s instance held by T2, T2 holds R₂'s instance and waits for R₁'s instance held by T1 — but T4 (outside the cycle) holds R₂'s *other* instance. When T4 finishes and releases its R instance, the OS hands it to T2 (the next R-waiter), T2 completes, releases its R instance to T1, T1 completes. The cycle visible in the graph never resolves into deadlock because the cycle's wait condition can be satisfied by a node *outside* the cycle.
 
@@ -442,6 +448,8 @@ Safe ⊂ Not-deadlocked (Safe → deadlock impossible)
 Unsafe ⊃ Deadlocked    (Unsafe → deadlock possible, not guaranteed)
 ```
 
+![Silberschatz Figure 8.8 — Safe, unsafe, and deadlocked state spaces](../images/figures/fig8_8_safe_unsafe_states.png)
+
 Avoidance allocates a resource only if doing so leaves the system in a Safe state — even if resources are physically available.
 
 ### 5.2 Safe / Unsafe Examples
@@ -487,6 +495,10 @@ When every resource type has **exactly one instance**, augment the RAG with **cl
 - On release: assignment edge → claim edge (back to "may request later").
 
 **Allocation rule**: When converting a request edge into an assignment edge, check whether this would create a **cycle** (treating claim edges as if they were also waiting). If yes, **deny** the allocation. Cycle detection is O(n²).
+
+![Silberschatz Figure 8.9 — Resource-allocation graph for deadlock avoidance](../images/figures/fig8_9_rag_avoidance.png)
+
+![Silberschatz Figure 8.10 — Unsafe state in a resource-allocation graph](../images/figures/fig8_10_rag_unsafe.png)
 
 ### 5.4 Banker's Algorithm — Data Structures
 
@@ -637,6 +649,8 @@ For **single-instance** resources, contract the RAG into a **Wait-for Graph**:
 ```text
 Ti → Rq → Tj  is replaced by  Ti → Tj
 ```
+
+![Silberschatz Figure 8.11 — (a) Resource-allocation graph (b) corresponding wait-for graph](../images/figures/fig8_11_wait_for_graph.png)
 
 A **cycle** in the wait-for graph means deadlock. Cycle detection runs in **O(V+E)** via DFS (the 3-color back-edge test from §2.2); for the wait-for graph V = n and the graph can be near-dense with up to n² edges, so the worst-case bound becomes **O(n²)** in the number of threads.
 

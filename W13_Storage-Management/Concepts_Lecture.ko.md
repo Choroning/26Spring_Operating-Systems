@@ -1,6 +1,6 @@
 # 13주차 이론 — 저장 장치 관리 (Storage Management)
 
-> **최종 수정일:** 2026-06-04
+> **최종 수정일:** 2026-06-19
 >
 > Silberschatz, Operating System Concepts Ch 11 (Mass-Storage Structure)
 
@@ -103,6 +103,8 @@
 - **RAID** 를 포함한 OS의 저장 장치 관리 서비스 개관.
 
 ### 1.2 HDD 물리적 구조
+
+![Silberschatz Figure 11.1 — HDD moving-head 디스크 메커니즘](../images/figures/p002_fig11.1.png)
 
 ```
     Platter 1  ──── Head 1 (위 표면)
@@ -225,6 +227,8 @@ $$
 - 페이지를 다시 쓰려면 전체 포함 블록이 먼저 **erase** 되어야 함, 그 다음 쓰기.
 
 이 단일 속성이 아래의 모든 컨트롤러 기교로 연쇄.
+
+![Silberschatz Figure 11.4 — 유효/무효 페이지를 가진 NAND 블록](../images/figures/p005_fig11.4.png)
 
 - **수명:** 셀당 약 $10^5$ program-erase 사이클 (제품 등급별로 크게 다름).
 - **DWPD** (Drive Writes Per Day): 명목 수명 동안 *전체* 드라이브 용량을 하루에 몇 번 덮어쓸 수 있는가 — 표준 내구성 측정.
@@ -379,6 +383,8 @@ OS는 cylinder나 page를 신경 쓰지 않음. 장치를 0, 1, 2, ... 로 번�
 
 **First-Come, First-Served.** 도착 순서대로 요청 처리.
 
+![Silberschatz Figure 11.6 — FCFS 디스크 스케줄링](../images/figures/p011_fig11.6.png)
+
 ```
   head
    53 → 98 → 183 → 37 → 122 → 14 → 124 → 65 → 67
@@ -399,6 +405,8 @@ $= 45 + 85 + 146 + 85 + 108 + 110 + 59 + 2 = \mathbf{640\ cylinder}$.
 ### 4.3 SCAN — Elevator 알고리즘
 
 한 방향으로 디스크 끝까지 이동하며 요청을 처리한 뒤, **방향을 반전** 해 남은 것을 처리 — 정확히 건물 엘리베이터처럼.
+
+![Silberschatz Figure 11.7 — SCAN 디스크 스케줄링](../images/figures/p011_fig11.7.png)
 
 같은 큐, head 53, 초기 방향 *감소*:
 
@@ -424,6 +432,8 @@ FCFS의 640보다 훨씬 좋음.
 SCAN의 단점: 가운데 근처 위치는 라운드당 **두 번** 서비스 (양 방향 한 번씩), 끝 위치는 라운드당 한 번만 서비스. 대기 시간이 비균일.
 
 **C-SCAN** 은 요청을 **한 방향에만** 서비스. 끝에 도달하면 head가 **즉시 시작으로 점프** 하며 반환 중에는 아무것도 서비스하지 않음.
+
+![Silberschatz Figure 11.8 — C-SCAN 디스크 스케줄링](../images/figures/p012_fig11.8.png)
 
 같은 큐, 방향 *증가*:
 
@@ -615,6 +625,8 @@ SCAN / C-SCAN의 "끝까지 가기" 는 끝 근처에 요청이 없으면 이동
 2. 펌웨어가 부트 저장 장치에서 **부트 블록** (MBR 또는 GPT) 읽음.
 3. 부트 블록의 코드가 **OS 커널** 적재 및 실행.
 
+![Silberschatz Figure 11.10 — Windows에서 저장 장치로부터의 부팅](../images/figures/p018_fig11.10.png)
+
 - **부트 디스크 / 시스템 디스크:** 부트 파티션을 담은 디스크.
 - 기본 Linux 부트스트랩 로더: **GRUB2**.
 - 펌웨어 자체가 멀웨어에 감염될 수 있음 → 공급망의 실제 보안 우려.
@@ -694,6 +706,8 @@ swapon /swapfile
 - Swap 영역은 4 KB **page slot** 의 배열로 조직.
 - **Swap map**: page slot당 정수 카운터의 배열.
 
+![Silberschatz Figure 11.11 — Linux 시스템의 swapping 자료 구조](../images/figures/p022_fig11.11.png)
+
 | 카운터 값 | 의미                                          |
 |-----------|-----------------------------------------------|
 | 0         | slot이 비어 있음 (사용 가능)                    |
@@ -742,6 +756,8 @@ NAS 단점: 저장 I/O가 일반 LAN 트래픽과 대역폭 경쟁; 부하 하�
 ### 8.3 SAN
 
 **Storage-Area Network.** 서버와 저장 장치를 **전용** 고성능 네트워크로 연결.
+
+![Silberschatz Figure 11.13 — Storage-area network](../images/figures/p024_fig11.13.png)
 
 | 항목              | NAS                  | SAN                   |
 |-------------------|----------------------|-----------------------|
@@ -956,6 +972,8 @@ $$
 
 RAID 0 (striping)과 RAID 1 (mirroring)의 다른 계층 순서 조합.
 
+![Silberschatz Figure 11.16 — 단일 디스크 장애 시의 RAID 0+1과 1+0](../images/figures/p031_fig11.16.png)
+
 - **RAID 0+1:** 먼저 striping, 그 다음 stripe를 미러. 단일 디스크 장애가 미러 전체 stripe를 깸 — 어레이의 절반이 오프라인.
 - **RAID 1+0 (RAID 10):** 먼저 미러, 그 다음 미러 쌍을 stripe. 단일 디스크 장애는 한 미러만 깸 — 어레이의 나머지는 무사하고 한 디스크만 재구축.
 
@@ -1009,6 +1027,8 @@ RAID는 **물리 매체 오류** 를 보호. 다음을 *보호하지 않음*:
 **ZFS** 는 다른 접근:
 - **모든 블록 (데이터와 메타데이터)** 의 checksum 저장.
 - 결정적으로, checksum은 블록 자체가 아닌 **부모 포인터** 에 저장 — 손상된 블록이 자기 checksum에 대해 거짓말할 수 없음.
+
+![Silberschatz Figure 11.17 — 모든 메타데이터와 데이터를 checksum 하는 ZFS](../images/figures/p034_fig11.17.png)
 
 읽기 시:
 - 데이터 → checksum 재계산 → 부모의 저장된 checksum과 비교.

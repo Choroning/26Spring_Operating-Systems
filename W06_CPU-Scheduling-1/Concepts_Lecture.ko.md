@@ -1,6 +1,6 @@
 # 6주차 이론 — CPU 스케줄링 (1)
 
-> **최종 수정일:** 2026-05-13
+> **최종 수정일:** 2026-06-19
 >
 > Silberschatz, Operating System Concepts Ch 5 (Sections 5.1 – 5.3)
 
@@ -95,6 +95,8 @@
 
 프로세스 실행은 **CPU 버스트** 와 **I/O 버스트** 의 반복 사이클로 구성된다:
 
+![Silberschatz Figure 5.1 — CPU와 I/O 버스트의 교대 시퀀스](../images/figures/p002_fig5_1.png)
+
 - **CPU 버스트**: CPU가 명령어를 실행하는 구간
 - **I/O 버스트**: 프로세스가 I/O 완료를 기다리는 구간
 - 마지막 CPU 버스트에서 프로세스는 **시스템 호출을 통해 종료를 요청** 한다
@@ -123,6 +125,8 @@ CPU 버스트 길이의 분포는 **지수적 또는 초지수적(hyperexponenti
 
 - **짧은 CPU 버스트** 가 매우 빈번하다 — 대부분의 버스트는 짧다
 - **긴 CPU 버스트** 는 드물게 발생한다
+
+![Silberschatz Figure 5.2 — CPU 버스트 지속 시간의 히스토그램](../images/figures/p003_fig5_2.png)
 
 *Silberschatz, Figure 5.2 — CPU 버스트 지속 시간의 히스토그램*
 
@@ -225,6 +229,8 @@ CPU 스케줄링 결정이 필요한 **4가지 상황**:
 1. **컨텍스트 스위치** 수행 (현재 프로세스 상태 저장 -> 새 프로세스 상태 복원)
 2. **사용자 모드** 로 전환
 3. 새 프로세스의 적절한 위치(PC — 프로그램 카운터, 다음 명령어의 주소를 저장하는 레지스터)로 점프
+
+![Silberschatz Figure 5.3 — 디스패처의 역할](../images/figures/p005_fig5_3.png)
 
 *Silberschatz, Figure 5.3 — 디스패처의 역할*
 
@@ -601,6 +607,8 @@ alpha = 0.5, tau(0) = 10으로 시작:
 | 6 | 13 | **11** | 0.5*13 + 0.5*9 |
 | 7 | - | **12** | 0.5*13 + 0.5*11 |
 
+![Silberschatz Figure 5.4 — 다음 CPU 버스트 길이의 예측](../images/figures/p010_fig5_4.png)
+
 *Silberschatz, Figure 5.4 — 다음 CPU 버스트 길이의 예측*
 
 - 실제 버스트가 갑자기 변해도 예측값은 점진적으로 따라간다
@@ -806,6 +814,8 @@ q = 100일 때 (모든 버스트 < 100):
 
 **q가 매우 작을 때** (예: q = 1ms):
 
+![Silberschatz Figure 5.5 — 타임 퀀텀이 작을수록 컨텍스트 스위치가 증가하는 방식](../images/figures/p013_fig5_5.png)
+
 *Silberschatz, Figure 5.5 — 타임 퀀텀이 작을수록 컨텍스트 스위치가 증가하는 방식*
 
 - 컨텍스트 스위치 횟수가 **급격히 증가** -> 오버헤드 증가
@@ -815,6 +825,8 @@ q = 100일 때 (모든 버스트 < 100):
 ### 6.5 RR — 타임 퀀텀과 반환 시간
 
 q가 반환 시간에 미치는 영향 (3개 프로세스, 각 버스트 = 10):
+
+![Silberschatz Figure 5.6 — 타임 퀀텀에 따른 반환 시간의 변화](../images/figures/p014_fig5_6.png)
 
 *Silberschatz, Figure 5.6 — 타임 퀀텀에 따른 반환 시간의 변화*
 

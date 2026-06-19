@@ -1,6 +1,6 @@
 # Week 13 Lecture — Storage Management
 
-> **Last Updated:** 2026-06-04
+> **Last Updated:** 2026-06-19
 >
 > Silberschatz, Operating System Concepts Ch 11 (Mass-Storage Structure)
 
@@ -103,6 +103,8 @@ This week's goals:
 - Survey the storage device management services the OS provides, including **RAID**.
 
 ### 1.2 HDD Physical Structure
+
+![Silberschatz Figure 11.1 — HDD moving-head disk mechanism](../images/figures/p002_fig11.1.png)
 
 ```
     Platter 1  ──── Head 1 (top surface)
@@ -225,6 +227,8 @@ Three operations with very different units and speeds:
 - To rewrite a page, the entire enclosing block must first be **erased**, then written.
 
 This single property cascades into all the controller cleverness below.
+
+![Silberschatz Figure 11.4 — a NAND block with valid and invalid pages](../images/figures/p005_fig11.4.png)
 
 - **Lifespan:** approximately $10^5$ program-erase cycles per cell (varies widely by product class).
 - **DWPD** (Drive Writes Per Day): how many times the *entire* drive capacity can be overwritten per day for the rated lifespan — a standard endurance metric.
@@ -379,6 +383,8 @@ When the disk is busy, new requests accumulate in a **pending queue**. The OS is
 
 **First-Come, First-Served.** Process requests in their arrival order.
 
+![Silberschatz Figure 11.6 — FCFS disk scheduling](../images/figures/p011_fig11.6.png)
+
 ```
   head
    53 → 98 → 183 → 37 → 122 → 14 → 124 → 65 → 67
@@ -399,6 +405,8 @@ Notice the **122 → 14 → 124** segment: the arm crosses almost the whole disk
 ### 4.3 SCAN — The Elevator Algorithm
 
 Move in one direction to the end of the disk, servicing requests in order, then **reverse direction** and service the remaining ones — exactly like a building elevator.
+
+![Silberschatz Figure 11.7 — SCAN disk scheduling](../images/figures/p011_fig11.7.png)
 
 Same queue, head 53, initial direction *decreasing*:
 
@@ -424,6 +432,8 @@ Much better than FCFS's 640.
 SCAN's downside: positions near the middle get serviced **twice** per round (once each direction), while positions at the ends get serviced only once. Waiting time is uneven.
 
 **C-SCAN** services requests in **one direction only**. On reaching the end, the head **immediately jumps back to the start** without servicing anything during the return.
+
+![Silberschatz Figure 11.8 — C-SCAN disk scheduling](../images/figures/p012_fig11.8.png)
 
 Same queue, direction *increasing*:
 
@@ -616,6 +626,8 @@ Boot sequence:
 2. Firmware reads the **boot block** (MBR or GPT) from the boot storage device.
 3. The boot block's code loads and executes the **OS kernel**.
 
+![Silberschatz Figure 11.10 — booting from a storage device in Windows](../images/figures/p018_fig11.10.png)
+
 - **Boot disk / system disk:** the disk containing the boot partition.
 - Default Linux bootstrap loader: **GRUB2**.
 - Firmware itself can be compromised by malware → real security concern in the supply chain.
@@ -696,6 +708,8 @@ swapon /swapfile
 - Swap area is organized as an array of 4 KB **page slots**.
 - **Swap map**: an array of integer counters, one per page slot.
 
+![Silberschatz Figure 11.11 — the data structures for swapping on Linux systems](../images/figures/p022_fig11.11.png)
+
 | Counter value | Meaning                                       |
 |---------------|-----------------------------------------------|
 | 0             | Slot is empty (available)                     |
@@ -744,6 +758,8 @@ NAS cons: storage I/O competes with normal LAN traffic for bandwidth; can become
 ### 8.3 SAN
 
 **Storage-Area Network.** Connects servers and storage over a **dedicated** high-performance network.
+
+![Silberschatz Figure 11.13 — storage-area network](../images/figures/p024_fig11.13.png)
 
 | Item              | NAS                  | SAN                   |
 |-------------------|----------------------|-----------------------|
@@ -958,6 +974,8 @@ Simplest redundancy. Twice the cost, but very fast rebuild and high reliability.
 
 Combinations of RAID 0 (striping) and RAID 1 (mirroring) at different layering orders.
 
+![Silberschatz Figure 11.16 — RAID 0+1 and 1+0 with a single disk failure](../images/figures/p031_fig11.16.png)
+
 - **RAID 0+1:** stripe first, then mirror the stripes. A single disk failure breaks the entire mirror's stripe — half the array goes offline.
 - **RAID 1+0 (RAID 10):** mirror first, then stripe across the mirror pairs. A single disk failure only breaks one mirror — the rest of the array is intact, and only one disk needs rebuilding.
 
@@ -1011,6 +1029,8 @@ RAID protects against **physical media errors**. It does *not* protect against:
 **ZFS** takes a different approach:
 - Stores **checksums for every block** (data and metadata).
 - Crucially, the checksum is stored in the **parent pointer**, not in the block itself — so corrupted blocks can't lie about their checksum.
+
+![Silberschatz Figure 11.17 — ZFS checksums all metadata and data](../images/figures/p034_fig11.17.png)
 
 On read:
 - Data → recompute checksum → compare against parent's stored checksum.

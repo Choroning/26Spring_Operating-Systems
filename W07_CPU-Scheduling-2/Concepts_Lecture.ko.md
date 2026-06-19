@@ -1,6 +1,6 @@
 # 7주차 이론 — CPU 스케줄링 (2)
 
-> **최종 수정일:** 2026-05-13
+> **최종 수정일:** 2026-06-19
 >
 > Silberschatz, Operating System Concepts Ch 5 (5.3.4 – 5.8절)
 
@@ -200,6 +200,8 @@
      +-----------------------------+
      가장 낮은 우선순위
 ```
+![Silberschatz Figure 5.8 — 다단계 큐 스케줄링](../images/figures/p017_fig5_8.png)
+
 *Silberschatz, Figure 5.8 — Multilevel queue scheduling*
 
 **큐 간 스케줄링**(두 가지 일반적인 정책):
@@ -232,6 +234,8 @@
  --> |   Q2   | -------> CPU
      +--------+
 ```
+![Silberschatz Figure 5.9 — 다단계 피드백 큐](../images/figures/p018_fig5_9.png)
+
 *Silberschatz, Figure 5.9 — Multilevel feedback queues*
 
 **이동 규칙:**
@@ -381,6 +385,8 @@ int main(int argc, char *argv[]) {
 
 SMP 환경에서 준비 큐를 구성하는 두 가지 주요 방식:
 
+![Silberschatz Figure 5.11 — 준비 큐 구성](../images/figures/p023_fig5_11.png)
+
 *Silberschatz, Figure 5.11 — Organization of ready queues*
 
 | 방식 | 장점 | 단점 |
@@ -397,7 +403,12 @@ SMP 환경에서 준비 큐를 구성하는 두 가지 주요 방식:
 - 캐시 미스 하나로 **수십~수백 CPU 사이클**이 소모됩니다.
 - 메모리 집약적 워크로드에서는 코어가 **최대 50%의 시간을 스톨** 상태로 낭비할 수 있습니다.
 
+![Silberschatz Figure 5.12 — 메모리 스톨](../images/figures/p024_fig5_12.png)
+
 *Silberschatz, Figure 5.12 — Memory stall*
+
+![Silberschatz Figure 5.13 — 멀티스레드 멀티코어 시스템](../images/figures/p024_fig5_13.png)
+
 *Silberschatz, Figure 5.13 — Multithreaded multicore system*
 
 **해결책 — 하드웨어 멀티스레딩**: 한 스레드가 메모리 스톨에 진입하면, 코어는 **일할 준비가 된 다른 하드웨어 스레드로 전환**합니다. 이를 통해 실행 유닛을 쉬게 두지 않고 코어 이용률을 극적으로 높입니다.
@@ -407,6 +418,8 @@ SMP 환경에서 준비 큐를 구성하는 두 가지 주요 방식:
 ### 4.4 칩 멀티스레딩 (CMT)
 
 단일 물리 코어에 **여러 하드웨어 스레드**를 배치합니다.
+
+![Silberschatz Figure 5.14 — 칩 멀티스레딩](../images/figures/p025_fig5_14.png) ![Silberschatz Figure 5.14 — 칩 멀티스레딩 (상세)](../images/figures/p025_fig5_14_1.png)
 
 *Silberschatz, Figure 5.14 — Chip multithreading*
 
@@ -434,6 +447,8 @@ SMP 환경에서 준비 큐를 구성하는 두 가지 주요 방식:
 ### 4.6 두 단계의 스케줄링
 
 **멀티스레드 멀티코어** 프로세서에서는 스케줄링이 두 단계로 일어납니다.
+
+![Silberschatz Figure 5.15 — 두 단계의 스케줄링](../images/figures/p026_fig5_15.png)
 
 *Silberschatz, Figure 5.15 — Two levels of scheduling*
 
@@ -463,6 +478,8 @@ Linux에서 hard affinity는 `sched_setaffinity()` 시스템 콜(혹은 `taskset
 ### 4.8 NUMA와 프로세서 친화도
 
 **NUMA (Non-Uniform Memory Access)** — 각 CPU(소켓)가 자기 전용 **로컬 메모리 뱅크**를 가지면서도, 인터커넥트를 통해 **다른 소켓의 메모리**에도 접근할 수 있는 다중 소켓 구조입니다.
+
+![Silberschatz Figure 5.16 — NUMA와 CPU 스케줄링](../images/figures/p028_fig5_16.png)
 
 *Silberschatz, Figure 5.16 — NUMA and CPU scheduling*
 
@@ -527,6 +544,8 @@ OS는 둘 사이에서 균형을 잡습니다: 불균형이 **충분히 클 때�
 
 **이벤트 지연(Event Latency)** = 이벤트 발생부터 서비스 완료까지의 총 시간.
 
+![Silberschatz Figure 5.17 — 이벤트 지연](../images/figures/p029_fig5_17.png)
+
 *Silberschatz, Figure 5.17 — Event latency*
 
 실시간 시스템에서 중요한 두 지연 요소:
@@ -543,6 +562,8 @@ Hard 실시간에서는 두 지연 모두 **수 마이크로초 이내로 유계
 ### 5.3 주기적 태스크 모델
 
 실시간 워크로드는 흔히 **주기적 태스크** — 동일 작업이 매 *p* 시간마다 반복 — 로 모델링합니다.
+
+![Silberschatz Figure 5.20 — 주기적 태스크](../images/figures/p032_fig5_20.png)
 
 *Silberschatz, Figure 5.20 — Periodic task*
 
@@ -739,6 +760,8 @@ EDF 실행 과정:
 
 ### 6.2 Linux 우선순위 범위
 
+![Silberschatz Figure 5.26 — Linux 시스템의 스케줄링 우선순위](../images/figures/p040_fig5_26.png)
+
 *Silberschatz, Figure 5.26 — Scheduling priorities on a Linux system*
 
 - **숫자가 작을수록 우선순위가 높음**(교재 관례를 따릅니다).
@@ -836,6 +859,8 @@ CFS는 실행 가능한 태스크를 **vruntime**을 키로 하는 **레드-블�
 ### 6.7 CFS — 부하 분산과 NUMA
 
 CFS 부하 분산은 머신의 메모리 위상에 맞춘 **스케줄링 도메인 계층**을 사용합니다.
+
+![Silberschatz Figure 5.27 — Linux CFS 스케줄러의 NUMA 인식 부하 분산](../images/figures/p040_fig5_27.png)
 
 *Silberschatz, Figure 5.27 — NUMA-aware load balancing with Linux CFS scheduler*
 

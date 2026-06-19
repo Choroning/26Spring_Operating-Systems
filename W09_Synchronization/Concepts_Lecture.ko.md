@@ -1,6 +1,6 @@
 # 9주차 이론 — 동기화 (Synchronization)
 
-> **최종 수정일:** 2026-05-13
+> **최종 수정일:** 2026-06-19
 >
 > Silberschatz, Operating System Concepts Ch 6 (Synchronization Tools), Ch 7 (Synchronization Examples)
 
@@ -225,6 +225,8 @@ turn = j;           /* ② */
 ```
 
 만약 CPU가 ②를 ①보다 먼저 실행한다면, 두 프로세스 모두 진입 검사를 통과해 임계 구역에 동시에 들어갈 수 있습니다 — **상호 배제가 깨집니다**. 컴파일러의 재배열도 같은 효과를 낳을 수 있습니다(두 쓰기는 서로 무관한 메모리를 다루기 때문입니다).
+
+![Peterson 해법에서 명령어 재배열의 효과](../images/figures/fig6_4_peterson_reorder.png)
 
 *Silberschatz Figure 6.4 — Peterson 해법에서 명령어 재배열의 효과.*
 
@@ -584,6 +586,8 @@ monitor monitor_name {
 }
 ```
 
+![모니터의 도식적 구조](../images/figures/fig6_12_monitor_schematic.png)
+
 *Silberschatz Figure 6.12 — 모니터의 도식적 구조.*
 
 핵심 속성:
@@ -614,6 +618,8 @@ x.signal();    /* x에서 대기 중인 스레드 하나를 깨움 */
 - **Signal-and-wait** — P가 기다리고, Q가 즉시 실행됩니다. (원래 Hoare의 정의.)
 - **Signal-and-continue** — P가 모니터를 떠날 때까지 계속 실행되고, 그 다음에 Q가 실행됩니다.
 - **타협안** — P는 신호 직후 모니터를 떠나고, Q가 재개됩니다.
+
+![조건 변수가 있는 모니터](../images/figures/fig6_13_monitor_conditions.png)
 
 *Silberschatz Figure 6.13 — 조건 변수가 있는 모니터.*
 
@@ -894,6 +900,8 @@ API 예시:
 - 한 번에 하나의 젓가락만 집을 수 있습니다.
 - 식사를 시작하려면 왼쪽과 오른쪽 젓가락이 모두 사용 가능해야 합니다.
 - 식사를 마치면 두 젓가락을 모두 내려놓습니다.
+
+![식사하는 철학자들](../images/figures/fig7_5_dining_philosophers.png)
 
 *Silberschatz Figure 7.5 — 식사하는 철학자들.*
 

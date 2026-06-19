@@ -1,6 +1,6 @@
 # 12주차 이론 — 가상 메모리 (Virtual Memory)
 
-> **최종 수정일:** 2026-06-04
+> **최종 수정일:** 2026-06-19
 >
 > Silberschatz, Operating System Concepts Ch 10 (Virtual Memory)
 
@@ -107,6 +107,8 @@
 - **공유 메모리** 를 통한 프로세스 간 통신.
 - copy-on-write를 통한 **빠른 `fork()`** (§2).
 
+![Silberschatz Figure 10.1 — 물리 메모리보다 큰 가상 메모리](../images/figures/p003_fig10.1.png)
+
 > **왜 이것이 옳은 추상화인가:** 11주차의 주소 지정 계층(페이지 테이블, MMU, TLB)은 *공간적* 가상화를 준다. Demand paging은 *시간적* 가상화를 추가한다 — 페이지는 CPU가 참조하는 순간에만 RAM에 존재하면 되고 사전에는 그럴 필요가 없다. 이번 강의의 모든 것은 "부재 페이지를 싸게 만들라"의 어떤 귀결이다.
 
 ### 1.2 프로세스의 가상 주소 공간
@@ -135,6 +137,8 @@
 - 홀은 **물리 메모리를 차지하지 않음** — 프레임을 가리키는 PTE가 없다.
 - 공유 라이브러리는 보통 가운데 영역(heap과 stack 사이)에 매핑된다.
 
+![Silberschatz Figure 10.2 — 가상 주소 공간](../images/figures/p003_fig10.2.png)
+
 > **핵심 통찰:** 홀이 공짜이기 때문에 프로세스는 거대한 최대 크기를 선언해도 비용을 치르지 않는다. 64비트 프로세스가 2 TB 희소 파일을 mmap 해도, 실제 건드린 페이지만 프레임을 할당.
 
 ### 1.3 가상 메모리를 통한 공유 라이브러리
@@ -146,6 +150,8 @@
 - 라이브러리는 **읽기 전용** 으로 매핑되며, 이것이 공유의 안전성을 보장(11주차 §6.2).
 - 공유 메모리 IPC도 동일 메커니즘.
 - `fork()` 는 초기에 페이지 테이블 복사로 부모와 자식이 모든 페이지를 공유 — 아래의 copy-on-write 참조.
+
+![Silberschatz Figure 10.3 — 가상 메모리를 사용한 공유 라이브러리](../images/figures/p004_fig10.3.png)
 
 ### 1.4 Demand Paging과 Lazy Pager
 
@@ -170,6 +176,8 @@ CPU는 두 종류의 "무효"를 구분하지 않음 — 둘 다 같은 하드�
 
 > **왜 이 설계가 깔끔한가:** "존재 vs 상주" 검사가 MMU가 이미 수행 중인 보호 검사와 합쳐짐. MMU가 유효 비트를 지원하기만 하면 demand paging은 본질적으로 "공짜" — 데이터 경로 변경 없이 트랩 위의 OS 로직만 추가.
 
+![Silberschatz Figure 10.4 — 일부 페이지가 메인 메모리에 없을 때의 페이지 테이블](../images/figures/p005_fig10.4.png)
+
 ### 1.6 페이지 폴트 처리 — 단계별
 
 CPU가 PTE가 무효인 페이지를 건드리면 **페이지 폴트 트랩** 으로 커널 제어 이전:
@@ -189,6 +197,8 @@ CPU가 PTE가 무효인 페이지를 건드리면 **페이지 폴트 트랩** �
 ```
 
 전체 시퀀스 — 회전 디스크 기준 보통 5–10 ms, SSD 수백 μs, NVMe 수십 μs — 는 일반 메모리 접근(~100 ns) 대비 **수 자릿수 더 느림**. 이것이 페이지 폴트 율을 극소로 유지해야 하는 이유.
+
+![Silberschatz Figure 10.5 — 페이지 폴트 처리 단계](../images/figures/p006_fig10.5.png)
 
 ### 1.7 Pure Demand Paging과 하드웨어 요구사항
 
@@ -227,6 +237,8 @@ OS는 **free-frame list** 를 유지 — 할당 가능한 물리 프레임의 �
 - 리스트가 임계값 이하로 줄면 **페이지 교체**(§3)가 희생자를 추방해 리스트 보충.
 
 **Zero-fill-on-demand**: 새 프로세스에게 프레임을 넘기기 전에 커널이 **0으로 초기화**. 왜? *보안* — 그 프레임은 다른 프로세스의 것이었고, 남은 내용이 새 프로세스에 누출되면 안 됨.
+
+![Silberschatz Figure 10.6 — 빈 프레임 리스트](../images/figures/p008_fig10.6.png)
 
 ### 1.10 Demand-Paging 성능 — EAT
 
@@ -322,6 +334,8 @@ Demand paging은 **over-allocation** 으로 이어진다: OS가 폴트가 날 �
 
 이것이 가상 메모리의 거짓말을 완성한다 — 20-페이지 프로세스가 10 프레임으로 실행 가능, 왜냐하면 OS가 가장 유용한 10개를 끊임없이 회전시키기 때문.
 
+![Silberschatz Figure 10.9 — 페이지 교체의 필요성](../images/figures/p014_fig10.9.png)
+
 ### 3.2 기본 교체 절차와 Dirty Bit
 
 ```
@@ -339,6 +353,8 @@ Demand paging은 **over-allocation** 으로 이어진다: OS가 폴트가 날 �
 **Dirty bit (modify bit)** 는 페이지가 쓰일 때마다 하드웨어가 세팅. 추방 시점에도 0이면 메모리 사본이 디스크 사본과 동일하므로 write-back을 스킵 가능.
 
 > **왜 중요한가:** swap-out I/O는 페이지 폴트에서 OS가 하는 가장 비싼 단일 작업. Clean 페이지에 대해 이를 건너뛰는 것은 일반 워크로드에서 디스크 트래픽을 대략 절반으로 줄임.
+
+![Silberschatz Figure 10.10 — 페이지 교체](../images/figures/p015_fig10.10.png)
 
 ### 3.3 페이지 교체가 주는 것
 
@@ -456,6 +472,8 @@ Demand paging은 **over-allocation** 으로 이어진다: OS가 폴트가 날 �
 | 4   | **4**| 1    | 2    | 3    | F      |
 | 5   | 4    | **5**| 2    | 3    | F      |
 
+![Silberschatz Figure 10.13 — FIFO 교체의 페이지 폴트 곡선 (Belady의 변칙)](../images/figures/p018_fig10.13.png)
+
 ### 3.7 Optimal (OPT / MIN)
 
 **OPT** 알고리즘은 **미래에 가장 오랫동안 사용되지 않을** 페이지를 교체.
@@ -547,6 +565,8 @@ Demand paging은 **over-allocation** 으로 이어진다: OS가 폴트가 날 �
 
 > **[자료구조]** 방법 2는 정확히 최근성 순 큐로 쓰이는 **이중 연결 리스트** 이며, "6번의 포인터 갱신" 수치는 unlink-후-맨앞삽입의 표준 비용이다: 노드를 떼어낼 때 그 선행/후행 노드의 포인터를 건드리고, 맨 앞에 재삽입할 때 옛 head, 새 노드의 두 링크, head 포인터를 건드린다. 단일이 아니라 *이중* 연결 리스트가 필요한 이유는 LRU가 **중간 노드를 O(1) 에 제거** 해야 하기 때문 — 내부 노드를 상수 시간에 splice out 하려면 선행 노드로의 back-pointer가 있어야 한다. 이 리스트를 페이지 번호 → 노드 해시 맵과 짝지으면 바로 교과서적 **LRU 캐시** 설계가 된다(O(1) 조회, O(1) 맨앞 이동, O(1) 꼬리 추방).
 
+![Silberschatz Figure 10.16 — 가장 최근 페이지 참조를 기록하는 스택의 사용](../images/figures/p021_fig10.16.png)
+
 ### 3.10 스택 알고리즘과 Belady 회피 이유
 
 교체 알고리즘이 **스택 알고리즘** 이라 함은, 모든 참조 문자열에 대해 $n$ 프레임에서의 상주 페이지 집합이 $n + 1$ 프레임에서의 상주 페이지 집합의 **부분집합** 임을 의미.
@@ -635,6 +655,8 @@ unsigned 정수로 비교하면 11000100 (196) > 01110111 (119)
 - 자주 쓰는 페이지는 손이 도달할 때 ref bit = 1 → 사실상 *절대* 교체되지 않음.
 
 > **왜 작동하는가:** reference bit가 이진 "최근 사용했는가" 신호를 줌. Clock은 그 한 비트를 LRU에 가까운 것으로 바꿈 — 최근 사용된 페이지에 면제권을 주고 진짜 오래된 페이지만 추방되도록.
+
+![Silberschatz Figure 10.17 — Second-chance (clock) 페이지 교체 알고리즘](../images/figures/p023_fig10.17.png)
 
 ### 4.4 Clock 알고리즘 — 시각화
 
@@ -735,6 +757,8 @@ $m$ 개 가용 프레임과 $n$ 개 프로세스가 있을 때 어떻게 분배�
 
 Free 메모리가 결정적으로 낮아져 reaper가 따라가지 못하면 **Linux는 OOM Killer(Out-Of-Memory Killer)** 실행 — 크기·나이·"종료 가능성"을 결합한 OOM 점수가 가장 나쁜 프로세스를 종료.
 
+![Silberschatz Figure 10.18 — 페이지 회수](../images/figures/p029_fig10.18.png)
+
 ### 5.5 NUMA와 프레임 할당
 
 **NUMA (Non-Uniform Memory Access)** 머신에서는 각 CPU가 자기 *로컬* 메모리 뱅크를 갖고, 로컬 메모리 접근이 다른 CPU의 메모리 접근보다 현저히 빠름.
@@ -760,6 +784,8 @@ Free 메모리가 결정적으로 낮아져 reaper가 따라가지 못하면 **L
 ```
 
 **증상 그래프:** 다중 프로그래밍 정도가 오르면 CPU 사용률 처음엔 상승(좋음), 임계점 넘으면 **갑자기 붕괴**. 그 붕괴가 thrashing.
+
+![Silberschatz Figure 10.20 — Thrashing](../images/figures/p032_fig10.20.png)
 
 > **왜 이것이 OS의 정석적 병리인가:** thrashing은 *추상화가 깨지는* 순간이다. 가상 메모리의 핵심은 프로그램이 RAM보다 클 수 있다는 것 — 단, *active* 풋프린트가 들어맞을 때만. 그 풋프린트를 가용 프레임을 넘어 밀면 시스템은 계산 대신 페이지 셔플링에 시간을 쓴다.
 
@@ -796,6 +822,8 @@ $$
 
 WS(t1) = {1, 2, 5, 6, 7}   WS(t2) = {3, 4}
 ```
+
+![Silberschatz Figure 10.22 — Working-set 모델](../images/figures/p034_fig10.22.png)
 
 **WS로 thrashing 방지:**
 - $WSS_i = |WS_i|$ — 프로세스 $i$ 가 필요로 하는 프레임 수.
@@ -840,6 +868,8 @@ Working-set 모델과 비교:
 - 궁극적으로 신경 쓰는 것(폴트 율)을 **직접 제어**.
 - 폴트 율이 *왜* 그런지에 대한 정보는 적음.
 
+![Silberschatz Figure 10.23 — 페이지 폴트 빈도(page-fault frequency)](../images/figures/p036_fig10.23.png)
+
 ---
 
 <br>
@@ -856,6 +886,10 @@ Free-frame list                  압축 후:
 [F12][F45][F88][F03]             [Compressed page-pack F99]
                                  [F12][F45][F88] free-frame list로 반환
 ```
+
+![Silberschatz Figure 10.24 — 압축 전 빈 프레임 리스트](../images/figures/p037_fig10.24.png)
+
+![Silberschatz Figure 10.25 — 압축 후 빈 프레임 리스트](../images/figures/p038_fig10.25.png)
 
 압축 페이지가 다시 참조되면 OS가 새 프레임으로 압축 해제. 페이지 폴트 + 압축 해제 비용은 들지만 디스크 I/O 없음.
 
@@ -896,6 +930,8 @@ Free-frame list                  압축 후:
    [32 CL][32 CR][ 64 BR ]...         ← BL 쪼개기 — 21 KB 요청에 32 KB 할당
 ```
 
+![Silberschatz Figure 10.26 — Buddy system 할당](../images/figures/p040_fig10.26.png)
+
 **해제는 합치기 유발:** 블록이 해제되고 그 buddy도 free이면 다음 레벨 크기로 병합 — 트리 위쪽으로 재귀.
 
 - **장점:** 합치기가 자명하고 빠름(레벨당 상수 시간, 총 $O(\log n)$).
@@ -914,6 +950,8 @@ Cache: "PCB"   ─── slab 1: [PCB][PCB][PCB][PCB]
                 ── slab 2: [PCB][PCB][PCB][PCB]
                 ── ...
 ```
+
+![Silberschatz Figure 10.27 — Slab 할당](../images/figures/p040_fig10.27.png)
 
 **동작:**
 - 할당 → 캐시의 첫 free 객체 가져옴.

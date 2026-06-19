@@ -1,6 +1,6 @@
 # Week 6 Lecture — CPU Scheduling (1)
 
-> **Last Updated:** 2026-05-13
+> **Last Updated:** 2026-06-19
 >
 > Silberschatz, Operating System Concepts Ch 5 (Sections 5.1 – 5.3)
 
@@ -95,6 +95,8 @@
 
 Process execution consists of a repeating cycle of **CPU bursts** and **I/O bursts**:
 
+![Silberschatz Figure 5.1 — Alternating sequence of CPU and I/O bursts](../images/figures/p002_fig5_1.png)
+
 - **CPU burst**: The interval during which the CPU executes instructions
 - **I/O burst**: The interval during which the process waits for I/O completion
 - In the final CPU burst, the process requests **termination via a system call**
@@ -123,6 +125,8 @@ The distribution of CPU burst lengths follows an **exponential or hyperexponenti
 
 - **Short CPU bursts** are very frequent — most bursts are short
 - **Long CPU bursts** occur rarely
+
+![Silberschatz Figure 5.2 — Histogram of CPU-burst durations](../images/figures/p003_fig5_2.png)
 
 *Silberschatz, Figure 5.2 — Histogram of CPU-burst durations*
 
@@ -225,6 +229,8 @@ Three roles of the Dispatcher:
 1. Perform **context switch** (save current process state -> restore new process state)
 2. Switch to **user mode**
 3. Jump to the appropriate location (PC — Program Counter, the register holding the address of the next instruction) of the new process
+
+![Silberschatz Figure 5.3 — The role of the dispatcher](../images/figures/p005_fig5_3.png)
 
 *Silberschatz, Figure 5.3 — The role of the dispatcher*
 
@@ -601,6 +607,8 @@ Starting with alpha = 0.5, tau(0) = 10:
 | 6 | 13 | **11** | 0.5*13 + 0.5*9 |
 | 7 | - | **12** | 0.5*13 + 0.5*11 |
 
+![Silberschatz Figure 5.4 — Prediction of the length of the next CPU burst](../images/figures/p010_fig5_4.png)
+
 *Silberschatz, Figure 5.4 — Prediction of the length of the next CPU burst*
 
 - Even when the actual burst changes suddenly, the predicted value gradually follows
@@ -806,6 +814,8 @@ When q = 100 (all bursts < 100):
 
 **If q is very small** (e.g., q = 1ms):
 
+![Silberschatz Figure 5.5 — How a smaller time quantum increases context switches](../images/figures/p013_fig5_5.png)
+
 *Silberschatz, Figure 5.5 — How a smaller time quantum increases context switches*
 
 - Context switch count **increases dramatically** -> overhead grows
@@ -815,6 +825,8 @@ When q = 100 (all bursts < 100):
 ### 6.5 RR — Time Quantum and Turnaround Time
 
 Effect of q on turnaround time (3 processes, each burst = 10):
+
+![Silberschatz Figure 5.6 — How turnaround time varies with the time quantum](../images/figures/p014_fig5_6.png)
 
 *Silberschatz, Figure 5.6 — How turnaround time varies with the time quantum*
 
