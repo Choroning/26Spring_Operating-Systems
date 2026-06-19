@@ -2,10 +2,8 @@
 
 > **최종 수정일:** 2026-06-19
 >
-> Silberschatz, Operating System Concepts Ch 16 (Security), Ch 17 (Protection)
+> Operating System Concepts, Silberschatz - Ch 16, 17
 
-> **선수 지식**: 2–3주차(프로세스)와 4–5주차(스레드) — §8의 보호 도메인이 프로세스/사용자 단위로 정의되고, 도메인 전환이 시스템 콜(2주차)을 통해 일어난다. 11–12주차(주 메모리·가상 메모리) — §2의 버퍼 오버플로가 스택 프레임과 주소 공간 구조를, return address 덮어쓰기가 호출 규약을 전제로 한다. 9주차(동기화)의 "정책 vs 기제" 사고가 §6 보호 설계에 재등장. 컴퓨터 네트워크의 패킷·TCP 핸드셰이크·포트 개념이 §3에 도움. 기본 이산수학/정수론(모듈러 거듭제곱, 소수)이 §4의 RSA와 해시 이해에 필요.
->
 > **학습 목표**:
 > 1. **보안(Security)** 과 **보호(Protection)** 를 구분하고 **CIA 트라이어드** (기밀성·무결성·가용성)와 추가 위반 유형(서비스 도용, DoS)을 설명할 수 있다
 > 2. **위협(threat)** 과 **공격(attack)** 을 구분하고 주요 공격(masquerading, replay, MITM, session hijacking, privilege escalation)을 나열할 수 있다
@@ -149,6 +147,8 @@
 ### 1.4 4계층 보안 모델
 
 ![Silberschatz Figure 16.1 — 4계층 보안 모델](../images/figures/figure_16_1.png)
+
+*Silberschatz Figure 16.1 — 4계층 보안 모델*
 
 보안은 물리(Physical) → 네트워크(Network) → 운영체제(Operating System) → 애플리케이션(Application)의 네 계층에서 동시에 다뤄져야 한다.
 
@@ -358,6 +358,8 @@ stmt.setString(1, username);  // 자동 이스케이프
 
 ![Silberschatz Figure 16.6 — 표준 보안 공격](../images/figures/figure_16_6.png)
 
+*Silberschatz Figure 16.6 — 표준 보안 공격*
+
 - **Zombie system:** 해커에게 장악되어 공격 출처를 은닉하는 데 쓰이는 시스템.
 - **WarDriving:** 보호되지 않은 WiFi 네트워크를 찾아 접근을 시도하는 행위.
 
@@ -434,6 +436,8 @@ stmt.setString(1, username);  // 자동 이스케이프
 암호화와 복호화에 **같은 키 $k$** 사용.
 
 ![Silberschatz Figure 16.7 — 안전하지 않은 매체 위의 안전한 통신](../images/figures/figure_16_7.png)
+
+*Silberschatz Figure 16.7 — 안전하지 않은 매체 위의 안전한 통신*
 
 | 알고리즘 | 키 길이           | 특징                                          |
 |----------|-------------------|-----------------------------------------------|
@@ -784,6 +788,8 @@ HTTPS의 기반이 되는 암호화 프로토콜 (SSL의 후속).
 
 ![Silberschatz Figure 17.1 — 보호 링 구조](../images/figures/figure_17_1.png)
 
+*Silberschatz Figure 17.1 — 보호 링 구조*
+
 - Ring $i$ 는 Ring $j$ ($j < i$) 기능의 *부분집합* 만 제공.
 - **Ring 0** 이 최고 권한 (전체 권한).
 - 더 높은 권한의 링으로의 전환은 **게이트(gate)** (예: 시스템 콜)를 통해서만 가능.
@@ -799,6 +805,8 @@ HTTPS의 기반이 되는 암호화 프로토콜 (SSL의 후속).
 | **ARMv8**         | EL0~EL3             | 4단계 Exception Level                   |
 
 ![Silberschatz Figure 17.3 — ARM 아키텍처](../images/figures/figure_17_3.png)
+
+*Silberschatz Figure 17.3 — ARM 아키텍처*
 
 - **TrustZone:** 온칩 암호 키를 보호 — 커널조차 직접 접근 불가.
 - Android 5.0+: 비밀번호·암호 키 보호에 TrustZone을 적극 활용.

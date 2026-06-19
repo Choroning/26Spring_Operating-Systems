@@ -1,11 +1,9 @@
 # 3주차 이론 — 프로세스 (2)
 
-> **최종 수정일:** 2026-05-13
+> **최종 수정일:** 2026-06-19
 >
-> Silberschatz, Operating System Concepts Ch 3 (Sections 3.4 – 3.8)
+> Operating System Concepts, Silberschatz - Ch 3 (3.4–3.8)
 
-> **선행 지식**: 2주차 프로세스 개념 (process, fork, exec, wait). 파일 디스크립터(file descriptor)에 대한 이해.
->
 > **학습 목표**:
 > 1. 공유 메모리(shared memory)와 메시지 전달(message passing) IPC 모델을 비교 설명
 > 2. 생산자-소비자 문제(producer-consumer problem)와 유한 버퍼(bounded buffer)를 설명
@@ -107,7 +105,7 @@ IPC는 현대 소프트웨어 어디에서나 사용된다:
 
 ![두 가지 IPC 모델](../images/figures/p021_fig.png)
 
-*Silberschatz, Figure 3.11 — (a) 공유 메모리. (b) 메시지 전달.*
+*Silberschatz Figure 3.11 — (a) 공유 메모리. (b) 메시지 전달.*
 
 > **핵심:** 공유 메모리는 초기 설정 시에만 커널이 개입하고 이후에는 일반 메모리 접근처럼 빠르게 동작하지만, 동기화를 프로그래머가 직접 해야 하는 부담이 있다. 반면 메시지 전달은 매번 시스템 콜을 통해 커널이 중재하므로 느리지만, OS가 동기화를 관리해 주므로 프로그래밍이 상대적으로 간단하다.
 
@@ -549,7 +547,7 @@ Windows에서 같은 머신 내의 프로세스 간 통신 메커니즘이다.
 
 ![Windows ALPC](../images/figures/p035_fig.png)
 
-*Silberschatz, Figure 3.19 — Windows의 Advanced local procedure calls*
+*Silberschatz Figure 3.19 — Windows의 Advanced local procedure calls*
 
 > ALPC는 Windows API를 통해 직접 노출되지 않는다. 애플리케이션은 표준 RPC를 사용하며, ALPC가 내부적으로 통신을 처리한다.
 
@@ -574,7 +572,7 @@ Windows에서 같은 머신 내의 프로세스 간 통신 메커니즘이다.
 
 ![일반 파이프의 파일 디스크립터](../images/figures/p036_fig.png)
 
-*Silberschatz, Figure 3.23 — 일반 파이프의 파일 디스크립터*
+*Silberschatz Figure 3.23 — 일반 파이프의 파일 디스크립터*
 
 ```c
 int fd[2];
@@ -718,7 +716,7 @@ find / -name "*.log" 2>/dev/null | xargs grep "ERROR" | sort -u
 
 ![소켓을 이용한 통신](../images/figures/p043_fig.png)
 
-*Silberschatz, Figure 3.26 — 소켓을 이용한 통신*
+*Silberschatz Figure 3.26 — 소켓을 이용한 통신*
 
 - 클라이언트: 1024보다 큰 임의의 포트 할당
 - 서버: **잘 알려진 포트(well-known port)** 에서 대기 (HTTP=80, SSH=22, FTP=21)
@@ -827,7 +825,7 @@ public class DateClient {
 
 ![RPC 실행 흐름](../images/figures/p048_fig.png)
 
-*Silberschatz, Figure 3.29 — 원격 프로시저 호출(RPC)의 실행*
+*Silberschatz Figure 3.29 — 원격 프로시저 호출(RPC)의 실행*
 
 > **참고:** 스텁은 클라이언트와 서버 양쪽에 존재한다. 클라이언트 스텁은 매개변수를 마샬링하여 네트워크로 전송하고, 서버 스텁(skeleton)은 수신된 데이터를 언마샬링하여 실제 프로시저를 호출한다.
 

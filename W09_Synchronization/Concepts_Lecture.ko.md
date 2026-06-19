@@ -2,10 +2,8 @@
 
 > **최종 수정일:** 2026-06-19
 >
-> Silberschatz, Operating System Concepts Ch 6 (Synchronization Tools), Ch 7 (Synchronization Examples)
+> Operating System Concepts, Silberschatz - Ch 6, 7
 
-> **선수 지식**: 4–5주차 스레드와 동시성. 프로세스, 스레드(사용자/커널 수준), 컨텍스트 전환, 공유 메모리에 대한 기본적인 이해가 있어야 합니다.
->
 > **학습 목표**:
 > 1. **레이스 컨디션(race condition)** 의 정의와 **임계 구역 문제(Critical-Section Problem)** 의 세 가지 요건(상호 배제, 진행, 한정 대기) 이해
 > 2. **Peterson의 해법**과 현대 하드웨어의 명령어 재배열로 인해 깨질 수 있는 이유 설명

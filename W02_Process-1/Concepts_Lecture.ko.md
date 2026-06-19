@@ -1,13 +1,9 @@
 # 2주차 이론 — 프로세스 (1)
 
-> **최종 수정일:** 2026-05-13
+> **최종 수정일:** 2026-06-19
 >
-> Silberschatz, Operating System Concepts Ch 3 (Sections 3.1 – 3.3)
+> Operating System Concepts, Silberschatz - Ch 3 (3.1–3.3)
 
----
-
-> **선수 지식**: 1주차 운영체제 개념 (정의, 이중 모드, 시스템 콜). 기본 C 프로그래밍 (포인터, 함수).
->
 > **학습 목표**:
 > 1. 프로세스의 구조를 설명할 수 있다 (메모리 레이아웃, PCB, 상태)
 > 2. fork(), exec(), wait()가 어떻게 함께 동작하는지 설명할 수 있다
@@ -84,7 +80,7 @@
 
 ![메모리에서의 프로세스 레이아웃](../images/figures/p002_fig.png)
 
-*Silberschatz, Figure 3.1 — 메모리에서의 프로세스 레이아웃*
+*Silberschatz Figure 3.1 — 메모리에서의 프로세스 레이아웃*
 
 - **텍스트(Text)** — 실행 코드
 - **데이터(Data)** — 전역 변수
@@ -176,7 +172,7 @@ int main(int argc, char *argv[]) {   // argc, argv 영역
 
 ![프로세스 상태 다이어그램](../images/figures/p005_fig.png)
 
-*Silberschatz, Figure 3.2 — 프로세스 상태 다이어그램*
+*Silberschatz Figure 3.2 — 프로세스 상태 다이어그램*
 
 **상태 전이 상세:**
 
@@ -199,7 +195,7 @@ int main(int argc, char *argv[]) {   // argc, argv 영역
 
 ![프로세스 제어 블록](../images/figures/p005_fig2.png)
 
-*Silberschatz, Figure 3.3 — 프로세스 제어 블록(PCB)*
+*Silberschatz Figure 3.3 — 프로세스 제어 블록(PCB)*
 
 PCB는 프로세스를 **시작하거나 재시작** 하는 데 필요한 모든 데이터의 저장소 역할을 한다.
 
@@ -305,11 +301,11 @@ current->state = new_state;  // 현재 프로세스의 상태 변경
 
 ![레디 큐와 대기 큐](../images/figures/p008_fig.png)
 
-*Silberschatz, Figure 3.4 — 레디 큐와 대기 큐*
+*Silberschatz Figure 3.4 — 레디 큐와 대기 큐*
 
 ![큐잉 다이어그램](../images/figures/p009_fig.png)
 
-*Silberschatz, Figure 3.5 — 프로세스 스케줄링의 큐잉 다이어그램*
+*Silberschatz Figure 3.5 — 프로세스 스케줄링의 큐잉 다이어그램*
 
 프로세스는 종료될 때까지 이 사이클을 반복한다. 종료 시 모든 큐에서 제거되고, PCB와 자원이 해제(deallocate)된다.
 
@@ -336,7 +332,7 @@ current->state = new_state;  // 현재 프로세스의 상태 변경
 
 ![문맥 교환 다이어그램](../images/figures/p010_fig.png)
 
-*Silberschatz, Figure 3.6 — 프로세스 간 문맥 교환*
+*Silberschatz Figure 3.6 — 프로세스 간 문맥 교환*
 
 > **핵심:** 문맥 교환은 운영체제의 핵심 메커니즘이다. 실제로 사용자가 여러 프로그램을 동시에 사용하는 것처럼 느끼는 것은, 운영체제가 매우 빠르게 프로세스 간 문맥 교환을 수행하기 때문이다. 단, 문맥 교환 중에는 유용한 작업이 수행되지 않으므로 순수한 오버헤드이다.
 
@@ -384,7 +380,7 @@ current->state = new_state;  // 현재 프로세스의 상태 변경
 
 ![Linux 프로세스 트리](../images/figures/p012_fig.png)
 
-*Silberschatz, Figure 3.7 — 일반적인 Linux 시스템의 프로세스 트리*
+*Silberschatz Figure 3.7 — 일반적인 Linux 시스템의 프로세스 트리*
 
 - **systemd** (pid = 1): 모든 사용자 프로세스의 **루트 부모(root parent)** — 시스템 부팅 시 생성되는 최초의 사용자 프로세스이다. 웹 서버, SSH 서버 등 추가 서비스를 위한 프로세스를 생성한다.
 - 전통적인 UNIX에서는 **init** (pid = 1)이 이 역할을 수행했다.

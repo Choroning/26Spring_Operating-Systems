@@ -2,10 +2,8 @@
 
 > **최종 수정일:** 2026-06-19
 >
-> Silberschatz, Operating System Concepts Ch 8 (Deadlocks)
+> Operating System Concepts, Silberschatz - Ch 8
 
-> **선수 지식**: 4–5주차 스레드와 동시성, 9주차 동기화. 뮤텍스 락, 세마포어, 임계 구역, 스레드 스케줄링의 기본 개념을 이해하고 있어야 합니다. 09주차 강의에서 데드락 *예시*를 본 적이 있다면, 이번 주차에서는 그 조건을 형식화하고 예방·회피·탐지·복구 알고리즘을 다룹니다.
->
 > **학습 목표**:
 > 1. **데드락(deadlock)** 과 **라이브락(livelock)** 을 구분하고, pthread 코드에서 각각 식별할 수 있다
 > 2. 데드락의 **4가지 필요 조건**(상호 배제, 점유 후 대기, 비선점, 순환 대기)을 진술할 수 있다
@@ -235,6 +233,8 @@ void *do_work_one(void *param) {
 
 ![Silberschatz Figure 8.4 — 자원 할당 그래프 (데드락 없음)](../images/figures/fig8_4_rag_no_deadlock.png)
 
+*Silberschatz Figure 8.4 — 자원 할당 그래프 (데드락 없음)*
+
 > **[자료구조]** RAG는 그냥 방향 그래프(directed graph)입니다. 데드락 형성 여부를 판정하는 것은 **방향 그래프의 사이클 탐지** — DFS에 3색(white = 미방문, grey = 현재 DFS 스택, black = 탐색 완료) 표시를 추가하면 grey 노드로 향하는 백 엣지(back edge)가 사이클을 닫는 시점. 시간 복잡도는 O(V+E)이고, RAG에서는 이후(§5.3, §6.1)에 자주 쓰이는 밀집 그래프 가정 하에 O(n²)으로 표시됩니다.
 
 ### 2.3 RAG — 사이클과 데드락
@@ -253,9 +253,13 @@ RAG에서의 사이클과 데드락 관계는 자원 인스턴스 수에 따라 
 
 ![Silberschatz Figure 8.5 — 데드락이 있는 자원 할당 그래프](../images/figures/fig8_5_rag_deadlock.png)
 
+*Silberschatz Figure 8.5 — 데드락이 있는 자원 할당 그래프*
+
 **예 2 — 사이클이 있지만 데드락 없음.** 사이클이 있지만 사이클 외부의 네 번째 스레드 T4가 사이클 자원 중 하나의 다른 인스턴스를 점유. T4가 반납하면 사이클의 대기 중 하나가 해소 → 사이클 깨짐.
 
 ![Silberschatz Figure 8.6 — 사이클이 있지만 데드락은 없음](../images/figures/fig8_6_rag_cycle_no_deadlock.png)
+
+*Silberschatz Figure 8.6 — 사이클이 있지만 데드락은 없음*
 
   구체적으로: R의 인스턴스가 2개라 하자. T1은 R₁을 점유하고 T2가 점유한 R₂ 인스턴스를 기다리고, T2는 R₂ 인스턴스를 점유하고 T1의 R₁을 기다리는 사이클. 그런데 사이클 *외부*의 T4가 R₂의 *다른* 인스턴스를 점유 중. T4가 종료해서 그 R 인스턴스를 반납하면 OS는 다음 R-대기자(T2)에게 넘김 → T2 종료 → 자기 R 인스턴스를 T1에게 → T1 종료. 그래프상 사이클이 보여도 사이클의 대기 조건이 사이클 *외부* 노드에 의해 충족되면 데드락이 되지 않습니다.
 
@@ -450,6 +454,8 @@ void transaction(Account from, Account to, double amount) {
 
 ![Silberschatz Figure 8.8 — 안전·불안전·데드락 상태 공간](../images/figures/fig8_8_safe_unsafe_states.png)
 
+*Silberschatz Figure 8.8 — 안전·불안전·데드락 상태 공간*
+
 회피는 자원이 물리적으로 가능해도 그 결과 상태가 Safe인 경우에만 자원을 할당합니다.
 
 ### 5.2 안전 / 불안전 예제
@@ -498,7 +504,11 @@ T2 needs 6, Available 4 < 6  → 실행 불가
 
 ![Silberschatz Figure 8.9 — 데드락 회피를 위한 자원 할당 그래프](../images/figures/fig8_9_rag_avoidance.png)
 
+*Silberschatz Figure 8.9 — 데드락 회피를 위한 자원 할당 그래프*
+
 ![Silberschatz Figure 8.10 — 불안전 상태 (사이클 형성)](../images/figures/fig8_10_rag_unsafe.png)
+
+*Silberschatz Figure 8.10 — 불안전 상태 (사이클 형성)*
 
 ### 5.4 은행원 알고리즘 — 자료 구조
 
@@ -651,6 +661,8 @@ Ti → Rq → Tj  를  Ti → Tj  로 치환
 ```
 
 ![Silberschatz Figure 8.11 — (a) 자원 할당 그래프 (b) 대응되는 wait-for graph](../images/figures/fig8_11_wait_for_graph.png)
+
+*Silberschatz Figure 8.11 — (a) 자원 할당 그래프 (b) 대응되는 wait-for graph*
 
 Wait-for Graph의 **사이클**이 데드락을 의미합니다. 사이클 탐지는 §2.2의 3색 백 엣지 검사 DFS로 **O(V+E)**; wait-for graph는 V = n이고 최악의 경우 거의 밀집(간선 수 ≈ n²)이 될 수 있어서 최악 복잡도가 스레드 수에 대해 **O(n²)** 이 됩니다.
 

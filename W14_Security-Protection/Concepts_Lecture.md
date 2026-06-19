@@ -2,10 +2,8 @@
 
 > **Last Updated:** 2026-06-19
 >
-> Silberschatz, Operating System Concepts Ch 16 (Security), Ch 17 (Protection)
+> Operating System Concepts, Silberschatz - Ch 16, 17
 
-> **Prerequisites**: Weeks 2–3 (processes) and 4–5 (threads) — the protection domains in §8 are defined per process/user, and domain switching happens through a system call (Week 2). Weeks 11–12 (main memory, virtual memory) — the buffer overflow in §2 assumes the stack-frame and address-space layout, and return-address overwriting assumes the calling convention. The "policy vs mechanism" thinking from Week 9 (synchronization) reappears in §6 protection design. A computer-networking background in packets, the TCP handshake, and ports helps with §3. Basic discrete math / number theory (modular exponentiation, primes) is needed for the RSA and hashing in §4.
->
 > **Learning Objectives**:
 > 1. Distinguish **Security** from **Protection** and explain the **CIA triad** (confidentiality, integrity, availability) plus extra violation types (theft of service, DoS)
 > 2. Distinguish **threat** from **attack** and list major attacks (masquerading, replay, MITM, session hijacking, privilege escalation)
@@ -149,6 +147,8 @@ Major attack types:
 ### 1.4 The Four-Layer Security Model
 
 ![Silberschatz Figure 16.1 — the four-layered model of security](../images/figures/figure_16_1.png)
+
+*Silberschatz Figure 16.1 — the four-layered model of security*
 
 Security must be addressed simultaneously across four layers: Physical → Network → Operating System → Application.
 
@@ -358,6 +358,8 @@ stmt.setString(1, username);  // Automatic escaping
 
 ![Silberschatz Figure 16.6 — standard security attacks](../images/figures/figure_16_6.png)
 
+*Silberschatz Figure 16.6 — standard security attacks*
+
 - **Zombie system:** a system hijacked by a hacker, used to conceal the source of attacks.
 - **WarDriving:** searching for unprotected WiFi networks to gain access.
 
@@ -434,6 +436,8 @@ Key property: given a ciphertext $c$, recovering the original message $m$ withou
 Encryption and decryption use the **same key $k$**.
 
 ![Silberschatz Figure 16.7 — secure communication over an insecure medium](../images/figures/figure_16_7.png)
+
+*Silberschatz Figure 16.7 — secure communication over an insecure medium*
 
 | Algorithm | Key Length        | Characteristics                               |
 |-----------|-------------------|-----------------------------------------------|
@@ -784,6 +788,8 @@ A hardware-level privilege hierarchy — based on the **Bell-LaPadula model**.
 
 ![Silberschatz Figure 17.1 — protection-ring structure](../images/figures/figure_17_1.png)
 
+*Silberschatz Figure 17.1 — protection-ring structure*
+
 - Ring $i$ provides only a *subset* of Ring $j$ ($j < i$) functionality.
 - **Ring 0** has the highest privilege (full privileges).
 - Transition to a higher-privilege ring is only possible through a **gate** (e.g. a system call).
@@ -799,6 +805,8 @@ A hardware-level privilege hierarchy — based on the **Bell-LaPadula model**.
 | **ARMv8**         | EL0~EL3             | 4-level Exception Levels                |
 
 ![Silberschatz Figure 17.3 — ARM architecture](../images/figures/figure_17_3.png)
+
+*Silberschatz Figure 17.3 — ARM architecture*
 
 - **TrustZone:** protects on-chip cryptographic keys — even the kernel cannot access them directly.
 - Android 5.0+: actively uses TrustZone for password and encryption-key protection.

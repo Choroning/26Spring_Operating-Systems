@@ -2,10 +2,8 @@
 
 > **최종 수정일:** 2026-06-19
 >
-> Silberschatz, Operating System Concepts Ch 5 (5.3.4 – 5.8절)
+> Operating System Concepts, Silberschatz - Ch 5 (5.3.4–5.8)
 
-> **선수 지식**: 6주차 CPU 스케줄링(1). FCFS, SJF, SRTF, RR 알고리즘과 다섯 가지 스케줄링 기준(CPU 이용률, 처리량, 반환 시간, 대기 시간, 응답 시간)을 이미 이해하고 있어야 합니다.
->
 > **학습 목표**:
 > 1. 우선순위 스케줄링과 기아(Starvation) / 노화(Aging) 메커니즘 이해
 > 2. Multilevel Queue vs Multilevel Feedback Queue(MLFQ) 비교
@@ -202,7 +200,7 @@
 ```
 ![Silberschatz Figure 5.8 — 다단계 큐 스케줄링](../images/figures/p017_fig5_8.png)
 
-*Silberschatz, Figure 5.8 — Multilevel queue scheduling*
+*Silberschatz Figure 5.8 — Multilevel queue scheduling*
 
 **큐 간 스케줄링**(두 가지 일반적인 정책):
 - **고정 우선순위**: 상위 큐가 **모두 비어 있을 때만** 하위 큐가 실행됩니다. *(위험: 하위 큐의 기아)*
@@ -236,7 +234,7 @@
 ```
 ![Silberschatz Figure 5.9 — 다단계 피드백 큐](../images/figures/p018_fig5_9.png)
 
-*Silberschatz, Figure 5.9 — Multilevel feedback queues*
+*Silberschatz Figure 5.9 — Multilevel feedback queues*
 
 **이동 규칙:**
 - **강등(Demotion)**: 특정 큐의 **전체 타임 퀀텀을 소진**하면 더 낮은 큐로 강등됩니다. *(해석: CPU-bound 프로세스이므로, 강등하여 짧고 반응성 높은 프로세스의 길을 막지 않도록 합니다.)*
@@ -387,7 +385,7 @@ SMP 환경에서 준비 큐를 구성하는 두 가지 주요 방식:
 
 ![Silberschatz Figure 5.11 — 준비 큐 구성](../images/figures/p023_fig5_11.png)
 
-*Silberschatz, Figure 5.11 — Organization of ready queues*
+*Silberschatz Figure 5.11 — Organization of ready queues*
 
 | 방식 | 장점 | 단점 |
 |----------|------|------|
@@ -405,11 +403,11 @@ SMP 환경에서 준비 큐를 구성하는 두 가지 주요 방식:
 
 ![Silberschatz Figure 5.12 — 메모리 스톨](../images/figures/p024_fig5_12.png)
 
-*Silberschatz, Figure 5.12 — Memory stall*
+*Silberschatz Figure 5.12 — Memory stall*
 
 ![Silberschatz Figure 5.13 — 멀티스레드 멀티코어 시스템](../images/figures/p024_fig5_13.png)
 
-*Silberschatz, Figure 5.13 — Multithreaded multicore system*
+*Silberschatz Figure 5.13 — Multithreaded multicore system*
 
 **해결책 — 하드웨어 멀티스레딩**: 한 스레드가 메모리 스톨에 진입하면, 코어는 **일할 준비가 된 다른 하드웨어 스레드로 전환**합니다. 이를 통해 실행 유닛을 쉬게 두지 않고 코어 이용률을 극적으로 높입니다.
 
@@ -421,7 +419,7 @@ SMP 환경에서 준비 큐를 구성하는 두 가지 주요 방식:
 
 ![Silberschatz Figure 5.14 — 칩 멀티스레딩](../images/figures/p025_fig5_14.png) ![Silberschatz Figure 5.14 — 칩 멀티스레딩 (상세)](../images/figures/p025_fig5_14_1.png)
 
-*Silberschatz, Figure 5.14 — Chip multithreading*
+*Silberschatz Figure 5.14 — Chip multithreading*
 
 예시:
 - **Intel 하이퍼스레딩(SMT)** — 코어당 하드웨어 스레드 2개.
@@ -450,7 +448,7 @@ SMP 환경에서 준비 큐를 구성하는 두 가지 주요 방식:
 
 ![Silberschatz Figure 5.15 — 두 단계의 스케줄링](../images/figures/p026_fig5_15.png)
 
-*Silberschatz, Figure 5.15 — Two levels of scheduling*
+*Silberschatz Figure 5.15 — Two levels of scheduling*
 
 **Level 1 (OS 스케줄러)**: **소프트웨어 스레드**를 **논리 프로세서**(하드웨어 스레드)에 배정합니다. CFS, Windows 스케줄러 등이 담당합니다.
 
@@ -481,7 +479,7 @@ Linux에서 hard affinity는 `sched_setaffinity()` 시스템 콜(혹은 `taskset
 
 ![Silberschatz Figure 5.16 — NUMA와 CPU 스케줄링](../images/figures/p028_fig5_16.png)
 
-*Silberschatz, Figure 5.16 — NUMA and CPU scheduling*
+*Silberschatz Figure 5.16 — NUMA and CPU scheduling*
 
 - **로컬 메모리 접근**: 빠름(낮은 지연).
 - **원격 메모리 접근**: 느림(인터커넥트 경유 필요).
@@ -546,7 +544,7 @@ OS는 둘 사이에서 균형을 잡습니다: 불균형이 **충분히 클 때�
 
 ![Silberschatz Figure 5.17 — 이벤트 지연](../images/figures/p029_fig5_17.png)
 
-*Silberschatz, Figure 5.17 — Event latency*
+*Silberschatz Figure 5.17 — Event latency*
 
 실시간 시스템에서 중요한 두 지연 요소:
 
@@ -565,7 +563,7 @@ Hard 실시간에서는 두 지연 모두 **수 마이크로초 이내로 유계
 
 ![Silberschatz Figure 5.20 — 주기적 태스크](../images/figures/p032_fig5_20.png)
 
-*Silberschatz, Figure 5.20 — Periodic task*
+*Silberschatz Figure 5.20 — Periodic task*
 
 - **t** — 처리 시간(주기당 CPU 버스트).
 - **d** — 마감(이 주기의 작업이 완료되어야 하는 시점).
@@ -762,7 +760,7 @@ EDF 실행 과정:
 
 ![Silberschatz Figure 5.26 — Linux 시스템의 스케줄링 우선순위](../images/figures/p040_fig5_26.png)
 
-*Silberschatz, Figure 5.26 — Scheduling priorities on a Linux system*
+*Silberschatz Figure 5.26 — Scheduling priorities on a Linux system*
 
 - **숫자가 작을수록 우선순위가 높음**(교재 관례를 따릅니다).
 - 실시간 태스크(0~99)가 일반 태스크(100~139)를 **항상 선점**합니다.
@@ -862,7 +860,7 @@ CFS 부하 분산은 머신의 메모리 위상에 맞춘 **스케줄링 도메�
 
 ![Silberschatz Figure 5.27 — Linux CFS 스케줄러의 NUMA 인식 부하 분산](../images/figures/p040_fig5_27.png)
 
-*Silberschatz, Figure 5.27 — NUMA-aware load balancing with Linux CFS scheduler*
+*Silberschatz Figure 5.27 — NUMA-aware load balancing with Linux CFS scheduler*
 
 **전략 — 저비용에서 고비용 마이그레이션 순:**
 1. **같은 도메인 내**(L2 캐시를 공유하는 코어) — 저렴, 자유롭게 이주.

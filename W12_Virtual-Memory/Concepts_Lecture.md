@@ -2,10 +2,8 @@
 
 > **Last Updated:** 2026-06-19
 >
-> Silberschatz, Operating System Concepts Ch 10 (Virtual Memory)
+> Operating System Concepts, Silberschatz - Ch 10
 
-> **Prerequisites**: Week 11 lecture is the direct foundation — pages, frames, page tables, MMU, TLB, valid/invalid bits, swapping. Without that vocabulary, almost nothing here makes sense. Week 1–3 (process/PCB, fork(), context switch) explains where copy-on-write and demand paging hook into process creation. Familiarity with disk vs RAM latency from a computer-architecture course makes the EAT discussion concrete.
->
 > **Learning Objectives**:
 > 1. State the **definition** of virtual memory and explain why separating logical from physical address space is useful
 > 2. Describe **demand paging** and the role of the **lazy swapper / pager**
@@ -109,6 +107,8 @@ Bonus features that ride on the same machinery:
 
 ![Silberschatz Figure 10.1 — Virtual memory larger than physical memory](../images/figures/p003_fig10.1.png)
 
+*Silberschatz Figure 10.1 — Virtual memory larger than physical memory*
+
 > **Why this is the right abstraction:** the addressing layer of Week 11 (page tables, MMU, TLB) gives us *spatial* virtualization. Demand paging adds *temporal* virtualization — a page only needs to exist in RAM at the moment the CPU references it, not before. Everything in this lecture is some consequence of "make absent pages cheap."
 
 ### 1.2 The Virtual Address Space of a Process
@@ -139,6 +139,8 @@ Virtual Address Space (one process):
 
 ![Silberschatz Figure 10.2 — Virtual address space](../images/figures/p003_fig10.2.png)
 
+*Silberschatz Figure 10.2 — Virtual address space*
+
 > **Key insight:** because holes are free, processes can declare massive maximum sizes without paying for them. A 64-bit process can mmap a 2 TB sparse file; only the touched pages allocate frames.
 
 ### 1.3 Shared Libraries via Virtual Memory
@@ -152,6 +154,8 @@ Multiple processes can **share** libraries such as the standard C library:
 - `fork()` initially shares all pages between parent and child via page-table copying — see copy-on-write below.
 
 ![Silberschatz Figure 10.3 — Shared library using virtual memory](../images/figures/p004_fig10.3.png)
+
+*Silberschatz Figure 10.3 — Shared library using virtual memory*
 
 ### 1.4 Demand Paging and the Lazy Pager
 
@@ -178,6 +182,8 @@ The CPU does not distinguish the two flavours of "invalid" — both raise the sa
 
 ![Silberschatz Figure 10.4 — Page table when some pages are not in main memory](../images/figures/p005_fig10.4.png)
 
+*Silberschatz Figure 10.4 — Page table when some pages are not in main memory*
+
 ### 1.6 Page-Fault Handling — Step by Step
 
 When the CPU touches a page whose PTE is invalid, a **page-fault trap** transfers control to the kernel:
@@ -199,6 +205,8 @@ When the CPU touches a page whose PTE is invalid, a **page-fault trap** transfer
 The whole sequence — typically 5–10 ms on a spinning disk, hundreds of μs on SSD, tens of μs on NVMe — is **orders of magnitude slower** than a normal memory access (~100 ns). This is why page-fault rate must be kept tiny.
 
 ![Silberschatz Figure 10.5 — Steps in handling a page fault](../images/figures/p006_fig10.5.png)
+
+*Silberschatz Figure 10.5 — Steps in handling a page fault*
 
 ### 1.7 Pure Demand Paging and Hardware Requirements
 
@@ -239,6 +247,8 @@ The OS maintains a **free-frame list** — a pool of physical frames available f
 **Zero-fill-on-demand**: before handing a frame to a new process, the kernel **zeroes it out**. Why? *Security* — the frame previously belonged to some other process, and its leftover contents must not leak.
 
 ![Silberschatz Figure 10.6 — List of free frames](../images/figures/p008_fig10.6.png)
+
+*Silberschatz Figure 10.6 — List of free frames*
 
 ### 1.10 Demand-Paging Performance — EAT
 
@@ -336,6 +346,8 @@ This is what makes the lie of virtual memory complete — a 20-page process can 
 
 ![Silberschatz Figure 10.9 — Need for page replacement](../images/figures/p014_fig10.9.png)
 
+*Silberschatz Figure 10.9 — Need for page replacement*
+
 ### 3.2 Basic Replacement Procedure and the Dirty Bit
 
 ```
@@ -355,6 +367,8 @@ The **dirty bit (modify bit)** is set by hardware whenever the page is written. 
 > **Why this matters:** swap-out I/O is the single most expensive thing the OS does on a page fault. Skipping it for clean pages cuts the disk traffic roughly in half on typical workloads.
 
 ![Silberschatz Figure 10.10 — Page replacement](../images/figures/p015_fig10.10.png)
+
+*Silberschatz Figure 10.10 — Page replacement*
 
 ### 3.3 What Page Replacement Buys You
 
@@ -473,6 +487,8 @@ More frames → **more** faults. This is **Belady's anomaly**, a fundamental pat
 
 ![Silberschatz Figure 10.13 — Page-fault curve for FIFO replacement (Belady's anomaly)](../images/figures/p018_fig10.13.png)
 
+*Silberschatz Figure 10.13 — Page-fault curve for FIFO replacement (Belady's anomaly)*
+
 ### 3.7 Optimal (OPT / MIN)
 
 The **OPT** algorithm replaces the page that **will not be used for the longest time in the future**.
@@ -566,6 +582,8 @@ Both demand hardware help; without it, doing this in software via interrupts wou
 
 ![Silberschatz Figure 10.16 — Use of a stack to record the most recent page references](../images/figures/p021_fig10.16.png)
 
+*Silberschatz Figure 10.16 — Use of a stack to record the most recent page references*
+
 ### 3.10 Stack Algorithms and Why They Avoid Belady
 
 A replacement algorithm is a **stack algorithm** if, for every reference string, the set of resident pages with $n$ frames is **always a subset** of the set with $n + 1$ frames.
@@ -656,6 +674,8 @@ Implemented as a **circular queue** with a hand pointer: the algorithm looks exa
 > **Why this works:** the reference bit gives a binary "recently used or not" signal. The clock turns that single bit into something close to LRU by giving recently-used pages a free pass and letting only the truly stale pages get evicted.
 
 ![Silberschatz Figure 10.17 — Second-chance (clock) page-replacement algorithm](../images/figures/p023_fig10.17.png)
+
+*Silberschatz Figure 10.17 — Second-chance (clock) page-replacement algorithm*
 
 ### 4.4 Clock Algorithm — Visualization
 
@@ -758,6 +778,8 @@ When free memory is critically low and the reaper cannot keep up, **Linux runs t
 
 ![Silberschatz Figure 10.18 — Reclaiming pages](../images/figures/p029_fig10.18.png)
 
+*Silberschatz Figure 10.18 — Reclaiming pages*
+
 ### 5.5 NUMA and Frame Allocation
 
 On **NUMA (Non-Uniform Memory Access)** machines each CPU has its own *local* memory bank; accessing local memory is significantly faster than accessing memory attached to another CPU.
@@ -785,6 +807,8 @@ On **NUMA (Non-Uniform Memory Access)** machines each CPU has its own *local* me
 **Symptom plot:** as the degree of multiprogramming rises, CPU utilization first climbs (good), then **suddenly collapses** past a critical point. That collapse is thrashing.
 
 ![Silberschatz Figure 10.20 — Thrashing](../images/figures/p032_fig10.20.png)
+
+*Silberschatz Figure 10.20 — Thrashing*
 
 > **Why this is the canonical OS pathology:** thrashing is what happens when *the abstraction breaks*. The whole point of virtual memory is that programs can be larger than RAM — but only if their *active* footprint fits. Push that footprint past available frames and the system spends more time shuffling pages than computing.
 
@@ -823,6 +847,8 @@ WS(t1) = {1, 2, 5, 6, 7}   WS(t2) = {3, 4}
 ```
 
 ![Silberschatz Figure 10.22 — Working-set model](../images/figures/p034_fig10.22.png)
+
+*Silberschatz Figure 10.22 — Working-set model*
 
 **Thrashing prevention with WS:**
 - $WSS_i = |WS_i|$ — number of frames needed by process $i$.
@@ -869,6 +895,8 @@ Compared to the working-set model:
 
 ![Silberschatz Figure 10.23 — Page-fault frequency](../images/figures/p036_fig10.23.png)
 
+*Silberschatz Figure 10.23 — Page-fault frequency*
+
 ---
 
 <br>
@@ -888,7 +916,11 @@ Free-frame list                  After compression:
 
 ![Silberschatz Figure 10.24 — Free-frame list before compression](../images/figures/p037_fig10.24.png)
 
+*Silberschatz Figure 10.24 — Free-frame list before compression*
+
 ![Silberschatz Figure 10.25 — Free-frame list after compression](../images/figures/p038_fig10.25.png)
+
+*Silberschatz Figure 10.25 — Free-frame list after compression*
 
 When a compressed page is referenced again, the OS decompresses it back into a fresh frame. This costs a page fault and a decompress step, but no disk I/O.
 
@@ -931,6 +963,8 @@ Allocating 21 KB from a 256 KB segment:
 
 ![Silberschatz Figure 10.26 — Buddy system allocation](../images/figures/p040_fig10.26.png)
 
+*Silberschatz Figure 10.26 — Buddy system allocation*
+
 **Deallocation triggers coalescing:** when a block is freed and its buddy is also free, they merge back into the larger size — recursively up the tree.
 
 - **Pro:** coalescing is trivial and fast (constant-time per level, $O(\log n)$ total).
@@ -951,6 +985,8 @@ Cache: "PCB"   ─── slab 1: [PCB][PCB][PCB][PCB]
 ```
 
 ![Silberschatz Figure 10.27 — Slab allocation](../images/figures/p040_fig10.27.png)
+
+*Silberschatz Figure 10.27 — Slab allocation*
 
 **Operations:**
 - Allocate → grab the first free object from the cache.

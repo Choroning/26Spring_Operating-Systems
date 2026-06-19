@@ -2,10 +2,8 @@
 
 > **최종 수정일:** 2026-06-19
 >
-> Silberschatz, Operating System Concepts Ch 5 (Sections 5.1 – 5.3)
+> Operating System Concepts, Silberschatz - Ch 5 (5.1–5.3)
 
-> **선수 지식**: 5주차 스레드와 동시성 개념. 프로세스 상태(준비, 실행, 대기)와 컨텍스트 스위칭에 대한 이해.
->
 > **학습 목표**:
 > 1. CPU-I/O 버스트 사이클을 이해하고 스케줄링의 필요성을 설명할 수 있다
 > 2. 선점형 스케줄링과 비선점형 스케줄링을 구분할 수 있다
@@ -97,6 +95,8 @@
 
 ![Silberschatz Figure 5.1 — CPU와 I/O 버스트의 교대 시퀀스](../images/figures/p002_fig5_1.png)
 
+*Silberschatz Figure 5.1 — CPU와 I/O 버스트의 교대 시퀀스*
+
 - **CPU 버스트**: CPU가 명령어를 실행하는 구간
 - **I/O 버스트**: 프로세스가 I/O 완료를 기다리는 구간
 - 마지막 CPU 버스트에서 프로세스는 **시스템 호출을 통해 종료를 요청** 한다
@@ -128,7 +128,7 @@ CPU 버스트 길이의 분포는 **지수적 또는 초지수적(hyperexponenti
 
 ![Silberschatz Figure 5.2 — CPU 버스트 지속 시간의 히스토그램](../images/figures/p003_fig5_2.png)
 
-*Silberschatz, Figure 5.2 — CPU 버스트 지속 시간의 히스토그램*
+*Silberschatz Figure 5.2 — CPU 버스트 지속 시간의 히스토그램*
 
 > 이 분포가 중요한 이유는 SJF와 같은 알고리즘의 설계를 정당화하기 때문이다: 대부분의 버스트가 짧으므로 짧은 버스트를 우선하면 대부분의 프로세스가 빠르게 서비스되고, 드문 긴 버스트 프로세스만 더 오래 기다린다.
 
@@ -232,7 +232,7 @@ CPU 스케줄링 결정이 필요한 **4가지 상황**:
 
 ![Silberschatz Figure 5.3 — 디스패처의 역할](../images/figures/p005_fig5_3.png)
 
-*Silberschatz, Figure 5.3 — 디스패처의 역할*
+*Silberschatz Figure 5.3 — 디스패처의 역할*
 
 > **스케줄러 vs 디스패처**: 스케줄러는 다음에 어떤 프로세스를 실행할지 **결정** 하고, 디스패처는 그 결정을 **실행** 한다. 스케줄러를 다음에 어떤 직원이 일할지 고르는 관리자로, 디스패처를 실제 서류 작업과 사무실 재배정을 처리하는 인사 담당자로 생각하면 된다. 서로 다른 책임을 가진 별개의 구성 요소이므로 이 구분이 중요하다.
 
@@ -609,7 +609,7 @@ alpha = 0.5, tau(0) = 10으로 시작:
 
 ![Silberschatz Figure 5.4 — 다음 CPU 버스트 길이의 예측](../images/figures/p010_fig5_4.png)
 
-*Silberschatz, Figure 5.4 — 다음 CPU 버스트 길이의 예측*
+*Silberschatz Figure 5.4 — 다음 CPU 버스트 길이의 예측*
 
 - 실제 버스트가 갑자기 변해도 예측값은 점진적으로 따라간다
 - 같은 값이 연속으로 반복되면 예측이 수렴한다
@@ -816,7 +816,7 @@ q = 100일 때 (모든 버스트 < 100):
 
 ![Silberschatz Figure 5.5 — 타임 퀀텀이 작을수록 컨텍스트 스위치가 증가하는 방식](../images/figures/p013_fig5_5.png)
 
-*Silberschatz, Figure 5.5 — 타임 퀀텀이 작을수록 컨텍스트 스위치가 증가하는 방식*
+*Silberschatz Figure 5.5 — 타임 퀀텀이 작을수록 컨텍스트 스위치가 증가하는 방식*
 
 - 컨텍스트 스위치 횟수가 **급격히 증가** -> 오버헤드 증가
 - 컨텍스트 스위치 시간이 퀀텀의 10%를 초과하면 -> **비효율적**
@@ -828,7 +828,7 @@ q가 반환 시간에 미치는 영향 (3개 프로세스, 각 버스트 = 10):
 
 ![Silberschatz Figure 5.6 — 타임 퀀텀에 따른 반환 시간의 변화](../images/figures/p014_fig5_6.png)
 
-*Silberschatz, Figure 5.6 — 타임 퀀텀에 따른 반환 시간의 변화*
+*Silberschatz Figure 5.6 — 타임 퀀텀에 따른 반환 시간의 변화*
 
 **경험 법칙(Rule of Thumb)**:
 - 이상적으로 CPU 버스트의 **80%** 가 타임 퀀텀 내에 완료되어야 한다

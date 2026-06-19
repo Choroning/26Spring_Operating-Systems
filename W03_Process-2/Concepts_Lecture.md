@@ -1,11 +1,9 @@
 # Week 3 Lecture — Process (2)
 
-> **Last Updated:** 2026-05-13
+> **Last Updated:** 2026-06-19
 >
-> Silberschatz, Operating System Concepts Ch 3 (Sections 3.4 – 3.8)
+> Operating System Concepts, Silberschatz - Ch 3 (3.4–3.8)
 
-> **Prerequisites**: Week 2 Process concepts (process, fork, exec, wait). Understanding of file descriptors.
->
 > **Learning Objectives**:
 > 1. Compare shared memory and message passing IPC models
 > 2. Explain the producer-consumer problem and bounded buffer
@@ -107,7 +105,7 @@ Two fundamental IPC models:
 
 ![Two IPC models](../images/figures/p021_fig.png)
 
-*Silberschatz, Figure 3.11 — (a) Shared memory. (b) Message passing.*
+*Silberschatz Figure 3.11 — (a) Shared memory. (b) Message passing.*
 
 > **Key Point:** Shared memory involves the kernel only during initial setup, and afterwards operates as fast as regular memory access. However, the programmer bears the burden of handling synchronization. In contrast, message passing involves the kernel mediating through system calls each time, making it slower, but the OS manages synchronization, making programming relatively simpler.
 
@@ -549,7 +547,7 @@ A communication mechanism for processes on the same machine in Windows.
 
 ![Windows ALPC](../images/figures/p035_fig.png)
 
-*Silberschatz, Figure 3.19 — Advanced local procedure calls in Windows*
+*Silberschatz Figure 3.19 — Advanced local procedure calls in Windows*
 
 > ALPC is not directly exposed through the Windows API. Applications use standard RPC, and ALPC handles the communication internally.
 
@@ -574,7 +572,7 @@ Considerations when implementing pipes:
 
 ![Ordinary pipe file descriptors](../images/figures/p036_fig.png)
 
-*Silberschatz, Figure 3.23 — File descriptors for an ordinary pipe*
+*Silberschatz Figure 3.23 — File descriptors for an ordinary pipe*
 
 ```c
 int fd[2];
@@ -718,7 +716,7 @@ find / -name "*.log" 2>/dev/null | xargs grep "ERROR" | sort -u
 
 ![Communication using sockets](../images/figures/p043_fig.png)
 
-*Silberschatz, Figure 3.26 — Communication using sockets*
+*Silberschatz Figure 3.26 — Communication using sockets*
 
 - Client: assigned a random port greater than 1024
 - Server: listens on a **well-known port** (HTTP=80, SSH=22, FTP=21)
@@ -827,7 +825,7 @@ public class DateClient {
 
 ![RPC execution flow](../images/figures/p048_fig.png)
 
-*Silberschatz, Figure 3.29 — Execution of a remote procedure call (RPC)*
+*Silberschatz Figure 3.29 — Execution of a remote procedure call (RPC)*
 
 > **Note:** Stubs exist on both the client and server sides. The client stub marshals parameters and sends them over the network, while the server stub (skeleton) unmarshals the received data and calls the actual procedure.
 

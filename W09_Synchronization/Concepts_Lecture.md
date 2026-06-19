@@ -2,10 +2,8 @@
 
 > **Last Updated:** 2026-06-19
 >
-> Silberschatz, Operating System Concepts Ch 6 (Synchronization Tools), Ch 7 (Synchronization Examples)
+> Operating System Concepts, Silberschatz - Ch 6, 7
 
-> **Prerequisites**: Week 4–5 Threads & Concurrency. You should already understand processes, threads (user/kernel level), context switching, and shared memory.
->
 > **Learning Objectives**:
 > 1. Define a **race condition** and the three requirements of the **Critical-Section Problem** (Mutual Exclusion, Progress, Bounded Waiting)
 > 2. Explain **Peterson's Solution** and why it can break on modern reordering hardware

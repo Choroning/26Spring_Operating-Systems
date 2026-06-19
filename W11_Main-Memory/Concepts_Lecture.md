@@ -2,10 +2,8 @@
 
 > **Last Updated:** 2026-06-19
 >
-> Silberschatz, Operating System Concepts Ch 9 (Main Memory)
+> Operating System Concepts, Silberschatz - Ch 9
 
-> **Prerequisites**: Week 1–3 (process/PCB, context switch). Familiarity with assembly addressing and the basic CPU/memory hierarchy from a computer-architecture course will help. From Week 10 lecture you already know how the kernel manages shared resources; this week the resource is **physical memory** itself.
->
 > **Learning Objectives**:
 > 1. Explain why the CPU can only directly address **registers and main memory**, not disk
 > 2. Distinguish **logical** and **physical** addresses, and describe the role of the **MMU**, **base register**, and **limit register**
@@ -128,7 +126,11 @@ Concrete example: with Base = 300040 and Limit = 120900, the accessible range is
 
 ![Silberschatz Figure 9.1 — A base and a limit register define a logical address space](../images/figures/p003_fig9.1.png)
 
+*Silberschatz Figure 9.1 — A base and a limit register define a logical address space*
+
 ![Silberschatz Figure 9.2 — Hardware address protection with base and limit registers](../images/figures/p004_fig9.2.png)
+
+*Silberschatz Figure 9.2 — Hardware address protection with base and limit registers*
 
 These registers can only be loaded from **kernel mode** by privileged instructions — otherwise a malicious user process could just lift its own limit.
 
@@ -161,6 +163,8 @@ Source code passes through several stages, each performing a partial binding:
 
 ![Silberschatz Figure 9.3 — Multistep processing of a user program](../images/figures/p005_fig9.3.png)
 
+*Silberschatz Figure 9.3 — Multistep processing of a user program*
+
 - **Symbolic** addresses (variable names) → **Relocatable** (offset from module start) → **Absolute** (physical address).
 
 ### 2.3 Logical vs Physical Address
@@ -187,6 +191,8 @@ The **MMU** is the hardware that performs logical-to-physical translation. In th
 ```
 
 ![Silberschatz Figure 9.5 — Dynamic relocation using a relocation register](../images/figures/p007_fig9.5.png)
+
+*Silberschatz Figure 9.5 — Dynamic relocation using a relocation register*
 
 The user program *only ever sees* logical addresses 0 … max. It has no way to forge a physical address, because the MMU is on the path between the CPU and the bus.
 
@@ -279,11 +285,15 @@ Protection is enforced with **Relocation register + Limit register**: the reloca
 
 ![Silberschatz Figure 9.6 — Hardware support for relocation and limit registers](../images/figures/p009_fig9.6.png)
 
+*Silberschatz Figure 9.6 — Hardware support for relocation and limit registers*
+
 ### 3.2 Variable Partition Scheme
 
 Each process gets a **variable-sized partition** matching its needs. When a process terminates a hole is created; **adjacent holes are coalesced** to form larger free blocks.
 
 ![Silberschatz Figure 9.7 — Variable partition](../images/figures/p010_fig9.7.png)
+
+*Silberschatz Figure 9.7 — Variable partition*
 
 The problem: given the current hole list, **which hole** should a new request of size n be allocated to? This is the **Dynamic Storage-Allocation Problem**.
 
@@ -399,6 +409,8 @@ Consequences:
 
 ![Silberschatz Figure 9.9 — Paging model of logical and physical memory](../images/figures/p014_fig9.9.png)
 
+*Silberschatz Figure 9.9 — Paging model of logical and physical memory*
+
 ### 4.2 Address Translation Principle
 
 Let page size be 2^n and the logical address space be 2^m bytes (on a 32-bit architecture, m = 32; on x86-64, m = 48 — see §9.3). Split the address:
@@ -431,11 +443,17 @@ For every CPU memory reference the MMU consults the **current process's page tab
 
 ![Silberschatz Figure 9.8 — Paging hardware](../images/figures/p013_fig9.8.png)
 
+*Silberschatz Figure 9.8 — Paging hardware*
+
 ![Silberschatz Figure 9.10 — Paging example for a 32-byte memory with 4-byte pages](../images/figures/p015_fig9.10.png)
+
+*Silberschatz Figure 9.10 — Paging example for a 32-byte memory with 4-byte pages*
 
 The OS maintains a **free-frame list**. When a process is created (or grows), frames are taken from the list and recorded in the process's page table.
 
 ![Silberschatz Figure 9.11 — Free frames before and after allocation](../images/figures/p016_fig9.11.png)
+
+*Silberschatz Figure 9.11 — Free frames before and after allocation*
 
 ### 4.4 Internal Fragmentation and Page Size Trade-offs
 
@@ -502,6 +520,8 @@ CPU --p,d--> Search for p in TLB
 ```
 
 ![Silberschatz Figure 9.12 — Paging hardware with TLB](../images/figures/p019_fig9.12.png)
+
+*Silberschatz Figure 9.12 — Paging hardware with TLB*
 
 When the TLB is full, an entry must be evicted (LRU, round-robin, random). Some entries are **wired down** (cannot be evicted) — typically kernel code/data, to keep the OS responsive.
 
@@ -574,11 +594,15 @@ This handles the common case where a process's actual address-space use is much 
 
 ![Silberschatz Figure 9.13 — Valid (v) or invalid (i) bit in a page table](../images/figures/p021_fig9.13.png)
 
+*Silberschatz Figure 9.13 — Valid (v) or invalid (i) bit in a page table*
+
 ### 6.2 Shared Pages
 
 Two processes running the same code can **share frames** for the read-only text pages, provided the code is **reentrant** (no self-modifying instructions, no per-process global state).
 
 ![Silberschatz Figure 9.14 — Sharing of standard C library in a paging environment](../images/figures/p022_fig9.14.png)
+
+*Silberschatz Figure 9.14 — Sharing of standard C library in a paging environment*
 
 ```text
 Example — 40 users on a text editor (libc text 2MB):
@@ -638,7 +662,11 @@ Logical address (32-bit, 4KB pages, two-level):
 
 ![Silberschatz Figure 9.15 — A two-level page-table scheme](../images/figures/p024_fig9.15.png)
 
+*Silberschatz Figure 9.15 — A two-level page-table scheme*
+
 ![Silberschatz Figure 9.16 — Address translation for a two-level 32-bit paging architecture](../images/figures/p025_fig9.16.png)
+
+*Silberschatz Figure 9.16 — Address translation for a two-level 32-bit paging architecture*
 
 This is the classical **forward-mapped page table** — a conventional page table that is *indexed by the virtual page number* (you start from the virtual address and walk "forward" through the table levels to reach the frame). This is the opposite of an **inverted page table** (§7.5), which is indexed by frame number and must be searched to find a given virtual page. The huge win: inner page tables for **unused address-space regions are not allocated**. Mechanically (in data-structures terms), the outer table is an array of 1024 pointers; each pointer either references an inner page table (4 KB, 1024 entries) or is **null/invalid**. Walking a null outer entry traps to the OS as "no mapping"; the corresponding 4 MB of virtual address space costs zero physical memory for the page table itself. A typical process uses only a small fraction of its 4 GB virtual space, so most outer entries stay null and we pay only for the used branches.
 
@@ -680,6 +708,8 @@ walk the chain until p matches
 
 ![Silberschatz Figure 9.17 — Hashed page table](../images/figures/p025_fig9.17.png)
 
+*Silberschatz Figure 9.17 — Hashed page table*
+
 Each bucket holds collisions in a linked list — this is the standard **separate-chaining** collision resolution from data structures: the entry stored at the bucket head has the form `(virtual_page, frame, next)`, with `next` linking to the next collision in the same bucket. To translate page `p` you compute `hash(p)`, walk the linked list at that bucket, and stop on the node whose stored virtual_page equals `p`. Average lookup is O(1) when the load factor is kept low; worst case is O(chain length). This works well for **sparse** address spaces (most of the 64-bit range is unused), because the table size is proportional to actually used pages, not to theoretical maximum.
 
 A **clustered page table** stores mappings for several consecutive pages in one entry, amortizing hash-table overhead. This is especially well suited to 64-bit sparse address spaces.
@@ -698,6 +728,8 @@ Inverted PT:
 ```
 
 ![Silberschatz Figure 9.18 — Inverted page table](../images/figures/p026_fig9.18.png)
+
+*Silberschatz Figure 9.18 — Inverted page table*
 
 - **Pro**: total size is proportional to physical memory, not virtual memory — huge savings.
 - **Con**: lookups are by *virtual* address, so the OS must search the whole table. The fix is an **auxiliary hash table** layered *on top of* the inverted table: hash `(pid, virtual_page)` to obtain the **frame index** (= row in the inverted table). This is structurally different from the hashed page table in §7.4 — there the hash *replaces* the page table; here it accelerates lookup into a separate structure indexed by frame.
@@ -724,6 +756,8 @@ Inverted PT:
 
 ![Silberschatz Figure 9.19 — Standard swapping of two processes using a disk as a backing store](../images/figures/p028_fig9.19.png)
 
+*Silberschatz Figure 9.19 — Standard swapping of two processes using a disk as a backing store*
+
 - Frees memory for other processes when the system is overcommitted.
 - **Very expensive**: transferring an entire process across disk takes seconds, dwarfing any time-slice.
 - Rarely used in modern OSes.
@@ -737,6 +771,8 @@ The modern equivalent operates at **page granularity**:
 - Only the *needed* pages move, not the whole process. Faster, finer, much more efficient.
 
 ![Silberschatz Figure 9.20 — Swapping with paging](../images/figures/p030_fig9.20.png)
+
+*Silberschatz Figure 9.20 — Swapping with paging*
 
 This is the foundation of **virtual memory** — covered in detail in Week 12 lecture.
 
@@ -770,9 +806,15 @@ Alternative strategies:
 
 ![Silberschatz Figure 9.21 — Logical to physical address translation in IA-32](../images/figures/p031_fig9.21.png)
 
+*Silberschatz Figure 9.21 — Logical to physical address translation in IA-32*
+
 ![Silberschatz Figure 9.22 — IA-32 segmentation](../images/figures/p032_fig9.22.png)
 
+*Silberschatz Figure 9.22 — IA-32 segmentation*
+
 ![Silberschatz Figure 9.23 — Paging in the IA-32](../images/figures/p033_fig9.23.png)
+
+*Silberschatz Figure 9.23 — Paging in the IA-32*
 
 ### 9.2 IA-32 PAE
 
@@ -783,6 +825,8 @@ Alternative strategies:
 - Linux and macOS supported PAE; 32-bit consumer Windows was capped at 4 GB anyway.
 
 ![Silberschatz Figure 9.24 — Page address extensions](../images/figures/p034_fig9.24.png)
+
+*Silberschatz Figure 9.24 — Page address extensions*
 
 ### 9.3 x86-64
 
@@ -796,6 +840,8 @@ The 64-bit extension architecture (originally AMD64, adopted by Intel).
 
 ![Silberschatz Figure 9.25 — x86-64 linear address](../images/figures/p034_fig9.25.png)
 
+*Silberschatz Figure 9.25 — x86-64 linear address*
+
 ### 9.4 ARMv8
 
 The dominant 64-bit architecture in mobile/embedded systems.
@@ -806,7 +852,11 @@ The dominant 64-bit architecture in mobile/embedded systems.
 
 ![Silberschatz Figure 9.26 — ARM 4-KB translation granule](../images/figures/p036_fig9.26.png)
 
+*Silberschatz Figure 9.26 — ARM 4-KB translation granule*
+
 ![Silberschatz Figure 9.27 — ARM four-level hierarchical paging](../images/figures/p036_fig9.27.png)
+
+*Silberschatz Figure 9.27 — ARM four-level hierarchical paging*
 
 ### 9.5 Comparison
 

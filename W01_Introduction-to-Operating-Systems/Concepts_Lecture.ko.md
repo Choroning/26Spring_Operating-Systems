@@ -1,9 +1,9 @@
 # 1주차 이론 — 운영체제 소개
 
-> **최종 수정일:** 2026-05-13
-
-> **선수 지식**: 운영체제에 대한 사전 지식은 필요 없다. 컴퓨터 구조(CPU, 메모리, I/O)에 대한 기본적인 이해가 있으면 도움이 된다.
+> **최종 수정일:** 2026-06-19
 >
+> Operating System Concepts, Silberschatz - Ch 1, 2
+
 > **학습 목표**:
 > 1. 운영체제(Operating System)가 무엇인지 정의하고 핵심 역할을 설명할 수 있다
 > 2. 이중 모드 동작(Dual-Mode Operation)이 무엇이며 왜 필요한지 설명할 수 있다
@@ -106,7 +106,7 @@
 | **2교시** | 이론 강의 (Part 2) |
 | **3교시** | 실습(Hands-on Lab) |
 
-- 교재: Silberschatz, **Operating System Concepts** 10판
+- 교재: Operating System Concepts, Silberschatz
 - 실습 참고: **xv6** (RISC-V), MIT 6.1810
 
 ---
@@ -131,7 +131,7 @@
 
 ![컴퓨터 시스템 구성 요소](../images/cropped/ch01_p02-02_fig.png)
 
-*Silberschatz, Figure 1.1 — 컴퓨터 시스템 구성 요소의 추상적 관점*
+*Silberschatz Figure 1.1 — 컴퓨터 시스템 구성 요소의 추상적 관점*
 
 - OS는 하드웨어와 응용 프로그램 **사이에** 위치한다.
 - 하드웨어를 직접 제어하고, 프로그램에 **깔끔한 인터페이스(clean interface)** 를 제공한다.
@@ -195,7 +195,7 @@ graph LR
 
 ![시스템 콜 처리 과정](../images/cropped/ch02_p11-11_fig.png)
 
-*Silberschatz, Figure 2.6 — 사용자 애플리케이션이 open() 시스템 콜을 호출하는 과정*
+*Silberschatz Figure 2.6 — 사용자 애플리케이션이 open() 시스템 콜을 호출하는 과정*
 
 - **시스템 콜(System Call)** = 사용자 프로그램이 OS 서비스를 요청하는 **유일한 방법**
 - 사용자 프로그램 → C 라이브러리 → `syscall` 명령어 (트랩) → 커널이 처리 → 반환
@@ -240,7 +240,7 @@ ISR(인터럽트 서비스 루틴)은 특정 인터럽트에 대응하여 실행
 
 ![저장 장치 계층 구조](../images/cropped/ch01_p11-11_fig.png)
 
-*Silberschatz, Figure 1.6 — 저장 장치 계층 구조*
+*Silberschatz Figure 1.6 — 저장 장치 계층 구조*
 
 | 수준 | 크기 | 접근 시간 | 관리 주체 |
 |:-----|:-----|:---------|:---------|
@@ -265,6 +265,8 @@ ISR(인터럽트 서비스 루틴)은 특정 인터럽트에 대응하여 실행
 
 ![Tux](../images/tux.png)
 
+*Tux*
+
 > **컨텍스트 스위칭(Context Switching)** 이란 현재 실행 중인 프로세스의 상태(레지스터, PC(프로그램 카운터 — CPU가 다음에 실행할 명령어의 위치를 추적하는 레지스터) 등)를 저장하고 다른 프로세스의 상태를 복원하여 실행을 재개하는 것을 뜻한다.
 
 > **참고:** 모놀리식 커널은 모든 서비스가 커널 공간에서 실행되므로 빠르지만, 하나의 버그가 전체 시스템을 다운시킬 수 있다. 마이크로커널은 최소한의 기능(IPC(프로세스 간 통신 — 서로 다른 프로그램이 데이터를 주고받는 방법), 스케줄링)만 커널에 두고 나머지를 사용자 공간에서 실행하므로 안정적이지만, 컨텍스트 스위칭 오버헤드가 크다. Linux는 모놀리식이지만 LKM을 통해 모듈 방식의 유연성도 갖추고 있다.
@@ -278,6 +280,8 @@ ISR(인터럽트 서비스 루틴)은 특정 인터럽트에 대응하여 실행
 - 학기 내내 xv6를 **읽고, 수정하고, 확장** 할 예정이다.
 
 ![RISC-V Logo](../images/riscv_logo.png)
+
+*RISC-V Logo*
 
 ```bash
 git clone https://github.com/mit-pdos/xv6-riscv
@@ -517,7 +521,7 @@ graph LR
 | OS 구조 | 모놀리식, 마이크로커널, 하이브리드, 적재 가능 모듈; 대부분 현대 OS는 하이브리드 |
 | xv6 | MIT 교육용 OS; RISC-V, C 언어, ~10,000줄; 학기 내내 활용 |
 | 핵심 주제 | 프로세스, 스레드, 스케줄링, 동기화, 메모리, 파일 시스템, 보안 |
-| 교재 | Silberschatz, Operating System Concepts 10판 |
+| 교재 | Operating System Concepts, Silberschatz |
 
 ---
 

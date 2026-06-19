@@ -1,11 +1,9 @@
 # 4주차 이론 — 스레드와 동시성 (1)
 
-> **최종 수정일:** 2026-05-13
+> **최종 수정일:** 2026-06-19
 >
-> Silberschatz, Operating System Concepts Ch 4 (Sections 4.1 – 4.4)
+> Operating System Concepts, Silberschatz - Ch 4 (4.1–4.4)
 
-> **선수 지식**: 2주차-W03 프로세스 개념 (프로세스, fork, IPC). 기본 C 프로그래밍.
->
 > **학습 목표**:
 > 1. 스레드가 무엇인지 설명하고 프로세스와의 차이를 구분할 수 있다
 > 2. 동시성(Concurrency)과 병렬성(Parallelism)을 구분할 수 있다
@@ -107,7 +105,7 @@
 
 ![단일 스레드 프로세스](../images/figures/fig4_1_single.png) ![멀티스레드 프로세스](../images/figures/fig4_1_multi.png)
 
-*Silberschatz, Figure 4.1 — 단일 스레드 프로세스와 멀티스레드 프로세스*
+*Silberschatz Figure 4.1 — 단일 스레드 프로세스와 멀티스레드 프로세스*
 
 - 단일 스레드: 하나의 실행 흐름, 하나의 PC, 하나의 스택
 - 멀티스레드: **여러 실행 흐름**, 각각 독립적인 PC와 스택 보유
@@ -155,7 +153,7 @@
 
 ![멀티스레드 서버 아키텍처](../images/figures/fig4_2.png)
 
-*Silberschatz, Figure 4.2 — 멀티스레드 서버 아키텍처*
+*Silberschatz Figure 4.2 — 멀티스레드 서버 아키텍처*
 
 **전통적 방식**: 요청당 새로운 **프로세스** 생성 → 시간 소모, 자원 낭비
 
@@ -221,7 +219,7 @@
 
 ![동시 실행 — 단일코어](../images/figures/fig4_3.png)
 
-*Silberschatz, Figure 4.3 — 단일코어 시스템에서의 동시 실행*
+*Silberschatz Figure 4.3 — 단일코어 시스템에서의 동시 실행*
 
 **병렬성 (Parallelism)**
 - 여러 작업이 **실제로 동시에 실행** 되는 것이다
@@ -229,7 +227,7 @@
 
 ![병렬 실행 — 멀티코어](../images/figures/fig4_4.png)
 
-*Silberschatz, Figure 4.4 — 멀티코어 시스템에서의 병렬 실행*
+*Silberschatz Figure 4.4 — 멀티코어 시스템에서의 병렬 실행*
 
 > 병렬성 없는 동시성은 가능하지만, 동시성 없는 병렬성은 불가능하다
 
@@ -349,7 +347,7 @@ $$
 
 ![데이터 병렬성 vs 작업 병렬성](../images/figures/fig4_5.png)
 
-*Silberschatz, Figure 4.5 — 데이터 병렬성 vs 작업 병렬성*
+*Silberschatz Figure 4.5 — 데이터 병렬성 vs 작업 병렬성*
 
 | 범주 | 데이터 병렬성 | 작업 병렬성 |
 |------|-------------|-----------|
@@ -369,7 +367,7 @@ $$
 
 ![사용자 스레드와 커널 스레드](../images/figures/fig4_6.png)
 
-*Silberschatz, Figure 4.6 — 사용자 스레드와 커널 스레드*
+*Silberschatz Figure 4.6 — 사용자 스레드와 커널 스레드*
 
 **사용자 스레드 (User Threads):**
 - 사용자 수준 라이브러리가 관리한다 (커널 지원 없이)
@@ -397,7 +395,7 @@ $$
 
 ![다대일 모델](../images/figures/fig4_7.png)
 
-*Silberschatz, Figure 4.7 — 다대일 모델*
+*Silberschatz Figure 4.7 — 다대일 모델*
 
 여러 사용자 스레드가 **하나의** 커널 스레드에 매핑된다.
 
@@ -417,7 +415,7 @@ $$
 
 ![일대일 모델](../images/figures/fig4_8.png)
 
-*Silberschatz, Figure 4.8 — 일대일 모델*
+*Silberschatz Figure 4.8 — 일대일 모델*
 
 각 사용자 스레드가 **하나의** 커널 스레드에 매핑된다.
 
@@ -437,7 +435,7 @@ $$
 
 ![다대다 모델](../images/figures/fig4_9.png)
 
-*Silberschatz, Figure 4.9 — 다대다 모델*
+*Silberschatz Figure 4.9 — 다대다 모델*
 
 여러 사용자 스레드가 **같거나 더 적은 수의** 커널 스레드에 매핑된다.
 
@@ -457,7 +455,7 @@ $$
 
 ![두 수준 모델](../images/figures/fig4_10.png)
 
-*Silberschatz, Figure 4.10 — 두 수준 모델*
+*Silberschatz Figure 4.10 — 두 수준 모델*
 
 **다대다** + **일대일** 허용
 

@@ -1,11 +1,9 @@
 # Week 4 Lecture — Threads and Concurrency (1)
 
-> **Last Updated:** 2026-05-13
+> **Last Updated:** 2026-06-19
 >
-> Silberschatz, Operating System Concepts Ch 4 (Sections 4.1 – 4.4)
+> Operating System Concepts, Silberschatz - Ch 4 (4.1–4.4)
 
-> **Prerequisites**: Week 2-W03 Process concepts (process, fork, IPC). Basic C programming.
->
 > **Learning Objectives**:
 > 1. Explain what a thread is and how it differs from a process
 > 2. Distinguish concurrency from parallelism
@@ -107,7 +105,7 @@ What threads within the same process **share**:
 
 ![Single-threaded process](../images/figures/fig4_1_single.png) ![Multithreaded process](../images/figures/fig4_1_multi.png)
 
-*Silberschatz, Figure 4.1 — Single-threaded and multithreaded processes*
+*Silberschatz Figure 4.1 — Single-threaded and multithreaded processes*
 
 - Single-threaded: one execution flow, one PC, one stack
 - Multithreaded: **multiple execution flows**, each with its own independent PC and stack
@@ -155,7 +153,7 @@ What threads within the same process **share**:
 
 ![Multithreaded server architecture](../images/figures/fig4_2.png)
 
-*Silberschatz, Figure 4.2 — Multithreaded server architecture*
+*Silberschatz Figure 4.2 — Multithreaded server architecture*
 
 **Traditional approach**: Create a new **process** per request → time-consuming, resource-wasteful
 
@@ -221,7 +219,7 @@ What threads within the same process **share**:
 
 ![Concurrent execution — single core](../images/figures/fig4_3.png)
 
-*Silberschatz, Figure 4.3 — Concurrent execution on a single-core system*
+*Silberschatz Figure 4.3 — Concurrent execution on a single-core system*
 
 **Parallelism**
 - Multiple tasks **actually executing simultaneously**
@@ -229,7 +227,7 @@ What threads within the same process **share**:
 
 ![Parallel execution — multicore](../images/figures/fig4_4.png)
 
-*Silberschatz, Figure 4.4 — Parallel execution on a multicore system*
+*Silberschatz Figure 4.4 — Parallel execution on a multicore system*
 
 > Concurrency without parallelism is possible, but parallelism without concurrency is not
 
@@ -349,7 +347,7 @@ Example: A program that is 75% parallel + 25% serial
 
 ![Data parallelism vs task parallelism](../images/figures/fig4_5.png)
 
-*Silberschatz, Figure 4.5 — Data parallelism vs task parallelism*
+*Silberschatz Figure 4.5 — Data parallelism vs task parallelism*
 
 | Category | Data Parallelism | Task Parallelism |
 |----------|-----------------|------------------|
@@ -369,7 +367,7 @@ Example: A program that is 75% parallel + 25% serial
 
 ![User threads and kernel threads](../images/figures/fig4_6.png)
 
-*Silberschatz, Figure 4.6 — User threads and kernel threads*
+*Silberschatz Figure 4.6 — User threads and kernel threads*
 
 **User Threads:**
 - Managed by user-level libraries (without kernel support)
@@ -397,7 +395,7 @@ Example: A program that is 75% parallel + 25% serial
 
 ![Many-to-one model](../images/figures/fig4_7.png)
 
-*Silberschatz, Figure 4.7 — Many-to-one model*
+*Silberschatz Figure 4.7 — Many-to-one model*
 
 Multiple user threads map to **a single** kernel thread.
 
@@ -417,7 +415,7 @@ Use cases:
 
 ![One-to-one model](../images/figures/fig4_8.png)
 
-*Silberschatz, Figure 4.8 — One-to-one model*
+*Silberschatz Figure 4.8 — One-to-one model*
 
 Each user thread maps to **one** kernel thread.
 
@@ -437,7 +435,7 @@ Use cases:
 
 ![Many-to-many model](../images/figures/fig4_9.png)
 
-*Silberschatz, Figure 4.9 — Many-to-many model*
+*Silberschatz Figure 4.9 — Many-to-many model*
 
 Multiple user threads map to **an equal or smaller number of** kernel threads.
 
@@ -457,7 +455,7 @@ Disadvantages:
 
 ![Two-level model](../images/figures/fig4_10.png)
 
-*Silberschatz, Figure 4.10 — Two-level model*
+*Silberschatz Figure 4.10 — Two-level model*
 
 **Many-to-many** + allows **one-to-one**
 

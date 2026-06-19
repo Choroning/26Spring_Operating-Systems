@@ -2,10 +2,8 @@
 
 > **최종 수정일:** 2026-06-19
 >
-> Silberschatz, Operating System Concepts Ch 4 (Sections 4.5 – 4.7)
+> Operating System Concepts, Silberschatz - Ch 4 (4.5–4.7)
 
-> **선수 지식**: 4주차 스레드 개념 (스레드, Pthreads, Java 스레드, 멀티스레딩 모델). 스레드 풀과 기본 Java 동시성에 대한 이해.
->
 > **학습 목표**:
 > 1. 암묵적 스레딩(Implicit Threading)이 무엇인지 설명하고 그 필요성을 이해할 수 있다
 > 2. 다섯 가지 암묵적 스레딩 기법(스레드 풀, Fork-Join, OpenMP, GCD, Intel TBB)을 비교할 수 있다
@@ -275,7 +273,7 @@ execute()      submit()   shutdown()
 
 ![Silberschatz Figure 4.16 — Fork-join 병렬처리](../images/figures/fig4_16.png)
 
-*Silberschatz, Figure 4.16 — Fork-join 병렬처리*
+*Silberschatz Figure 4.16 — Fork-join 병렬처리*
 
 > Fork-Join 모델은 팀 리더가 하위 업무를 위임하는 것과 같다. 리더(부모 스레드)가 팀원들에게 작업을 "fork"하고, 모든 사람이 결과를 가지고 "join"할 만남의 장소에서 기다린다. Fork-Join 라이브러리는 몇 명을 고용하고 어떻게 업무를 효율적으로 배분할지 결정하는 프로젝트 매니저이다.
 
@@ -297,7 +295,7 @@ Task(problem):
 
 ![Silberschatz Figure 4.17 — Java에서의 Fork-join](../images/figures/fig4_17.png)
 
-*Silberschatz, Figure 4.17 — Java에서의 Fork-join*
+*Silberschatz Figure 4.17 — Java에서의 Fork-join*
 
 > **[알고리즘]** 이것은 병합 정렬(merge sort)이나 퀵 정렬(quicksort)과 동일한 패턴이다. 핵심 통찰은 분할 정복이 자연스럽게 fork-join에 매핑된다는 것이다: 각 재귀 호출이 fork된 태스크가 되고, 병합 단계가 join이 된다. 차이점은 fork-join이 실제로 **하위 태스크를 여러 스레드에서 병렬로 실행** 한다는 것이며, 일반 재귀 호출은 스택에서 순차적으로 실행된다.
 
@@ -328,7 +326,7 @@ RecursiveTask<V>   RecursiveAction
 
 ![Silberschatz Figure 4.19 — Fork-Join UML 클래스 다이어그램](../images/figures/fig4_19.png)
 
-*Silberschatz, Figure 4.19 — Fork-Join UML 클래스 다이어그램*
+*Silberschatz Figure 4.19 — Fork-Join UML 클래스 다이어그램*
 
 > `RecursiveTask<V>`는 계산된 결과를 반환해야 할 때(합계 등), `RecursiveAction`은 부수 효과만 있는 태스크(제자리 정렬 등)에 사용된다.
 
@@ -1053,7 +1051,7 @@ LWP(경량 프로세스)는 사용자 스레드와 커널 스레드 사이에 �
 
 ![Silberschatz Figure 4.20 — 경량 프로세스 (LWP)](../images/figures/fig4_20.png)
 
-*Silberschatz, Figure 4.20 — 경량 프로세스 (LWP)*
+*Silberschatz Figure 4.20 — 경량 프로세스 (LWP)*
 
 **LWP 수**: CPU 바운드 애플리케이션은 1개만 필요하고, I/O 집약적 애플리케이션은 동시 블로킹 I/O 연산 수만큼 필요하다
 
@@ -1120,7 +1118,7 @@ LWP(경량 프로세스)는 사용자 스레드와 커널 스레드 사이에 �
 
 ![Silberschatz Figure 4.21 — Windows 스레드 자료 구조](../images/figures/fig4_21.png)
 
-*Silberschatz, Figure 4.21 — Windows 스레드 자료 구조*
+*Silberschatz Figure 4.21 — Windows 스레드 자료 구조*
 
 - ETHREAD, KTHREAD → **커널만 접근 가능** (커널 공간)
 - TEB → **사용자 모드에서 접근 가능** (사용자 공간)
@@ -1180,7 +1178,7 @@ thread = clone(CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND)
 
 ![Silberschatz Figure 4.22 — clone() 플래그](../images/figures/fig4_22.png)
 
-*Silberschatz, Figure 4.22 — clone() 플래그*
+*Silberschatz Figure 4.22 — clone() 플래그*
 
 주요 clone 플래그:
 
