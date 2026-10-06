@@ -8,7 +8,7 @@
 > 1. Distinguish **deadlock** from **livelock** and recognize each in pthread code
 > 2. State the **four necessary conditions** for deadlock (Mutual Exclusion, Hold and Wait, No Preemption, Circular Wait)
 > 3. Build a **Resource-Allocation Graph (RAG)** and reason about whether a cycle implies deadlock
-> 4. Compare the four handling strategies — **Prevention**, **Avoidance**, **Detection & Recovery**, **Ignorance** — and explain when each is used in practice
+> 4. Compare the four handling strategies (**Prevention**, **Avoidance**, **Detection & Recovery**, **Ignorance**) and explain when each is used in practice
 > 5. Apply **prevention** by breaking each necessary condition, especially **resource ordering** for circular wait
 > 6. Apply **Banker's Algorithm** (Safety Algorithm + Resource-Request Algorithm) to decide whether a request keeps the system safe
 > 7. Apply the **Detection Algorithm** (Wait-for Graph and multi-instance variant) and choose appropriate invocation frequency
@@ -184,7 +184,7 @@ If both threads run this pattern in lockstep, each acquires its first lock, fail
 
 **Fix — random backoff**: insert a randomized delay before retrying. This is exactly the **CSMA/CD collision-resolution** strategy from Ethernet (binary exponential backoff). Breaking the symmetry of the retry pattern is what gets one thread through.
 
-> **[Computer Networks]** Binary exponential backoff: after the k-th consecutive collision, each station picks a random retry slot from `[0, 2^k − 1]`. The retry window *doubles* every collision, so the probability that two contenders pick the same slot drops exponentially. Originally specified in Ethernet (IEEE 802.3) for resolving carrier-sense collisions on a shared medium; the same idea is reused in Wi-Fi, TCP retransmission timers, and — here — software retry loops.
+> **[Computer Networks]** Binary exponential backoff: after the k-th consecutive collision, each station picks a random retry slot from `[0, 2^k − 1]`. The retry window *doubles* every collision, so the probability that two contenders pick the same slot drops exponentially. Originally specified in Ethernet (IEEE 802.3) for resolving carrier-sense collisions on a shared medium; the same idea is reused in Wi-Fi, TCP retransmission timers, and (here) software retry loops.
 
 ---
 
@@ -636,7 +636,7 @@ Re-run Safety: a sequence ⟨T1, T3, T4, T0, T2⟩ works → Safe → allocate.
 
 **Denied requests from the new state:**
 
-- **T4 requests (3, 3, 0)** — `(3,3,0) ≤ Available=(2,3,0)`? No (3 > 2) — insufficient, T4 waits.
+- **T4 requests (3, 3, 0)** (`(3,3,0) ≤ Available=(2,3,0)`? No (3 > 2)) insufficient, T4 waits.
 - **T0 requests (0, 2, 0)** — checks pass; pretend allocation gives Available=(2,1,0). Safety check fails → **Unsafe** → request denied, T0 waits, even though resources are available right now.
 
 > **The crucial insight**: Avoidance can deny a request *even when the resource is physically free*, purely because granting it would close off the system's only path to completion.
@@ -1020,7 +1020,7 @@ int main() {
 
 13. Why does a *dynamic* lock ordering (locks chosen at runtime) need special handling, and what is the standard fix?
 
-    > **Answer:** When locks are picked from function arguments — e.g., `transaction(from, to)` — two callers with swapped argument order can each acquire the locks in opposite orders, deadlocking. The standard fix is to derive the order from a *stable property of the lock itself*, e.g., compare lock addresses and always acquire the smaller-address lock first. Java often uses `System.identityHashCode(Object)` for the same purpose.
+    > **Answer:** When locks are picked from function arguments (e.g., `transaction(from, to)`) two callers with swapped argument order can each acquire the locks in opposite orders, deadlocking. The standard fix is to derive the order from a *stable property of the lock itself*, e.g., compare lock addresses and always acquire the smaller-address lock first. Java often uses `System.identityHashCode(Object)` for the same purpose.
 
 14. Explain why allocating one more instance to T2 in the Safe-State example caused a transition to Unsafe.
 

@@ -231,7 +231,7 @@ What threads within the same process **share**:
 
 > Concurrency without parallelism is possible, but parallelism without concurrency is not
 
-> Concurrency is one person alternating between cooking and laundry (both in progress, but only one at a time). Parallelism is two people — one cooking, one doing laundry — truly working at the same time.
+> Concurrency is one person alternating between cooking and laundry (both in progress, but only one at a time). Parallelism is two people (one cooking, one doing laundry) truly working at the same time.
 
 > **Key Point:** The distinction between concurrency and parallelism must be clearly understood. Concurrency is a **logical concept** that includes tasks alternating execution on a single core. Parallelism is a **physical concept** meaning actual simultaneous execution across multiple cores.
 

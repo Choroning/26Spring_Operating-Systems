@@ -14,108 +14,33 @@
 
 ## Table of Contents
 
-- [1. Orientation](#1-orientation)
-  - [1.1 Instructor](#11-instructor)
-  - [1.2 Syllabus](#12-syllabus)
-  - [1.3 Grading Policy](#13-grading-policy)
-  - [1.4 Assignments](#14-assignments)
-  - [1.5 Midterm & Final Exams](#15-midterm--final-exams)
-  - [1.6 Final Project](#16-final-project)
-  - [1.7 Class Format](#17-class-format)
-- [2. What is an Operating System?](#2-what-is-an-operating-system)
-  - [2.1 Definition](#21-definition)
-  - [2.2 Where the OS Sits](#22-where-the-os-sits)
-  - [2.3 Two Roles of the OS](#23-two-roles-of-the-os)
-  - [2.4 Dual-Mode Operation](#24-dual-mode-operation)
-  - [2.5 System Calls](#25-system-calls)
-  - [2.6 How a Computer System Works](#26-how-a-computer-system-works)
-  - [2.7 Storage-Device Hierarchy](#27-storage-device-hierarchy)
-  - [2.8 OS Structure](#28-os-structure)
-  - [2.9 xv6](#29-xv6)
-- [3. Semester Preview](#3-semester-preview)
-  - [3.1 Processes (Weeks 2–3)](#31-processes-weeks-23)
-  - [3.2 Threads & Concurrency (Weeks 4–5)](#32-threads--concurrency-weeks-45)
-  - [3.3 CPU Scheduling (Weeks 6–7)](#33-cpu-scheduling-weeks-67)
-  - [3.4 Synchronization (Week 9)](#34-synchronization-week-9)
-  - [3.5 Deadlocks (Week 10)](#35-deadlocks-week-10)
-  - [3.6 Memory Management (Weeks 11–12)](#36-memory-management-weeks-1112)
-  - [3.7 File Systems & Security (Weeks 13–14)](#37-file-systems--security-weeks-1314)
-  - [3.8 Course Roadmap](#38-course-roadmap)
-- [Summary](#summary)
-- [Self-Check Questions](#self-check-questions)
-
+- [1. What is an Operating System?](#1-what-is-an-operating-system)
+  - [1.1 Definition](#11-definition)
+  - [1.2 Where the OS Sits](#12-where-the-os-sits)
+  - [1.3 Two Roles of the OS](#13-two-roles-of-the-os)
+  - [1.4 Dual-Mode Operation](#14-dual-mode-operation)
+  - [1.5 System Calls](#15-system-calls)
+  - [1.6 How a Computer System Works](#16-how-a-computer-system-works)
+  - [1.7 Storage-Device Hierarchy](#17-storage-device-hierarchy)
+  - [1.8 OS Structure](#18-os-structure)
+  - [1.9 xv6](#19-xv6)
+- [2. Semester Preview](#2-semester-preview)
+  - [2.1 Processes (Weeks 2–3)](#21-processes-weeks-23)
+  - [2.2 Threads & Concurrency (Weeks 4–5)](#22-threads--concurrency-weeks-45)
+  - [2.3 CPU Scheduling (Weeks 6–7)](#23-cpu-scheduling-weeks-67)
+  - [2.4 Synchronization (Week 9)](#24-synchronization-week-9)
+  - [2.5 Deadlocks (Week 10)](#25-deadlocks-week-10)
+  - [2.6 Memory Management (Weeks 11–12)](#26-memory-management-weeks-1112)
+  - [2.7 File Systems & Security (Week 13)](#27-file-systems--security-week-13)
 ---
 
 <br>
 
-## 1. Orientation
+## 1. What is an Operating System?
 
-### 1.1 Instructor
 
-> *Redacted for privacy.*
 
-### 1.2 Syllabus
-
-- The syllabus is available on the **LMS**.
-- Total of **15 weeks**
-  - Week 8 — **Midterm Exam**
-  - Week 15 — **Final Exam**
-
-### 1.3 Grading Policy
-
-| Component | Weight |
-|:----------|:-------|
-| Assignments | **10%** |
-| Midterm Exam (Written) | **30%** |
-| Final Exam (Written) | **30%** |
-| Final Exam (Project) | **30%** |
-| Attendance | 0% |
-
-> However, students who are absent for more than **1/3** of the total class hours will not receive a grade.
-
-### 1.4 Assignments
-
-**In-class Quizzes: 5%**
-- **10** quizzes → **0.5%** each
-- Weeks 3, 4, 5, 6, 7, 9, 10, 11, 12, 13
-
-**Take-home Assignments: 5%**
-- **5** assignments → **1%** each
-- Weeks 2, 3, 4, 5, 6
-
-### 1.5 Midterm & Final Exams
-
-- **Handwritten** (no electronic devices allowed)
-- **1 hour** each
-
-### 1.6 Final Project
-
-- Begins in **Week 9**, teams of **3–4 members**
-- **Coding agents** may be used without restriction (Claude Code, Codex, Gemini CLI, OpenCode, etc.)
-- Tasks:
-  - **Design and develop** an OS prototype (e.g., add new features to xv6, design LLM-based OS concepts)
-  - Write an **OS specification document** and **project report**
-  - **Presentation** (in-person, Week 14)
-- Evaluation: Instructor **15%** + Peer evaluation **15%**
-
-### 1.7 Class Format
-
-| Period | Content |
-|:-------|:--------|
-| **Period 1** | Lecture (Part 1) + Quiz |
-| **Period 2** | Lecture (Part 2) |
-| **Period 3** | Hands-on Lab |
-
-- Textbook: Operating System Concepts, Silberschatz
-- Lab reference: **xv6** (RISC-V), MIT 6.1810
-
----
-
-<br>
-
-## 2. What is an Operating System?
-
-### 2.1 Definition
+### 1.1 Definition
 
 The kernel is the core program that starts when your computer boots and never stops running — it manages all hardware resources and provides services to applications.
 
@@ -127,7 +52,7 @@ The kernel is the core program that starts when your computer boots and never st
 
 > **Exam Tip:** If asked "What is an OS?", you must include the keyword **kernel**. Programs outside the kernel (shell, compiler, GUI, etc.) are system programs, while word processors, games, etc. are application programs.
 
-### 2.2 Where the OS Sits
+### 1.2 Where the OS Sits
 
 ![Computer system components](../images/cropped/ch01_p02-02_fig.png)
 
@@ -140,7 +65,7 @@ The kernel is the core program that starts when your computer boots and never st
 
 > **[Computer Architecture]** A computer system is layered as: hardware → OS → applications → users. Each layer hides the complex details of the layer below and provides a simplified interface upward — this is called **abstraction**. Representative abstractions provided by the OS: processes (CPU), virtual memory (memory), files (disk).
 
-### 2.3 Two Roles of the OS
+### 1.3 Two Roles of the OS
 
 **Resource Allocator:**
 
@@ -158,7 +83,7 @@ Controls the execution of user programs and prevents errors and misuse:
 
 > **Exam Tip:** Resource allocator vs. control program are two perspectives on the role of the OS. The resource allocator focuses on "how to divide resources," while the control program focuses on "how to execute safely." When asked to describe the roles of the OS on an exam, it is best to mention both.
 
-### 2.4 Dual-Mode Operation
+### 1.4 Dual-Mode Operation
 
 **Dual-Mode Operation**
 
@@ -191,7 +116,7 @@ Privileged instructions are CPU instructions that could harm the system if misus
 
 > **[Computer Architecture]** CPUs have regular instructions and **privileged instructions**. Privileged instructions (e.g., I/O instructions, interrupt control, timer configuration) can only be executed in kernel mode. If execution is attempted in user mode, the hardware generates a **trap** and transfers control to the OS. This is the core mechanism for OS self-protection.
 
-### 2.5 System Calls
+### 1.5 System Calls
 
 ![System call processing](../images/cropped/ch02_p11-11_fig.png)
 
@@ -208,7 +133,7 @@ Privileged instructions are CPU instructions that could harm the system if misus
 
 > **Note:** System calls are identified by **system call numbers**. When a user program invokes a system call, the corresponding number is stored in a designated register (RISC-V uses `a7`, x86 uses `eax`) and then a trap occurs. (`a7` and `eax` are names of specific CPU registers — think of them as named slots that the hardware knows to check for the system call number) The kernel reads this number and looks up the corresponding handler function in the **system call table**. In the Week 3 lab, you will directly examine the xv6 system call table (`syscall.c`).
 
-### 2.6 How a Computer System Works
+### 1.6 How a Computer System Works
 
 ```mermaid
 graph TD
@@ -236,7 +161,7 @@ An ISR (Interrupt Service Routine) is the kernel function that runs in response 
 
 > **[Computer Architecture]** An **interrupt** is a mechanism by which a device signals the CPU, saying "I've finished my task — please handle it." The CPU pauses its current work and executes the corresponding Interrupt Service Routine (ISR) by consulting the Interrupt Vector Table (IVT). Without **DMA**, the CPU would have to transfer data byte by byte, which is highly inefficient. The DMA controller handles data transfer instead, and upon completion, notifies the CPU via an interrupt.
 
-### 2.7 Storage-Device Hierarchy
+### 1.7 Storage-Device Hierarchy
 
 ![Storage-device hierarchy](../images/cropped/ch01_p11-11_fig.png)
 
@@ -252,7 +177,7 @@ An ISR (Interrupt Service Routine) is the kernel function that runs in response 
 
 > **[Computer Architecture]** Higher levels are faster, more expensive, and smaller in capacity. This hierarchy works because of the **locality** principle. **Temporal locality**: recently accessed data is likely to be accessed again soon. **Spatial locality**: data near recently accessed data is likely to be accessed soon. Think of reading a book — after reading page 50, you are likely to read page 51 next (spatial locality) and may re-read page 50 again soon (temporal locality). Cache memory exploits this predictability. The OS manages storage devices at and below main memory, actively leveraging this hierarchy in virtual memory (Weeks 11–12).
 
-### 2.8 OS Structure
+### 1.8 OS Structure
 
 | Structure | Core Idea | Example |
 |:----------|:----------|:--------|
@@ -271,7 +196,7 @@ Most modern OSes are **hybrid** — they take a pragmatic approach rather than a
 
 > **Note:** A monolithic kernel runs all services in kernel space, making it fast, but a single bug can crash the entire system. A microkernel keeps only minimal functionality (IPC (Inter-Process Communication — how separate programs pass data to each other), scheduling) in the kernel and runs the rest in user space, making it more stable but incurring greater context-switching overhead. Linux is monolithic but also provides modular flexibility through LKMs.
 
-### 2.9 xv6
+### 1.9 xv6
 
 - **xv6**: A simple Unix-like educational OS created by MIT
 - Written in **C** for the **RISC-V** architecture.
@@ -290,7 +215,7 @@ make qemu    # Boot xv6 in the QEMU emulator
 ```
 
 > **Note:** To build xv6, the following tools must be pre-installed:
-> - **RISC-V cross compiler**: `riscv64-unknown-elf-gcc` (or `riscv64-linux-gnu-gcc`) — needed to generate RISC-V binaries on an x86/ARM host. A cross compiler is needed because your laptop likely runs x86 (Intel/AMD), but xv6 targets RISC-V — the cross compiler translates C source code into RISC-V machine code that your laptop cannot run natively.
+> - **RISC-V cross compiler**: `riscv64-unknown-elf-gcc` (or `riscv64-linux-gnu-gcc`) translates C source code into RISC-V machine code because xv6 targets RISC-V while the host laptop may use x86 or ARM.
 > - **QEMU**: `qemu-system-riscv64` — emulates RISC-V hardware to run xv6
 > - **make, git**: build system and source control
 >
@@ -303,9 +228,9 @@ make qemu    # Boot xv6 in the QEMU emulator
 
 <br>
 
-## 3. Semester Preview
+## 2. Semester Preview
 
-### 3.1 Processes (Weeks 2–3)
+### 2.1 Processes (Weeks 2–3)
 
 Without processes, the computer could only run one program at a time — you would have to close your browser to open a text editor.
 
@@ -335,7 +260,7 @@ graph LR
 
 > **Note:** If processes only ran independently, it would be difficult to build useful systems. Most real systems have multiple processes that cooperate by exchanging data, which is called **Interprocess Communication (IPC)**. IPC mechanisms such as shared memory, message passing, pipes, and sockets are covered in detail in Week 3.
 
-### 3.2 Threads & Concurrency (Weeks 4–5)
+### 2.2 Threads & Concurrency (Weeks 4–5)
 
 A single-threaded program cannot take advantage of multi-core CPUs. Threads allow a single program to do multiple things in parallel, like downloading a file while updating the UI.
 
@@ -366,7 +291,7 @@ graph TD
 
 > **Note:** The key difference between processes and threads: processes have independent address spaces, but threads within the same process **share** code, data, and files. Each thread has only its own stack and register set. While shared memory makes inter-thread communication fast, synchronization issues can arise.
 
-### 3.3 CPU Scheduling (Weeks 6–7)
+### 2.3 CPU Scheduling (Weeks 6–7)
 
 With dozens of processes competing for a limited number of CPU cores, the OS needs a strategy to decide who runs when — a poor strategy means some programs starve while others hog the CPU.
 
@@ -393,7 +318,7 @@ graph LR
 
 > **[Algorithms]** SJF is theoretically the optimal algorithm for minimizing average wait time, but in practice, the next job's CPU burst time cannot be known exactly. Therefore, prediction is done using exponential averaging based on past data. In Round Robin, if the time slice is too large, it becomes equivalent to FCFS; if too small, context-switching overhead increases.
 
-### 3.4 Synchronization (Week 9)
+### 2.4 Synchronization (Week 9)
 
 Without synchronization, concurrent threads can corrupt shared data in subtle ways that are extremely difficult to debug — bugs that appear only once in a million runs.
 
@@ -417,7 +342,7 @@ graph TD
 
 > **Note:** In the diagram above, the reason balance can become 950: Thread A reads balance (1000), then Thread B also reads the same value (1000). If Thread B stores 950 first and then Thread A stores 1100, the result is 1100; if stored in the opposite order, the result is 950. This nondeterministic outcome is a race condition. To resolve this, **mutual exclusion** over the critical section is needed.
 
-### 3.5 Deadlocks (Week 10)
+### 2.5 Deadlocks (Week 10)
 
 Locks solve race conditions, but careless locking introduces a new problem: deadlock, where the entire system freezes because everyone is waiting for everyone else.
 
@@ -435,13 +360,13 @@ graph LR
     style LB fill:#fff3e0
 ```
 
-**Four conditions** (all must hold for deadlock): Mutual Exclusion · Hold and Wait · No Preemption · **Circular Wait**
+**Four conditions** must all hold for deadlock: Mutual Exclusion, Hold and Wait, No Preemption, and **Circular Wait**.
 
-**Solutions**: Lock Ordering · `trylock` + Back-off · Deadlock Detection and Recovery
+**Solutions:** lock ordering, `trylock` with back-off, and deadlock detection and recovery.
 
 > **[Discrete Mathematics]** Deadlocks can be modeled using a **Resource Allocation Graph**. If a **cycle** exists in this graph, deadlock may occur (when each resource type has a single instance, a cycle = deadlock). Breaking any one of the four conditions prevents deadlock; in practice, **preventing circular wait** (fixing the lock acquisition order) is most commonly used.
 
-### 3.6 Memory Management (Weeks 11–12)
+### 2.6 Memory Management (Weeks 11–12)
 
 Without virtual memory, one program could overwrite another's memory, making the entire system unstable. Virtual memory also lets you run programs larger than physical RAM.
 
@@ -468,11 +393,11 @@ graph LR
 > **Lazy Allocation**: Lazy allocation means the OS does not actually allocate physical memory when requested, but waits until the memory is first accessed.
 
 - Enables **COW fork**, **lazy allocation**, **memory-mapped files**, and more
-- In xv6: RISC-V **Sv39** (Sv39 is the name RISC-V gives to its virtual memory scheme — details will be covered in Weeks 11–12; for now, just note that virtual addresses are 39 bits wide) — 3-level page table, 39-bit virtual address
+- In xv6, RISC-V uses **Sv39** for virtual memory. We will cover the details in Weeks 11–12. For now, note that Sv39 uses a 3-level page table and 39-bit virtual addresses.
 
 > **[Computer Architecture]** To translate virtual addresses to physical addresses, the page table in memory must be consulted each time, which can double (or more) memory access latency. To solve this, CPUs include a cache called the **TLB (Translation Lookaside Buffer)** that stores recent translation results. COW (Copy-On-Write) fork is an optimization where during `fork()`, only the page table is shared instead of actually copying memory, and physical pages are copied only when a write occurs.
 
-### 3.7 File Systems & Security (Weeks 13–14)
+### 2.7 File Systems & Security (Week 13)
 
 Without a file system, data would be lost every time the computer powers off, and there would be no organized way to store, retrieve, or share information.
 
@@ -493,16 +418,6 @@ Without a file system, data would be lost every time the computer powers off, an
 
 > **[Data Structures]** The directory structure of a file system is a **tree** (starting from root `/`). An inode is a data structure that stores file metadata (size, permissions, data block locations, etc.), while file names are stored in directory entries. The reason a single file can have multiple names (hard links) is precisely because of this separated structure.
 
-### 3.8 Course Roadmap
-
-| Week | Topic | Week | Topic |
-|:-----|:------|:-----|:------|
-| **1** | Introduction + Coding Agents | **9** | Synchronization |
-| **2–3** | Processes | **10** | Deadlocks |
-| **4–5** | Threads & Concurrency | **11–12** | Memory Management |
-| **6–7** | CPU Scheduling | **13** | File Systems |
-| **8** | *Midterm Exam* | **14** | Security + Project Presentations |
-| | | **15** | *Final Exam (Written)* |
 
 ---
 
@@ -543,7 +458,7 @@ Without a file system, data would be lost every time the computer powers off, an
 
 4. What is the difference between a trap and a hardware interrupt?
 
-   > **Answer:** A **trap** is a **synchronous** event raised by software — a system call or an exception (divide-by-zero, page fault) — always tied to a specific instruction. A **hardware interrupt** is an **asynchronous** signal from an external device (timer, disk, keyboard) that arrives independent of the currently executing instruction.
+> **Answer:** A **trap** is a **synchronous** event raised by software, such as a system call or an exception (divide-by-zero or page fault), and is always tied to a specific instruction. A **hardware interrupt** is an **asynchronous** signal from an external device (timer, disk, keyboard) that arrives independently of the currently executing instruction.
 
 5. Without virtual memory, what problems would arise when running multiple programs simultaneously?
 

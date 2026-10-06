@@ -936,7 +936,7 @@ Simplest redundancy. Twice the cost, but very fast rebuild and high reliability.
 
 **Problem — parity bottleneck.** Every write also writes the parity disk → the parity disk gets hammered while the data disks idle. Small writes need read-modify-write (4 disk accesses). This is why RAID 4 is rare in practice.
 
-> **[Discrete Mathematics]** Bitwise XOR makes the set of $n$-bit strings into an **abelian group** under $\oplus$, with the all-zeros string as identity and **every element its own inverse**. The three properties you proved in discrete math — associativity, commutativity, and self-inverse ($a \oplus a = 0$) — are exactly what makes parity recovery work: you can reorder and regroup the XOR of the surviving disks however you like and the lost block's contribution is the only one that survives. The same algebra also lets a *small* write update parity incrementally as $A_p' = A_p \oplus A_{\text{old}} \oplus A_{\text{new}}$ without re-reading the whole stripe.
+> **[Discrete Mathematics]** Bitwise XOR makes the set of $n$-bit strings into an **abelian group** under $\oplus$, with the all-zeros string as identity and **every element its own inverse**. The three properties you proved in discrete math (associativity, commutativity, and self-inverse ($a \oplus a = 0$)) are exactly what makes parity recovery work: you can reorder and regroup the XOR of the surviving disks however you like and the lost block's contribution is the only one that survives. The same algebra also lets a *small* write update parity incrementally as $A_p' = A_p \oplus A_{\text{old}} \oplus A_{\text{new}}$ without re-reading the whole stripe.
 
 ### 9.7 RAID 5 — Distributed Parity
 
@@ -1206,7 +1206,7 @@ Expected totals: **FCFS 640, SCAN 236, C-SCAN 382, LOOK 208, C-LOOK 322**.
 
 8. **Swap sizing under modern RAM:** When does a modern system with 32 GB of RAM still benefit from swap, and when is it counterproductive?
 
-   > **Answer:** **Beneficial:** (a) **Hibernation** — the kernel writes RAM contents to swap before powering off; without swap, hibernation is impossible. (b) **Memory pressure tail** — even on a well-provisioned system, occasional bursts (massive compile, large DB import) can briefly exceed RAM; swap lets these complete slowly instead of triggering OOM kill. (c) **Cold pages** — long-idle process pages can be moved to disk so RAM is available for active workloads. **Counterproductive:** (a) On systems where any swap activity destroys interactive responsiveness — better to have OOM kill the offender. (b) On systems with high-endurance-sensitive flash where unnecessary writes shorten lifespan (this is *the* reason mobile OSes avoid swap, Week 12). (c) As a substitute for adding RAM when the workload truly needs the RAM — swap will keep the system technically alive but unusably slow.
+   > **Answer:** Swap helps with hibernation by saving RAM before power-off, brief memory-pressure spikes that would otherwise trigger OOM, and moving cold pages to disk so active workloads can use RAM. It can hurt interactive responsiveness or shorten flash storage life through unnecessary writes (why mobile OSes avoid it; see Week 12). Swap also cannot replace adding RAM when a workload needs more memory; it only keeps the system running slowly.
 
 9. **MTBF math:** A 4-disk RAID 5 array with per-disk MTBF = $10^5$ hours and MTTR = 20 hours. What is the array's data-loss MTBF under independence?
 
@@ -1218,7 +1218,7 @@ Expected totals: **FCFS 640, SCAN 236, C-SCAN 382, LOOK 208, C-LOOK 322**.
 
 11. **ZFS checksum trick:** Why does ZFS store block checksums in the *parent pointer*, not in the block itself? What attack / failure does this defend against?
 
-    > **Answer:** If the checksum lived inside the block, a hardware corruption that flipped both data and the checksum (which is plausible — both are on the same disk sector / page) would go undetected because the corrupted block would "validate" against its own corrupted checksum. By storing the checksum in the **parent pointer** — a different on-disk location, in a different block — corruption of the data block cannot also corrupt its checksum. On read, ZFS fetches the parent pointer, finds the checksum, then reads the data block and verifies. The defense extends beyond bit rot to **firmware bugs** that silently return wrong data, **misdirected writes** that put bytes in the wrong sector, and **lost writes** that never reach disk despite the controller acknowledging — failure modes RAID alone is blind to.
+    > **Answer:** If a checksum were stored inside its data block, corruption could change both the data and checksum together, making the damaged block appear valid. ZFS stores the checksum in the **parent pointer**, a separate on-disk location, so damage to the data block cannot also alter the checksum. ZFS verifies it when reading the block. This detects bit rot, firmware bugs that return wrong data, misdirected writes, and lost writes that the controller acknowledged but never reached disk, all of which RAID alone can miss.
 
 12. **Storage attachment choice:** A startup needs shared storage accessible by 8 web servers and 2 batch-processing servers. Compare NAS, SAN, and cloud storage for this use case.
 

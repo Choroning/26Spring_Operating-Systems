@@ -468,6 +468,6 @@ struct proc {
 
 5. **spinlock**: Why does xv6 use a spinlock (rather than a sleeping lock) to protect `struct proc`? Consider when `struct proc` is accessed.
 
-   > **Answer:** `struct proc` is touched by the scheduler, interrupt handlers, and other CPUs concurrently. A sleeping lock would `sleep()` the caller on contention, but the scheduler itself — the code that lives to run `sleep()` and `wakeup()` — needs this lock, which would deadlock. Interrupt handlers also cannot sleep. The critical sections are short, so busy-waiting on a spinlock is the only safe choice.
+   > **Answer:** `struct proc` is touched by the scheduler, interrupt handlers, and other CPUs concurrently. A sleeping lock would `sleep()` the caller on contention, but the scheduler itself (the code that lives to run `sleep()` and `wakeup()`) needs this lock, which would deadlock. Interrupt handlers also cannot sleep. The critical sections are short, so busy-waiting on a spinlock is the only safe choice.
 
 ---

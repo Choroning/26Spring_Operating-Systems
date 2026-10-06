@@ -43,6 +43,52 @@ This repository contains bilingual study materials and system-level code develop
 |:----------:|:------------------|:-------------:|:---------------:|:----------------------------------------|
 |`DCSS301-00`|OPERATING SYSTEM|Major Required|Prof. Unggi&nbsp;Lee|Department of Computer Science and Software Engineering|
 
+### Course Overview
+
+This course covers the design and implementation of operating systems, including processes and threads, CPU scheduling, synchronization, memory management, file systems, and I/O. It combines theoretical foundations with implementation examples from Linux, UNIX, and xv6.
+
+### Instructor and Lab
+
+- **Instructor:** Prof. Unggi Lee, Department of Computer Science and Software Engineering
+- **Research lab:** [LEAP Lab](https://codingchild2424.github.io/lab-website/), studying generative AI in education, pedagogical alignment, large language models, and knowledge tracing
+- **Hands-on lab:** xv6 for RISC-V, following [MIT 6.1810](https://pdos.csail.mit.edu/6.1810/)
+
+### Schedule and Class Format
+
+- **Credits:** 3
+- **Meeting times:** Wednesday, periods 5–6; Thursday, period 8
+- **Classroom:** Science and Technology Building 2, Room 310
+- **Weekly format:** Period 1: lecture (part 1) and quiz; Period 2: lecture (part 2); Period 3: hands-on lab
+
+### Assessment
+
+| Component | Weight |
+|:----------|-------:|
+| Assignments (quizzes 5%, take-home assignments 5%) | 10% |
+| Midterm exam (written) | 30% |
+| Final exam (written) | 30% |
+| Final project | 30% |
+| Attendance | 0% |
+
+- There are ten quizzes in Weeks 3–7 and 9–13, and five take-home assignments in Weeks 2–6.
+- Written exams are handwritten, allow no electronic devices, and last one hour.
+- The final project begins in Week 9. Teams of 3–4 design and develop an OS prototype, prepare a specification and project report, and present in person in Week 14. The project grade is split evenly between instructor and peer evaluation.
+- Generative AI tools are permitted and encouraged for assignments and projects when students explain their own reasoning and design decisions.
+- A grade is not awarded if a student misses more than one third of the total class hours.
+
+### Course Roadmap
+
+| Week | Topic | Week | Topic |
+|:----:|:------|:----:|:------|
+| 1 | Introduction | 9 | Synchronization Tools and Examples |
+| 2 | Process 1 | 10 | Deadlocks |
+| 3 | Process 2 | 11 | Main Memory |
+| 4 | Thread and Concurrency 1 | 12 | Virtual Memory |
+| 5 | Thread and Concurrency 2 | 13 | Storage Management, Security and Protection |
+| 6 | CPU Scheduling 1 | 14 | Final Exam (Project) |
+| 7 | CPU Scheduling 2 | 15 | Final Exam (Written) |
+| 8 | Midterm Exam | 16 | Study Week |
+
 - **📖 References**
 
 | Type | Contents |

@@ -91,7 +91,7 @@ To keep the CPU busy (high CPU utilization), the OS must keep **many processes r
 - **Address translation** — each process expects a clean address space starting from 0, but they cannot all actually live at physical address 0.
 - **Efficient sharing** — code (libraries, the kernel) should be shared; private data must not.
 
-> **Why this is foundational**: every later memory topic — paging, virtual memory, page replacement, copy-on-write — is a different way to enforce these three properties at scale.
+> **Why this is foundational**: every later memory topic (paging, virtual memory, page replacement, copy-on-write) is a different way to enforce these three properties at scale.
 
 ### 1.2 The CPU's Directly Addressable Storage
 
@@ -733,7 +733,7 @@ Inverted PT:
 
 - **Pro**: total size is proportional to physical memory, not virtual memory — huge savings.
 - **Con**: lookups are by *virtual* address, so the OS must search the whole table. The fix is an **auxiliary hash table** layered *on top of* the inverted table: hash `(pid, virtual_page)` to obtain the **frame index** (= row in the inverted table). This is structurally different from the hashed page table in §7.4 — there the hash *replaces* the page table; here it accelerates lookup into a separate structure indexed by frame.
-- **Limitation**: each frame maps to exactly one (pid, vpage). Shared pages — where the same frame appears in multiple processes' page tables — are awkward to express.
+- **Limitation**: each frame maps to exactly one (pid, vpage). Shared pages (where the same frame appears in multiple processes' page tables) are awkward to express.
 
 ### 7.6 Comparison
 
@@ -895,7 +895,7 @@ typedef struct Block {
 } Block;
 ```
 
-> **[Data Structures]** Why a singly-linked list? An address-sorted linked list is the natural fit because the operations are (1) walk the list to find a hole — sequential access, O(n); (2) split a block — pointer surgery, O(1); (3) coalesce after release — check the neighbor pointers, O(1). **First-fit can short-circuit** the walk on the first match, so its expected cost is much smaller than n on a fragmented list; **Best-fit and Worst-fit** must scan the entire list to be sure they have found the smallest / largest sufficient hole — O(n) every time. This asymmetry is the algorithmic reason First-fit is typically faster than the other two, independent of fragmentation quality. Production allocators (e.g., glibc's ptmalloc) replace the list with size-segregated bins + balanced trees to drop allocation to O(log n).
+> **[Data Structures]** An address-sorted singly linked list supports the needed operations: finding a hole takes a sequential O(n) scan, splitting a block takes O(1) pointer updates, and coalescing adjacent holes after release takes O(1) neighbor checks. **First-fit can stop** at the first matching hole, so its expected cost is often below n. **Best-fit and Worst-fit** must scan the full list to find the smallest or largest sufficient hole, taking O(n) each time. This is why First-fit is usually faster. Production allocators such as glibc's ptmalloc use size-segregated bins and balanced trees to reduce allocation to O(log n).
 
 ### 10.2 Lab Functions and Example I/O
 
@@ -982,7 +982,7 @@ Extensions: feed a stream of randomized requests, compare the average external f
 
 5. Walk through First-fit, Best-fit, Worst-fit on the same hole list. Why does Worst-fit usually perform worst?
 
-   > **Answer:** First-fit picks the first hole that satisfies the request, stopping as soon as it finds one. Best-fit scans the whole list and picks the smallest sufficient hole; Worst-fit picks the largest. Worst-fit's intuition — *"leave the biggest leftover hole"* — backfires: it shreds the largest hole first, eliminating the only hole large enough for future big requests. First-fit and Best-fit preserve big holes; First-fit is also faster (no full scan).
+   > **Answer:** First-fit picks the first hole that satisfies the request, stopping as soon as it finds one. Best-fit scans the whole list and picks the smallest sufficient hole; Worst-fit picks the largest. Worst-fit's intuition (*"leave the biggest leftover hole"*) backfires: it shreds the largest hole first, eliminating the only hole large enough for future big requests. First-fit and Best-fit preserve big holes; First-fit is also faster (no full scan).
 
 6. Distinguish external and internal fragmentation. State the 50-percent rule.
 
