@@ -541,7 +541,7 @@ graph TD
 
 3. What are the three demos in Lab 2, and what OpenMP directive does each demonstrate?
 
-   > **Answer:** Typically: **Demo 1** — `#pragma omp parallel for` (loop parallelism); **Demo 2** — `#pragma omp parallel for reduction(+:x)` (safe accumulation); **Demo 3** — `#pragma omp sections` or `#pragma omp task` (task-based parallelism). Refer to the lab body for the exact mapping used.
+    > **Answer:** A typical mapping is: Demo 1 uses `#pragma omp parallel for` for loop parallelism; Demo 2 uses `#pragma omp parallel for reduction(+:x)` for safe accumulation; Demo 3 uses `#pragma omp sections` or `#pragma omp task` for task parallelism. Check the lab body for the exact mapping.
 
 4. When `fork()` is called in a multithreaded program, how many threads does the child process have? Why is this dangerous?
 

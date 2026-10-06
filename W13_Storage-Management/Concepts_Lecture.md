@@ -188,7 +188,7 @@ Typical breakdown:
 
 > **The single most important number on this slide is 82 IOPS.** It explains why databases use indices (to turn random access into sequential), why filesystems batch writes (to amortize seek), and why SSDs feel transformative — they kill the seek penalty entirely.
 
-> **[Computer Architecture]** This is the bottom of the **memory hierarchy** you met in Week 11 — register → cache → main memory → disk, each level trading capacity for latency. The architecture course quantifies this in *cycles*: a register access is ~1 cycle and a DRAM access is tens to hundreds, but a single HDD access at ~12 ms is on the order of **tens of millions of CPU cycles**. That cliff between DRAM and disk is exactly why the OS treats "is it already in memory?" (page-fault handling, the page cache) as the central performance question, and why the 82-IOPS ceiling — not raw CPU speed — bounds so many real workloads.
+> **[Computer Architecture]** This is the bottom of the **memory hierarchy** from Week 11: registers, cache, main memory, and disk trade capacity for latency. A register access takes about one cycle; DRAM takes tens to hundreds of cycles; one HDD access at roughly 12 ms costs tens of millions of CPU cycles. This gap makes page-fault handling and the page cache central OS performance concerns. Many workloads are limited by the 82-IOPS ceiling rather than raw CPU speed.
 
 ---
 

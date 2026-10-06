@@ -1425,7 +1425,7 @@ print(rbac.check_access("Bob", "File1", "write"))    # False
 
 11. **Sandboxing implementations:** Compare what SECCOMP-BPF and Apple Seatbelt each restrict and how they achieve isolation.
 
-    > **Answer:** **SECCOMP-BPF (Linux)** isolates at the *system-call* level — it defines a white/blacklist of "syscalls this process may invoke" using the Berkeley Packet Filter language, applies it via `prctl()`, and inherits it to children on fork (Android Bionic applies it to all apps automatically). It prevents a process from even calling disallowed kernel interfaces, shrinking the attack surface. **Apple Seatbelt (macOS)** is *profile*-based: a policy written in Scheme (`(deny default)` then `allow` only what is needed) is applied per binary to finely restrict *resource access* — files, Mach services, sysctl, etc. The commonality is "allow only what is needed (least privilege)" to confine a program's impact — they differ in *layer*: one a syscall filter, the other a resource-access profile.
+    > **Answer:** **SECCOMP-BPF (Linux)** restricts system calls with a Berkeley Packet Filter policy applied through `prctl()` and inherited by forked children; Android Bionic applies it to apps by default. This reduces the kernel interfaces a process can invoke. **Apple Seatbelt (macOS)** applies a Scheme profile to each binary to restrict access to files, Mach services, sysctl, and other resources. Both follow least privilege, but SECCOMP filters system calls while Seatbelt controls resource access.
 
 12. **Synthesize via defense in depth:** Given an attacker targeting a web server, weave a single scenario showing how this week's mechanisms (from firewall to data encryption) defend in *successive layers*.
 

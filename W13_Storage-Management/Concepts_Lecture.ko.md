@@ -934,7 +934,7 @@ $$
 
 **문제 — parity 병목.** 모든 쓰기가 parity 디스크에도 씀 → parity 디스크가 두들겨 맞고 데이터 디스크는 idle. 작은 쓰기는 read-modify-write (4 디스크 접근) 필요. 그래서 RAID 4는 실전에서 드물다.
 
-> **[Discrete Mathematics]** 비트 XOR은 $n$-비트 문자열 집합을 $\oplus$ 하에 **아벨 군(abelian group)** 으로 만든다 — 항등원은 전부-0 문자열이고 **모든 원소가 자기 자신의 역원**. 이산수학에서 증명한 세 성질 — 결합법칙, 교환법칙, 자기역원($a \oplus a = 0$) — 이 바로 parity 복구를 작동시킨다: 생존 디스크들의 XOR을 마음대로 재배열/재그룹화해도 잃어버린 블록의 기여만 살아남는다. 같은 대수가 *작은* 쓰기에서 전체 stripe를 다시 읽지 않고 $A_p' = A_p \oplus A_{\text{old}} \oplus A_{\text{new}}$ 로 parity를 증분 갱신하게도 해준다.
+> **[Discrete Mathematics]** XOR makes n-bit strings an **abelian group**: the all-zero string is the identity, and every element is its own inverse. Associativity, commutativity, and the identity a ⊕ a = 0 allow the surviving disks’ XOR values to be regrouped so only the lost block remains. The same property lets a small write update parity with $A_p' = A_p ⊕ A_old ⊕ A_new$ without rereading the full stripe.
 
 ### 9.7 RAID 5 — 분산 Parity
 
