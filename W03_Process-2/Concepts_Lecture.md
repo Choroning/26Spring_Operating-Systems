@@ -374,7 +374,7 @@ char *ptr = (char *)mmap(0, 4096, PROT_READ | PROT_WRITE,
                           MAP_SHARED, fd, 0);
 ```
 
-> **`shm_open()` parameters:** `name` — name of the shared memory object (processes access it using the same name). `O_CREAT` — create if it does not exist. `O_RDWR` — allow both reading and writing. Return value — file descriptor (integer).
+> **`shm_open()` parameters:** `name` is the shared-memory object name used by processes to access the same object; `O_CREAT` creates it if needed; `O_RDWR` allows reading and writing. The return value is a file descriptor (integer).
 
 > **Note:** `ftruncate(fd, SIZE)` sets the size of the newly created shared memory object to `SIZE` bytes. A new `shm_open` object has zero length by default, so this step is mandatory before writing.
 
@@ -542,7 +542,7 @@ A communication mechanism for processes on the same machine in Windows.
 
 **Message delivery methods (by size):**
 1. **Small (<=256 bytes)** — uses the port's message queue, delivered by copying
-2. **Large** — uses a **section object (shared memory)** (a section object is Windows' kernel-managed shared memory region — roughly equivalent to POSIX's `shm_open` + `mmap` combination)
+2. **Large:** Uses a **section object (shared memory)**, a Windows kernel-managed region roughly equivalent to POSIX `shm_open` plus `mmap`.
 3. **Very large** — server directly reads/writes the client's address space
 
 ![Windows ALPC](../images/figures/p035_fig.png)

@@ -853,7 +853,7 @@ CFS stores runnable tasks in a **Red-Black Tree** keyed by **vruntime**.
 - Insertion/deletion: **O(log N)**.
 - When a task **blocks** (e.g., waits for I/O), it's **removed** from the tree. When it becomes runnable again, it's **inserted** back.
 
-> **[Data Structures]** Why a red-black tree and not a heap? A heap gives O(1) min-find and O(log N) insert, same as the leftmost-cached RB-tree. But CFS also needs to **remove arbitrary elements** (when a task blocks — you don't know where in the heap it lives without an external index) and **update priorities** (vruntime grows as the task runs) — and RB-trees support these in O(log N) with cleaner invariants than heaps. The "leftmost-cached" trick stores a pointer to the smallest element so `next_task = leftmost` runs in O(1).
+> **[Data Structures]** Both heaps and red-black trees find the minimum in O(1) and support insertion in O(log N). CFS also needs arbitrary removal when a task blocks and priority updates as vruntime grows. A heap needs an external index to find an arbitrary task; a red-black tree supports both operations in O(log N). CFS caches a `leftmost` pointer to find the next task in O(1).
 
 ### 6.7 CFS — Load Balancing and NUMA
 
@@ -1010,7 +1010,7 @@ Model the system as a **network of servers + queues**.
 - Build a software model of the computer system and run the scheduler against synthetic workloads.
 - Workload sources:
   - **Random number generation** — convenient but may not match real usage.
-  - **Trace files** — recorded sequences of events from real systems — reproduce real behavior exactly, much higher accuracy.
+  - **Trace files** (recorded sequences of events from real systems) reproduce real behavior exactly, much higher accuracy.
 - **Cons**: development cost, long execution time, storage space for traces.
 
 **Implementation**
@@ -1216,7 +1216,7 @@ Notice how short jobs (P3, P5) finish entirely in Q0 (top priority, fast respons
 
 13. Why does CFS use a red-black tree keyed by vruntime? What operations does it need to support, and what are their complexities?
 
-    > **Answer:** Required operations: ① find-min (next task) — cached as `rb_leftmost`, **O(1)**; ② arbitrary insert (new/waking task) — **O(log N)**; ③ arbitrary delete (task blocks) — **O(log N)**; ④ priority update — **O(log N)**. A heap provides O(1) min but arbitrary delete is awkward; RB-trees support all required operations cleanly.
+    > **Answer:** The scheduler needs four operations: find the minimum task in O(1) using cached `rb_leftmost`; insert a new or waking task in O(log N); remove a blocked task in O(log N); and update a priority in O(log N). Heaps make arbitrary removal awkward, while red-black trees support all four operations cleanly.
 
 14. Describe Windows priority classes and the priority boost mechanism. Why does Windows boost the priority of a thread that just completed I/O?
 

@@ -154,7 +154,7 @@ if (fork() == 0) {
 }
 ```
 
-> **Note:** `strlen(msg)` is used here — not `sizeof(msg)` — because `msg` is a pointer, and `sizeof` on a pointer gives the pointer's byte size (4 or 8 bytes), not the string length.
+> **Note:** `strlen(msg)` is used here (not `sizeof(msg)`) because `msg` is a pointer, and `sizeof` on a pointer gives the pointer's byte size (4 or 8 bytes), not the string length.
 
 ```mermaid
 graph LR

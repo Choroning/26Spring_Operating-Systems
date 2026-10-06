@@ -202,7 +202,7 @@ When the CPU touches a page whose PTE is invalid, a **page-fault trap** transfer
 8. The instruction re-executes; this time the PTE is valid → succeeds.
 ```
 
-The whole sequence — typically 5–10 ms on a spinning disk, hundreds of μs on SSD, tens of μs on NVMe — is **orders of magnitude slower** than a normal memory access (~100 ns). This is why page-fault rate must be kept tiny.
+The whole sequence (typically 5–10 ms on a spinning disk, hundreds of μs on SSD, tens of μs on NVMe) is **orders of magnitude slower** than a normal memory access (~100 ns). This is why page-fault rate must be kept tiny.
 
 ![Silberschatz Figure 10.5 — Steps in handling a page fault](../images/figures/p006_fig10.5.png)
 
@@ -270,9 +270,9 @@ $$
 - $p = 1/1000$ (one fault per 1000 accesses): $\text{EAT} = 200 + 7999.8 \approx 8200\ \text{ns}$ — **40× slower** than raw memory!
 - To keep slowdown within 10% ($\text{EAT} \leq 220$): $p < 0.0000025 \approx 1/400\,000$.
 
-> **The lesson:** page faults must be **extremely rare** — fewer than one per ~400,000 references — for demand paging to feel free. This is why everything else in this lecture (good replacement, working sets, locality) matters: a small jump in fault rate translates to a huge jump in effective access time.
+> **The lesson:** page faults must be **extremely rare** (fewer than one per ~400,000 references) for demand paging to feel free. This is why everything else in this lecture (good replacement, working sets, locality) matters: a small jump in fault rate translates to a huge jump in effective access time.
 
-> **[Computer Architecture]** This EAT formula is the *same* expected-value technique you saw for the **TLB** in Week 11 (`α·(T+M) + (1−α)·(T+2M)`), just one rung lower on the **memory hierarchy**. The TLB version balanced a cache hit (cycles) against a memory access (≈100 ns); this version balances a memory access (≈100 ns) against a disk/SSD fault (millions of cycles). The numbers are brutal here precisely because each step down the hierarchy — register → cache → DRAM → SSD → disk — costs roughly **two orders of magnitude** more latency. A TLB miss merely doubles a fast operation; a page fault replaces a 100 ns operation with an 8 ms one, which is why the tolerable miss rate collapses from ~2% (TLB) to ~0.00025% (page fault).
+> **[Computer Architecture]** This EAT formula is the *same* expected-value technique you saw for the **TLB** in Week 11 (`α·(T+M) + (1−α)·(T+2M)`), just one rung lower on the **memory hierarchy**. The TLB version balanced a cache hit (cycles) against a memory access (≈100 ns); this version balances a memory access (≈100 ns) against a disk/SSD fault (millions of cycles). The numbers are brutal here precisely because each step down the hierarchy (register → cache → DRAM → SSD → disk) costs roughly **two orders of magnitude** more latency. A TLB miss merely doubles a fast operation; a page fault replaces a 100 ns operation with an 8 ms one, which is why the tolerable miss rate collapses from ~2% (TLB) to ~0.00025% (page fault).
 
 ### 1.11 Swap Space Utilization
 
@@ -735,7 +735,7 @@ Several complementary techniques layered on top of any replacement policy:
 
 ### 5.1 Minimum Frames and Where the Bound Comes From
 
-Each process needs at least a **minimum number of frames** so that any *single* instruction — together with every page its operands touch — can run to completion after a page-fault restart. If even one instruction needed more distinct pages than the process owns, the restart would fault again on the same instruction forever, and it could never make progress.
+Each process needs at least a **minimum number of frames** so that any *single* instruction (together with every page its operands touch) can run to completion after a page-fault restart. If even one instruction needed more distinct pages than the process owns, the restart would fault again on the same instruction forever, and it could never make progress.
 
 - The minimum is **determined by the architecture**: the maximum number of distinct pages any single instruction can reference (the instruction's own page plus all of its operand pages).
 - Indirect addressing increases the bound. Example: 1 level of indirect addressing → minimum **3 frames** (instruction page, operand-pointer page, operand page).
@@ -1175,7 +1175,7 @@ Total Page Faults: 15
 
 2. **Page-fault walkthrough:** A process executes `MOV [0x4000], EAX`. The page containing 0x4000 is marked invalid. Walk through every step from CPU to instruction-restart.
 
-   > **Answer:** (1) CPU forms the effective address 0x4000 and presents it to the MMU. (2) MMU walks the page table, finds the PTE has valid bit = 0, raises a **page-fault trap**. (3) Kernel trap handler examines the faulting address and PTE. (4) It distinguishes "illegal address" (deliver SIGSEGV) from "valid but on disk." Here, valid-but-on-disk. (5) Kernel pulls a free frame from the free-frame list (running the reaper if the list is empty). (6) Issues a disk I/O to read the page into that frame; process blocks waiting on I/O. (7) On I/O completion, kernel writes the new (frame #, valid=1, permissions) into the PTE. (8) Returns from trap, **restarting** the faulting `MOV` instruction. (9) MMU translates 0x4000 again — now valid — and the store succeeds.
+   > **Answer:** (1) CPU forms the effective address 0x4000 and presents it to the MMU. (2) MMU walks the page table, finds the PTE has valid bit = 0, raises a **page-fault trap**. (3) Kernel trap handler examines the faulting address and PTE. (4) It distinguishes "illegal address" (deliver SIGSEGV) from "valid but on disk." Here, valid-but-on-disk. (5) Kernel pulls a free frame from the free-frame list (running the reaper if the list is empty). (6) Issues a disk I/O to read the page into that frame; process blocks waiting on I/O. (7) On I/O completion, kernel writes the new (frame #, valid=1, permissions) into the PTE. (8) Returns from trap, **restarting** the faulting `MOV` instruction. (9) MMU translates 0x4000 again (now valid) and the store succeeds.
 
 3. **EAT impact:** With mem = 100 ns and pf = 5 ms, what page-fault rate keeps slowdown within 5%?
 
@@ -1187,7 +1187,7 @@ Total Page Faults: 15
 
 5. **FIFO vs LRU vs OPT:** Run all three on reference string `1 2 3 4 1 2 5 1 2 3 4 5` with 4 frames. Tabulate fault counts.
 
-   > **Answer:** **FIFO (4 frames)** — per the §3.6 trace, **10 faults**. **LRU (4 frames)**: 1,2,3,4 (4F, fill). Then 1,2 hit; 5 fault (LRU=3, evict 3) — frames {1,2,4,5}. 1,2 hit; 3 fault (LRU=4, evict 4) — {1,2,3,5}. 4 fault (LRU=5, evict 5) — {1,2,3,4}. 5 fault (LRU=1, evict 1) — {2,3,4,5}. **8 faults**. **OPT (4 frames)**: always evict the resident page whose **next use is farthest in the future**. 1,2,3,4 fault (4) → {1,2,3,4}. 1,2 hit. **5 faults** — remaining string is `1 2 3 4 5`; next uses are 1→next, 2→next, 3→#10, 4→#11, so evict 4 (farthest) → {1,2,3,5}. 1,2 hit. 3 hit. **4 faults** — remaining string is `4 5`; next uses are 1→never, 2→never, 3→never, 5→#12, so evict any never-used page, say 1 → {2,3,4,5} (equivalently 2 or 3). 5 hit. **Total OPT = 6 faults**. Comparison: FIFO 10 > LRU 8 > OPT 6 — and notice FIFO suffers Belady's anomaly here (9 with 3 frames, 10 with 4), while LRU/OPT are monotone.
+   > **Answer:** With 4 frames, **FIFO has 10 faults** (per the §3.6 trace). **LRU has 8 faults**: after loading 1, 2, 3, and 4, the misses on 5, 3, 4, and 5 evict 3, 4, 5, and 1 in turn. **OPT has 6 faults**. It first evicts 4, whose next use is farthest away, then evicts a page that is never used again. Thus FIFO (10) > LRU (8) > OPT (6). FIFO also shows Belady's anomaly: it has 9 faults with 3 frames and 10 with 4, while LRU and OPT are monotonic.
 
 6. **Belady's anomaly:** Why does FIFO suffer it while LRU does not? Use the stack-algorithm property to justify.
 
@@ -1199,7 +1199,7 @@ Total Page Faults: 15
 
 8. **Enhanced second-chance:** A frame is (R=0, M=1). What does this say about the page, and what is the eviction cost compared to (R=0, M=0)?
 
-   > **Answer:** R=0 means the page has not been referenced in the current cycle ("not recently used"); M=1 means it has been written to since being loaded ("dirty"). So this page is **stale but modified**. Compared to (R=0, M=0) — also stale, but **clean** — evicting (0, 1) is more expensive because the dirty contents must be **written back to swap/disk** before the frame can be reused. The clean page can simply be dropped (the disk already has the same bytes). The enhanced-second-chance algorithm prefers to evict (0, 0) first precisely to avoid the write-back, eviting (0, 1) only when no clean stale page is available.
+   > **Answer:** R=0 means the page has not been referenced in the current cycle ("not recently used"); M=1 means it has been written to since being loaded ("dirty"). So this page is **stale but modified**. Compared to (R=0, M=0) (also stale, but **clean**) evicting (0, 1) is more expensive because the dirty contents must be **written back to swap/disk** before the frame can be reused. The clean page can simply be dropped (the disk already has the same bytes). The enhanced-second-chance algorithm prefers to evict (0, 0) first precisely to avoid the write-back, eviting (0, 1) only when no clean stale page is available.
 
 9. **Working-set:** $\Delta = 8$, reference string `1 2 1 3 4 5 1 2 3 4 5 6`. What is the working set after the last reference?
 

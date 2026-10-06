@@ -374,7 +374,7 @@ char *ptr = (char *)mmap(0, 4096, PROT_READ | PROT_WRITE,
                           MAP_SHARED, fd, 0);
 ```
 
-> **`shm_open()` 매개변수:** `name` — 공유 메모리 객체의 이름 (프로세스들이 같은 이름으로 접근). `O_CREAT` — 존재하지 않으면 생성. `O_RDWR` — 읽기와 쓰기 모두 허용. 반환값 — 파일 디스크립터(file descriptor, 정수).
+> **`shm_open()` 매개변수:** `name`은 여러 프로세스가 같은 객체에 접근할 때 사용하는 이름이다. `O_CREAT`는 객체가 없으면 생성하고, `O_RDWR`은 읽기와 쓰기를 허용한다. 반환값은 파일 디스크립터(file descriptor, 정수)다.
 
 > **참고:** `ftruncate(fd, SIZE)`는 새로 생성된 공유 메모리 객체의 크기를 `SIZE` 바이트로 설정한다. 새 `shm_open` 객체는 기본 길이가 0이므로, 쓰기 전에 이 단계가 필수이다.
 

@@ -83,7 +83,7 @@
 
 **Implicit Threading** is a strategy that delegates thread creation and management to the **compiler and runtime library**.
 
-> If explicit threading (Week 4) is like a chef personally managing every worker in the kitchen — assigning tasks, watching timing, handling conflicts — then implicit threading is like hiring a restaurant manager who handles all staffing and scheduling while the chef only decides what dishes to make.
+> Explicit threading (Week 4) is like a chef personally managing every worker by assigning tasks, watching timing, and handling conflicts. With implicit threading, a restaurant manager handles staffing and scheduling while the chef decides what to cook.
 
 **Why is it needed?**
 - Applications with hundreds to thousands of threads have emerged
@@ -830,7 +830,7 @@ Five key issues to consider in multithreaded programming:
 | **Delivered to** | The process that performed the action | Delivered to another process |
 | **Examples** | Illegal memory access, div by 0 | `Ctrl+C`, timer expire |
 
-(Here 'synchronous' means the signal was caused by the running thread's own action — like dividing by zero — not by something external)
+('Synchronous' means the signal was caused by the running thread's own action, such as dividing by zero. An external event causes an asynchronous signal.)
 
 > **Synchronous signals** are the result of a thread's own actions — like dividing by zero or accessing invalid memory. The thread "caused" the signal, so delivery is straightforward. **Asynchronous signals** come from outside the process (the user pressing Ctrl+C, a timer expiring, another process sending a signal), which is where the multithreading complication arises: *which* thread should receive it?
 
@@ -1220,7 +1220,7 @@ Key clone flags:
 > - **Processes**: sharing nothing (plain `fork()`)
 > - **Containers**: selective sharing + namespace isolation (`CLONE_NEWNS`, `CLONE_NEWPID`, etc.)
 >
-> This spectrum — from full isolation (processes) to full sharing (threads) to selective isolation (containers) — is all controlled by the same system call. It's one of Linux's most elegant design decisions.
+> Processes provide full isolation, threads provide shared execution, and containers provide selective isolation. Linux controls all three through the same system call, an elegant design decision.
 
 ---
 
@@ -1387,7 +1387,7 @@ int main() {
    > for (int i = 0; i < N; i++)
    >     sum += arr[i];
    > ```
-   > Without `reduction`, multiple threads write concurrently to the shared `sum` — a race condition — so the result is non-deterministic and usually incorrect. `reduction(+:sum)` gives each thread a private partial sum and merges them at the end safely.
+   > Without `reduction`, multiple threads write to the shared `sum` concurrently, creating a race condition and usually an incorrect, non-deterministic result. `reduction(+:sum)` gives each thread a private partial sum and combines them safely at the end.
 
 5. When a multithreaded process calls `fork()`, should all threads be duplicated or only the calling thread? Explain the reasoning for both cases.
 

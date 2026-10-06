@@ -97,7 +97,7 @@ A **cooperating process** is one that can affect, or be affected by, the executi
 
 The fundamental problem: **concurrent access to shared data can produce inconsistent results**. Without a discipline that orders these accesses, the final state of the shared data depends on the unpredictable interleaving of instructions.
 
-> **Why this is the foundation of the whole chapter**: Every synchronization tool you will see — locks, semaphores, monitors — exists for one reason: to impose **orderly execution** on concurrent accesses to shared data, so that correctness no longer depends on luck.
+> **Why this is the foundation of the whole chapter**: Every synchronization tool you will see (locks, semaphores, monitors) exists for one reason: to impose **orderly execution** on concurrent accesses to shared data, so that correctness no longer depends on luck.
 
 ### 1.2 Race Condition
 
@@ -116,7 +116,7 @@ T5: consumer  count = register2        {count = 4}  ← incorrect!
 
 The correct final value is `count = 5` (one increment + one decrement). Depending on interleaving, the result can become **4** (consumer wins) or **6** (producer wins) — an off-by-one bug whose appearance is timing-dependent and therefore extremely hard to reproduce.
 
-**The fix**: identify and **protect** the region of code that touches shared data — the **critical section** — so that only one thread is inside it at a time.
+**The fix**: identify and **protect** the region of code that touches shared data (the **critical section**) so that only one thread is inside it at a time.
 
 > **Why race conditions are so feared in practice**: They depend on timing, so they may pass every test in development and only manifest in production under load. The bug that escaped Therac-25 (radiation-therapy machine, 1985–87) and killed patients was a race condition in operator-input handling. Synchronization is not a stylistic concern — it is a correctness concern.
 
@@ -164,7 +164,7 @@ A kernel must choose whether one of its own threads can be preempted while runni
 
 Two practical points:
 - **Single processor** systems can implement mutual exclusion cheaply by **disabling interrupts** for the critical section.
-- **Multiprocessor** systems cannot — disabling interrupts on every core is expensive — so they need other mechanisms (memory barriers, atomic instructions, locks).
+- **Multiprocessor** systems cannot disable interrupts on every core because doing so is expensive. They need other mechanisms, such as memory barriers, atomic instructions, and locks.
 
 > **Historical note**: Linux was nonpreemptive until kernel 2.6 (2003), then became fully preemptive. Modern Linux, Windows, and macOS are all preemptive kernels designed to scale across many cores.
 
@@ -383,7 +383,7 @@ atomic_inc(&counter);                   /* counter = 12 */
 int val = atomic_read(&counter);        /* val     = 12 */
 ```
 
-**Important caveat**: atomic variables protect updates to **a single variable**. Compound invariants involving multiple variables — e.g., the bounded-buffer invariants `0 ≤ count ≤ n` and `in/out` indices — still need a **mutex** or **semaphore** that protects the whole critical section.
+**Important caveat**: atomic variables protect updates to **a single variable**. Compound invariants involving multiple variables (e.g., the bounded-buffer invariants `0 ≤ count ≤ n` and `in/out` indices) still need a **mutex** or **semaphore** that protects the whole critical section.
 
 > **A useful rule of thumb**: If all you need to do is "increment a counter" or "set a flag", use an atomic. If you need to update **two related fields together** so that no observer ever sees them out of sync, use a lock.
 
@@ -1475,7 +1475,7 @@ Note the use of `while (state[i] != EATING)` around `pthread_cond_wait` — exac
 
 17. Why does the naive semaphore solution to dining-philosophers deadlock? List three remedies.
 
-    > **Answer:** If every philosopher simultaneously executes `wait(chopstick[i])` (her left), all five chopsticks become 0; each then blocks on her right chopstick → **circular wait → deadlock**. Remedies: **(1) at most 4 diners** at a time (limits the cycle); **(2) pick up both chopsticks atomically** in a CS, e.g., the monitor solution; **(3) asymmetric protocol** — odd philosophers pick left first, even pick right first — breaks circular wait.
+    > **Answer:** If every philosopher simultaneously executes `wait(chopstick[i])` (her left), all five chopsticks become 0; each then blocks on her right chopstick → **circular wait → deadlock**. Remedies: **(1) at most 4 diners** at a time (limits the cycle); **(2) pick up both chopsticks atomically** in a CS, e.g., the monitor solution; **(3) asymmetric protocol** (odd philosophers pick left first, even pick right first) breaks circular wait.
 
 18. Compare Windows Dispatcher Objects and Critical-Section Objects. When is each used?
 

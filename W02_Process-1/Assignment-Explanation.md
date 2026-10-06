@@ -621,7 +621,7 @@ return -1;
   - cmd2's `read()` will **never receive EOF** → blocks forever → program hangs!
 - UNIX pipe rule: **All write ends must be closed** for the read side to receive EOF
 
-> **[Lab 3]** This is the practical application of the rule learned in the lab: "closing the write end → the read side receives EOF." Since the parent, child 1, and child 2 — a total of 3 processes — all hold pipe fds, **all unused fds must be closed in each process** for correct operation.
+> **[Lab 3]** This is the practical application of the rule learned in the lab: "closing the write end → the read side receives EOF." Since the parent, child 1, and child 2 (a total of 3 processes) all hold pipe fds, **all unused fds must be closed in each process** for correct operation.
 
 ### 4.6 execute_pipe Complete Flow Summary
 

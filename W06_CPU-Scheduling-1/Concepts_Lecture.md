@@ -165,7 +165,7 @@ When the CPU becomes idle, the **ready queue** is used to select the next proces
 - The ready queue does not have to be FIFO
   - Can be implemented as a FIFO queue, **priority queue**, tree, linked list, etc.
 - Records in the queue are typically **PCBs (Process Control Blocks)**
-  - Recall: A PCB (Process Control Block) stores all state information for a process — registers, program counter, priority, etc. — so that it can be resumed exactly where it left off after a context switch.
+  - Recall: A PCB (Process Control Block) stores all state information for a process (registers, program counter, priority, etc.) so that it can be resumed exactly where it left off after a context switch.
 - The internal order of the queue is determined by the scheduling algorithm
 
 > **Key Point:** The "ready queue" is not necessarily a queue in the data structure sense. It's a collection of processes that are ready to run. The scheduling algorithm determines how that collection is ordered — FCFS uses a FIFO queue, SJF uses a priority queue sorted by burst length, etc. The name "ready queue" is a historical convention.

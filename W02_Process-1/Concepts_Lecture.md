@@ -96,7 +96,7 @@ Text and data are **fixed** in size, while stack and heap **dynamically** expand
 ### 1.3 Dynamic Growth of Stack and Heap
 
 **Stack growth:**
-- Each time a function is called, an **activation record** (function parameters, local variables, return address) is pushed onto the stack. An activation record — also called a **stack frame** — is the block of memory pushed onto the stack each time a function is called; it holds the function's local variables, parameters, and the address to return to when the function finishes.
+- Each time a function is called, an **activation record** (function parameters, local variables, return address) is pushed onto the stack. An activation record (also called a **stack frame**) is the block of memory pushed onto the stack each time a function is called; it holds the function's local variables, parameters, and the address to return to when the function finishes.
 - When a function returns, the activation record is popped.
 - The stack grows **from high addresses toward low addresses** (downward).
 
@@ -251,7 +251,7 @@ Modern OSes allow **multi-threaded execution**:
 - A single process can perform multiple tasks simultaneously
 - **Parallel execution** is possible on multi-core systems
 
-> **Example — Multithreaded Word Processor:** Thread 1 manages user input, Thread 2 runs the spell checker — both can run simultaneously! This overcomes the single-thread limitation described above.
+> **Example: Multithreaded Word Processor.** Thread 1 manages user input while Thread 2 runs the spell checker, allowing both tasks to proceed concurrently. This overcomes the single-thread limitation described above.
 
 **What threads of the same process share:** text section, data section, heap, open files, signals, etc.
 
@@ -887,6 +887,6 @@ Shell (parent process)
 
 5. **fork + exec:** Explain why shells use the `fork()` + `exec()` + `wait()` pattern instead of a single "create-and-run" system call. What advantage does separating fork and exec provide?
 
-   > **Answer:** Between `fork()` and `exec()`, the child (a copy of the parent) can reconfigure its environment — redirect file descriptors with `dup2()`, set environment variables, change working directory, install signal handlers — before loading the new program. A single combined `spawn()` call would require the parent to pre-specify every possible customization as options. The fork/exec split provides a simple, composable interface: "customize, then load".
+   > **Answer:** Between `fork()` and `exec()`, the child (a copy of the parent) can reconfigure its environment (redirect file descriptors with `dup2()`, set environment variables, change working directory, install signal handlers) before loading the new program. A single combined `spawn()` call would require the parent to pre-specify every possible customization as options. The fork/exec split provides a simple, composable interface: "customize, then load".
 
 ---

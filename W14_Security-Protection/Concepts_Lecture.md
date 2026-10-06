@@ -9,7 +9,7 @@
 > 2. Distinguish **threat** from **attack** and list major attacks (masquerading, replay, MITM, session hijacking, privilege escalation)
 > 3. Explain the **four-layer security model**, the "weakest link," the human factor (social engineering), and the **attack surface**
 > 4. Classify **malware** (Trojan, Spyware, Ransomware, Back door, Logic bomb) and explain how the **principle of least privilege** governs the blast radius
-> 5. Explain **code injection** — buffer overflow (stack layout, return-address overwrite), shellcode/NOP-sled, SQL injection — and its defenses
+> 5. Explain the principles and defenses of **code injection**, including buffer overflows, shellcode/NOP sleds, and SQL injection.
 > 6. Distinguish **viruses** (by type) from **worms** along host requirement, propagation, and damage
 > 7. Distinguish **network threats** (sniffing, spoofing, MITM, DoS/DDoS, SYN flood, port scanning) and explain zombie/botnet concepts
 > 8. Explain **symmetric/asymmetric** crypto (AES, RSA), **hashing** (SHA, salt), **digital signatures/certificates**, the **TLS handshake**, and the **key-distribution problem**
@@ -1405,7 +1405,7 @@ print(rbac.check_access("Bob", "File1", "write"))    # False
 
 6. **Role of salt:** What attack does salt prevent when storing passwords as hashes, and how?
 
-   > **Answer:** Without salt, storing only the hash means *the same password always yields the same hash*, so an attacker can use a precomputed table of common-password hashes (a **rainbow table**) to reverse them at once, or instantly identify users with the same hash in a leaked DB. A **salt** is a *random value* appended per password; the system stores `H(password + salt)`. With different salts, the same password produces different hashes, so the attacker must re-hash the dictionary *for each salt* — defeating precomputed tables (preventing dictionary/rainbow-table attacks) — and users sharing a password get different hashes, isolating exposure. UNIX `/etc/shadow` is the canonical application.
+   > **Answer:** Without salt, storing only the hash means *the same password always yields the same hash*, so an attacker can use a precomputed table of common-password hashes (a **rainbow table**) to reverse them at once, or instantly identify users with the same hash in a leaked DB. A **salt** is a *random value* appended per password; the system stores `H(password + salt)`. With different salts, the same password produces different hashes, so the attacker must re-hash the dictionary *for each salt* (defeating precomputed tables (preventing dictionary/rainbow-table attacks)) and users sharing a password get different hashes, isolating exposure. UNIX `/etc/shadow` is the canonical application.
 
 7. **Policy vs Mechanism, Need-to-Know vs Least-Privilege:** Explain how the two pairs of concepts correspond.
 
