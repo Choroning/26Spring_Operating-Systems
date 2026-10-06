@@ -1405,7 +1405,7 @@ int main() {
 
 9. Windows의 세 가지 스레드 자료 구조(ETHREAD, KTHREAD, TEB)와 각각의 위치를 설명하라.
 
-   > **정답:** **ETHREAD**(Executive Thread Block) — 상위 레벨 Executive 데이터(소유 프로세스 포인터 등), **커널 공간**. **KTHREAD**(Kernel Thread Block) — 스케줄링·동기화 정보(상태, 우선순위, 커널 스택), **커널 공간**. **TEB**(Thread Environment Block) — 사용자 모드에서 접근 가능한 스레드별 데이터(TLS, 예외 리스트, last error), **사용자 공간**.
+    > **정답:** **ETHREAD**는 소유 프로세스 포인터 등 상위 Executive 정보를 **커널 공간**에 저장한다. **KTHREAD**는 상태, 우선순위, 커널 스택 등 스케줄링과 동기화 정보를 **커널 공간**에 저장한다. **TEB**는 TLS, 예외 목록, 마지막 오류 등 사용자 모드에서 접근 가능한 스레드별 정보를 **사용자 공간**에 둔다.
 
 10. Linux의 `clone()` 시스템 호출은 프로세스와 스레드 생성을 어떻게 통합하는가? 공유 플래그는 무엇을 제어하는가?
 

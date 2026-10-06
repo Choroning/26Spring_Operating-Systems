@@ -1407,7 +1407,7 @@ int main() {
 
 9. Describe the three Windows thread data structures (ETHREAD, KTHREAD, TEB) and their locations.
 
-   > **Answer:** **ETHREAD** (Executive Thread Block) — high-level Executive data (pointer to owning process, etc.), in **kernel space**. **KTHREAD** (Kernel Thread Block) — scheduling and synchronization info (state, priority, kernel stack), in **kernel space**. **TEB** (Thread Environment Block) — per-thread data accessible from user mode (TLS, exception list, last error), in **user space**.
+    > **Answer:** **ETHREAD** stores high-level Executive data, such as the owning-process pointer, in **kernel space**. **KTHREAD** stores scheduling and synchronization data, including state, priority, and the kernel stack, also in **kernel space**. **TEB** stores per-thread data available in user mode, such as TLS, the exception list, and last error, in **user space**.
 
 10. How does Linux's `clone()` system call unify process and thread creation? What do the sharing flags control?
 

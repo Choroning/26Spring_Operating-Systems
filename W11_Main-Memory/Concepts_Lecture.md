@@ -986,7 +986,7 @@ Extensions: feed a stream of randomized requests, compare the average external f
 
 6. Distinguish external and internal fragmentation. State the 50-percent rule.
 
-   > **Answer:** **External fragmentation** — enough total free memory exists, but no single hole is large enough; a contiguity problem. **Internal fragmentation** — the allocation unit is larger than the request, and the leftover *inside* the allocation is wasted. **50-percent rule** (Knuth's analysis for first-fit): with N allocated blocks, statistically about 0.5N additional blocks are lost to external fragmentation — roughly 1/3 of total memory becomes unusable, which motivated the shift to paging.
+    > **Answer:** External fragmentation occurs when total free memory is sufficient but no single hole is large enough. Internal fragmentation occurs when the allocation unit exceeds the request and wastes space inside the allocation. Under Knuth's **50-percent rule** for first-fit, N allocated blocks lead to about 0.5N additional blocks lost to external fragmentation, leaving roughly one third of memory unusable. This helped motivate paging.
 
 7. Walk through a paging address translation. Why does the offset pass through unchanged?
 

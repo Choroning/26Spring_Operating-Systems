@@ -541,7 +541,7 @@ graph TD
 
 3. 실습 2의 세 가지 데모는 각각 어떤 OpenMP 지시어를 사용하는가?
 
-   > **정답:** 일반적으로: **데모 1** — `#pragma omp parallel for`(루프 병렬화); **데모 2** — `#pragma omp parallel for reduction(+:x)`(안전한 누산); **데모 3** — `#pragma omp sections` 또는 `#pragma omp task`(태스크 기반 병렬). 정확한 매핑은 실습 본문 참조.
+    > **정답:** 보통 데모 1은 `#pragma omp parallel for`를 이용한 루프 병렬화, 데모 2는 `#pragma omp parallel for reduction(+:x)`를 이용한 안전한 누산, 데모 3은 `#pragma omp sections` 또는 `#pragma omp task`를 이용한 태스크 병렬화다. 정확한 매핑은 실습 본문을 참고한다.
 
 4. 다중 스레드 프로그램에서 `fork()`를 호출하면 자식 프로세스에는 몇 개의 스레드가 있는가? 이것이 왜 위험한가?
 

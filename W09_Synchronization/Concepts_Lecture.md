@@ -230,7 +230,7 @@ If a CPU executes ② before ①, both processes may pass the entry check and en
 
 **Fix**: insert **memory barriers** (next section) that prevent the hardware and compiler from reordering across the boundary. With proper barriers, Peterson's algorithm does work correctly on modern hardware — but in practice, programmers use higher-level primitives (locks, atomics) that hide this complexity.
 
-> **[Computer Architecture]** An algorithm that is provably correct on an idealized **sequentially-consistent** memory model can fail catastrophically on real hardware that implements a **relaxed (weak) memory model**. A machine's memory model — which load/store reorderings the CPU and compiler are *allowed* to perform — is part of the architecture specification: x86 is relatively strong (TSO — Total Store Order); ARM and POWER are much weaker. Synchronization code must explicitly respect this with **memory barriers** (next section) or with higher-level primitives that insert barriers internally.
+> **[Computer Architecture]** An algorithm proved correct under **sequential consistency** can fail on hardware that uses a **relaxed memory model**. A memory model defines which load and store reorderings the CPU and compiler may perform. x86 is relatively strong because of TSO, while ARM and POWER allow more reordering. Synchronization must account for this with **memory barriers** or higher-level primitives that insert them.
 
 ---
 
@@ -1412,7 +1412,7 @@ Note the use of `while (state[i] != EATING)` around `pthread_cond_wait` — exac
 
 2. State the three requirements of the Critical-Section Problem. What goes wrong when each one is missing?
 
-   > **Answer:** **Mutual Exclusion** — at most one process in the CS at a time (otherwise race conditions return). **Progress** — if no one is in the CS, a waiting process must be selected without indefinite postponement (otherwise the system can deadlock with the CS empty). **Bounded Waiting** — there is a finite limit on how many other processes can enter before a waiting process is granted entry (otherwise starvation).
+    > **Answer:** Mutual exclusion allows at most one process in the critical section at a time. Progress requires selecting a waiting process when the critical section is empty, without indefinite delay. Bounded waiting limits how many other processes may enter before a waiting process is admitted. These properties prevent races, deadlock, and starvation, respectively.
 
 3. Compare preemptive and nonpreemptive kernels. Why does a multiprocessor preemptive kernel need more careful synchronization than a single-CPU nonpreemptive kernel?
 
@@ -1447,7 +1447,7 @@ Note the use of `while (state[i] != EATING)` around `pthread_cond_wait` — exac
 
 10. List three common semaphore-misuse bugs. Why are they so hard to debug?
 
-    > **Answer:** **(1) Order reversal** — `signal(mutex); CS; wait(mutex)` lets multiple threads into the CS. **(2) Duplicate wait** — `wait(mutex); CS; wait(mutex)` deadlocks at the second wait. **(3) Omitted wait or signal** — leaves the CS unprotected or never wakes anyone. They are hard to debug because they manifest only on specific interleavings and pass typical tests; the right answer is to use a **higher-level construct (monitor)**.
+     > **Answer:** Reversing the order (`signal(mutex); CS; wait(mutex)`) admits multiple threads to the critical section. Calling `wait` twice (`wait(mutex); CS; wait(mutex)`) deadlocks at the second call. Omitting `wait` or `signal` leaves the section unprotected or fails to wake a waiter. These bugs depend on thread interleavings, so they can pass ordinary tests; a monitor provides a safer, higher-level construct.
 
 11. What is a monitor, and how does it differ from semaphores? Why are condition variables needed in addition?
 

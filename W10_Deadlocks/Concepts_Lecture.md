@@ -152,7 +152,7 @@ Time 4: thread_two requests first_mutex  → blocked!  (held by T1)
 Result: both threads wait forever → Deadlock!
 ```
 
-> **Why this is so dangerous**: Deadlock does **not** always occur — it depends on CPU scheduling. The code can pass thousands of test runs and only deadlock in production. It is a textbook example of a **heisenbug** — a bug whose behavior changes (often disappearing) the moment you try to observe it, e.g., adding logging or a debugger perturbs the timing — making it timing-sensitive, intermittent, and very hard to reproduce.
+> **Why this is so dangerous:** Deadlock depends on CPU scheduling, so code may pass thousands of tests and fail only in production. This is a **heisenbug**: observing it, for example by adding logging or a debugger, can change timing and make it disappear. That makes it intermittent and difficult to reproduce.
 
 ### 1.4 Livelock
 
@@ -445,7 +445,7 @@ Prevention is heavy-handed — it removes deadlock by structurally restricting w
 >
 > **Unsafe State**: no safe sequence exists.
 
-> **[Discrete Mathematics]** Vector notation used throughout this section: when X and Y are vectors of the same length, **`X ≤ Y` means component-wise** — `X[j] ≤ Y[j]` for every index j. Likewise `+` and `−` on vectors are component-wise. Note that vector `≤` is a **partial order**, not a total one — two vectors can be **incomparable** (e.g., `(1,3) ≰ (2,2)` and `(2,2) ≰ (1,3)`). The Banker's Algorithm depends on this distinction: a request that fails `Request ≤ Available` is not "greater than" — it is simply unsatisfiable in some component.
+> **[Discrete Mathematics]** For equal-length vectors X and Y, **`X ≤ Y` means component-wise comparison**: `X[j] ≤ Y[j]` at every index. Vector addition and subtraction are also component-wise. This relation is a **partial order**, so some vectors are incomparable; for example, neither `(1,3) ≤ (2,2)` nor `(2,2) ≤ (1,3)`. The Banker's Algorithm relies on this: if `Request ≤ Available` fails, at least one resource component is unavailable.
 
 ```text
 Safe ⊂ Not-deadlocked (Safe → deadlock impossible)
@@ -1004,7 +1004,7 @@ int main() {
 
 9. How does the OS decide *when* to run the detection algorithm? Give three strategies.
 
-   > **Answer:** (1) **On every request** — instant detection and the culprit is obvious, but high overhead. (2) **Periodic** — every fixed interval; cheap but slow to respond. (3) **CPU-utilization triggered** — deadlock shrinks the runnable set and depresses CPU usage, so invoke detection when CPU drops below a threshold (e.g., 40%).
+    > **Answer:** Detection can run on every request for immediate results and an obvious culprit, at the cost of high overhead. It can run periodically to reduce overhead, though response is slower. A third option triggers detection when CPU utilization falls below a threshold, since deadlocks reduce the runnable set (for example, 40%).
 
 10. Why do real OSes (Linux, Windows) ignore deadlock by default?
 
@@ -1024,7 +1024,7 @@ int main() {
 
 14. Explain why allocating one more instance to T2 in the Safe-State example caused a transition to Unsafe.
 
-    > **Answer:** Before the extra allocation, Available = 3, enough to satisfy T1's remaining Need of 2; once T1 finishes, Available grows to 5, enough for T0's remaining 5, and so on — a safe sequence ⟨T1, T0, T2⟩ exists. After granting one more to T2, Available drops to 2 — still enough for T1 (need 2), but once T1 returns its 2, Available is 4, less than either T0's remaining 5 or T2's remaining 6. The only feasible step (T1) cannot unlock either of the others, so **no safe sequence exists** — the state is Unsafe and Avoidance should have refused the grant.
+     > **Answer:** Before the extra allocation, Available is 3, enough for T1's remaining Need of 2. T1 can finish and return its allocation, raising Available to 5; then T0 can finish, so ⟨T1, T0, T2⟩ is a safe sequence. After granting one more unit to T2, Available falls to 2. T1 can still finish, but returning its 2 units raises Available only to 4, which is insufficient for T0's remaining 5 or T2's remaining 6. No further process can finish, so the state is unsafe and the grant should be refused.
 
 15. What is **lockdep** and what classes of bugs does it find?
 
