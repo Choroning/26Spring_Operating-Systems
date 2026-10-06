@@ -47,11 +47,10 @@ This repository contains bilingual study materials and system-level code develop
 
 This course covers the design and implementation of operating systems, including processes and threads, CPU scheduling, synchronization, memory management, file systems, and I/O. It combines theoretical foundations with implementation examples from Linux, UNIX, and xv6.
 
-### Instructor and Lab
+### Instructor and Research Lab
 
 - **Instructor:** Prof. Unggi Lee, Department of Computer Science and Software Engineering
 - **Research lab:** [LEAP Lab](https://codingchild2424.github.io/lab-website/), studying generative AI in education, pedagogical alignment, large language models, and knowledge tracing
-- **Hands-on lab:** xv6 for RISC-V, following [MIT 6.1810](https://pdos.csail.mit.edu/6.1810/)
 
 ### Schedule and Class Format
 
@@ -88,6 +87,10 @@ This course covers the design and implementation of operating systems, including
 | 6 | CPU Scheduling 1 | 14 | Final Exam (Project) |
 | 7 | CPU Scheduling 2 | 15 | Final Exam (Written) |
 | 8 | Midterm Exam | 16 | Study Week |
+
+### Learning Resources
+
+- **Lab environment:** RISC-V xv6, using [MIT 6.1810](https://pdos.csail.mit.edu/6.1810/) resources
 
 - **📖 References**
 
