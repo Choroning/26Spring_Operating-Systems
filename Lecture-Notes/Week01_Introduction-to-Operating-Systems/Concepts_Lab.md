@@ -1,11 +1,11 @@
 # Week 1 Lab — Coding Agents
 
-> **Last Updated:** 2026-05-13
+[Repository Guide](../../README.md) | [English](Concepts_Lab.md) | [한국어](Concepts_Lab.ko.md)
 
-> **Prerequisites**: Week 1 Lecture concepts (OS definition, dual-mode, system calls).
->
-> **Learning Objectives**: After completing this lab, you should be able to:
-> 1. Install and authenticate a coding agent (e.g., Gemini CLI, Claude Code)
+> **Last Updated:** 2026-10-18
+
+> **Learning Objectives:**
+> 1. Install and authenticate a coding agent such as Gemini CLI or Claude Code
 > 2. Delegate real tasks to an agent and critically evaluate its output
 > 3. Apply the RALPH technique to iteratively improve agent-generated work
 > 4. Understand how a minimal OS is structured (bootloader, kernel, linker script)
@@ -17,12 +17,12 @@
 - [1. Lab Overview](#1-lab-overview)
 - [2. What is a Coding Agent?](#2-what-is-a-coding-agent)
 - [3. Available Agents](#3-available-agents)
-- [4. Task 1 — Install a Coding Agent](#4-task-1--install-a-coding-agent)
-- [5. Task 2 — File Organization](#5-task-2--file-organization)
-- [6. Task 3 — GitHub Repository Documentation](#6-task-3--github-repository-documentation)
-- [7. Task 4 — The RALPH Technique](#7-task-4--the-ralph-technique)
+- [4. Task 1: Install a Coding Agent](#4-task-1-install-a-coding-agent)
+- [5. Task 2: File Organization](#5-task-2-file-organization)
+- [6. Task 3: GitHub Repository Documentation](#6-task-3-github-repository-documentation)
+- [7. Task 4: The RALPH Technique](#7-task-4-the-ralph-technique)
   - [7.1 Applying RALPH in Practice](#71-applying-ralph-in-practice)
-- [8. Task 5 — Build a Mini OS](#8-task-5--build-a-mini-os)
+- [8. Task 5: Build a Mini OS](#8-task-5-build-a-mini-os)
   - [8.1 What to Observe](#81-what-to-observe)
 - [Summary](#summary)
 - [Self-Check Questions](#self-check-questions)
@@ -35,7 +35,7 @@
 
 - **Objective**: Install AI-based coding agents and use them in real development tasks.
 - **Duration**: Approximately 50 minutes
-- **Deliverables**: None — this is an exploratory lab
+- **Deliverables**: None (exploratory lab)
 - These tools will be used for labs and assignments **throughout the semester**.
 
 ```mermaid
@@ -46,13 +46,15 @@ graph LR
     T4 --> T5["Task 5<br/>Mini OS Build"]
 ```
 
+*Figure 1. Order of lab tasks 1-5*
+
 ---
 
 <br>
 
 ## 2. What is a Coding Agent?
 
-An AI-based CLI tool that generates code by **understanding context**.
+A coding agent is an AI-based CLI tool that generates code by **understanding context**.
 
 ```mermaid
 graph LR
@@ -66,13 +68,14 @@ graph LR
     style D fill:#fce4ec
 ```
 
+*Figure 2. The read, plan, execute, and verify loop of a coding agent*
+
 - It can read the file system, execute commands, and make edits autonomously.
-- Use cases: scaffolding, refactoring, documentation, debugging
+- It is used for scaffolding, refactoring, documentation, and debugging.
 
 > **Note:** **Scaffolding** refers to automatically generating a project's initial skeleton (directory structure, configuration files, boilerplate code, etc.). The term originates from the construction industry, where scaffolds are erected before building. For example, if you say "Create a React project," the agent will create `package.json`, a `src/` directory, basic component files, and more all at once.
 
-> **Example**: _"Write a Makefile for a C project with debug and release targets."_
-> Agent: checks directory → writes Makefile → verifies build success
+**Example:** Given the request "Write a Makefile for a C project with debug and release targets.", the agent works in the order: checks directory → writes Makefile → verifies build success.
 
 > **Key Point:** Unlike simple code autocompletion tools (such as Copilot), coding agents are autonomous tools that can understand the entire project context, read and modify multiple files simultaneously, and execute commands. The key difference from a ChatGPT web interface is that they directly access the local file system to perform tasks.
 
@@ -84,11 +87,13 @@ graph LR
 
 | Agent | Price | Description |
 |:------|:------|:------------|
-| ![Gemini](../images/gemini.png) **Gemini CLI** | Free (1,000 requests/day) | Google's agent. A good default choice. |
-| ![Claude](../images/claude_ai.png) **Claude Code** | Paid | Anthropic's agent. Powerful multi-file reasoning capabilities. |
-| ![OpenAI](../images/openai.png) **Codex CLI** | Paid | OpenAI's agent. An open-source CLI. |
+| ![Gemini](../../images/Week01_Gemini.png) **Gemini CLI** | Free (1,000 requests/day) | Google's agent. A good default choice. |
+| ![Claude](../../images/Week01_Claude-AI.png) **Claude Code** | Paid | Anthropic's agent. Powerful multi-file reasoning capabilities. |
+| ![OpenAI](../../images/Week01_OpenAI.png) **Codex CLI** | Paid | OpenAI's agent. An open-source CLI. |
 
-Others: **OpenCode** (open-source harness — supports all models including open-source LLMs)
+*Table 1. Price and characteristics of the available coding agents*
+
+Another option is **OpenCode**. OpenCode is an open-source harness that can use a wide range of models, including open-source LLMs.
 
 > **Note:** Gemini CLI is free and can be used without cost concerns for lab exercises. Claude Code excels in complex multi-file projects, and Codex CLI is open-source and customizable. We recommend starting with the free Gemini CLI and trying other agents as needed.
 
@@ -96,7 +101,7 @@ Others: **OpenCode** (open-source harness — supports all models including open
 
 <br>
 
-## 4. Task 1 — Install a Coding Agent
+## 4. Task 1: Install a Coding Agent
 
 Refer to the official documentation and install at least one coding agent.
 
@@ -114,13 +119,13 @@ gemini --version    # or: claude --version
 ```
 
 **Checklist:**
-- Does the CLI run without errors?
-- Can you authenticate? (Gemini uses a Google account, Claude uses an Anthropic account)
-- Try a simple prompt: `"What is 2 + 2?"` — verify that a response is returned
+- Check that the CLI runs without errors.
+- Check that you can authenticate (Gemini uses a Google account, Claude uses an Anthropic account).
+- Enter a simple prompt such as `"What is 2 + 2?"` and check that a response is returned.
 
-> **LTS (Long-Term Support)**: LTS is the stable, recommended version of Node.js for most users.
+> **Definition:** In Node.js, **LTS (Long-Term Support)** is the stable, long-term support version recommended for most users.
 
-> **[Programming Languages]** `npm` is the package manager for Node.js. If it is not installed, you must first install the LTS version from [the official Node.js website](https://nodejs.org). After installation, you can verify it by running `node --version` and `npm --version` in the terminal.
+> **[Computer Programming]** `npm` is the package manager for Node.js. If it is not installed, you must first install the LTS version from [the official Node.js website](https://nodejs.org). After installation, you can verify it by running `node --version` and `npm --version` in the terminal.
 
 > **Note:** The `-g` in `npm install -g` stands for **global**, meaning the package is installed system-wide rather than in the current project. With a global installation, you can run commands like `gemini` or `claude` directly from any terminal location. Without `-g`, the package is installed only in the current directory's `node_modules/` and cannot be used as a global command.
 
@@ -128,13 +133,13 @@ gemini --version    # or: claude --version
 
 <br>
 
-## 5. Task 2 — File Organization
+## 5. Task 2: File Organization
 
 Use an agent to **organize files** in a messy directory.
 
 **Example prompt:**
 
-```
+```text
 "Organize the files in ~/Downloads into subdirectories by file type
  (images, documents, code, etc.). Show me the plan before executing."
 ```
@@ -145,7 +150,7 @@ Use an agent to **organize files** in a messy directory.
 - Does it handle edge cases well (e.g., files without extensions)?
 
 **Discussion:**
-- What would have happened if you hadn't said _"Show me the plan first"_?
+- What would have happened if you had not said "Show me the plan first"?
 - How can you give more specific instructions when the result is unsatisfactory?
 
 > **Note:** Getting into the habit of asking the agent to "Show me the plan first" when delegating tasks is very important. This prevents unintended file deletion or movement. Especially when working with real file systems, undo is difficult, so it is safest to always review and approve the agent's plan before execution.
@@ -154,17 +159,17 @@ Use an agent to **organize files** in a messy directory.
 
 <br>
 
-## 6. Task 3 — GitHub Repository Documentation
+## 6. Task 3: GitHub Repository Documentation
 
 Use an agent to **generate a README.md** for an existing codebase.
 
 **Choose a target repository:**
-- Your own project, or a public repository such as:
+- Use your own project or a public repository such as the following.
   - `https://github.com/code-yeongyu/oh-my-opencode`
 
 **Example prompt:**
 
-```
+```text
 "Read this codebase and write a comprehensive README.md that includes
  an architecture overview, installation instructions, and usage examples."
 ```
@@ -174,40 +179,42 @@ Use an agent to **generate a README.md** for an existing codebase.
 - Are the installation instructions correct and complete?
 - Is anything missing (license, contribution guide, screenshots)?
 
-> Save this README — you will improve it in the next task.
+> **Note:** Save this README, because the next task (Task 4) improves it.
 
 ---
 
 <br>
 
-## 7. Task 4 — The RALPH Technique
+## 7. Task 4: The RALPH Technique
 
-> **Rubric**: A rubric is a structured set of criteria used to evaluate the quality of a deliverable.
+> **Definition:** A **rubric** is a structured set of criteria used to evaluate the quality of a deliverable.
 
 Create a **verifiable evaluation rubric** and use it to iteratively improve the quality of the output.
 
-![Ralph Wiggum](../images/ralph_wiggum.png)
+![Figure 3. Ralph Wiggum, the character that symbolizes the RALPH technique](../../images/Week01_Ralph-Wiggum.png)
+
+*Figure 3. Ralph Wiggum, the character that symbolizes the RALPH technique*
 
 **R**equest → **A**nalyze → **L**ist issues → **P**rompt again → **H**armonize
 
 **Step-by-step process:**
 
-1. Ask the agent to generate a rubric (e.g., _"What makes a world-class README?"_)
-2. Ask the agent to **evaluate its own output against the rubric**
-3. Ask it to fix all identified issues
-4. Repeat until all criteria are met
+1. Ask the agent to generate a rubric (e.g., _"What makes a world-class README?"_).
+2. Ask the agent to **evaluate its own output against the rubric**.
+3. Ask it to fix all identified issues.
+4. Repeat until all criteria are met.
 
 **Key phrases to try:**
 - _"Keep going until all criteria are met"_
 - _"Evaluate against the rubric and fix all issues"_
 
-> **Key Point:** The RALPH technique is a methodology for systematically improving AI agent output. The core idea is to "have the agent create its own evaluation criteria, evaluate its own output against those criteria, and then fix any deficiencies." Repeating this loop yields results of much higher quality than the initial output.
+> **Key Point:** The RALPH technique is a methodology for systematically improving AI agent output. The core idea is to have the agent create its own evaluation criteria, evaluate its own output against those criteria, and then fix any deficiencies. Repeating this loop yields results of much higher quality than the initial output.
 
 ### 7.1 Applying RALPH in Practice
 
 **Example workflow using the README from Task 3:**
 
-```
+```text
 You:   "Create a rubric for evaluating a high-quality open-source README."
 Agent: Returns 8 criteria (description, installation, usage, architecture, ...)
 
@@ -230,13 +237,13 @@ Agent: 8/8 — all criteria met.
 
 <br>
 
-## 8. Task 5 — Build a Mini OS
+## 8. Task 5: Build a Mini OS
 
-Use an agent to create a **minimal operating system** — a preview of the final project.
+Use an agent to create a **minimal operating system**. This task is a preview of the term project.
 
 **Example prompt:**
 
-```
+```text
 "Create a minimal bootable OS for x86. It should print 'Hello, OS!' to the screen.
  Include a Makefile and instructions for running it in QEMU."
 ```
@@ -254,15 +261,17 @@ graph LR
     style D fill:#fce4ec
 ```
 
-> **Bootloader / Real Mode / Protected Mode**: When the CPU first starts, it runs in Real Mode, which can only access 1 MB of memory. The bootloader is responsible for switching the CPU to Protected Mode, which enables full memory access and hardware protection features (like memory segmentation and privilege levels). Only then can the kernel be loaded and run.
+*Figure 4. Expected output files of the mini OS build and the role of each file*
 
-> **[Computer Architecture]** When a computer is powered on, the BIOS/UEFI loads the boot sector (512 bytes) into memory and executes it. `boot.asm` is this boot sector code, which starts in Real Mode, transitions to Protected Mode, and then loads the kernel (`kernel.c`). `linker.ld` is a linker script that specifies where the kernel code and data are placed in memory.
+> **Definition:** **Bootloader, real mode, and protected mode.** When an x86 CPU first starts, it runs in real mode, which can only access 1 MB of memory. The bootloader is responsible for loading the kernel into memory and switching the CPU to protected mode, which enables full memory access and hardware protection features (like memory segmentation and privilege levels). A 32-bit kernel can run only after this switch is complete.
 
-> **Note:** For regular applications, the OS manages memory layout, but when developing an OS itself, you must specify "where the code is loaded in memory" yourself. The **linker script** is what performs this role. For example, the bootloader must be located at memory address `0x7C00`, and the kernel code must be placed after it — this is specified in the linker script through the starting addresses and ordering of `.text`, `.data`, and `.bss` sections. `.text` holds executable code, `.data` holds initialized variables, and `.bss` holds uninitialized variables. `0x7C00` is the memory address where the BIOS places the boot sector — a hardware convention established decades ago. Without a linker script, the compiler would use arbitrary addresses and booting would fail.
+> **[Computer Architecture]** With legacy BIOS booting, when a computer is powered on, the BIOS loads the boot sector (512 bytes) into memory and executes it (UEFI loads an EFI executable instead of a boot sector). `boot.asm` is this boot sector code, which starts in Real Mode, transitions to Protected Mode, and then loads the kernel (`kernel.c`). `linker.ld` is a linker script that specifies where the kernel code and data are placed in memory.
+
+> **Note:** For regular applications, the OS manages memory layout, but when developing an OS itself, you must specify where the code is loaded in memory yourself. The **linker script** is what performs this role. For example, the bootloader must be located at memory address `0x7C00`, and the kernel code must be placed at the address where the bootloader loads it; this is specified in the linker script through the starting addresses and ordering of `.text`, `.data`, and `.bss` sections. `.text` holds executable code, `.data` holds initialized variables, and `.bss` holds uninitialized variables. `0x7C00` is the memory address where the BIOS places the boot sector, a convention established decades ago by the IBM PC BIOS. Without a linker script, the linker would use its default layout for regular applications and booting would fail.
 
 ### 8.1 What to Observe
 
-You do **not** need to successfully boot the OS — the **process** is what matters.
+You do **not** need to successfully boot the OS. The **process** is what matters.
 
 **Observe how the agent:**
 - Decomposes a complex problem into multiple files
@@ -273,9 +282,13 @@ You do **not** need to successfully boot the OS — the **process** is what matt
 **Follow-up prompts to try:**
 - _"Add keyboard input support"_
 - _"Explain what the linker script does, line by line"_
-- _"The build failed with error X — fix it"_
+- _"The build failed with error X. Fix it"_
 
-> **Note:** It is highly likely that the OS code generated by the agent will produce build errors when run as-is. Do not panic — just pass the error message directly to the agent. The key is to be specific: "The build failed. Here is the error message: [error message]."
+> **Note:** It is highly likely that the OS code generated by the agent will produce build errors when run as-is. In that case, pass the error message directly to the agent. The key is to be specific: "The build failed. Here is the error message: [error message]."
+
+> **Key Point:** Coding agents are just tools, and understanding the output they generate is still **the user's own** responsibility.
+
+> **Note:** It is important to view agents as powerful assistants, not magic tools. If you submit agent-generated code without understanding it, there is no learning benefit. Always ask "Explain why you did it this way," and develop the habit of reading and understanding the generated code yourself.
 
 ---
 
@@ -283,17 +296,13 @@ You do **not** need to successfully boot the OS — the **process** is what matt
 
 ## Summary
 
-| Task | Skills Acquired |
-|:-----|:----------------|
-| 1. Install Agent | Tool setup, authentication, basic prompting |
-| 2. File Organization | Delegating real tasks, reviewing agent decisions |
-| 3. Repo Documentation | Evaluating AI-generated technical documentation |
-| 4. RALPH Technique | Systematic iterative improvement using rubrics |
-| 5. Mini OS | Working with complex multi-file system projects |
-
-> Coding agents are just tools — understanding the output they generate is still **your** responsibility.
-
-> **Note:** It is important to view agents as "powerful assistants," not "magic tools." If you submit agent-generated code without understanding it, there is no learning benefit. Always ask "Explain why you did it this way," and develop the habit of reading and understanding the generated code yourself.
+| Concept | Key Summary |
+|:--------|:------------|
+| Agent installation (Task 1) | You set up the tool, authenticate, and check that it works with a basic prompt. |
+| File organization (Task 2) | You delegate a real task to the agent and review its decisions. |
+| Repository documentation (Task 3) | You evaluate AI-generated technical documentation for accuracy and completeness. |
+| RALPH technique (Task 4) | You use a rubric to improve the output systematically and iteratively. |
+| Mini OS (Task 5) | You work with the agent on a complex system project made of multiple files. |
 
 ---
 
@@ -303,22 +312,47 @@ You do **not** need to successfully boot the OS — the **process** is what matt
 
 1. What is the key difference between a coding agent and a simple code autocompletion tool like Copilot?
 
-   > **Answer:** Copilot autocompletes a single code fragment at the cursor. A **coding agent** invokes multi-step tools (read/write files, build, test, run commands) and autonomously plans, executes, and verifies work against a goal. Agents operate on the entire project state, not a single line.
+   <details>
+   <summary>Answer</summary>
+
+   Copilot autocompletes a single code fragment at the cursor. A **coding agent** invokes multi-step tools (read/write files, build, test, run commands) and autonomously plans, executes, and verifies work against a goal. Agents operate on the entire project state, not a single line.
+
+   </details>
 
 2. Why is it important to ask an agent to "show the plan first" before executing file system operations?
 
-   > **Answer:** File-system actions can be irreversible (deletes, overwrites). If the agent misunderstands intent, the damage is hard to undo. Reviewing the plan first lets the user catch scope errors (wrong paths, unintended deletes) before any disk change is made.
+   <details>
+   <summary>Answer</summary>
+
+   File-system actions can be irreversible (deletes, overwrites). If the agent misunderstands intent, the damage is hard to undo. Reviewing the plan first lets the user catch scope errors (wrong paths, unintended deletes) before any disk change is made.
+
+   </details>
 
 3. Describe the RALPH technique in your own words. Why does iterating with a rubric produce better results than a single prompt?
 
-   > **Answer:** RALPH (Rubric-Aligned Loop Prompt Hardening) defines explicit evaluation criteria (a rubric), then has the agent produce, self-evaluate against the rubric, and revise iteratively. A single prompt relies on one guess; a rubric-driven loop steers each revision toward measurable criteria, so the output quality converges rather than drifting.
+   <details>
+   <summary>Answer</summary>
+
+   RALPH (Request, Analyze, List issues, Prompt again, Harmonize) defines explicit evaluation criteria (a rubric), then has the agent produce, self-evaluate against the rubric, and revise iteratively. A single prompt relies on one guess; a rubric-driven loop steers each revision toward measurable criteria, so the output quality converges rather than drifting.
+
+   </details>
 
 4. When building a mini OS, what is the role of the bootloader, and why must it switch from Real Mode to Protected Mode?
 
-   > **Answer:** The bootloader is the tiny program the firmware runs first — it loads the kernel into memory and transfers control. On x86, Real Mode is 16-bit and limited to 1 MB addressing. Any modern kernel needs 32/64-bit addresses and memory protection, so the bootloader must enable Protected Mode before jumping to the kernel.
+   <details>
+   <summary>Answer</summary>
+
+   The bootloader is the tiny program the firmware runs first; it loads the kernel into memory and transfers control. On x86, Real Mode is 16-bit and limited to 1 MB addressing. Any modern kernel needs 32-bit or 64-bit addresses and memory protection, so the bootloader must enable Protected Mode before jumping to the kernel.
+
+   </details>
 
 5. If the agent-generated OS code fails to build, what is the most effective way to ask the agent to fix it?
 
-   > **Answer:** Feed back the full error output, the exact command that failed, and the environment (OS, compiler version). Define a clear success condition (e.g., "fix this error and keep existing tests passing"). The more concrete the context, the less the agent has to guess at the root cause.
+   <details>
+   <summary>Answer</summary>
+
+   Feed back the full error output, the exact command that failed, and the environment (OS, compiler version). Define a clear success condition (e.g., "fix this error and keep existing tests passing"). The more concrete the context, the less the agent has to guess at the root cause.
+
+   </details>
 
 ---

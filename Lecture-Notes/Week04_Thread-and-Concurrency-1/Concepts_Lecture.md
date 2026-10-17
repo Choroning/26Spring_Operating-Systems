@@ -1,10 +1,12 @@
 # Week 4 Lecture — Threads and Concurrency (1)
 
-> **Last Updated:** 2026-06-19
->
-> Operating System Concepts, Silberschatz - Ch 4 (4.1–4.4)
+[Repository Guide](../../README.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **Learning Objectives**:
+> **Last Updated:** 2026-10-18
+>
+> Operating System Concepts, Silberschatz, Ch 4 (4.1-4.4)
+
+> **Learning Objectives:**
 > 1. Explain what a thread is and how it differs from a process
 > 2. Distinguish concurrency from parallelism
 > 3. Compare multithreading models (Many-to-One, One-to-One, Many-to-Many)
@@ -19,7 +21,7 @@
   - [1.1 What Is a Thread?](#11-what-is-a-thread)
   - [1.2 Single-Threaded vs Multithreaded Processes](#12-single-threaded-vs-multithreaded-processes)
   - [1.3 Thread vs Process Comparison](#13-thread-vs-process-comparison)
-  - [1.4 Why Use Threads — Real-World Examples](#14-why-use-threads--real-world-examples)
+  - [1.4 Why Use Threads: Real-World Examples](#14-why-use-threads-real-world-examples)
   - [1.5 Multithreaded Web Server](#15-multithreaded-web-server)
 - [2. Benefits of Multithreading](#2-benefits-of-multithreading)
   - [2.1 Four Benefits of Threads](#21-four-benefits-of-threads)
@@ -40,10 +42,10 @@
   - [6.1 Thread Library Overview](#61-thread-library-overview)
   - [6.2 Asynchronous vs Synchronous Threading](#62-asynchronous-vs-synchronous-threading)
   - [6.3 Pthreads Overview](#63-pthreads-overview)
-  - [6.4 Pthreads Example — Integer Summation](#64-pthreads-example--integer-summation)
-  - [6.5 Pthreads — Creating and Joining Multiple Threads](#65-pthreads--creating-and-joining-multiple-threads)
+  - [6.4 Pthreads Example: Integer Summation (Figure 4.11)](#64-pthreads-example-integer-summation-figure-411)
+  - [6.5 Pthreads: Creating and Joining Multiple Threads](#65-pthreads-creating-and-joining-multiple-threads)
   - [6.6 pthread_create() Details](#66-pthread_create-details)
-  - [6.7 Windows Thread Example](#67-windows-thread-example)
+  - [6.7 Windows Thread Example (Figure 4.13)](#67-windows-thread-example-figure-413)
 - [7. Java Threads](#7-java-threads)
   - [7.1 Java Thread Overview](#71-java-thread-overview)
   - [7.2 Runnable Interface](#72-runnable-interface)
@@ -54,10 +56,10 @@
   - [8.1 Executor Overview](#81-executor-overview)
   - [8.2 Thread Pool Types](#82-thread-pool-types)
   - [8.3 Benefits of Thread Pools](#83-benefits-of-thread-pools)
-  - [8.4 Callable and Future — Returning Results](#84-callable-and-future--returning-results)
+  - [8.4 Callable and Future: Returning Results](#84-callable-and-future-returning-results)
   - [8.5 execute() vs submit()](#85-execute-vs-submit)
   - [8.6 JVM and Host OS Relationship](#86-jvm-and-host-os-relationship)
-- [9. Lab — Pthreads Multithreaded Programming](#9-lab--pthreads-multithreaded-programming)
+- [9. Lab: Pthreads Multithreaded Programming](#9-lab-pthreads-multithreaded-programming)
   - [9.1 Lab Overview: Splitting Array Summation Across Multiple Threads](#91-lab-overview-splitting-array-summation-across-multiple-threads)
   - [9.2 Thread Function Implementation](#92-thread-function-implementation)
   - [9.3 Main Function](#93-main-function)
@@ -79,7 +81,7 @@
 
 A **Thread** is the **basic unit of CPU utilization** within a process.
 
-> If a process is a factory, then threads are the workers inside it. They share the same building (code, data, files) but each has their own workstation (stack) and tracks their own progress (PC, registers).
+> **Note:** **Analogy.** If a process is a factory, then threads are the workers inside it. They share the same building (code, data, files) but each has their own workstation (stack) and tracks their own progress (PC, registers).
 
 What each thread **owns independently**:
 - Thread ID
@@ -87,25 +89,29 @@ What each thread **owns independently**:
 - Register Set
 - **Stack** (function calls, local variables)
 
-> **Program Counter (PC)**: a register that holds the memory address of the next instruction to be executed.
+> **Definition:** The **Program Counter (PC)** is a register that holds the memory address of the next instruction to be executed.
 
-> **Register Set**: the collection of CPU registers (general-purpose, status, etc.) whose values define a thread's execution state.
+> **Definition:** The **Register Set** is the collection of CPU registers (general-purpose, status, etc.) whose values define a thread's execution state.
 
 What threads within the same process **share**:
 - Code section (program code)
 - Data section (global variables)
 - OS resources (open files, signals, etc.)
 
-> Traditional process = a single thread of control
-> Modern process = **multiple threads** of control
+A traditional process has a single thread of control,
+while a modern process can have **multiple threads** of control.
 
-> **Key Point:** Threads are sometimes called "lightweight processes." If a process is the **unit of resource ownership** (address space, files, etc.), a thread is the **unit of scheduling** (PC, stack, registers). Multiple execution flows can be created within a single process, saving resources while achieving parallelism.
+> **Key Point:** Threads are sometimes called **lightweight processes**. If a process is the **unit of resource ownership** (address space, files, etc.), a thread is the **unit of scheduling** (PC, stack, registers). Multiple execution flows can be created within a single process, saving resources while achieving parallelism.
 
 ### 1.2 Single-Threaded vs Multithreaded Processes
 
-![Single-threaded process](../images/figures/fig4_1_single.png) ![Multithreaded process](../images/figures/fig4_1_multi.png)
+![Figure 1. Structure of a single-threaded process](../../images/Week04_Figure-4-1-Single.png)
 
-*Silberschatz Figure 4.1 — Single-threaded and multithreaded processes*
+*Figure 1. Structure of a single-threaded process*
+
+![Figure 2. Structure of a multithreaded process](../../images/Week04_Figure-4-1-Multi.png)
+
+*Figure 2. Structure of a multithreaded process*
 
 - Single-threaded: one execution flow, one PC, one stack
 - Multithreaded: **multiple execution flows**, each with its own independent PC and stack
@@ -119,21 +125,23 @@ What threads within the same process **share**:
 |----------|---------|--------|
 | Creation cost | **High** (memory and resource allocation) | **Low** (only stack and registers needed) |
 | Context switching | **Slow** (address space switch) | **Fast** (same address space) |
-| Memory sharing | Isolated by default (IPC (Inter-Process Communication) required — pipes, sockets, etc.) | **Naturally shared** (code, data) |
+| Memory sharing | Isolated by default (IPC (Inter-Process Communication) such as pipes or sockets required) | **Naturally shared** (code, data) |
 | Independence | High (one dying has little effect on others) | Low (one dying can affect the entire process) |
 | Communication | IPC required (pipes, sockets, etc.) | Direct communication via global variables |
 
-> **IPC (Inter-Process Communication)** was covered in detail in Week 3. Since threads share the same address space, they can communicate directly through shared memory without IPC.
+*Table 1. Comparison of processes and threads*
 
-> Threads are also called **"Lightweight Processes (LWP)."**
+> **Note:** **IPC (Inter-Process Communication)** was covered in detail in Week 3. Since threads share the same address space, they can communicate directly through shared memory without IPC.
 
-> **[Computer Architecture]** Thread context switching is faster than process switching because the address space is the same, so **no TLB flush is needed**. When switching processes, the page table changes, requiring TLB invalidation, which causes frequent TLB misses and degrades performance. A page table is the OS's mapping from a program's logical addresses to physical RAM locations; each process has its own, so switching processes forces the CPU to load a different one.
+> **Note:** Threads are called **Lightweight Processes (LWP)** because, as the table shows, their creation and switching costs are lower than those of processes.
+
+> **[Computer Architecture]** Thread context switching is faster than process switching because the address space is the same, so **no TLB flush is needed**. When switching processes, the page table changes, so unless TLB entries are tagged with an address-space identifier such as an ASID, the TLB must be invalidated, which causes frequent TLB misses and degrades performance. A page table is the OS's mapping from a program's logical addresses to physical RAM locations; each process has its own, so switching processes forces the CPU to load a different one.
 >
-> **TLB (Translation Lookaside Buffer)**: a hardware cache that speeds up virtual-to-physical address translation. Thread switches within the same process don't require a TLB flush since they share the same address space.
+> The **TLB (Translation Lookaside Buffer)** is a hardware cache that speeds up virtual-to-physical address translation. Thread switches within the same process do not require a TLB flush since they share the same address space.
 
-> **Exam Tip:** "Differences between threads and processes" or "why threads are called lightweight processes" is a frequently tested topic. You should be able to precisely distinguish what is **shared** (code, data, files) and what is **independent** (PC, registers, stack).
+> **Note:** **Exam Tip.** The differences between threads and processes and the reason threads are called lightweight processes are frequently tested topics. You should be able to precisely distinguish what is **shared** (code, data, files) and what is **independent** (PC, registers, stack).
 
-### 1.4 Why Use Threads — Real-World Examples
+### 1.4 Why Use Threads: Real-World Examples
 
 **Web Browser:**
 - Thread 1: Receiving data from the network
@@ -145,25 +153,25 @@ What threads within the same process **share**:
 - Thread 2: Handling keystrokes
 - Thread 3: Spell/grammar checking (background)
 
-**Photo App — Thumbnail Generation:**
+**Thumbnail Generation in a Photo App:**
 - A separate thread processes each image in the collection
 - Parallel processing reduces total elapsed time
 
 ### 1.5 Multithreaded Web Server
 
-![Multithreaded server architecture](../images/figures/fig4_2.png)
+![Figure 3. Multithreaded server architecture](../../images/Week04_Figure-4-2.png)
 
-*Silberschatz Figure 4.2 — Multithreaded server architecture*
+*Figure 3. Multithreaded server architecture*
 
 **Traditional approach**: Create a new **process** per request → time-consuming, resource-wasteful
 
 **Modern approach**: Create a new **thread** per request
-- Shares the same address space, so it's **fast and lightweight**
+- Shares the same address space, so it is **fast and lightweight**
 - Advantageous for handling a large number of concurrent connections
 
-> The Linux kernel itself is multithreaded — `kthreadd` (pid=2) is the parent of all kernel threads
+> **Note:** The Linux kernel itself is multithreaded. `kthreadd` (pid=2) is the parent of all other kernel threads.
 
-> **Note:** Modern high-performance servers have evolved beyond "thread-per-request" to use **event loop** architectures. For example, Nginx uses a few worker threads that handle tens of thousands of concurrent connections via I/O multiplexing with `epoll`/`kqueue`. Node.js also uses a single-threaded event loop. However, "thread-per-request" remains important as a fundamental concept, and Java servlet containers (Tomcat, etc.) use this model.
+> **Note:** Modern high-performance servers have evolved beyond the thread-per-request model to use **event loop** architectures. For example, Nginx uses a few worker processes, each running an event loop that handles tens of thousands of concurrent connections via I/O multiplexing with `epoll`/`kqueue`. Node.js also uses a single-threaded event loop. However, the thread-per-request model remains important as a fundamental concept, and Java servlet containers (Tomcat, etc.) use this model.
 
 ---
 
@@ -201,9 +209,11 @@ What threads within the same process **share**:
 | **Economy** | Lower creation/switching costs than processes | Web server request handling |
 | **Scalability** | Parallel execution on multicore | Video encoding, scientific computing |
 
-> When a web server creates threads instead of processes for each request, overhead is significantly reduced.
+*Table 2. Four benefits of threads with representative examples*
 
-> **Exam Tip:** The four benefits of threads (Responsiveness, Resource Sharing, Economy, Scalability) are frequently tested in short-answer or essay form. You should be able to explain the **key reason** for each benefit in a single sentence.
+> **Note:** When a web server creates threads instead of processes for each request, overhead is significantly reduced.
+
+> **Note:** **Exam Tip.** The four benefits of threads (Responsiveness, Resource Sharing, Economy, Scalability) are frequently tested in short-answer or essay form. You should be able to explain the **key reason** for each benefit in a single sentence.
 
 ---
 
@@ -215,34 +225,34 @@ What threads within the same process **share**:
 
 **Concurrency**
 - Multiple tasks **making progress** at the same time
-- Possible even on a single core — **interleaving** through time-sharing
+- Possible even on a single core through **interleaving** by time-sharing
 
-![Concurrent execution — single core](../images/figures/fig4_3.png)
+![Figure 4. Concurrent execution on a single-core system](../../images/Week04_Figure-4-3.png)
 
-*Silberschatz Figure 4.3 — Concurrent execution on a single-core system*
+*Figure 4. Concurrent execution on a single-core system*
 
 **Parallelism**
 - Multiple tasks **actually executing simultaneously**
-- Only possible on multicore — each core runs a different thread
+- Only possible on multicore (or multiprocessor) systems, where each core runs a different thread
 
-![Parallel execution — multicore](../images/figures/fig4_4.png)
+![Figure 5. Parallel execution on a multicore system](../../images/Week04_Figure-4-4.png)
 
-*Silberschatz Figure 4.4 — Parallel execution on a multicore system*
+*Figure 5. Parallel execution on a multicore system*
 
-> Concurrency without parallelism is possible, but parallelism without concurrency is not
+> **Note:** Concurrency without parallelism is possible, but parallelism without concurrency is not.
 
-> Concurrency is one person alternating between cooking and laundry (both in progress, but only one at a time). Parallelism is two people (one cooking, one doing laundry) truly working at the same time.
+> **Note:** **Analogy.** Concurrency is one person alternating between cooking and laundry (both in progress, but only one at a time). Parallelism is two people (one cooking, one doing laundry) truly working at the same time.
 
 > **Key Point:** The distinction between concurrency and parallelism must be clearly understood. Concurrency is a **logical concept** that includes tasks alternating execution on a single core. Parallelism is a **physical concept** meaning actual simultaneous execution across multiple cores.
 
 ### 3.2 Single-Core vs Multicore Execution Comparison
 
-**Single-Core System (Figure 4.3):**
+**Single-Core System (Figure 4):**
 - 4 threads: T1, T2, T3, T4
 - Only one runs at a time → concurrency achieved through **interleaving**
 - Not true parallelism
 
-**Multicore System (Figure 4.4):**
+**Multicore System (Figure 5):**
 - Core 1: Alternates between T1 and T3
 - Core 2: Alternates between T2 and T4
 - T1 and T2 execute **simultaneously** → **true parallelism**
@@ -252,6 +262,8 @@ What threads within the same process **share**:
 | Concurrency | Yes (interleaving) | Yes (parallel) |
 | Parallelism | No | **Yes** |
 | Performance gain | Only time-sharing | Actual throughput increase |
+
+*Table 3. Comparison of single-core and multicore systems*
 
 ### 3.3 Five Challenges of Multicore Programming
 
@@ -272,16 +284,16 @@ Challenges that must be overcome to **effectively utilize** multicore systems:
 **4. Data dependency**
 - If there are data dependencies between tasks, **synchronization** is needed
 - If Task B requires the result of Task A, the order must be guaranteed
-- Covered in detail in Ch 6
+- Synchronization is covered in detail in Week 9
 
 **5. Testing and debugging**
 - Parallel execution allows for **various execution paths**
 - **Non-deterministic** results can occur
 - Hard-to-reproduce bugs (heisenbugs) emerge
 
-> Due to these challenges, many experts argue that the multicore era requires **fundamentally new** software design approaches.
+> **Note:** Due to these challenges, many experts argue that the multicore era requires **fundamentally new** software design approaches.
 
-> **Note:** "Heisenbug" is a term derived from Heisenberg's Uncertainty Principle, referring to bugs that disappear when you try to observe (debug) them. A classic example in multithreaded programs is when attaching a debugger changes the timing, preventing the bug from reproducing.
+> **Note:** The term **heisenbug** derives from Heisenberg's Uncertainty Principle and refers to bugs that disappear when you try to observe (debug) them. A classic example in multithreaded programs is when attaching a debugger changes the timing, preventing the bug from reproducing.
 
 ### 3.4 Amdahl's Law
 
@@ -294,7 +306,7 @@ $$
 - **S** = serial execution fraction (proportion of the serial portion)
 - **N** = number of processing cores
 
-> In this formula, S is the fraction of the program that must execute serially (cannot be parallelized), and N is the number of cores. The denominator represents: serial time (S) + parallel time divided among N cores ((1-S)/N).
+> **Note:** In this formula, S is the fraction of the program that must execute serially (cannot be parallelized), and N is the number of cores. The denominator represents: serial time (S) + parallel time divided among N cores ((1-S)/N).
 
 Key implications:
 - Even as N approaches infinity, the speedup converges to **1/S**
@@ -306,26 +318,28 @@ Key implications:
 |:---:|:---:|:---:|:---:|:---:|
 | 5% | 1.90x | 3.48x | 5.93x | **20.00x** |
 | 10% | 1.82x | 3.08x | 4.71x | **10.00x** |
-| 25% | 1.60x | 2.28x | 3.02x | **4.00x** |
+| 25% | 1.60x | 2.29x | 2.91x | **4.00x** |
 | 50% | 1.33x | 1.60x | 1.78x | **2.00x** |
+
+*Table 4. Maximum speedup by serial fraction and number of cores*
 
 Example: A program that is 75% parallel + 25% serial
 - 2 cores → **1.6x** speedup
-- 4 cores → **2.28x** speedup
+- 4 cores → about **2.29x** speedup
 - No matter how many cores are added, the maximum is **4x** (= 1/0.25)
 
-> The larger the serial fraction, the more **limited** the performance improvement from adding cores.
+> **Note:** The larger the serial fraction, the more **limited** the performance improvement from adding cores.
 
-![Amdahl's Law graph](../images/figures/fig4_amdahl.png)
+![Figure 6. Speedup versus number of cores under Amdahl's Law](../../images/Week04_Amdahl.png)
 
-*Silberschatz, Amdahl's Law — Speedup vs. number of cores*
+*Figure 6. Speedup versus number of cores under Amdahl's Law*
 
 - The smaller S is (higher parallelization ratio), the greater the effect of adding cores
 - If S = 0.50, the maximum is 2x regardless of the number of cores
 
-> **Exam Tip:** The Amdahl's Law formula and calculating "speedup on N cores given S" are frequently tested. In particular, remember that **speedup = 1/S when N → ∞**.
+> **Note:** **Exam Tip.** The Amdahl's Law formula and calculating the speedup on N cores for a given S are frequently tested. In particular, remember that **speedup = 1/S when N → ∞**.
 
-> **[Algorithms]** Amdahl's Law is a core concept in parallel algorithm design. No matter how excellent a parallel algorithm is, if there are portions that must execute sequentially (e.g., result merging, initialization), those portions determine the upper bound of speedup.
+> **[Parallel Computing]** Amdahl's Law is a core concept in parallel algorithm design. No matter how excellent a parallel algorithm is, if there are portions that must execute sequentially (e.g., result merging, initialization), those portions determine the upper bound of speedup.
 
 ### 3.5 Types of Parallelism
 
@@ -345,9 +359,9 @@ Example: A program that is 75% parallel + 25% serial
 
 **Data Parallelism vs Task Parallelism Comparison:**
 
-![Data parallelism vs task parallelism](../images/figures/fig4_5.png)
+![Figure 7. Data parallelism and task parallelism](../../images/Week04_Figure-4-5.png)
 
-*Silberschatz Figure 4.5 — Data parallelism vs task parallelism*
+*Figure 7. Data parallelism and task parallelism*
 
 | Category | Data Parallelism | Task Parallelism |
 |----------|-----------------|------------------|
@@ -355,9 +369,11 @@ Example: A program that is 75% parallel + 25% serial
 | Operation type | **Same** operation | **Different** operations |
 | Scalability | Proportional to data size | Depends on number of tasks |
 
-> In practice, **hybrid** forms are common.
+*Table 5. Comparison of data parallelism and task parallelism*
 
-> **Note:** GPU programming (CUDA, OpenCL) is a representative use case of data parallelism. Thousands of cores perform the same operation on different data fragments simultaneously. In contrast, microservice architectures are closer to task parallelism — different services perform different functions.
+> **Note:** In practice, **hybrid** forms are common.
+
+> **Note:** GPU programming (CUDA, OpenCL) is a representative use case of data parallelism. Thousands of cores perform the same operation on different data fragments simultaneously. In contrast, microservice architectures are closer to task parallelism because different services perform different functions.
 
 ---
 
@@ -365,25 +381,25 @@ Example: A program that is 75% parallel + 25% serial
 
 ## 4. User Threads and Kernel Threads
 
-![User threads and kernel threads](../images/figures/fig4_6.png)
+![Figure 8. User threads and kernel threads](../../images/Week04_Figure-4-6.png)
 
-*Silberschatz Figure 4.6 — User threads and kernel threads*
+*Figure 8. User threads and kernel threads*
 
 **User Threads:**
 - Managed by user-level libraries (without kernel support)
 - Examples: POSIX Pthreads, Windows threads, Java threads
 
-> User-level threads are managed entirely by a library in user space — the library maintains its own thread table and performs context switches without kernel involvement. The kernel is unaware of these threads, which means if one user thread makes a blocking system call, all threads in that process may be blocked.
+> **Note:** Pure user-level threads are managed entirely by a library in user space. The library maintains its own thread table and performs context switches without kernel involvement. The kernel is unaware of these threads, which means if one user thread makes a blocking system call, all threads in that process may be blocked. This is the many-to-one model of Section 5.1.
 
 **Kernel Threads:**
 - **Directly managed** by the OS kernel
 - Supported by virtually all modern OSes: Windows, Linux, macOS
 
-> Key question: **How** should user threads be **mapped** to kernel threads?
+The key question is **how** user threads should be **mapped** to kernel threads.
 
-> **Key Point:** A common source of confusion with the terms "user threads" and "kernel threads" is that Pthreads and Java threads are ultimately mapped to kernel threads for execution. Here, "user threads" refers to **threads created and managed through user-level APIs**, while "kernel threads" refers to **threads that the kernel's scheduler recognizes and directly schedules**. The mapping model (many-to-one, one-to-one, many-to-many) determines the relationship between the two.
+> **Key Point:** A common source of confusion with the terms user thread and kernel thread is that Pthreads and Java threads are ultimately mapped to kernel threads for execution. Here, a user thread means **a thread created and managed through user-level APIs**, while a kernel thread means **a thread that the kernel's scheduler recognizes and directly schedules**. The mapping model (many-to-one, one-to-one, many-to-many) determines the relationship between the two.
 
-> Note: The examples listed (Pthreads, Java threads) are called "user threads" because they are created via user-level APIs. However, on modern Linux, each user thread maps one-to-one to a kernel thread — we will see why in Section 5.
+> **Note:** The examples listed (Pthreads, Java threads) are called user threads because they are created via user-level APIs. However, on modern Linux, each user thread maps one-to-one to a kernel thread, and Section 5 explains why.
 
 ---
 
@@ -393,18 +409,18 @@ Example: A program that is 75% parallel + 25% serial
 
 ### 5.1 Many-to-One Model
 
-![Many-to-one model](../images/figures/fig4_7.png)
+![Figure 9. Many-to-one model](../../images/Week04_Figure-4-7.png)
 
-*Silberschatz Figure 4.7 — Many-to-one model*
+*Figure 9. Many-to-one model*
 
 Multiple user threads map to **a single** kernel thread.
 
 Advantages:
-- Thread management is **efficient** since it's done in user space
+- Thread management is **efficient** since it is done in user space
 
 Disadvantages:
 - If one thread makes a **blocking system call** → **the entire process blocks**
-- **True parallelism is impossible** — the kernel can only schedule one thread at a time
+- **True parallelism is impossible**. Because there is only one kernel thread, the kernel can schedule only one thread at a time
 
 Use cases:
 - Former Solaris Green Threads
@@ -413,9 +429,9 @@ Use cases:
 
 ### 5.2 One-to-One Model
 
-![One-to-one model](../images/figures/fig4_8.png)
+![Figure 10. One-to-one model](../../images/Week04_Figure-4-8.png)
 
-*Silberschatz Figure 4.8 — One-to-one model*
+*Figure 10. One-to-one model*
 
 Each user thread maps to **one** kernel thread.
 
@@ -433,9 +449,9 @@ Use cases:
 
 ### 5.3 Many-to-Many Model
 
-![Many-to-many model](../images/figures/fig4_9.png)
+![Figure 11. Many-to-many model](../../images/Week04_Figure-4-9.png)
 
-*Silberschatz Figure 4.9 — Many-to-many model*
+*Figure 11. Many-to-many model*
 
 Multiple user threads map to **an equal or smaller number of** kernel threads.
 
@@ -447,15 +463,15 @@ Advantages:
 Disadvantages:
 - **Very complex to implement**
 
-> The complexity arises from needing a user-level scheduler that coordinates with the kernel scheduler, plus mechanisms like upcalls for the kernel to notify the user-level scheduler about events. An upcall is a mechanism where the kernel sends a notification to a user-level scheduler — for example, alerting it that a thread is about to block so the scheduler can switch to a different user thread.
+> **Note:** The complexity arises from needing a user-level scheduler that coordinates with the kernel scheduler, plus mechanisms like upcalls for the kernel to notify the user-level scheduler about events. An upcall is a mechanism where the kernel sends a notification to a user-level scheduler, for example, alerting it that a thread is about to block so the scheduler can switch to a different user thread.
 
-> Theoretically the most flexible, but in practice the one-to-one model dominates.
+> **Note:** Theoretically the most flexible, but in practice the one-to-one model dominates.
 
 ### 5.4 Two-Level Model
 
-![Two-level model](../images/figures/fig4_10.png)
+![Figure 12. Two-level model](../../images/Week04_Figure-4-10.png)
 
-*Silberschatz Figure 4.10 — Two-level model*
+*Figure 12. Two-level model*
 
 **Many-to-many** + allows **one-to-one**
 
@@ -463,7 +479,7 @@ Disadvantages:
 - Specific **critical threads** can be **directly bound** to kernel threads
   - Example: Threads requiring real-time processing
 
-> In practice, the one-to-one model became standard due to implementation complexity; many-to-many is used internally by some concurrency libraries
+> **Note:** In practice, the one-to-one model became standard due to implementation complexity; many-to-many is used internally by some concurrency libraries.
 
 ### 5.5 Multithreading Model Summary
 
@@ -473,6 +489,8 @@ Disadvantages:
 | **One-to-One** | 1:1 | High concurrency, parallel execution | Thread count limited (overhead) | **Linux, Windows** |
 | Many-to-Many | N:M | Flexible, parallel + non-blocking | Complex implementation | Some libraries |
 | Two-Level | N:M + 1:1 | Flexible + critical thread binding | Complex implementation | Former Solaris, IRIX |
+
+*Table 6. Comparison of multithreading models*
 
 Key points:
 - As processing cores increased, kernel thread count limits became less important
@@ -501,9 +519,9 @@ Two implementation approaches:
 - Library function call = **system call**
 
 Three major thread libraries:
-1. **POSIX Pthreads** — user-level or kernel-level
-2. **Windows Threads** — kernel-level
-3. **Java Threads** — runs on the JVM, uses the host OS's library
+1. **POSIX Pthreads**: user-level or kernel-level
+2. **Windows Threads**: kernel-level
+3. **Java Threads**: runs on the JVM, uses the host OS's library
 
 ### 6.2 Asynchronous vs Synchronous Threading
 
@@ -512,22 +530,22 @@ Two main thread creation strategies:
 **Asynchronous Threading**
 - Once the parent thread creates a child thread, they execute **independently**
 - **Little data sharing** between parent and child
-- Example: Multithreaded web server — each request handled by an independent thread
+- Example: In a multithreaded web server, each request is handled by an independent thread
 
 **Synchronous Threading**
 - The parent thread **waits (joins)** for all child threads to complete
 - Child threads **deliver results** to the parent upon completion
 - **Significant data sharing** between tasks
-- Example: Parallel summation — parent merges partial sums from each thread
+- Example: In parallel summation, the parent merges partial sums from each thread
 
-> All examples in this chapter follow the **synchronous threading** pattern.
+> **Note:** The examples in Sections 6.4-6.7 all follow the **synchronous threading** pattern.
 
 ### 6.3 Pthreads Overview
 
 **POSIX Pthreads** = IEEE 1003.1c standard
 
-> This is a **specification**, not an **implementation**
-> OS designers are free to choose their implementation approach
+> **Note:** This is a **specification**, not an **implementation**.
+> OS designers are free to choose their implementation approach.
 
 Key API functions:
 
@@ -538,10 +556,12 @@ Key API functions:
 | `pthread_exit()` | Terminate the current thread |
 | `pthread_attr_init()` | Initialize thread attributes |
 
+*Table 7. Key Pthreads API functions*
+
 Supported environments: UNIX, Linux, macOS
 - Windows does not natively support it (third-party implementations exist)
 
-### 6.4 Pthreads Example — Integer Summation (Figure 4.11)
+### 6.4 Pthreads Example: Integer Summation (Figure 4.11)
 
 ```c
 #include <pthread.h>
@@ -576,10 +596,10 @@ void *runner(void *param)
 
 **Execution flow** (input = 5):
 
-1. `main()` calls `pthread_attr_init(&attr)` — set default attributes
+1. `main()` calls `pthread_attr_init(&attr)` to set default attributes
 2. `pthread_create(&tid, &attr, runner, argv[1])`
    - Creates a new thread, starts execution at `runner("5")`
-3. `pthread_join(tid, NULL)` — parent **waits** for child to complete
+3. With `pthread_join(tid, NULL)`, the parent **waits** for the child to complete
 4. Child thread (`runner`):
    - `upper = 5`, sum = 1+2+3+4+5 = **15**
    - Terminates with `pthread_exit(0)`
@@ -590,7 +610,7 @@ void *runner(void *param)
 - Without `pthread_join()`, the parent might terminate first
 - `runner()` takes a `void *` parameter and returns `void *`
 
-### 6.5 Pthreads — Creating and Joining Multiple Threads
+### 6.5 Pthreads: Creating and Joining Multiple Threads
 
 **Multiple thread join pattern (Figure 4.12):**
 
@@ -632,13 +652,15 @@ int pthread_create(
 | `start_routine` | Function pointer of the form `void *func(void *param)` |
 | `arg` | Argument to be passed to start_routine (void * type) |
 
-> Reading the declaration `void *(*start_routine)(void*)`: `start_routine` is a pointer to a function that takes a `void *` parameter and returns `void *`. The `void *` type acts as a generic pointer — it can point to any data type.
+*Table 8. Parameters of `pthread_create()`*
+
+> **Note:** **Reading the declaration.** In `void *(*start_routine)(void*)`, `start_routine` is a pointer to a function that takes a `void *` parameter and returns `void *`. The `void *` type acts as a generic pointer and can point to an object of any data type.
 
 Return value: 0 on success, error number on failure
 
 ### 6.7 Windows Thread Example (Figure 4.13)
 
-Windows defines its own type aliases: `DWORD` (32-bit unsigned integer), `HANDLE` (opaque OS resource identifier), `LPVOID` (equivalent to `void *`), and `WINAPI` (calling-convention keyword — treat it as decoration).
+Windows defines its own type aliases: `DWORD` (32-bit unsigned integer), `HANDLE` (opaque OS resource identifier), `LPVOID` (equivalent to `void *`), and `WINAPI` (calling-convention keyword, which can be treated as decoration when reading the code).
 
 ```c
 #include <windows.h>
@@ -686,6 +708,8 @@ int main(int argc, char *argv[])
 | Handle cleanup | Automatic | `CloseHandle()` required |
 | Shared data | Global variables | Global variables (DWORD, etc.) |
 
+*Table 9. API comparison of Pthreads and Windows threads*
+
 **WaitForMultipleObjects() example:**
 ```c
 /* Wait until all N thread handles in the array have completed */
@@ -713,7 +737,7 @@ Two ways to create threads:
 1. **Extend the Thread class** and override `run()`
 2. **Implement the Runnable interface** (more common)
 
-> The Runnable approach is recommended — because Java does not support multiple inheritance
+> **Note:** The Runnable approach is recommended because Java does not support multiple inheritance of classes, so a class that extends Thread cannot extend any other class.
 
 ### 7.2 Runnable Interface
 
@@ -735,14 +759,14 @@ What the `start()` method does:
 1. **Allocates memory and initializes** a new thread in the JVM
 2. Calls the `run()` method to make the thread **runnable**
 
-> Note: If you call `run()` directly, it executes in the **same thread**!
+> **Caution:** If you call `run()` directly, no new thread is created and it executes in the **same thread** that called it.
 > You must call `start()` to create a new thread.
 
 ### 7.3 Lambda Expressions
 
 **Method 2: Lambda expressions (Java 8+)**
 
-A lambda expression is a compact, anonymous function written inline — it eliminates the need to define a whole class. A functional interface is any interface with exactly one abstract method, which lets Java infer what the lambda should implement.
+A lambda expression is a compact, anonymous function written inline, which eliminates the need to define a whole class. A functional interface is any interface with exactly one abstract method, which lets Java infer what the lambda should implement.
 
 Runnable is a **functional interface** with only one abstract method → lambda can be used
 
@@ -764,7 +788,7 @@ new Thread(() -> {
 }).start();
 ```
 
-> Using lambda expressions allows defining thread tasks inline without a separate class definition, making **code more concise**.
+> **Note:** Using lambda expressions allows defining thread tasks inline without a separate class definition, making **code more concise**.
 
 ### 7.4 join()
 
@@ -807,6 +831,8 @@ for (int i = 0; i < 10; i++) {
 | Shared data | Global variables | Global variables | **Object fields** (no global variables) |
 | Returning results | Difficult (`void *`) | Difficult | **Callable/Future** |
 
+*Table 10. Comparison of Pthreads, Windows, and Java threads*
+
 Java characteristics:
 - **No concept of global data**
 - Data sharing between threads is **explicitly set up through objects**
@@ -840,9 +866,9 @@ Executor service = new SomeExecutor();
 service.execute(new Task());
 ```
 
-> **Producer-consumer model**: Tasks (Runnables) are produced, and threads consume them for execution. The producer-consumer model is a pattern where one part of the program generates work items (producer) and another part executes them (consumer) — here, your code produces `Runnable` tasks and the thread pool's threads consume and run them.
+> **Definition:** The **producer-consumer model** is a pattern where one part of the program generates work items (producer) and another part executes them (consumer). In an Executor, your code produces tasks (`Runnable` objects) and the thread pool's threads consume and run them.
 
-> **[Programming Languages]** The Executor pattern is an example of the **Strategy Pattern**. By separating the task (what to do) from the execution strategy (how to execute), the same task can be run in various ways: single thread, thread pool, scheduling, etc.
+> **[Software Engineering]** The Executor pattern is an example of the **Strategy Pattern**. By separating the task (what to do) from the execution strategy (how to execute), the same task can be run in various ways: single thread, thread pool, scheduling, etc.
 
 ### 8.2 Thread Pool Types
 
@@ -850,9 +876,11 @@ Factory methods of the `Executors` class:
 
 | Method | Description |
 |--------|-------------|
-| `newSingleThreadExecutor()` | Thread pool of size 1 — guarantees sequential execution |
+| `newSingleThreadExecutor()` | Thread pool of size 1, guarantees sequential execution |
 | `newFixedThreadPool(int n)` | Maintains a fixed pool of n threads |
 | `newCachedThreadPool()` | Creates threads as needed, **reuses** idle threads |
+
+*Table 11. Thread pool factory methods of the `Executors` class*
 
 ```java
 // Fixed thread pool example
@@ -865,7 +893,7 @@ for (int i = 0; i < 100; i++) {
 pool.shutdown();  // Shut down pool after all tasks complete
 ```
 
-> Using thread pools reduces thread creation/destruction costs and **limits** the number of concurrent threads.
+> **Note:** Using thread pools reduces thread creation/destruction costs and **limits** the number of concurrent threads.
 
 ### 8.3 Benefits of Thread Pools
 
@@ -881,9 +909,9 @@ pool.shutdown();  // Shut down pool after all tasks complete
 - Separates task definition (what to do) from execution strategy (how to execute)
 - Various strategies possible: delayed execution, periodic execution, etc.
 
-> Pool size should be configured considering **CPU count, memory, and expected concurrent requests**
+> **Note:** Pool size should be configured considering **CPU count, memory, and expected concurrent requests**.
 
-### 8.4 Callable and Future — Returning Results
+### 8.4 Callable and Future: Returning Results
 
 **Problem**: Runnable's `run()` has no return value (`void`)
 
@@ -951,9 +979,11 @@ public class Driver {
 
 | Method | Parameter | Return Value | When to Use |
 |--------|-----------|-------------|-------------|
-| `execute(Runnable)` | Runnable | None (`void`) | Tasks that don't need results |
+| `execute(Runnable)` | Runnable | None (`void`) | Tasks that do not need results |
 | `submit(Callable)` | Callable | `Future<V>` | Tasks that **need results** |
 | `submit(Runnable)` | Runnable | `Future<?>` | Only checking completion status |
+
+*Table 12. Comparison of `execute()` and `submit()`*
 
 **Thread pool example (Figure 4.15):**
 
@@ -989,6 +1019,8 @@ public class ThreadPoolExample {
  └──────────────────────────────┘
 ```
 
+*Figure 13. Layers of a Java application, the JVM, and the host OS*
+
 - The JVM specification does not prescribe **how** Java threads are **mapped** to the OS
 - It depends on the implementation:
   - **Windows**: One-to-one model → each Java thread maps to a kernel thread
@@ -999,7 +1031,7 @@ public class ThreadPoolExample {
 
 <br>
 
-## 9. Lab — Pthreads Multithreaded Programming
+## 9. Lab: Pthreads Multithreaded Programming
 
 ### 9.1 Lab Overview: Splitting Array Summation Across Multiple Threads
 
@@ -1019,6 +1051,8 @@ public class ThreadPoolExample {
               ↘            ↓              ↓            ↙
                                Total Sum
 ```
+
+*Figure 14. Data-parallel split of a 1000-element array summation across four threads*
 
 ### 9.2 Thread Function Implementation
 
@@ -1102,7 +1136,7 @@ gcc -pthread lab_sum.c -o lab_sum
 ./lab_sum
 ```
 
-> The `-pthread` flag is required (links the Pthreads library)
+> **Note:** The `-pthread` flag is required (links the Pthreads library).
 
 ### 9.5 Why the thread_ids Array Is Needed
 
@@ -1129,13 +1163,13 @@ for (int i = 0; i < NUM_THREADS; i++) {
 }
 ```
 
-> This is a classic example of a **data dependency** problem.
+> **Note:** This is a classic example of a **race condition**, where new threads read the variable `i` while the main thread changes it, and it shows the **data dependency** challenge of Section 3.3.
 
-> **Exam Tip:** "Why can't you pass `&i` directly?" is a frequently tested Pthreads question. The key is that `pthread_create()` creates threads asynchronously, so by the time the thread actually reads `*(int*)arg`, the value of `i` may have already changed.
+> **Note:** **Exam Tip.** Why you cannot pass `&i` directly is a frequently tested Pthreads question. The key is that `pthread_create()` creates threads asynchronously, so by the time the thread actually reads `*(int*)arg`, the value of `i` may have already changed.
 
 ### 9.6 Observing Race Conditions
 
-> Imagine two people checking the same bank account balance simultaneously and each withdrawing 10,000 won. Both see 50,000 won, both withdraw, but only one withdrawal is recorded — the bank loses money.
+> **Note:** **Analogy.** Imagine two people checking the same bank account balance simultaneously and each withdrawing 10,000 won. Both see 50,000 won and both withdraw, but only one withdrawal is recorded, so the bank loses money.
 
 What if all threads share a **single global variable** instead of `partial_sum[id]`?
 
@@ -1159,13 +1193,13 @@ A **race condition** occurs:
 - If multiple threads execute simultaneously, **values can be lost**
 - Running multiple times can produce **different results**
 
-> Synchronization is covered in detail in Ch 6 and Ch 7
+> **Note:** Synchronization is covered in detail in Week 9.
 
 > **Key Point:** The root cause of the race condition is that `global_sum += array[i]` is **not an atomic operation**. This single line of C code actually executes in three steps: (1) LOAD `global_sum` into a register, (2) ADD `array[i]`, (3) STORE the result back to `global_sum`. If two threads read the same value simultaneously, one thread's update gets overwritten.
 
 ### 9.7 Pthreads Integer Summation (Textbook Example Variant)
 
-Sums integers received as a command-line argument:
+Computes the sum from 1 to N for an integer N received as a command-line argument:
 
 ```c
 #include <pthread.h>
@@ -1203,10 +1237,10 @@ Execution: `./a.out 10` → "sum = 55"
 ### 9.8 Lab Key Takeaways
 
 **Basic Pthreads pattern:**
-1. `pthread_attr_init()` — Initialize attributes (defaults are sufficient)
-2. `pthread_create()` — Create thread (function pointer + argument)
+1. `pthread_attr_init()`: Initialize attributes (defaults are sufficient)
+2. `pthread_create()`: Create thread (function pointer + argument)
 3. Perform work in the thread function (share results via global variables)
-4. `pthread_join()` — Wait for termination
+4. `pthread_join()`: Wait for termination
 5. Collect and print results
 
 **Precautions:**
@@ -1222,44 +1256,67 @@ Execution: `./a.out 10` → "sum = 55"
 
 | Concept | Key Summary |
 |:--------|:-----------|
-| Thread | Unit of execution within a process; shares code/data/files; PC/registers/stack are independent |
-| Benefits of Threads | Responsiveness, resource sharing, economy, scalability |
-| Multicore Programming | Concurrency vs parallelism; 5 challenges (identifying tasks, balance, data splitting, data dependency, testing) |
-| Amdahl's Law | Serial fraction is the bottleneck — speedup ≤ 1/S; even with N → ∞, cannot exceed 1/S |
-| Data Parallelism vs Task Parallelism | Partition data for the same operation vs distribute different tasks |
-| Multithreading Models | Many-to-one (rarely used), **one-to-one** (Linux, Windows), many-to-many (complex) |
-| Pthreads | `pthread_create()`, `pthread_join()`, `pthread_exit()`; POSIX standard |
-| Windows Threads | `CreateThread()`, `WaitForSingleObject()`, `CloseHandle()` |
-| Java Threads | `Runnable`, `Thread.start()`, `Thread.join()`, lambda |
-| Java Executor Framework | Separates task from execution with thread pools; returns results via `Callable`/`Future` |
-| Race Condition | Occurs with non-atomic read-modify-write on shared variables; synchronization needed (Ch 6) |
-| Textbook Scope | Silberschatz Ch 4, Sections 4.1–4.4 |
+| Thread | A thread is the basic unit of CPU utilization within a process that shares code, data, and files but has its own PC, registers, and stack. |
+| Benefits of Threads | Threads provide four benefits: responsiveness, resource sharing, economy, and scalability. |
+| Multicore Programming | Multicore programming distinguishes concurrency from parallelism and faces five challenges: identifying tasks, balance, data splitting, data dependency, and testing and debugging. |
+| Amdahl's Law | The serial fraction S is the bottleneck, so speedup is at most 1/(S + (1-S)/N) and cannot exceed 1/S even as N → ∞. |
+| Data Parallelism and Task Parallelism | Data parallelism partitions data and applies the same operation to each part, whereas task parallelism distributes different tasks to threads. |
+| Multithreading Models | Many-to-one is rarely used, **one-to-one** is adopted by Linux and Windows, and many-to-many is flexible but complex to implement. |
+| Pthreads | Pthreads is the POSIX standard API that creates, waits for, and terminates threads with `pthread_create()`, `pthread_join()`, and `pthread_exit()`. |
+| Windows Threads | Windows threads are created with `CreateThread()`, waited for with `WaitForSingleObject()`, and cleaned up with `CloseHandle()`. |
+| Java Threads | Java threads define work by implementing `Runnable` or with a lambda, start with `Thread.start()`, and wait with `Thread.join()`. |
+| Java Executor Framework | The Executor framework separates tasks from execution with thread pools and returns results through `Callable` and `Future`. |
+| Race Condition | A race condition occurs with non-atomic read-modify-write on shared variables and requires synchronization (Week 9). |
 
 ---
-
 
 <br>
 
 ## Self-Check Questions
 
-1. What do threads in the same process share? What does each thread own independently?
+1. **Shared and per-thread resources:** What do threads in the same process share? What does each thread own independently?
 
-   > **Answer:** **Shared**: code segment, data segment, heap, open file descriptors, signal handlers, and process ID. **Per-thread (independent)**: thread ID, program counter, register set, and stack.
+   <details>
+   <summary>Answer</summary>
 
-2. Why doesn't a thread switch within the same process require a TLB flush?
+   Threads **share** the code segment, data segment, heap, open file descriptors, signal handlers, and process ID. Each thread **independently** owns its thread ID, program counter, register set, and stack.
 
-   > **Answer:** Threads in the same process share the **same address space** (same page table), so virtual-to-physical mappings are identical. Existing TLB entries remain valid, so no flush is needed. A process context switch, by contrast, changes address space and requires either a TLB flush or ASID tagging.
+   </details>
 
-3. If a program has 20% serial code, what is the maximum speedup with 8 cores according to Amdahl's Law? What about with infinite cores?
+2. **TLB flush:** Why does a thread switch within the same process not require a TLB flush?
 
-   > **Answer:** `Speedup = 1 / (S + (1-S)/N)`. With S = 0.2, N = 8: `1 / (0.2 + 0.8/8) = 1/0.3 ≈ 3.33×`. With N → ∞: `1 / 0.2 = 5×`. No matter how many cores, the serial portion bounds speedup at **5×**.
+   <details>
+   <summary>Answer</summary>
 
-4. Explain the difference between concurrency and parallelism with an example.
+   Threads in the same process share the **same address space** (same page table), so virtual-to-physical mappings are identical. Existing TLB entries remain valid, so no flush is needed. A process context switch, by contrast, changes address space and requires either a TLB flush or ASID tagging.
 
-   > **Answer:** **Concurrency** is logically overlapping multiple tasks (possibly on a single core via time-sharing). **Parallelism** is physically running tasks at the same time (requires multiple cores). Example: on a single core, a browser interleaves playing music and loading a page — concurrency only. On a quad-core CPU, four threads running compute simultaneously — true parallelism.
+   </details>
 
-5. Why is the one-to-one multithreading model the most widely used in modern operating systems, despite its overhead of creating a kernel thread for each user thread?
+3. **Amdahl's Law calculation:** If a program has 20% serial code, what is the maximum speedup with 8 cores according to Amdahl's Law? What about with infinite cores?
 
-   > **Answer:** ① If one thread makes a blocking system call, the others keep running in the kernel — solving Many-to-One's fatal limitation. ② Multiple threads can genuinely run in parallel on multicore CPUs. ③ The kernel scheduler can adjust each thread's priority individually. The per-thread overhead has been reduced by making kernel thread structures lightweight, so the benefits far outweigh the cost.
+   <details>
+   <summary>Answer</summary>
+
+   The speedup is $1 / (S + (1-S)/N)$. With S = 0.2 and N = 8, it is $1 / (0.2 + 0.8/8) = 1/0.3 \approx 3.33$ times. With N → ∞, it is $1 / 0.2 = 5$ times. No matter how many cores are added, the serial portion bounds speedup at **5x**.
+
+   </details>
+
+4. **Concurrency and parallelism:** Explain the difference between concurrency and parallelism with an example.
+
+   <details>
+   <summary>Answer</summary>
+
+   **Concurrency** is logically overlapping multiple tasks, which includes interleaving them on a single core via time-sharing. **Parallelism** is physically running tasks at the same time, which requires multiple cores. For example, when a browser on a single core interleaves playing music and loading a page, there is concurrency only. When four threads compute simultaneously on a quad-core CPU, there is true parallelism.
+
+   </details>
+
+5. **Why one-to-one is adopted:** Why is the one-to-one multithreading model the most widely used in modern operating systems, despite its overhead of creating a kernel thread for each user thread?
+
+   <details>
+   <summary>Answer</summary>
+
+   First, if one thread makes a blocking system call, the others keep running in the kernel, which solves the fatal limitation of the many-to-one model. Second, multiple threads can run truly in parallel on multicore CPUs. Third, the kernel scheduler can adjust each thread's priority individually. The per-thread overhead has been reduced by making kernel thread structures lightweight, and kernel thread count limits matter less as the number of processing cores grows, so the benefits outweigh the cost.
+
+   </details>
 
 ---

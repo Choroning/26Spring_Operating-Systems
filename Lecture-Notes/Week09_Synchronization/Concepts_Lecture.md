@@ -1,19 +1,18 @@
 # Week 9 Lecture — Synchronization
 
-> **Last Updated:** 2026-06-19
->
-> Operating System Concepts, Silberschatz - Ch 6, 7
+[Repository Guide](../../README.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **Learning Objectives**:
-> 1. Define a **race condition** and the three requirements of the **Critical-Section Problem** (Mutual Exclusion, Progress, Bounded Waiting)
-> 2. Explain **Peterson's Solution** and why it can break on modern reordering hardware
-> 3. Describe hardware support: **memory barriers**, **test_and_set**, **compare_and_swap (CAS)**, **atomic variables**
-> 4. Use **mutex locks** and understand the spinlock vs sleeping-lock trade-off
-> 5. Use **counting** and **binary semaphores** with and without a waiting queue
-> 6. Reason about **monitors** and **condition variables** (wait/signal, signal-and-wait vs signal-and-continue)
-> 7. Identify **liveness** failures: deadlock, priority inversion (and the priority-inheritance fix)
-> 8. Solve the three classic problems: **Bounded-Buffer**, **Readers-Writers**, **Dining-Philosophers**
-> 9. Map the abstract concepts to real systems: **Windows**, **Linux**, **POSIX**, **Java**
+> **Last Updated:** 2026-10-18
+>
+> Operating System Concepts, Silberschatz, Ch 6, 7
+
+> **Learning Objectives:**
+> 1. Define a race condition and explain the three requirements of the Critical-Section Problem (mutual exclusion, progress, bounded waiting)
+> 2. Explain why Peterson's Solution can break on modern hardware that reorders instructions, and describe the hardware support that addresses it (memory barriers, test_and_set, compare_and_swap, atomic variables)
+> 3. Use mutex locks and counting and binary semaphores, and explain the spinlock versus sleeping-lock trade-off and the implementation difference with and without a waiting queue
+> 4. Explain how monitors and condition variables work (wait/signal, signal-and-wait versus signal-and-continue)
+> 5. Identify liveness failures such as deadlock and priority inversion, and explain the priority-inheritance protocol
+> 6. Solve the bounded-buffer, readers-writers, and dining-philosophers problems, and map the abstract concepts to Windows, Linux, POSIX, and Java
 
 ---
 
@@ -33,10 +32,10 @@
   - [3.1 Memory Barriers (Memory Fences)](#31-memory-barriers-memory-fences)
   - [3.2 test_and_set](#32-test_and_set)
   - [3.3 compare_and_swap (CAS)](#33-compare_and_swap-cas)
-  - [3.4 CAS — Ensuring Bounded Waiting](#34-cas--ensuring-bounded-waiting)
+  - [3.4 CAS: Ensuring Bounded Waiting](#34-cas-ensuring-bounded-waiting)
   - [3.5 Atomic Variables](#35-atomic-variables)
 - [4. Mutex Locks](#4-mutex-locks)
-  - [4.1 Mutex Lock — Basics](#41-mutex-lock--basics)
+  - [4.1 Mutex Lock: Basics](#41-mutex-lock-basics)
   - [4.2 Spinlocks and Busy Waiting](#42-spinlocks-and-busy-waiting)
 - [5. Semaphores](#5-semaphores)
   - [5.1 Definition (wait / signal)](#51-definition-wait--signal)
@@ -45,7 +44,7 @@
   - [5.4 Atomicity of Semaphore Implementation](#54-atomicity-of-semaphore-implementation)
 - [6. Monitors](#6-monitors)
   - [6.1 Difficulty of Using Semaphores](#61-difficulty-of-using-semaphores)
-  - [6.2 Monitor — Structure](#62-monitor--structure)
+  - [6.2 Monitor: Structure](#62-monitor-structure)
   - [6.3 Condition Variables](#63-condition-variables)
   - [6.4 Implementing a Monitor with Semaphores](#64-implementing-a-monitor-with-semaphores)
   - [6.5 ResourceAllocator Monitor Example](#65-resourceallocator-monitor-example)
@@ -55,14 +54,14 @@
   - [7.3 Evaluating Synchronization Tools](#73-evaluating-synchronization-tools)
 - [8. Classic Problems of Synchronization](#8-classic-problems-of-synchronization)
   - [8.1 Bounded-Buffer Problem](#81-bounded-buffer-problem)
-  - [8.2 Bounded-Buffer — Producer/Consumer Code](#82-bounded-buffer--producerconsumer-code)
+  - [8.2 Bounded-Buffer: Producer/Consumer Code](#82-bounded-buffer-producerconsumer-code)
   - [8.3 Readers-Writers Problem](#83-readers-writers-problem)
-  - [8.4 Readers-Writers — First Problem Solution](#84-readers-writers--first-problem-solution)
+  - [8.4 Readers-Writers: First Problem Solution](#84-readers-writers-first-problem-solution)
   - [8.5 Reader-Writer Locks](#85-reader-writer-locks)
   - [8.6 Dining-Philosophers Problem](#86-dining-philosophers-problem)
-  - [8.7 Dining-Philosophers — Semaphore Solution and Deadlock](#87-dining-philosophers--semaphore-solution-and-deadlock)
-  - [8.8 Dining-Philosophers — Deadlock-Avoidance Strategies](#88-dining-philosophers--deadlock-avoidance-strategies)
-  - [8.9 Dining-Philosophers — Monitor Solution](#89-dining-philosophers--monitor-solution)
+  - [8.7 Dining-Philosophers: Semaphore Solution and Deadlock](#87-dining-philosophers-semaphore-solution-and-deadlock)
+  - [8.8 Dining-Philosophers: Deadlock-Avoidance Strategies](#88-dining-philosophers-deadlock-avoidance-strategies)
+  - [8.9 Dining-Philosophers: Monitor Solution](#89-dining-philosophers-monitor-solution)
 - [9. Synchronization in Real Systems](#9-synchronization-in-real-systems)
   - [9.1 Windows Synchronization](#91-windows-synchronization)
   - [9.2 Linux Synchronization](#92-linux-synchronization)
@@ -70,11 +69,11 @@
   - [9.4 POSIX Semaphores (Named and Unnamed)](#94-posix-semaphores-named-and-unnamed)
   - [9.5 POSIX Condition Variables](#95-posix-condition-variables)
 - [10. Java Synchronization](#10-java-synchronization)
-  - [10.1 Java Monitors — `synchronized`, `wait()`/`notify()`](#101-java-monitors--synchronized-waitnotify)
+  - [10.1 Java Monitors: `synchronized`, `wait()`/`notify()`](#101-java-monitors-synchronized-waitnotify)
   - [10.2 How Java Monitors Work Internally](#102-how-java-monitors-work-internally)
   - [10.3 ReentrantLock and Semaphore](#103-reentrantlock-and-semaphore)
   - [10.4 Java Condition Variables](#104-java-condition-variables)
-- [11. Lab — Dining-Philosophers Implementation](#11-lab--dining-philosophers-implementation)
+- [11. Lab: Dining-Philosophers Implementation](#11-lab-dining-philosophers-implementation)
   - [11.1 Lab: Naive pthread Implementation](#111-lab-naive-pthread-implementation)
   - [11.2 Lab: Asymmetric Solution](#112-lab-asymmetric-solution)
   - [11.3 Lab: Monitor Solution with POSIX Condition Variables](#113-lab-monitor-solution-with-posix-condition-variables)
@@ -89,21 +88,21 @@
 
 ### 1.1 Cooperating Processes and Data Inconsistency
 
-A **cooperating process** is one that can affect, or be affected by, the execution of other processes. Cooperation requires **shared state**, which can be exchanged through:
+A **cooperating process** is one that can affect, or be affected by, the execution of other processes. Cooperation requires **shared state**, which can be exchanged in the following ways.
 
-- **Shared memory** — multiple processes map the same memory region.
-- **Message passing** — processes exchange messages explicitly.
-- **Logical address space sharing** — multiple threads in a single process all share the same address space.
+- **Shared memory**: multiple processes map the same memory region.
+- **Message passing**: processes exchange messages explicitly.
+- **Logical address space sharing**: multiple threads in a single process all share the same address space.
 
-The fundamental problem: **concurrent access to shared data can produce inconsistent results**. Without a discipline that orders these accesses, the final state of the shared data depends on the unpredictable interleaving of instructions.
+The fundamental problem is that **concurrent access to shared data can produce inconsistent results**. Without a discipline that orders these accesses, the final state of the shared data depends on how the instructions interleave.
 
-> **Why this is the foundation of the whole chapter**: Every synchronization tool you will see (locks, semaphores, monitors) exists for one reason: to impose **orderly execution** on concurrent accesses to shared data, so that correctness no longer depends on luck.
+> **Note:** **Why this underlies every synchronization tool.** Every synchronization tool covered below (locks, semaphores, monitors) exists for one reason: to impose **orderly execution** on concurrent accesses to shared data, so that correctness no longer depends on luck.
 
 ### 1.2 Race Condition
 
 A **race condition** occurs when two or more processes (or threads) access shared data concurrently, and the **final result depends on the order in which the accesses interleave**.
 
-**Classic example.** A producer thread executes `count++` while a consumer executes `count--`, with the initial value `count = 5`. Both `++` and `--` decompose into **load → modify → store**, and an unfortunate interleaving can lose one of the updates:
+**Classic example.** A producer thread executes `count++` while a consumer executes `count--`, with the initial value `count = 5`. Both `++` and `--` decompose into **load → modify → store**, so an unfortunate interleaving loses one of the updates.
 
 ```text
 T0: producer  register1 = count        {register1 = 5}
@@ -114,26 +113,28 @@ T4: producer  count = register1        {count = 6}
 T5: consumer  count = register2        {count = 4}  ← incorrect!
 ```
 
-The correct final value is `count = 5` (one increment + one decrement). Depending on interleaving, the result can become **4** (consumer wins) or **6** (producer wins) — an off-by-one bug whose appearance is timing-dependent and therefore extremely hard to reproduce.
+*Figure 1. Execution order in which a producer-consumer interleaving loses one update*
 
-**The fix**: identify and **protect** the region of code that touches shared data (the **critical section**) so that only one thread is inside it at a time.
+The correct final value is `count = 5` (one increment and one decrement). Depending on the interleaving, the result can become **4** (the consumer writes last) or **6** (the producer writes last). This **lost update**, which leaves the value off by one, depends on timing and is therefore extremely hard to reproduce.
 
-> **Why race conditions are so feared in practice**: They depend on timing, so they may pass every test in development and only manifest in production under load. The bug that escaped Therac-25 (radiation-therapy machine, 1985–87) and killed patients was a race condition in operator-input handling. Synchronization is not a stylistic concern — it is a correctness concern.
+**The fix:** identify and protect the region of code that touches shared data, the **critical section**, so that only one thread is inside it at a time.
+
+> **Note:** **Why race conditions are feared in practice.** Race conditions depend on timing, so they often pass every test in development and only manifest in production under load. The defect in the Therac-25 radiation-therapy machine that killed patients in 1985-87 was a race condition in operator-input handling. Synchronization is not a stylistic concern but a **correctness** concern.
 
 ### 1.3 Race Conditions in the Kernel
 
-The kernel manipulates extensive shared state on behalf of all processes, so race conditions there can corrupt the entire system.
+The kernel manipulates extensive shared state on behalf of all processes, so race conditions in the kernel can corrupt the entire system.
 
-- **`fork()`** maintains a `next_available_pid` counter. Two simultaneous `fork()` calls can read the same value before either updates it → **two processes share one PID**.
-- **Open file table** modifications can collide when multiple processes open files concurrently.
+- **`fork()`** maintains a `next_available_pid` counter. If two simultaneous `fork()` calls read the same value before either updates it, **two processes share one PID**.
+- When multiple processes open files concurrently, modifications to the **open file table** can collide.
 - **Memory allocator** bookkeeping (free lists, zone counts) can be corrupted.
-- **Process list** updates during `fork()`/`exit()` and **interrupt handlers** that touch shared structures are similarly vulnerable.
+- **Process list** updates during `fork()` and `exit()` and **interrupt handlers** that touch shared structures are similarly vulnerable.
 
-Kernel developers must **systematically prevent** these races; user-space programmers benefit from the kernel's discipline.
+Kernel developers must **systematically prevent** these races, and user-space programmers benefit from that discipline.
 
 ### 1.4 The Critical-Section Problem
 
-Each process is structured around a critical section as follows:
+Each process is structured around a critical section as follows.
 
 ```c
 while (true) {
@@ -144,29 +145,29 @@ while (true) {
 }
 ```
 
-A correct solution to the Critical-Section Problem must satisfy **three requirements**:
+A correct solution to the Critical-Section Problem must satisfy all of the following **three requirements**.
 
-1. **Mutual Exclusion** — at most one process is in its critical section at any time.
-2. **Progress** — if no process is in the critical section and some processes wish to enter, the choice of which one enters cannot be postponed indefinitely. (Processes in the remainder section do not block anyone.)
-3. **Bounded Waiting** — once a process requests entry, there is an upper bound on the number of times other processes are allowed to enter the critical section before the request is granted.
+1. **Mutual Exclusion**: at most one process is in its critical section at any time.
+2. **Progress**: if no process is in the critical section and some processes wish to enter, the choice of which one enters cannot be postponed indefinitely. (Processes in the remainder section do not block anyone.)
+3. **Bounded Waiting**: once a process requests entry, there is an **upper bound** on the number of times other processes may enter the critical section before the request is granted.
 
-> **What each requirement protects against**:
-> - Without **Mutual Exclusion** → race conditions return.
-> - Without **Progress** → the system can deadlock-by-design (everyone waits even though the CS is empty).
-> - Without **Bounded Waiting** → starvation — a particular process may never enter, even though others keep entering.
+> **Note:** **What each requirement protects against.**
+> - Without **mutual exclusion**, race conditions return.
+> - Without **progress**, the system can deadlock by design, stalling even though the critical section is empty.
+> - Without **bounded waiting**, starvation can occur: a particular process may never enter while others keep entering.
 
 ### 1.5 Preemptive vs Nonpreemptive Kernels
 
-A kernel must choose whether one of its own threads can be preempted while running in kernel mode.
+A kernel must decide whether one of its own threads can be preempted while running in kernel mode.
 
-- **Nonpreemptive kernel** — kernel-mode code runs until it blocks, exits, or yields. Race conditions on kernel data are **inherently avoided** on a single CPU (no other kernel thread can interleave with you). Drawback: **poor responsiveness** (high-priority user tasks may have to wait while the kernel finishes).
-- **Preemptive kernel** — kernel-mode code itself can be preempted. Better responsiveness and more suitable for real-time work, but the kernel must be carefully designed to handle race conditions, especially in **SMP** systems.
+- **Nonpreemptive kernel**: kernel-mode code runs until it blocks, exits, or yields. On a single CPU no other kernel thread can interleave, so race conditions on kernel data are **inherently avoided**. The drawback is **poor responsiveness** (high-priority user tasks may have to wait until the kernel finishes).
+- **Preemptive kernel**: kernel-mode code itself can be preempted. It is more responsive and more suitable for real-time work, but it must be carefully designed to prevent race conditions, especially in **SMP** systems.
 
-Two practical points:
-- **Single processor** systems can implement mutual exclusion cheaply by **disabling interrupts** for the critical section.
-- **Multiprocessor** systems cannot disable interrupts on every core because doing so is expensive. They need other mechanisms, such as memory barriers, atomic instructions, and locks.
+Two points matter in practice.
+- **Single processor** systems can implement mutual exclusion cheaply just by **disabling interrupts** for the critical section.
+- **Multiprocessor** systems cannot afford to disable interrupts on every core, so they need other mechanisms such as memory barriers, atomic instructions, and locks.
 
-> **Historical note**: Linux was nonpreemptive until kernel 2.6 (2003), then became fully preemptive. Modern Linux, Windows, and macOS are all preemptive kernels designed to scale across many cores.
+> **Note:** **Historical note.** The Linux kernel was nonpreemptive before version 2.6 and became fully preemptive with 2.6 (2003). Modern Linux, Windows, and macOS are all preemptive kernels designed to scale across many cores.
 
 ---
 
@@ -176,14 +177,14 @@ Two practical points:
 
 ### 2.1 Algorithm
 
-Peterson's Solution is a classic **software-only** solution to the Critical-Section Problem for **two** processes (P0 and P1). It uses two shared variables:
+Peterson's Solution is a classic **software-only** solution to the Critical-Section Problem for **two processes (P0 and P1)**. It uses the following two shared variables.
 
 ```c
 int     turn;       /* whose turn it is to enter */
 boolean flag[2];    /* flag[i] = true means process i wants to enter */
 ```
 
-Each process Pi (with its partner Pj, where `j = 1 - i`) executes:
+Each process Pi (with its partner Pj, where `j = 1 - i`) executes the following.
 
 ```c
 while (true) {
@@ -200,21 +201,21 @@ while (true) {
 }
 ```
 
-Intuition: **`flag[i]` says "I want in"**, and **`turn` says "you go first"**. A process enters the critical section only if its partner does not want in (`flag[j] == false`) **or** its partner has already yielded (`turn == i`).
+Intuitively, **`flag[i]`** means that Pi wants to enter, and **`turn`** means that the process yields the turn to its partner first. A process enters the critical section when its partner does not want to enter (`flag[j] == false`) or its partner has already yielded (`turn == i`).
 
 ### 2.2 Correctness Proof
 
-**1. Mutual Exclusion.** For Pi to leave the entry-section loop, either `flag[j] == false` or `turn == i`. If both processes are in the CS simultaneously, then `flag[0] == flag[1] == true`, so the only way out for both was via `turn`. But `turn` is a single integer that holds either 0 or 1 — it cannot equal both `i = 0` and `i = 1` at once. Contradiction → mutual exclusion holds.
+**1. Mutual Exclusion.** For Pi to leave the entry-section loop, either `flag[j] == false` or `turn == i` must hold. If both processes are in the critical section simultaneously, both `flag[0]` and `flag[1]` are `true`, so both must have left through the `turn` condition. But `turn` holds only one of the values 0 and 1, so `turn == 0` and `turn == 1` cannot hold at the same time. This is a contradiction, so mutual exclusion holds.
 
-**2. Progress.** If Pj is in the remainder section, `flag[j] == false`, so Pi enters immediately. If Pj has set `flag[j] = true` and is in its entry section, then `turn` decides — and since `turn` is set to a single value, exactly one of the two enters.
+**2. Progress.** If Pj is in the remainder section, `flag[j] == false`, so Pi enters immediately. If Pj has set `flag[j] = true` and is in its entry section, `turn` decides. Since `turn` holds a single value, exactly one of the two enters.
 
-**3. Bounded Waiting.** Suppose Pi is waiting. When Pj exits the CS, it sets `flag[j] = false`, and Pi enters. If Pj wants to re-enter, it must first set `turn = i`, so Pi will enter before Pj re-enters. Pj can therefore "cut in line" **at most once** before Pi runs → **bound = 1**.
+**3. Bounded Waiting.** Suppose Pi is waiting. When Pj exits the critical section, it sets `flag[j] = false`, and Pi enters. If Pj wants to re-enter, it must first set `turn = i`, so Pi enters before Pj does. Pj can therefore enter ahead of Pi **at most once**, and the **bound is 1**.
 
-> **Why Peterson's is famous despite being obsolete in practice**: It proves that mutual exclusion is achievable with **only ordinary loads and stores** on shared memory — no special hardware instructions required, in theory. That theoretical clarity is why it appears in every OS textbook.
+> **Note:** **Why Peterson's Solution is famous despite being unused in practice.** It shows that mutual exclusion is achievable with **only ordinary loads and stores** on shared memory (in theory, without special hardware instructions). That theoretical clarity is why operating-systems textbooks widely include it.
 
 ### 2.3 Limitations on Modern Architectures
 
-Peterson's correctness assumes that statements execute **in program order** and that a write becomes visible to other CPUs immediately. **Modern processors and compilers violate both assumptions** for performance — they routinely **reorder** independent loads and stores, and a store may sit in a per-core write buffer for some time before becoming globally visible.
+The correctness proof of Peterson's Solution assumes that statements execute **in program order** and that a write becomes visible to other CPUs immediately. **Modern processors and compilers violate both assumptions.** For performance they routinely **reorder** independent loads and stores, and a write may sit in a per-core write buffer for some time before becoming globally visible.
 
 ```text
 /* Peterson's entry section */
@@ -222,15 +223,17 @@ flag[i] = true;     /* ① */
 turn = j;           /* ② */
 ```
 
-If a CPU executes ② before ①, both processes may pass the entry check and enter the CS simultaneously — **mutual exclusion is broken**. The same effect can arise from a compiler reordering (since the two writes target unrelated memory).
+If a CPU executes ② before ①, both processes may pass the entry check and enter the critical section simultaneously; that is, **mutual exclusion is broken**. Since the two writes target unrelated memory, a compiler reordering can have the same effect.
 
-![The effects of instruction reordering in Peterson's solution](../images/figures/fig6_4_peterson_reorder.png)
+![Figure 2. The effects of instruction reordering in Peterson's solution](../../images/Week09_Peterson-Reorder.png)
 
-*Silberschatz Figure 6.4 — The effects of instruction reordering in Peterson's solution.*
+*Figure 2. The effects of instruction reordering in Peterson's solution*
 
-**Fix**: insert **memory barriers** (next section) that prevent the hardware and compiler from reordering across the boundary. With proper barriers, Peterson's algorithm does work correctly on modern hardware — but in practice, programmers use higher-level primitives (locks, atomics) that hide this complexity.
+In Figure 2 (Figure 6.4 of the textbook), reordering makes process0 write `turn = 1` first and `flag[0] = true` later. In between, process1 writes `turn = 0` and `flag[1] = true`, and since `flag[0]` is still `false`, it enters the critical section (cs). When process0 then writes `flag[0] = true` and performs the entry check, `turn` is 0, so it enters the critical section without waiting, and both processes are in the critical section at the same time.
 
-> **[Computer Architecture]** An algorithm proved correct under **sequential consistency** can fail on hardware that uses a **relaxed memory model**. A memory model defines which load and store reorderings the CPU and compiler may perform. x86 is relatively strong because of TSO, while ARM and POWER allow more reordering. Synchronization must account for this with **memory barriers** or higher-level primitives that insert them.
+**The fix:** insert **memory barriers** (Section 3.1) that prevent the hardware and compiler from reordering across the boundary. With proper barriers, Peterson's algorithm works correctly on modern hardware. In practice, however, programmers use higher-level primitives (locks, atomic variables) that hide this complexity.
+
+> **[Computer Architecture]** An algorithm proved correct under **sequential consistency** can fail on real hardware that uses a **relaxed memory model**. A memory model defines which load and store reorderings the CPU and compiler may perform. x86 is relatively strong because of TSO (total store order), while ARM and POWER allow more reordering. Synchronization code must account for this with **memory barriers** or higher-level primitives that insert them.
 
 ---
 
@@ -240,12 +243,12 @@ If a CPU executes ② before ①, both processes may pass the entry check and en
 
 ### 3.1 Memory Barriers (Memory Fences)
 
-The **memory model** of a system describes the guarantees the hardware gives about the visibility and ordering of memory operations across CPUs:
+The **memory model** of a system describes what the hardware guarantees about how memory operations become visible and in what order they appear across CPUs.
 
-- **Strongly ordered** — a write by one processor is **immediately visible** to all others, in program order. (Easy to reason about, but slower.)
-- **Weakly ordered** — writes can become visible **out of order** and after a delay. (Faster — the dominant choice in modern multicore designs, e.g., ARM, x86 with caveats.)
+- **Strongly ordered**: a write by one processor is **immediately** visible to all other processors, in program order. It is easy to reason about but slower.
+- **Weakly ordered**: writes can become visible **out of order or after a delay**. Because it is faster, it is the dominant choice in modern multicore designs; ARM is a typical example, and x86 also permits some reordering (a later load performed before an earlier store).
 
-A **Memory Barrier** (or **memory fence**) is a special instruction that **enforces ordering**: all loads and stores **before** the barrier must complete before any load or store **after** the barrier may begin (from the viewpoint of other processors).
+A **memory barrier** (or **memory fence**) is a special instruction that **enforces ordering**. From the viewpoint of other processors, all loads and stores **before** the barrier must complete before any load or store **after** the barrier.
 
 ```c
 /* Thread 1 */                       /* Thread 2 */
@@ -255,16 +258,16 @@ memory_barrier();                    flag = true;
 print x;  /* guaranteed to print 100 */
 ```
 
-Without the barriers, Thread 2's write to `x` could become visible **after** the write to `flag`, so Thread 1 might see `flag == true` but `x == 0`. The barriers force the program order to hold globally.
+Without the barriers, Thread 2's write to `x` could become visible **after** its write to `flag`, so Thread 1 might see `flag == true` while `x == 0`. The barriers force the program order to hold globally as well.
 
-- Memory barriers are a **very low-level** primitive used mostly by **kernel and library writers**. Most application programmers use locks or atomics, which insert the necessary barriers internally.
-- With appropriate barriers, **Peterson's Solution works correctly on modern hardware**.
+- Memory barriers are a **very low-level** primitive used mostly by **kernel and library writers**. Most application programmers use locks or atomic variables, which insert the necessary barriers internally and automatically.
+- With appropriate barriers, **Peterson's Solution also works correctly on modern hardware**.
 
-> **[Computer Architecture]** Mental model for memory barriers: think of each CPU core as having a **store buffer** between its pipeline and the cache-coherent memory system. A `store` instruction *retires* into this buffer immediately so the pipeline can keep moving; the buffer drains to memory later in some order chosen by the hardware. That delayed drain is what lets one core's writes appear out-of-order to another core. A memory barrier (`mfence`/`sfence` on x86, `dmb`/`dsb` on ARM) is the instruction that says "drain my store buffer before I do anything else, and don't let later operations overtake earlier ones."
+> **[Computer Architecture]** **A mental model for memory barriers.** Each CPU core can be thought of as having a **store buffer** between its pipeline and the cache-coherent memory system. A `store` instruction *retires* into this buffer immediately so the pipeline can keep moving, and the buffer drains to memory later in an order chosen by the hardware. Because of this delayed drain, one core's writes can appear out of order to another core. A memory barrier (`mfence`/`sfence` on x86, `dmb`/`dsb` on ARM) is the instruction that tells the core to drain its store buffer before doing anything else and not to let later operations overtake earlier ones.
 
 ### 3.2 test_and_set
 
-`test_and_set` is an **atomic** instruction that returns the old value of a memory cell and unconditionally writes `true` to it — both as a single, indivisible operation.
+`test_and_set` is an **atomic** instruction that returns the old value of a memory cell and unconditionally writes `true` to it. Both actions are performed as a single, indivisible operation.
 
 ```c
 boolean test_and_set(boolean *target) {
@@ -274,7 +277,7 @@ boolean test_and_set(boolean *target) {
 }
 ```
 
-**Mutual exclusion via `test_and_set`** (lock initialized to `false`):
+**Mutual exclusion implemented with `test_and_set`** (the lock is initialized to `false`) looks as follows.
 
 ```c
 do {
@@ -289,11 +292,11 @@ do {
 } while (true);
 ```
 
-The first thread to call `test_and_set` sees `false`, sets it to `true`, and enters. Every subsequent caller sees `true` and spins. Even if two CPUs call `test_and_set` at exactly the same moment, the hardware **serializes** them — only one will read `false`.
+The first thread to call `test_and_set` sees `false`, changes the value to `true`, and enters. Every subsequent caller sees `true` and spins. Even if two CPUs call `test_and_set` at exactly the same moment, the hardware **serializes** the calls, so only one of them reads `false`.
 
 ### 3.3 compare_and_swap (CAS)
 
-A more general atomic primitive: **compare-and-swap** atomically tests whether a memory cell holds an expected value, and if so, replaces it with a new one.
+**Compare-and-swap**, a more general atomic primitive, atomically tests whether a memory cell holds an expected value and, if so, replaces it with a new value.
 
 ```c
 int compare_and_swap(int *value, int expected, int new_value) {
@@ -304,7 +307,7 @@ int compare_and_swap(int *value, int expected, int new_value) {
 }
 ```
 
-**Mutual exclusion using CAS** (lock initialized to 0; 0 = free, 1 = held):
+**Mutual exclusion using CAS** (the lock is initialized to 0, where 0 means free and 1 means held) looks as follows.
 
 ```c
 while (true) {
@@ -319,14 +322,14 @@ while (true) {
 }
 ```
 
-- On Intel x86, CAS is implemented by the **`lock cmpxchg`** instruction — an `xchg` variant prefixed by `lock` so the bus is held for the duration.
-- CAS is the primitive at the bottom of nearly every modern lock-free data structure (lock-free queues, hazard pointers, RCU, …).
+- On Intel x86, CAS is implemented with the **`lock cmpxchg`** instruction. The `lock` prefix on the `cmpxchg` (compare-and-exchange) instruction locks the bus while the destination operand is being updated.
+- CAS is the primitive underlying most modern lock-free data structures such as lock-free queues, and it is also used by memory-reclamation techniques such as hazard pointers.
 
-> **Why CAS is more powerful than test_and_set**: `test_and_set` works only on booleans; CAS works on arbitrary integers and lets you say "update this if it still holds the value I last saw" — the foundation of optimistic concurrency, where a thread reads a value, computes a new one, and only commits if no one else has changed the value in the meantime.
+> **Note:** **Why CAS is more powerful than test_and_set.** `test_and_set` works only on booleans, while CAS works on arbitrary integers and can express an update that happens only if the value still equals the value last read. This is the foundation of **optimistic concurrency**, where a thread reads a value, computes a new one, and commits only if no other thread has changed the value in the meantime.
 
-### 3.4 CAS — Ensuring Bounded Waiting
+### 3.4 CAS: Ensuring Bounded Waiting
 
-The plain CAS-spin lock above guarantees mutual exclusion but **not bounded waiting** — an unlucky thread can be repeatedly beaten to the lock. The following extension uses a `waiting[]` flag array to ensure every requester is served within at most `n - 1` other CS entries:
+The plain CAS spin lock above guarantees mutual exclusion but **does not guarantee bounded waiting**, because an unlucky thread can repeatedly lose the lock. The following extension uses a `waiting[]` flag array to ensure that every requester is served after seeing at most `n - 1` critical-section entries by other threads.
 
 ```c
 /* Shared: boolean waiting[n] = {false}, int lock = 0 */
@@ -353,13 +356,13 @@ while (true) {
 }
 ```
 
-When a thread exits the CS, it scans `waiting[]` **cyclically** starting from its successor and hands the lock to the first waiter found. Every requester is therefore served within at most `n - 1` other entries → **bounded waiting**.
+When a thread exits the critical section, it scans `waiting[]` **cyclically** starting from its successor and hands the lock to the first waiter found. Every requester is therefore served after seeing at most `n - 1` other entries, which is **bounded waiting**.
 
 ### 3.5 Atomic Variables
 
-**Atomic variables** are a higher-level abstraction built on CAS that gives you race-free updates of single integers without writing the CAS loop yourself.
+**Atomic variables** are a higher-level abstraction built on CAS that provides race-free updates of single integers without writing the CAS loop yourself.
 
-A canonical CAS-based atomic increment:
+A canonical CAS-based atomic increment looks as follows.
 
 ```c
 void increment(atomic_int *v) {
@@ -370,9 +373,9 @@ void increment(atomic_int *v) {
 }
 ```
 
-If the value was changed by another thread in the meantime, the CAS fails and the loop retries with the fresh value.
+If another thread changed the value in the meantime, the CAS fails and the loop retries with the fresh value.
 
-**Linux kernel API**:
+**Linux kernel API:**
 
 ```c
 atomic_t counter;
@@ -383,9 +386,9 @@ atomic_inc(&counter);                   /* counter = 12 */
 int val = atomic_read(&counter);        /* val     = 12 */
 ```
 
-**Important caveat**: atomic variables protect updates to **a single variable**. Compound invariants involving multiple variables (e.g., the bounded-buffer invariants `0 ≤ count ≤ n` and `in/out` indices) still need a **mutex** or **semaphore** that protects the whole critical section.
+> **Caution:** Atomic variables protect updates to **a single variable** only. Invariants that span multiple variables, such as the bounded-buffer invariant `0 ≤ count ≤ n` together with the `in` and `out` indices, need a **mutex** or **semaphore** that protects the whole critical section.
 
-> **A useful rule of thumb**: If all you need to do is "increment a counter" or "set a flag", use an atomic. If you need to update **two related fields together** so that no observer ever sees them out of sync, use a lock.
+> **Note:** **A useful rule of thumb.** If all you need is to increment a counter or set a flag, use an atomic variable. If you must update **two or more related fields together** so that no observer ever sees them out of sync, use a lock.
 
 ---
 
@@ -393,9 +396,9 @@ int val = atomic_read(&counter);        /* val     = 12 */
 
 ## 4. Mutex Locks
 
-### 4.1 Mutex Lock — Basics
+### 4.1 Mutex Lock: Basics
 
-A **mutex lock** ("**mut**ual **ex**clusion") is the simplest synchronization tool: a Boolean `available` flag with two operations.
+A **mutex lock** (**mut**ual **ex**clusion) is the simplest synchronization tool, consisting of a Boolean `available` flag and two operations.
 
 ```c
 acquire() {
@@ -409,7 +412,7 @@ release() {
 }
 ```
 
-Usage:
+The usage pattern is as follows.
 
 ```c
 acquire(lock);
@@ -417,38 +420,40 @@ acquire(lock);
 release(lock);
 ```
 
-Two requirements that the textbook formulation hides:
+The textbook formulation leaves two requirements implicit.
 
 - `acquire()` and `release()` themselves must be **atomic**. They are typically implemented on top of `test_and_set` or CAS.
-- The lock variable is a **Boolean** — exactly two states (held / free).
+- The lock variable is a **Boolean** with exactly two states (held, free).
 
 A mutex's job is to make the critical section appear **as if it executed in isolation**.
 
 ### 4.2 Spinlocks and Busy Waiting
 
-A **spinlock** is a mutex whose `acquire()` **busy-waits** (loops) until the lock is free, instead of putting the thread to sleep.
+A **spinlock** is a mutex whose `acquire()` **busy-waits** (loops) until the lock is free instead of putting the thread to sleep.
 
 | Property | Spinlock | Sleeping lock |
 |----------|----------|---------------|
 | Wait strategy | **Spin** in a loop | **Block** (sleep) |
-| Wakeup cost | None — already running | Two context switches (sleep + wake) |
+| Wakeup cost | None (already running) | Two context switches (sleep + wake) |
 | Best when | Lock held for a **very short** time | Lock held for a **longer** time |
-| Risk | Wastes CPU on uniprocessor; only one core can spin productively | Higher latency to acquire |
+| Risk | Wastes CPU on uniprocessor, only one core can spin productively | Higher latency to acquire |
 
-**Spinlock advantages**:
-- **No context-switch overhead** — when the lock is released, the spinning thread sees it on the next loop iteration and continues.
-- **Especially useful in multicore systems**: while the lock is held by core A, core B can spin productively, and the moment A releases, B grabs it without involving the scheduler.
-- **Rule of thumb**: use a spinlock when the expected hold time is **shorter than two context switches**.
+*Table 1. Comparison of spinlocks and sleeping locks*
 
-**Spinlock disadvantages**:
-- Wastes CPU cycles. On a **uniprocessor** with no other useful work to do, spinning is purely wasteful (the holder cannot release while the spinner is using its CPU slot).
-- High **lock contention** (many threads contending for the same lock) destroys performance.
+**Spinlock advantages:**
+- **No context-switch overhead.** When the lock is released, the spinning thread sees it on the next loop iteration and continues.
+- **Especially useful in multicore systems.** While core A holds the lock, core B can spin productively, and the moment A releases it, B grabs it without involving the scheduler.
+- **Rule of thumb:** use a spinlock when the expected hold time is **shorter than two context switches**.
 
-**Lock contention terminology**:
-- **Uncontended** lock — one thread tries to acquire and succeeds immediately.
-- **Contended** (blocked) lock — multiple threads are simultaneously trying to acquire; some must wait.
+**Spinlock disadvantages:**
+- Spinning wastes CPU cycles. On a **uniprocessor** with no other useful work, spinning is pure waste (the holder cannot release the lock while the spinner occupies the CPU).
+- When many threads contend for the same lock, high **lock contention** severely degrades performance.
 
-> **The deeper picture**: Spinlocks vs sleeping locks is a *time-cost* trade-off. Sleeping pays a fixed two-context-switch cost; spinning pays a cost proportional to wait time. Whichever is smaller wins — which is why kernels often use spinlocks for very-short kernel-data critical sections, and sleeping locks (mutexes) for longer user-level work.
+**Lock contention terminology:**
+- **Uncontended lock**: one thread tries to acquire it and succeeds immediately.
+- **Contended (blocked) lock**: multiple threads try to acquire it simultaneously, and some must wait.
+
+> **Note:** **The deeper picture.** Choosing between spinlocks and sleeping locks is a *time-cost* trade-off. Sleeping pays a fixed cost of two context switches, while spinning pays a cost proportional to the wait time. Whichever is smaller wins, which is why kernels often use spinlocks for very short kernel-data critical sections and sleeping locks (mutexes) for longer user-level work.
 
 ---
 
@@ -458,9 +463,9 @@ A **spinlock** is a mutex whose `acquire()` **busy-waits** (loops) until the loc
 
 ### 5.1 Definition (wait / signal)
 
-A **semaphore** S is an integer variable accessed only through two **atomic** operations, originally proposed by Edsger Dijkstra:
+A **semaphore** S is an integer variable accessed only through two **atomic** operations, originally proposed by Edsger Dijkstra.
 
-**`wait(S)`** — also called **P** (Dutch *proberen*, "to test"):
+**`wait(S)`** is also called **P** (Dutch *proberen*, "to test").
 
 ```c
 wait(S) {
@@ -470,7 +475,7 @@ wait(S) {
 }
 ```
 
-**`signal(S)`** — also called **V** (Dutch *verhogen*, "to increment"):
+**`signal(S)`** is also called **V** (Dutch *verhogen*, "to increment").
 
 ```c
 signal(S) {
@@ -478,23 +483,23 @@ signal(S) {
 }
 ```
 
-Two atomicity requirements that are easy to miss:
-- The modifications to `S` must be atomic (`S--` and `S++` are decomposed read-modify-writes).
-- In `wait`, **the test of `S` and the decrement together must be uninterruptible** — otherwise two threads can both observe `S = 1` and both decrement, ending up with `S = -1` when only one should have entered.
+There are two atomicity requirements that are easy to miss.
+- The modifications to `S` (`S--` and `S++`) must be atomic because they decompose into read-modify-write sequences.
+- In `wait`, **the test of `S` and the decrement together must be indivisible**. Otherwise two threads can both observe `S = 1` and both decrement, ending up with `S = -1`, and two threads enter where only one should have.
 
 ### 5.2 Semaphore Types and Usage
 
 **Counting semaphore.**
-- Range: any non-negative integer.
-- Models a **resource pool of N identical resources**.
-- `wait(S)` acquires one resource (S decreases), `signal(S)` releases one (S increases).
-- When `S = 0`, all resources are in use → further `wait()` calls block.
+- Its range is any non-negative integer.
+- It models a **resource pool of N identical resources**.
+- `wait(S)` acquires one resource (S decreases), and `signal(S)` releases one (S increases).
+- When `S = 0`, all resources are in use, so further `wait()` calls block.
 
 **Binary semaphore.**
-- Range: 0 or 1.
-- Behaves **almost identically to a mutex lock** — initialized to 1, `wait` = lock, `signal` = unlock.
+- Its range is 0 or 1.
+- It behaves **almost identically to a mutex lock**: it is initialized to 1, and `wait` serves as lock and `signal` as unlock.
 
-**Execution-order control with a semaphore.** A semaphore can also enforce that one statement must execute before another. With `synch` initialized to 0:
+**Execution-order control with a semaphore.** A semaphore can also enforce that one statement executes before another. With `synch` initialized to 0, the code is as follows.
 
 ```text
 P1:                           P2:
@@ -504,11 +509,11 @@ P1:                           P2:
 
 `P2` blocks at `wait(synch)` until `P1` calls `signal(synch)` after executing `S1`. So **S2 is guaranteed to execute after S1**, regardless of the order in which P1 and P2 are scheduled.
 
-> **The key generalization over mutexes**: a counting semaphore is the natural tool whenever there are **N indistinguishable resources** (database connections, threadpool slots, free buffer slots, …). Mutex = "one access at a time"; counting semaphore = "at most N accesses at a time".
+> **Key Point:** **Generalization over mutexes.** A counting semaphore is the natural tool whenever there are **N indistinguishable resources** (database connections, thread-pool slots, free buffer slots, and so on). A mutex allows only one access at a time, while a counting semaphore allows at most N accesses at a time.
 
 ### 5.3 Eliminating Busy Waiting (Waiting Queue)
 
-The textbook definition of `wait()` busy-waits, which is wasteful when the CS is long. Real implementations attach a **waiting queue** of blocked processes to each semaphore:
+The textbook definition of `wait()` busy-waits, which is wasteful when the critical section is long. Real implementations attach a **waiting queue** of blocked processes to each semaphore.
 
 ```c
 typedef struct {
@@ -533,23 +538,23 @@ signal(semaphore *S) {
 }
 ```
 
-Two consequences worth memorizing:
+Two consequences are worth remembering.
 
 - When `S->value` is **negative**, its **absolute value equals the number of processes blocked on this semaphore**.
-- A **FIFO** waiting queue gives **bounded waiting** (every blocked process is eventually woken in order).
+- A **FIFO** waiting queue gives **bounded waiting** (blocked processes are woken in order).
 
-Note that `wait` now decrements first and then checks — this matches the negative-value bookkeeping above.
+Note that `wait` in this implementation decrements first and then checks. This order matches the negative-value bookkeeping above.
 
 ### 5.4 Atomicity of Semaphore Implementation
 
 For `wait()` and `signal()` to behave correctly, their bodies must execute **atomically**.
 
-- **Single processor**: just **disable interrupts** during the wait/signal body. Cheap and effective.
-- **Multiprocessor**: disabling interrupts on every CPU is expensive and bad for latency. Implementations use a **CAS** or a **spinlock** internally to make the wait/signal body atomic across cores.
+- **Single processor**: just **disable interrupts** while the wait/signal body runs. This is cheap and effective.
+- **Multiprocessor**: disabling interrupts on every CPU is expensive and bad for latency. Implementations use **CAS** or a **spinlock** internally to make the wait/signal body atomic across cores.
 
-Note that this **does not eliminate busy waiting completely** — it merely shrinks it from the application's potentially long CS down to the few instructions inside `wait`/`signal`. The application still benefits from sleep/wake-up because *its* CS no longer requires busy waiting.
+This approach **does not eliminate busy waiting completely**. It merely shrinks the busy waiting from the application's potentially long critical section down to the few instructions inside `wait`/`signal`. The application still benefits from sleep/wakeup, because *its own* critical section no longer requires busy waiting.
 
-> **The picture to keep in mind**: synchronization primitives form a **stack**. At the bottom is hardware (CAS, fences); on top of CAS sits a tiny internal spinlock; on top of that sits the semaphore (which exposes a sleep/wake interface). Each layer hides the busy-waiting of the layer below.
+> **Note:** **The picture to keep in mind.** Synchronization primitives form a **stack**. At the bottom is the hardware (CAS, fences), above it a tiny internal spinlock, and above that the semaphore, which exposes a sleep/wake interface. Each layer hides the busy waiting of the layer below.
 
 ---
 
@@ -559,17 +564,17 @@ Note that this **does not eliminate busy waiting completely** — it merely shri
 
 ### 6.1 Difficulty of Using Semaphores
 
-Semaphores are powerful but **error-prone**. A misuse causes a timing bug that may only manifest under specific interleavings, making it brutal to debug. Common mistakes:
+Semaphores are powerful but **error-prone**. A misuse causes a timing bug that may only manifest under specific interleavings, which makes debugging very hard. Common mistakes are as follows.
 
-- **Order reversal** — `signal(mutex); CS; wait(mutex);` → multiple processes can enter the CS at once → **mutual exclusion violation**.
-- **Duplicate wait** — `wait(mutex); CS; wait(mutex);` → the second `wait` blocks forever → **deadlock**.
-- **Omitted wait or signal** — leaves the CS unprotected, or never wakes anyone up.
+- **Order reversal**: writing `signal(mutex); CS; wait(mutex);` lets multiple processes enter the critical section at once, so **mutual exclusion is violated**.
+- **Duplicate wait**: writing `wait(mutex); CS; wait(mutex);` blocks forever at the second `wait`, causing **deadlock**.
+- **Omitted wait or signal**: the critical section is left unprotected, or no one is ever woken up.
 
-These bugs share three properties: (1) the program looks reasonable, (2) tests usually pass, (3) failure is rare and timing-dependent. The remedy is a **higher-level construct** that hides the explicit `wait`/`signal` calls — the **monitor**.
+These bugs share three properties: (1) the code looks reasonable, (2) tests usually pass, and (3) failures are rare and timing-dependent. The remedy is to use a higher-level construct such as the **monitor**, which hides the explicit `wait`/`signal` calls.
 
-### 6.2 Monitor — Structure
+### 6.2 Monitor: Structure
 
-A **monitor** is an **abstract data type (ADT)** that automatically provides mutual exclusion among its operations: at any moment, at most one thread is executing inside the monitor.
+A **monitor** is an **abstract data type (ADT)** that automatically provides mutual exclusion among its operations. At any moment, at most one thread is executing inside the monitor.
 
 ```text
 monitor monitor_name {
@@ -584,20 +589,22 @@ monitor monitor_name {
 }
 ```
 
-![Schematic view of a monitor](../images/figures/fig6_12_monitor_schematic.png)
+![Figure 3. Schematic view of a monitor](../../images/Week09_Monitor-Schematic.png)
 
-*Silberschatz Figure 6.12 — Schematic view of a monitor.*
+*Figure 3. Schematic view of a monitor*
 
-Key properties:
-- **Only one thread at a time** can be active inside the monitor — the compiler/runtime, not the programmer, inserts the lock/unlock around each function.
-- The internal variables are accessible **only via the monitor's functions** — no outsider can corrupt them.
-- The programmer never writes `wait(mutex)` / `signal(mutex)` for the monitor lock.
+In Figure 3 (Figure 6.12 of the textbook), a monitor consists of shared data at the top, operations in the middle, and initialization code at the bottom, and threads that want to enter the monitor wait their turn in the entry queue outside it.
 
-> **Why this is a leap forward**: with semaphores, mutual exclusion is a programmer **convention** ("everyone who touches X must call wait first"). With monitors, mutual exclusion is a **structural** property of the ADT — there is no way to access X without going through a monitor function, and the monitor function is automatically protected.
+Its main properties are as follows.
+- **Only one thread at a time** can be active inside the monitor. The compiler or runtime, not the programmer, inserts the lock/unlock around each function.
+- The internal variables are accessible **only through the monitor's functions**, so no outsider can corrupt them.
+- The programmer does not write `wait(mutex)`/`signal(mutex)` for the monitor lock.
+
+> **Note:** **Why this is a leap forward.** With semaphores, mutual exclusion is a programmer **convention** that every piece of code touching X calls wait first. With monitors, mutual exclusion is a **structural** property of the ADT. There is no way to access X without going through a monitor function, and the monitor function is automatically protected.
 
 ### 6.3 Condition Variables
 
-Mutual exclusion alone is not enough — sometimes a thread inside the monitor must **wait** for a condition that another monitor function can establish. **Condition variables** provide that:
+Mutual exclusion alone is sometimes not enough. A thread inside the monitor may need to wait for a **condition** that another monitor function will establish. **Condition variables** play this role.
 
 ```text
 condition x, y;
@@ -606,26 +613,28 @@ x.wait();      /* the calling thread is suspended on x */
 x.signal();    /* wake up one thread waiting on x */
 ```
 
-Two essential differences from semaphores:
+There are two essential differences from semaphores.
 
-- `x.signal()` has **no effect** if no thread is waiting on `x`. In a semaphore, `signal` always changes the value.
-- A thread that calls `x.wait()` **releases the monitor** so other threads can enter; otherwise the monitor would deadlock.
+- `x.signal()` has **no effect** if no thread is waiting on `x`. A semaphore's `signal` always changes the value.
+- A thread that calls `x.wait()` **releases the monitor** so other threads can enter. Otherwise the monitor would deadlock.
 
-**What happens after `x.signal()` when both the signaler P and the awakened Q want to be inside the monitor?** Three policies exist:
+**What happens after `x.signal()` if both the signaler P and the awakened Q want to be inside the monitor?** Three policies exist.
 
-- **Signal and wait** — P waits, Q runs immediately. (Original Hoare definition.)
-- **Signal and continue** — P continues until it leaves the monitor; Q runs afterward.
-- **Compromise** — P leaves the monitor immediately after signaling; Q resumes.
+- **Signal-and-wait**: P waits, and Q runs immediately (Hoare's original definition).
+- **Signal-and-continue**: P continues until it leaves the monitor, and Q runs afterward.
+- **Compromise**: P leaves the monitor immediately after signaling, and Q resumes.
 
-![Monitor with condition variables](../images/figures/fig6_13_monitor_conditions.png)
+![Figure 4. Monitor with condition variables](../../images/Week09_Monitor-Conditions.png)
 
-*Silberschatz Figure 6.13 — Monitor with condition variables.*
+*Figure 4. Monitor with condition variables*
 
-> **What condition variables are *for***: they let a thread **politely give up the monitor** while waiting for a state change (e.g., "buffer is non-empty"), and let another thread **wake** that waiter when the state changes. Without condition variables, a waiting thread would either spin (wasting CPU) or block while still holding the monitor lock (deadlock).
+Figure 4 (Figure 6.13 of the textbook) shows the structure of Figure 3 with a waiting queue attached to the shared-data area for each of the conditions x and y. A thread that calls `x.wait()` waits in the queue for x, and a thread that calls `y.wait()` waits in the queue for y.
+
+> **Note:** **Why condition variables exist.** Condition variables let a thread that is waiting for a state change (for example, the buffer becoming non-empty) **give up the monitor**, and let another thread **wake** that waiter when it changes the state. Without condition variables, a waiting thread would either spin and waste CPU or block while still holding the monitor lock and deadlock.
 
 ### 6.4 Implementing a Monitor with Semaphores
 
-Monitors can be built on semaphores. Here is the **signal-and-wait** version. Each external monitor function `F` is wrapped:
+Monitors can be built on semaphores. The following is the **signal-and-wait** version. Every external monitor function `F` is wrapped as follows.
 
 ```text
 semaphore mutex      = 1;     /* protects monitor entry */
@@ -641,7 +650,7 @@ else
     signal(mutex);            /* otherwise release the monitor lock */
 ```
 
-Each condition variable `x` needs its own semaphore `x_sem` and counter `x_count`:
+Each condition variable `x` needs its own semaphore `x_sem` and counter `x_count`.
 
 ```text
 /* x.wait() */                          /* x.signal() */
@@ -654,11 +663,11 @@ wait(x_sem);                            }
 x_count--;
 ```
 
-The bookkeeping is intricate — which is precisely the *point*: the monitor abstraction hides this from the programmer, and the compiler/runtime is the one party that must get it right.
+The bookkeeping is intricate, which is precisely the *point*: the monitor abstraction hides this complexity from the programmer, and the compiler or runtime only has to implement it correctly once.
 
 ### 6.5 ResourceAllocator Monitor Example
 
-A monitor that allocates a single resource, prioritizing whoever requests it for the **shortest** time (using a `condition.wait(time)` priority form):
+The following monitor allocates a single resource and gives priority to the requester that needs it for the **shortest** time. It uses a priority wait of the form `condition.wait(time)`.
 
 ```text
 monitor ResourceAllocator {
@@ -682,7 +691,7 @@ monitor ResourceAllocator {
 }
 ```
 
-Usage:
+The usage is as follows.
 
 ```text
 R.acquire(t);
@@ -690,7 +699,7 @@ R.acquire(t);
 R.release();
 ```
 
-`x.wait(c)` stores priority value `c` for the caller; `x.signal()` resumes the waiter with the **smallest** stored value. This is a **conditional-wait** variant supported by some monitor implementations.
+`x.wait(c)` stores the priority value `c` for the caller, and `x.signal()` resumes the waiter with the **smallest** stored value. This is a **conditional-wait** variant supported by some monitor implementations.
 
 ---
 
@@ -698,13 +707,13 @@ R.release();
 
 ## 7. Liveness
 
-A **liveness** failure is one where individual processes are alive but the system never makes progress on what they want to do. Mutual exclusion is about **safety**; liveness is about **eventually getting your turn**.
+A **liveness** failure is a state in which individual processes are alive but the system never makes progress on what they want to do. If mutual exclusion is a **safety** property, liveness is a property about **eventually getting your turn**.
 
 ### 7.1 Deadlock
 
-**Deadlock** is a state where every process in a set is waiting for an event that **only another process in the same set can cause**. None can ever proceed.
+**Deadlock** is a state where every process in a set is waiting for an event that **only another process in the same set** can cause. No process can proceed.
 
-Classic two-process deadlock with two semaphores S, Q (both initialized to 1):
+The classic two-process deadlock with two semaphores S and Q (both initialized to 1) is as follows.
 
 ```text
 P0                          P1
@@ -715,52 +724,56 @@ signal(S);                  signal(Q);
 signal(Q);                  signal(S);
 ```
 
-If P0 acquires S and is then preempted right before `wait(Q)`, while P1 acquires Q and is preempted right before `wait(S)` — **each holds what the other needs**, neither can proceed.
+If P0 acquires S and is preempted right before `wait(Q)`, and P1 acquires Q and is preempted right before `wait(S)`, then **each holds what the other needs**, so neither can proceed.
 
-- Deadlock most often arises around **resource acquisition / release**.
-- Diagnosis, prevention, avoidance, detection, and recovery for deadlock are covered in detail in **Ch 8 (next week)**.
+- Deadlock most often arises around **resource acquisition and release**.
+- Diagnosis, prevention, avoidance, detection, and recovery for deadlock are covered in detail in **Week 10**.
 
-> **The four necessary conditions** (preview of Ch 8): mutual exclusion, hold and wait, no preemption, circular wait. Eliminating any one is enough to prevent deadlock — a useful framing once you know what to look for.
+> **Note:** **The four necessary conditions for deadlock (preview of Week 10).** They are mutual exclusion, hold and wait, no preemption, and circular wait. Eliminating any one of them is enough to prevent deadlock, which makes this a useful framing once you know what to look for.
 
 ### 7.2 Priority Inversion and Priority Inheritance
 
-**Priority inversion** is a subtle liveness bug where a **lower-priority** process indirectly **blocks a higher-priority** one.
+**Priority inversion** is a subtle liveness bug in which a **lower-priority** process indirectly **blocks** a **higher-priority** one.
 
-The setup — three priorities **L** (low) < **M** (medium) < **H** (high):
+Suppose there are three processes with priorities **L** (low) < **M** (medium) < **H** (high).
 
 1. **L** acquires semaphore S.
-2. **H** becomes runnable and tries to acquire S → blocked, waiting for L.
+2. **H** becomes runnable and tries to acquire S, but it blocks and waits for L.
 3. **M** becomes runnable. M has higher priority than L, so M **preempts L**.
-4. As long as M runs, L cannot release S, and H cannot proceed.
+4. While M runs, L cannot release S, and H cannot proceed.
 
-Net result: **H is delayed by M**, even though H has higher priority than M.
+As a result, **H is delayed by M**, even though H has higher priority than M.
 
-**Priority Inheritance Protocol**:
+**Priority Inheritance Protocol:**
 - While L holds a lock that H is waiting for, **temporarily raise L to H's priority**.
-- M can no longer preempt L → L finishes its CS quickly and releases S.
+- M can no longer preempt L, so L finishes its critical section quickly and releases S.
 - After L releases the lock, it reverts to its original priority.
 
-> **A famous real incident — Mars Pathfinder, 1997.** The lander suffered repeated, mysterious system resets on Mars. The cause was a priority-inversion bug in **VxWorks RTOS**: a low-priority meteorological task held a mutex that a high-priority bus-management task needed, and a medium-priority comms task kept preempting the low-priority one. A watchdog timer expired and reset the system. JPL engineers fixed it remotely by **enabling priority inheritance** on the offending mutex. Synchronization is real engineering, with real consequences.
+> **Note:** **A famous real incident: Mars Pathfinder, 1997.** The lander suffered repeated, unexplained system resets on Mars. The cause was priority inversion in **VxWorks RTOS**. A low-priority meteorological task held a mutex that a high-priority bus-management task needed, and a medium-priority communications task kept preempting the low-priority task. As a result, a watchdog timer expired and reset the system. JPL engineers fixed the problem remotely by **enabling priority inheritance** on the offending mutex. The incident shows that synchronization errors can have serious consequences in real systems.
 
 ### 7.3 Evaluating Synchronization Tools
 
-Synchronization tools differ in **performance** depending on **lock contention**:
+The **performance** of synchronization tools depends on the degree of **lock contention**.
 
 | Contention level | CAS-based (optimistic) | Locking (pessimistic) |
 |------------------|------------------------|-----------------------|
 | **Uncontended** | Fast (slight edge) | Fast |
-| **Moderate** | **Much faster** — no context switch | Slower — pays context-switch cost |
-| **High** | Slow — many CAS retries | Fast — queue-based ordering |
+| **Moderate** | **Much faster** (no context switch) | Slower (pays context-switch cost) |
+| **High** | Slow (many CAS retries) | Fast (queue-based ordering) |
 
-A useful tier-of-abstraction view:
+*Table 2. Performance of CAS-based and lock-based synchronization by contention level*
+
+Classified by level of abstraction, the tools are as follows.
 
 | Level | Tools | Typical user |
 |-------|-------|--------------|
 | **Low** | Hardware (CAS, test_and_set, fences) | Mostly used as the *foundation* of higher tools |
 | **Mid** | Mutex locks, semaphores | Most common in kernels and applications |
-| **High** | Monitors, condition variables | Language-level support (Java, C# `lock`, …) |
+| **High** | Monitors, condition variables | Language-level support (Java, C# `lock`, and so on) |
 
-> **Practical implication**: there is no single "best" synchronization primitive. The right choice depends on the **expected contention**, the **length of the critical section**, and whether you need **multi-resource** or **single-flag** semantics.
+*Table 3. Synchronization tools by level of abstraction*
+
+> **Note:** **Practical implication.** No synchronization primitive is best in every situation. The right choice depends on the **expected contention**, the **length of the critical section**, and whether **multi-resource** or **single-flag** semantics are needed.
 
 ---
 
@@ -768,11 +781,11 @@ A useful tier-of-abstraction view:
 
 ## 8. Classic Problems of Synchronization
 
-Three classical problems recur throughout systems software. Each illustrates a distinct synchronization pattern.
+Three classic problems recur throughout systems software, and each illustrates a distinct synchronization pattern.
 
 ### 8.1 Bounded-Buffer Problem
 
-A **bounded buffer of size n** is shared between **producers** that insert items and **consumers** that remove them. Three semaphores:
+A **bounded buffer of size n** is shared between **producers** that insert items and **consumers** that remove them. Three semaphores are used.
 
 | Semaphore | Init | Role |
 |-----------|------|------|
@@ -780,7 +793,9 @@ A **bounded buffer of size n** is shared between **producers** that insert items
 | `empty` | n | Number of empty slots (counting). |
 | `full`  | 0 | Number of filled slots (counting). |
 
-Shared declarations:
+*Table 4. Semaphores and initial values in the bounded-buffer problem*
+
+The shared declarations are as follows.
 
 ```c
 int n;
@@ -789,9 +804,9 @@ semaphore empty = n;
 semaphore full  = 0;
 ```
 
-`empty` and `full` are **counting** semaphores; `mutex` is a **binary** semaphore for buffer access.
+`empty` and `full` are **counting** semaphores, and `mutex` is a **binary** semaphore for buffer access.
 
-### 8.2 Bounded-Buffer — Producer/Consumer Code
+### 8.2 Bounded-Buffer: Producer/Consumer Code
 
 ```c
 /* Producer */                       /* Consumer */
@@ -809,35 +824,35 @@ while (true) {                       while (true) {
                                      }
 ```
 
-Two non-obvious correctness points:
+There are two non-obvious correctness points.
 
-- **Wait order matters**: always `wait(empty)` (or `wait(full)`) **before** `wait(mutex)`. If a producer reverses the order to `wait(mutex); wait(empty);`, then when the buffer is full it holds `mutex` while blocked on `empty` — and the consumer cannot acquire `mutex` to free a slot. **Deadlock.**
-- The producer and consumer are **structurally symmetric** (`empty` ↔ `full`). Whenever you see this pattern, try to verify the symmetry — it is often the easiest correctness check.
+- **Wait order matters.** Always call `wait(empty)` or `wait(full)` **before** `wait(mutex)`. If a producer changes the order to `wait(mutex); wait(empty);`, then when the buffer is full the producer blocks on `empty` while holding `mutex`, and the consumer cannot acquire `mutex` to free a slot. The result is **deadlock**.
+- The producer and consumer are **structurally symmetric** (`empty` ↔ `full`). In this kind of pattern, checking the symmetry is often the easiest correctness check.
 
-> **Why three semaphores instead of one mutex**: a single mutex can ensure mutual exclusion on the buffer, but it cannot make a producer **wait** until the buffer has an empty slot. The two counting semaphores express the *availability* of slots; the mutex serializes the *act* of inserting/removing.
+> **Note:** **Why three semaphores instead of a single mutex.** A single mutex can ensure mutual exclusion on the buffer, but it cannot make a producer **wait** until an empty slot appears. The two counting semaphores express the *availability* of slots, and the mutex serializes the *act* of inserting and removing.
 
 ### 8.3 Readers-Writers Problem
 
-A shared dataset is accessed by two kinds of processes:
+A shared dataset is accessed by two kinds of processes.
 
-- **Readers** — read the data only.
-- **Writers** — read and modify.
+- **Readers**: only read the data.
+- **Writers**: read and modify the data.
 
-The synchronization rules:
+The synchronization rules are as follows.
 
-- **Many readers may read concurrently** (they don't conflict).
-- **A writer needs exclusive access** — no other writers and no readers.
+- **Many readers may read concurrently** (they do not conflict).
+- **A writer needs exclusive access.** No other writer and no reader may access the data at the same time.
 
-Two variants of the problem differ in whose preferences win:
+The two variants of the problem differ in which side is favored.
 
 - **First Readers-Writers Problem (readers priority).** A reader may enter even while writers are waiting. Writers can **starve**.
 - **Second Readers-Writers Problem (writers priority).** Once a writer is waiting, no new reader may enter. Readers can **starve**.
 
-Both versions allow **starvation** — only the victim differs. A **reader-writer lock** generalizes mutexes to distinguish **read mode (shared)** and **write mode (exclusive)**, leaving the priority policy as a parameter.
+Both versions allow **starvation**; only the victim differs. A **reader-writer lock** generalizes the mutex to distinguish **read mode (shared)** and **write mode (exclusive)**, leaving the priority policy as a parameter.
 
-### 8.4 Readers-Writers — First Problem Solution
+### 8.4 Readers-Writers: First Problem Solution
 
-Shared variables:
+The shared variables are as follows.
 
 ```c
 semaphore rw_mutex = 1;     /* writer-vs-readers exclusion */
@@ -845,7 +860,7 @@ semaphore mutex    = 1;     /* protects read_count        */
 int       read_count = 0;
 ```
 
-Code:
+The code is as follows.
 
 ```c
 /* Writer */                            /* Reader */
@@ -866,48 +881,50 @@ while (true) {                          while (true) {
                                         }
 ```
 
-Reading the protocol:
+The protocol works as follows.
 
-- The **first reader** acquires `rw_mutex` (locking out writers); subsequent readers don't bother.
-- The **last reader** releases `rw_mutex` (letting any waiting writer in).
-- `mutex` only protects the `read_count` counter and is held briefly.
+- The **first reader** acquires `rw_mutex` to lock out writers, and subsequent readers do not acquire `rw_mutex` again.
+- The **last reader** releases `rw_mutex`, letting any waiting writer in.
+- `mutex` protects only the `read_count` counter and is held briefly.
 
-When n readers and 1 writer are all waiting: 1 reader holds `rw_mutex`, n − 1 readers wait on `mutex`, and the writer waits on `rw_mutex`.
+If a writer is in the critical section and n readers are waiting, one reader waits on `rw_mutex` and the other n − 1 readers wait on `mutex`. When the writer executes `signal(rw_mutex)`, the scheduler decides whether to resume the waiting readers or a single waiting writer.
 
 ### 8.5 Reader-Writer Locks
 
-A **reader-writer lock** is the generalization of a mutex that makes the reader/writer distinction first-class.
+A **reader-writer lock** is the generalization of a mutex that makes the distinction between reading and writing a first-class concept.
 
-- **Read mode** — multiple threads may hold the lock simultaneously.
-- **Write mode** — only one thread may hold the lock; no readers may.
+- **Read mode**: multiple threads may hold the lock simultaneously.
+- **Write mode**: only one thread may hold the lock, and no reader may hold it meanwhile.
 
-Reader-writer locks pay off when:
-- Read and write operations can be cleanly distinguished in the code.
-- **Readers vastly outnumber writers** — the cost of the more complex lock is repaid by the higher concurrency among readers.
+Reader-writer locks pay off in the following cases.
+- Read and write operations can be clearly distinguished in the code.
+- **Readers vastly outnumber writers.** The cost of the more complex lock is repaid by the higher concurrency among readers.
 
-API examples:
+API examples are as follows.
 - POSIX: `pthread_rwlock_t`.
 - Java: `java.util.concurrent.locks.ReentrantReadWriteLock`.
-- Windows: **Slim Reader-Writer Lock** (SRWL).
+- Windows: **Slim Reader/Writer (SRW) Lock**.
 
 ### 8.6 Dining-Philosophers Problem
 
-Five philosophers sit around a circular table. Between every pair of adjacent philosophers there is one chopstick — five chopsticks total. Each philosopher alternates between **thinking** and **eating**, but to eat she must **hold both adjacent chopsticks**.
+Five philosophers sit around a circular table. Between every pair of adjacent philosophers there is one chopstick, five chopsticks in total. Each philosopher alternates between **thinking** and **eating**, and to eat she must **hold both adjacent chopsticks**.
 
-Rules:
-- Pick up only one chopstick at a time.
-- Both left and right chopsticks must be available before eating begins.
-- After eating, put both chopsticks down.
+The rules are as follows.
+- A philosopher picks up only one chopstick at a time.
+- Both the left and right chopsticks must be available before eating begins.
+- After eating, the philosopher puts both chopsticks down.
 
-![The dining philosophers](../images/figures/fig7_5_dining_philosophers.png)
+![Figure 5. The dining philosophers](../../images/Week09_Dining-Philosophers.png)
 
-*Silberschatz Figure 7.5 — The dining philosophers.*
+*Figure 5. The dining philosophers*
 
-The dining-philosophers problem is the canonical illustration of **the difficulty of allocating multiple resources to multiple processes simultaneously without deadlock or starvation**.
+In Figure 5 (Figure 7.5 of the textbook), a bowl of rice sits in the center of the round table, each of the five chairs faces its own plate, and one chopstick lies between every two neighboring plates.
 
-### 8.7 Dining-Philosophers — Semaphore Solution and Deadlock
+The dining-philosophers problem is a representative example of **the difficulty of allocating multiple resources to multiple processes without deadlock or starvation**.
 
-Represent each chopstick as a binary semaphore initialized to 1:
+### 8.7 Dining-Philosophers: Semaphore Solution and Deadlock
+
+Each chopstick is represented as a binary semaphore initialized to 1.
 
 ```c
 semaphore chopstick[5];   /* each initialized to 1 */
@@ -926,21 +943,21 @@ while (true) {
 }
 ```
 
-This solution is **incorrect**. If all five philosophers simultaneously execute `wait(chopstick[i])` (each picks up her left), every chopstick value is 0; each philosopher then blocks on `wait(chopstick[(i+1)%5])`. **Circular wait → deadlock**, and no one ever eats.
+This solution is **incorrect**. If all five philosophers simultaneously execute `wait(chopstick[i])` (each picks up her left chopstick), every chopstick value becomes 0, and each philosopher then blocks on `wait(chopstick[(i+1)%5])`. **Circular wait causes deadlock**, and no one can eat.
 
-### 8.8 Dining-Philosophers — Deadlock-Avoidance Strategies
+### 8.8 Dining-Philosophers: Deadlock-Avoidance Strategies
 
-Three classic remedies:
+There are three classic remedies.
 
-- **Method 1 — limit to at most 4 simultaneous diners.** Add an extra `seats` semaphore initialized to 4. With at most 4 philosophers competing for 5 chopsticks, at least one can always pick up both.
-- **Method 2 — pick up chopsticks only when both are available.** Wrap the check-and-pick-up in a critical section so no philosopher ever holds just one chopstick. This is the approach the monitor solution implements.
-- **Method 3 — asymmetric protocol.** Odd-numbered philosophers grab **left first**, even-numbered grab **right first**. This breaks the **circular wait** condition (the four conditions for deadlock are covered next week in Ch 8).
+- **Method 1: limit the number of philosophers at the table to at most 4.** Add a semaphore `seats` initialized to 4. With at most 4 philosophers competing for 5 chopsticks, at least one can always pick up both.
+- **Method 2: pick up chopsticks only when both are available.** Perform the check and the pickup in a single critical section so no philosopher ever holds just one chopstick. This is the approach the monitor solution takes.
+- **Method 3: use an asymmetric protocol.** Odd-numbered philosophers pick up the **left first**, and even-numbered philosophers pick up the **right first**. This breaks the **circular wait** condition (the four conditions for deadlock are covered in Week 10).
 
-Note: **deadlock-free does not imply starvation-free.** A philosopher whose neighbors are both extremely hungry could in principle never eat. Eliminating starvation requires additional fairness mechanisms.
+> **Caution:** **Deadlock-free does not imply starvation-free.** A philosopher whose neighbors are both extremely hungry could in principle never eat. Eliminating starvation requires additional fairness mechanisms.
 
-### 8.9 Dining-Philosophers — Monitor Solution
+### 8.9 Dining-Philosophers: Monitor Solution
 
-The monitor solution makes "pick up both chopsticks when both are free" a structurally enforced invariant.
+The monitor solution turns the rule of picking up chopsticks only when both are available into a structurally enforced invariant.
 
 ```text
 monitor DiningPhilosophers {
@@ -976,7 +993,7 @@ monitor DiningPhilosophers {
 }
 ```
 
-Each philosopher i invokes the monitor as:
+Each philosopher i invokes the monitor as follows.
 
 ```text
 DiningPhilosophers.pickup(i);
@@ -986,12 +1003,12 @@ DiningPhilosophers.pickup(i);
 DiningPhilosophers.putdown(i);
 ```
 
-How it works:
+It works as follows.
 
-- `pickup(i)` sets state to HUNGRY, calls `test(i)`. If both neighbors are not EATING, state becomes EATING and the philosopher proceeds. Otherwise `self[i].wait()` blocks her.
-- `putdown(i)` sets state to THINKING and re-tests both neighbors — if either is hungry and her neighbors aren't eating, that neighbor's wait is signaled.
-- **Deadlock-free**: a philosopher only eats when **both** chopsticks are available, so no one holds half a pair.
-- **Starvation possible**: an unlucky philosopher whose neighbors keep alternating eating could be perpetually skipped (left as an exercise in the textbook).
+- `pickup(i)` sets the state to HUNGRY and calls `test(i)`. If neither neighbor is EATING, the state becomes EATING and the philosopher proceeds. Otherwise `self[i].wait()` blocks her.
+- `putdown(i)` sets the state to THINKING and calls `test()` again for both neighbors. If a neighbor is hungry and that neighbor's own neighbors are not eating, that neighbor's wait is signaled.
+- **Deadlock-free.** A philosopher eats only when **both** chopsticks are available, so no one holds just one chopstick.
+- **Starvation is possible.** If the neighbors keep alternating, an unlucky philosopher could be skipped indefinitely (left as an exercise in the textbook).
 
 ---
 
@@ -1001,34 +1018,36 @@ How it works:
 
 ### 9.1 Windows Synchronization
 
-Windows distinguishes single-processor and multiprocessor cases, and offers both kernel-side and user-side primitives.
+Windows distinguishes the single-processor and multiprocessor cases and offers both kernel-side and user-side primitives.
 
-- **Single processor** — protect global state by **masking interrupts** in the kernel.
-- **Multiprocessor** — use **spinlocks** for very short kernel critical sections. A thread is **never preempted while holding a spinlock** (otherwise the holder might sleep while a spinner burns CPU forever).
+- **Single processor**: the kernel protects global state by **masking interrupts**.
+- **Multiprocessor**: the kernel uses **spinlocks** for very short kernel critical sections. A thread is **not preempted** while holding a spinlock (otherwise a spinner could waste CPU for a long time while the holder is suspended).
 
-**Dispatcher Objects** — kernel objects exposed to user threads for synchronization.
-- Examples: **Mutex Lock**, **Semaphore**, **Event**, **Timer**.
-- Each has two states: **signaled** (available) and **nonsignaled** (in use).
+**Dispatcher Objects** are kernel objects exposed to user threads for synchronization.
+- Examples include **Mutex Lock**, **Semaphore**, **Event**, and **Timer**.
+- Each object has two states: **signaled** (available) and **nonsignaled** (in use).
 - A thread that requests a nonsignaled object is **blocked** and placed on the object's waiting queue.
-- When the object becomes signaled, a waiter is moved to the **ready** state.
+- When the object becomes signaled, one waiting thread (mutex) or several (event) move to the **ready** state, depending on the object type.
 
-**Critical-Section Object** — a user-mode mutex optimized for the common case.
-- Tries to acquire with a **spinlock first** (avoiding any kernel call).
-- If the spin takes too long, allocates a **kernel mutex** and blocks.
-- In the **uncontended** case, acquire/release happens entirely in user mode → very fast.
+A **Critical-Section Object** is a user-mode mutex optimized for the common case.
+- It first tries to acquire with a **spinlock**, avoiding a kernel call.
+- If the spin takes too long, it allocates a **kernel mutex** and blocks.
+- In the **uncontended** case, both acquire and release happen entirely in user mode, which is very fast.
 
 ### 9.2 Linux Synchronization
 
-Linux has been **fully preemptive** since kernel **2.6** (previously nonpreemptive).
+Linux has been **fully preemptive** since kernel **2.6** (it was nonpreemptive before).
 
 | Tool | Purpose | Notes |
 |------|---------|-------|
 | `atomic_t`     | Atomic integer ops | Counters, sequence generators |
 | `spinlock_t`   | Short kernel CS (SMP) | On a uniprocessor, replaced by **disable preemption** |
-| `mutex`        | Longer CS | **Sleeping** lock — blocks rather than spins |
+| `mutex`        | Longer CS | **Sleeping** lock (blocks rather than spins) |
 | `semaphore`    | Counting semaphore | Suitable for long waits |
 
-Single-CPU vs SMP behavior of the spinlock primitive:
+*Table 5. Synchronization tools in the Linux kernel*
+
+The spinlock primitive behaves differently on a single CPU and on SMP, as follows.
 
 ```c
 /* Single Processor          | Multiple Processors    */
@@ -1037,10 +1056,10 @@ Single-CPU vs SMP behavior of the spinlock primitive:
 /* Enable kernel preempt     | Release spin lock      */
 ```
 
-Two important properties of Linux spinlocks and mutexes:
+Linux spinlocks and mutexes have two important properties.
 
-- **Nonrecursive** — a thread that already holds a lock will **deadlock** if it tries to acquire it again.
-- The kernel maintains a per-task `preempt_count` — preemption is allowed only when `preempt_count == 0`. Holding any lock increments this counter.
+- **Nonrecursive**: a thread that already holds a lock will **deadlock** if it tries to acquire the same lock again.
+- The kernel maintains a per-task `preempt_count` and allows preemption only when `preempt_count == 0`. Acquiring a spinlock increments this counter, and releasing it decrements the counter.
 
 ### 9.3 POSIX Mutex Locks
 
@@ -1057,13 +1076,13 @@ pthread_mutex_lock(&mutex);
 pthread_mutex_unlock(&mutex);
 ```
 
-This is the standard mutex idiom you will see in any pthread program.
+This is the standard mutex idiom commonly seen in pthread programs.
 
 ### 9.4 POSIX Semaphores (Named and Unnamed)
 
-POSIX provides two flavors of semaphores for different sharing scopes.
+POSIX provides two kinds of semaphores with different sharing scopes.
 
-**Named semaphores** — identified by a string name, can be shared between **unrelated processes**:
+**Named semaphores** are identified by a string name and can be shared between **unrelated processes**.
 
 ```c
 #include <semaphore.h>
@@ -1076,18 +1095,20 @@ sem_wait(sem);
 sem_post(sem);
 ```
 
-**Unnamed semaphores** — initialized with `sem_init(&sem, 0, 1)`; shared among **threads of the same process** (or among related processes via shared memory).
+**Unnamed semaphores** are initialized with `sem_init(&sem, 0, 1)` and are shared among **threads of the same process** (or among related processes through shared memory).
 
 | Type | API | Sharing scope |
 |------|-----|---------------|
 | Named   | `sem_open` / `sem_wait` / `sem_post` | Across **unrelated processes** |
 | Unnamed | `sem_init` / `sem_wait` / `sem_post` | Within a **single process** (or via shared memory) |
 
+*Table 6. Comparison of POSIX named and unnamed semaphores*
+
 ### 9.5 POSIX Condition Variables
 
-Because C has no built-in monitor, condition variables in POSIX are explicitly paired with a mutex.
+Because C has no built-in monitor, POSIX condition variables are used explicitly paired with a mutex.
 
-Setup:
+The setup is as follows.
 
 ```c
 pthread_mutex_t  mutex;
@@ -1096,7 +1117,7 @@ pthread_mutex_init(&mutex, NULL);
 pthread_cond_init(&cond_var, NULL);
 ```
 
-Waiting thread:
+The code of the waiting thread is as follows.
 
 ```c
 pthread_mutex_lock(&mutex);
@@ -1105,7 +1126,7 @@ while (a != b)
 pthread_mutex_unlock(&mutex);
 ```
 
-Signaling thread:
+The code of the signaling thread is as follows.
 
 ```c
 pthread_mutex_lock(&mutex);
@@ -1114,13 +1135,13 @@ pthread_cond_signal(&cond_var);             /* wake one waiter */
 pthread_mutex_unlock(&mutex);
 ```
 
-Three rules every pthread programmer must know:
+A pthread programmer must know three rules.
 
-- `pthread_cond_wait()` **atomically releases the mutex and blocks**; on wakeup, it **reacquires** the mutex before returning.
-- `pthread_cond_signal()` does **not** release the mutex — the signaler must call `unlock()` itself.
-- The condition test must always be inside a **`while` loop**, not an `if`. Spurious wakeups are permitted by the standard, and other threads may have changed the state between the wakeup and reacquiring the mutex.
+- `pthread_cond_wait()` **atomically releases the mutex and blocks**. On wakeup it **reacquires** the mutex before returning.
+- `pthread_cond_signal()` does **not** release the mutex. The signaling thread must call `unlock()` itself.
+- The condition test must always be inside a **`while`** loop, not an `if`. The standard permits spurious wakeups, and another thread may have changed the state between the wakeup and the reacquisition of the mutex.
 
-> **The "always while, never if" rule**: writing `if (a != b) pthread_cond_wait(...)` is a classic bug. Even if no spurious wakeup ever happens, another waiter may grab the resource you were notified about before you re-check, and you would proceed on a false premise. The `while` re-checks the predicate every time you wake.
+> **Note:** **The "always while, never if" rule.** Writing `if (a != b) pthread_cond_wait(...)` is a classic bug. Even if no spurious wakeup ever happens, another waiter may take the resource before the awakened thread re-checks the condition, and the thread would then proceed on a false premise. The `while` re-checks the predicate every time the thread wakes.
 
 ---
 
@@ -1128,11 +1149,11 @@ Three rules every pthread programmer must know:
 
 ## 10. Java Synchronization
 
-Java provides monitor-like synchronization at the **language level**, with the `synchronized` keyword as the primary tool and richer primitives in `java.util.concurrent`.
+Java provides monitor-like synchronization at the **language level**. The `synchronized` keyword is the primary tool, and richer primitives are available in `java.util.concurrent`.
 
-### 10.1 Java Monitors — `synchronized`, `wait()`/`notify()`
+### 10.1 Java Monitors: `synchronized`, `wait()`/`notify()`
 
-A bounded buffer using Java's built-in monitor:
+A bounded buffer using Java's built-in monitor is as follows.
 
 ```java
 public class BoundedBuffer<E> {
@@ -1165,28 +1186,28 @@ public class BoundedBuffer<E> {
 }
 ```
 
-The `synchronized` keyword **automatically** acquires the receiver object's monitor lock on entry and releases it on exit (even on exception).
+The `synchronized` keyword **automatically** acquires the receiver object's monitor lock on method entry and releases it on exit (even when an exception is thrown).
 
 ### 10.2 How Java Monitors Work Internally
 
-- Every Java object owns **one lock**, an **entry set** (threads waiting for the lock), and a **wait set** (threads blocked on `wait()`).
+- Every Java object owns **one lock**, an **entry set** (threads waiting for the lock), and a **wait set** (threads blocked in `wait()`).
 
-**When a thread calls `wait()`**:
-1. Releases the object's lock.
-2. Transitions to the **blocked** state.
-3. Joins the **wait set**.
+**When a thread calls `wait()`:**
+1. It releases the object's lock.
+2. It transitions to the **blocked** state.
+3. It joins the **wait set**.
 
-**When a thread calls `notify()`**:
-1. Picks an **arbitrary** thread T from the wait set.
-2. Moves T from the wait set into the **entry set**.
-3. Marks T runnable.
-4. When T eventually re-acquires the lock, its `wait()` call returns.
+**When a thread calls `notify()`:**
+1. An **arbitrary** thread T is picked from the wait set.
+2. T is moved from the wait set into the **entry set**.
+3. T is marked runnable.
+4. When T eventually reacquires the lock, its `wait()` call returns.
 
-`notifyAll()` does the same as `notify()` but for **every** thread in the wait set. Use `notifyAll()` when more than one type of waiting condition shares the same lock — only the threads whose condition has actually been satisfied will proceed past their `while` loop.
+`notifyAll()` does the same as `notify()` but for **every** thread in the wait set. Use `notifyAll()` when more than one type of waiting condition shares the same lock. Then only the threads whose condition has actually been satisfied proceed past their `while` loop.
 
 ### 10.3 ReentrantLock and Semaphore
 
-`java.util.concurrent.locks.ReentrantLock` is a more flexible lock than `synchronized`:
+`java.util.concurrent.locks.ReentrantLock` is a more flexible lock than `synchronized`.
 
 ```java
 Lock key = new ReentrantLock();
@@ -1198,11 +1219,11 @@ try {
 }
 ```
 
-Notable features:
-- A **fairness parameter** (`new ReentrantLock(true)`) makes the lock prefer the longest-waiting thread.
-- **Reentrant**: a thread that already holds the lock may acquire it again without deadlocking (the lock counts depth).
+Its notable features are as follows.
+- A **fairness parameter** (`new ReentrantLock(true)`) makes the lock favor the longest-waiting thread.
+- **Reentrant**: a thread that already holds the lock may acquire it again without deadlocking (the lock counts the nesting depth).
 
-`java.util.concurrent.Semaphore` is the standard semaphore:
+`java.util.concurrent.Semaphore` is the standard semaphore.
 
 ```java
 Semaphore sem = new Semaphore(1);
@@ -1217,7 +1238,7 @@ finally {
 
 ### 10.4 Java Condition Variables
 
-`Condition` objects (associated with a `Lock`) let you wait on **named** conditions, so you can wake up a *specific* waiter rather than picking randomly with `notify()`.
+`Condition` objects associated with a `Lock` let a thread wait on **named** conditions, so a *specific* waiter can be woken instead of an arbitrary thread as with `notify()`.
 
 ```java
 Lock lock = new ReentrantLock();
@@ -1242,22 +1263,22 @@ public void doWork(int threadNumber) {
 }
 ```
 
-- `await()` releases the lock and suspends (analog of `pthread_cond_wait()` and Java `Object.wait()`).
-- `signal()` wakes the **specific** waiter on that named condition — the principal advantage over the single anonymous `notify()` of built-in monitors.
+- `await()` releases the lock and blocks (the counterpart of `pthread_cond_wait()` and Java `Object.wait()`).
+- `signal()` wakes the **specific** waiter on that named condition. This is the principal advantage over the single anonymous `notify()` of built-in monitors.
 
-> **When named condition variables matter**: in a bounded buffer, "buffer not empty" and "buffer not full" are two distinct conditions. With a single anonymous `notify()`, a producer who fills the last slot might wake another *producer* waiting for an empty slot, who immediately blocks again — a wasted wakeup. With named conditions, the producer signals the consumer-condition specifically, eliminating the spurious round-trip.
+> **Note:** **When named condition variables matter.** In a bounded buffer, the condition that the buffer is not full and the condition that the buffer is not empty are distinct. With a single anonymous `notify()`, a producer that fills the last slot might wake another *producer* waiting for an empty slot, which immediately blocks again, wasting the wakeup. With named condition variables, the producer can signal the consumers' condition precisely, eliminating the wasted round trip.
 
 ---
 
 <br>
 
-## 11. Lab — Dining-Philosophers Implementation
+## 11. Lab: Dining-Philosophers Implementation
 
-The lab exercises the chapter's concepts on the dining-philosophers problem using POSIX threads.
+This section implements the dining-philosophers problem with POSIX threads to put the concepts covered above into code.
 
 ### 11.1 Lab: Naive pthread Implementation
 
-Each chopstick is a `pthread_mutex_t`. Each philosopher is a thread that loops "think → pick up left → pick up right → eat → put down".
+Each chopstick is a `pthread_mutex_t`, and each philosopher is a thread that repeatedly thinks, picks up the left chopstick, picks up the right chopstick, eats, and puts the chopsticks down.
 
 ```c
 #include <pthread.h>
@@ -1287,13 +1308,13 @@ void *philosopher(void *arg) {
 }
 ```
 
-Lab tasks:
-- Run the program and observe how it can **deadlock** (every philosopher holding her left chopstick).
-- Implement one of the classic remedies (asymmetric protocol, at-most-4 diners, or monitor) and confirm the deadlock disappears.
+This implementation behaves as follows.
+- When the program runs, it can **deadlock** in the situation where every philosopher holds her left chopstick.
+- Implementing one of the classic remedies (asymmetric protocol, at most 4 diners, or monitor) makes the deadlock disappear.
 
 ### 11.2 Lab: Asymmetric Solution
 
-Even-numbered philosophers grab the **right** chopstick first, odd-numbered grab the **left** first — this breaks the circular-wait condition.
+Even-numbered philosophers pick up the **right** chopstick first, and odd-numbered philosophers pick up the **left** chopstick first. This breaks the circular-wait condition.
 
 ```c
 void *philosopher_asymmetric(void *arg) {
@@ -1325,11 +1346,11 @@ void *philosopher_asymmetric(void *arg) {
 }
 ```
 
-> **Why it works**: deadlock requires a *cycle* of "P0 waits for P1's chopstick, P1 waits for P2's, …, Pn waits for P0's". In the asymmetric protocol, the order in which any two adjacent philosophers acquire their shared chopstick is reversed, so the cycle cannot close.
+> **Note:** **Why the asymmetric solution works.** Deadlock requires a *cycle* in which P0 waits for P1's chopstick, P1 waits for P2's, ..., and P4 waits for P0's. In the asymmetric protocol, an odd-numbered philosopher and the even-numbered philosopher to her right both pick up the chopstick between them second. Whoever holds that chopstick already holds her first chopstick and can eat, so the cycle cannot close.
 
 ### 11.3 Lab: Monitor Solution with POSIX Condition Variables
 
-A direct translation of the textbook monitor (§ 8.9) into POSIX:
+A direct translation of the textbook monitor of Section 8.9 into POSIX is as follows.
 
 ```c
 #include <pthread.h>
@@ -1366,7 +1387,7 @@ void putdown(int i) {
 }
 ```
 
-Note the use of `while (state[i] != EATING)` around `pthread_cond_wait` — exactly the pattern from § 9.5 (defensive against spurious wakeups).
+Note the use of `while (state[i] != EATING)` around `pthread_cond_wait`. It is exactly the pattern from Section 9.5 and defends against spurious wakeups.
 
 ---
 
@@ -1376,29 +1397,28 @@ Note the use of `while (state[i] != EATING)` around `pthread_cond_wait` — exac
 
 | Concept | Key Summary |
 |:--------|:-----------|
-| Race Condition | Result depends on interleaving order; arises whenever shared data is touched concurrently without coordination |
-| Critical-Section Problem | Requires **Mutual Exclusion**, **Progress**, **Bounded Waiting** |
-| Preemptive vs Nonpreemptive Kernel | Nonpreemptive: races avoided on uniprocessor but worse responsiveness; modern kernels (Linux ≥ 2.6, Windows, macOS) are preemptive |
-| Peterson's Solution | Software-only, two-process; provably correct but **breaks under instruction reordering** without memory barriers |
-| Memory Barrier | Forces ordering of loads/stores across CPUs; foundation under modern locks/atomics |
-| `test_and_set` / `compare_and_swap` | Hardware atomic primitives; CAS is the building block of nearly every modern lock-free structure |
-| Atomic Variables | Race-free single-variable updates; **insufficient** for multi-variable invariants |
-| Mutex Lock | Simplest protection; `acquire()`/`release()` must be atomic |
-| Spinlock vs Sleeping Lock | Spin: no context switch, wastes CPU; sleep: scales with long CS — pick by expected hold time |
-| Semaphore | Atomic `wait`/`signal`; **counting** for resource pools, **binary** ≈ mutex; can also enforce execution order |
-| Waiting Queue | Eliminates application-level busy waiting; `value < 0` ⇒ `|value|` waiters |
-| Monitor | High-level ADT with automatic mutual exclusion; replaces error-prone explicit `wait`/`signal` |
-| Condition Variable | `wait`/`signal` inside a monitor; signal-and-wait vs signal-and-continue policies |
-| Deadlock | Cyclic wait among processes; resolved/prevented in Ch 8 |
-| Priority Inversion | Lower-priority task indirectly blocks higher one; fixed by **priority inheritance** (Mars Pathfinder, 1997) |
-| Bounded-Buffer | `mutex`, `empty`, `full` semaphores; **wait counting before mutex** to avoid deadlock |
-| Readers-Writers | Many readers OR one writer; first/second variants → reader/writer starvation; reader-writer locks |
-| Dining-Philosophers | 5 chopsticks, 5 philosophers; naive solution deadlocks; remedies: limit-to-4, asymmetric, monitor |
-| Windows | Spinlocks (kernel) + Dispatcher Objects (signaled/nonsignaled) + user-mode Critical-Section objects |
-| Linux | `atomic_t`, `spinlock_t`, sleeping `mutex`, `semaphore`; nonrecursive locks; `preempt_count` gates kernel preemption |
-| POSIX | `pthread_mutex`, named/unnamed semaphores, condition variables (always test inside `while`) |
-| Java | `synchronized` + `wait`/`notify(All)`; `ReentrantLock` (fair, reentrant); `Semaphore`; named `Condition` |
-| Textbook Scope | Silberschatz Ch 6 (Synchronization Tools) + Ch 7 (Synchronization Examples) |
+| Race Condition | It arises when shared data is accessed concurrently without coordination, and the result depends on the interleaving order. |
+| Critical-Section Problem | A solution must satisfy the three requirements of **mutual exclusion**, **progress**, and **bounded waiting**. |
+| Preemptive vs Nonpreemptive Kernel | A nonpreemptive kernel avoids races on a single CPU but is less responsive, and modern kernels (Linux 2.6 and later, Windows, macOS) are preemptive. |
+| Peterson's Solution | It is a provably correct software-only solution for two processes, but it **breaks under instruction reordering** without memory barriers. |
+| Memory Barrier | It forces the ordering of loads and stores across CPUs and is the foundation of modern locks and atomic variables. |
+| `test_and_set` / `compare_and_swap` | They are hardware atomic primitives, and CAS is the building block of most modern lock-free data structures. |
+| Atomic Variables | They update a single variable without races but are **insufficient** for invariants that span multiple variables. |
+| Mutex Lock | It is the simplest protection tool, and `acquire()` and `release()` must be atomic. |
+| Spinlock vs Sleeping Lock | A spinlock avoids context switches but wastes CPU, while a sleeping lock suits long critical sections, so the choice depends on the expected hold time. |
+| Semaphore | It is accessed through atomic `wait`/`signal`; a **counting** semaphore models resource pools, a **binary** semaphore behaves like a mutex, and a semaphore can also enforce execution order. |
+| Waiting Queue | It eliminates application-level busy waiting, and when `value` is negative, its absolute value is the number of waiters. |
+| Monitor | It is a high-level ADT with automatic mutual exclusion that replaces error-prone explicit `wait`/`signal` calls. |
+| Condition Variable | It waits for and announces conditions with `wait`/`signal` inside a monitor, under either the signal-and-wait or the signal-and-continue policy. |
+| Deadlock | It is a circular wait among processes, and its resolution and prevention are covered in Week 10. |
+| Priority Inversion | A lower-priority task indirectly blocks a higher-priority one, and **priority inheritance** fixes it (Mars Pathfinder, 1997). |
+| Bounded-Buffer | It uses the `mutex`, `empty`, and `full` semaphores and calls **wait on a counting semaphore before wait on mutex** to avoid deadlock. |
+| Readers-Writers | Either many readers or one writer may access the data, the first and second variants allow writer and reader starvation respectively, and reader-writer locks generalize the idea. |
+| Dining-Philosophers | The naive solution with 5 chopsticks and 5 philosophers deadlocks, and the remedies are limiting the table to 4, the asymmetric protocol, and a monitor. |
+| Windows | It provides kernel spinlocks, Dispatcher Objects with signaled/nonsignaled states, and user-mode Critical-Section objects. |
+| Linux | It provides `atomic_t`, `spinlock_t`, sleeping `mutex`, and `semaphore`, its locks are nonrecursive, and `preempt_count` gates kernel preemption. |
+| POSIX | It provides `pthread_mutex`, named/unnamed semaphores, and condition variables, whose conditions are always tested inside `while`. |
+| Java | It provides `synchronized` with `wait`/`notify(All)`, `ReentrantLock` (fair, reentrant), `Semaphore`, and named `Condition` objects. |
 
 ---
 
@@ -1406,92 +1426,196 @@ Note the use of `while (state[i] != EATING)` around `pthread_cond_wait` — exac
 
 ## Self-Check Questions
 
-1. Define a race condition and walk through the producer/consumer `count++` / `count--` example. Why is the symptom timing-dependent?
+1. **Race condition:** Define a race condition and explain it with the producer/consumer `count++`/`count--` example. Why is the symptom timing-dependent?
 
-   > **Answer:** A race condition occurs when two or more threads access shared data concurrently and the **result depends on the interleaving order**. With `count = 5`, `count++` and `count--` each decompose into load → modify → store; an interleaving that lets one thread's store overwrite the other's loses an update, leaving `count = 4` or `count = 6` instead of `5`. Whether the bad interleaving happens depends on scheduling, so the bug appears intermittently — easy to miss in testing.
+   <details>
+   <summary>Answer</summary>
 
-2. State the three requirements of the Critical-Section Problem. What goes wrong when each one is missing?
+   A race condition occurs when two or more threads access shared data concurrently and the **result depends on the interleaving order**. With `count = 5`, `count++` and `count--` each decompose into load → modify → store, and an interleaving in which one thread's store overwrites the other's loses an update, leaving `count = 4` or `count = 6` instead of `5`. Whether the bad interleaving happens depends on scheduling, so the bug appears intermittently and is easy to miss in testing.
 
-    > **Answer:** Mutual exclusion allows at most one process in the critical section at a time. Progress requires selecting a waiting process when the critical section is empty, without indefinite delay. Bounded waiting limits how many other processes may enter before a waiting process is admitted. These properties prevent races, deadlock, and starvation, respectively.
+   </details>
 
-3. Compare preemptive and nonpreemptive kernels. Why does a multiprocessor preemptive kernel need more careful synchronization than a single-CPU nonpreemptive kernel?
+2. **Three requirements of the Critical-Section Problem:** State the three requirements of the Critical-Section Problem. What goes wrong when each one is missing?
 
-   > **Answer:** In a **single-CPU nonpreemptive** kernel, no other kernel thread can run until the current one yields, so kernel data races are inherently absent. **Preemptive** kernels allow another thread (potentially on **another core**) to interleave at any moment — so every shared kernel structure needs explicit protection. Disabling interrupts is enough on a uniprocessor but not across cores in SMP.
+   <details>
+   <summary>Answer</summary>
 
-4. Walk through Peterson's Solution. Why does it satisfy mutual exclusion, and why can it break on modern hardware?
+   **Mutual exclusion** allows at most one process in the critical section at a time; without it, race conditions occur. **Progress** requires that, when the critical section is empty, one of the processes wishing to enter be selected without indefinite delay; without it, the system can deadlock even though the critical section is empty. **Bounded waiting** limits how many other processes may enter before a waiting process is admitted; without it, starvation can occur.
 
-   > **Answer:** Each process Pi sets `flag[i] = true`, then `turn = j`, then waits while `flag[j] && turn == j`. **Mutual exclusion**: if both processes were inside the CS, then `flag[0] = flag[1] = true`, so the only way out for both was `turn == self`, but `turn` holds a single value. Contradiction. **Modern hardware** can reorder the writes `flag[i] = true` and `turn = j`; if `turn = j` is observed first, both processes can pass the entry check. Fix: insert memory barriers between the two writes.
+   </details>
 
-5. Give pseudocode for `test_and_set` and `compare_and_swap`, and show how each implements a lock. Why is CAS strictly more powerful?
+3. **Preemptive and nonpreemptive kernels:** Compare preemptive and nonpreemptive kernels. Why does a multiprocessor preemptive kernel need more careful synchronization than a single-CPU nonpreemptive kernel?
 
-   > **Answer:**
-   > - `test_and_set(target)` atomically reads `*target` and sets it to `true`, returning the old value. Lock: spin while `test_and_set(&lock)` returns `true`.
-   > - `compare_and_swap(value, expected, new_value)` atomically writes `new_value` only if `*value == expected`, returning the original value. Lock: spin while `compare_and_swap(&lock, 0, 1) != 0`.
-   > - CAS is more powerful because it works on **arbitrary integers** (not just booleans) and lets you express "update if unchanged since I last read it" — the basis of optimistic concurrency and lock-free data structures.
+   <details>
+   <summary>Answer</summary>
 
-6. What is an atomic variable, and what is it **not** good for?
+   In a **single-CPU nonpreemptive** kernel, no other kernel thread can run until the current one yields, so kernel data races are inherently absent. In a **preemptive** kernel, another thread (even on **another core**) can interleave at any moment, so every shared kernel structure needs explicit protection. Disabling interrupts is enough on a uniprocessor but not across the cores of an SMP system.
 
-   > **Answer:** An atomic variable provides race-free **single-variable** updates (e.g., `atomic_inc(&counter)`) typically built on CAS. It is **not** sufficient for invariants that span multiple variables — e.g., the `count`, `in`, `out` triple in a bounded buffer must be updated together under a single mutex/semaphore, or an observer can see them inconsistent.
+   </details>
 
-7. Compare a spinlock and a sleeping mutex. When is each preferable, and what is the rule of thumb?
+4. **Peterson's Solution:** Explain why Peterson's Solution satisfies mutual exclusion and why it can break on modern hardware.
 
-   > **Answer:** A **spinlock** busy-loops; a **sleeping mutex** blocks (two context switches). Spinlocks are preferable when the lock is held very briefly — especially on multicore systems where one core can spin while another finishes the CS. Sleeping locks win for long-held locks because the sleeping waiter frees its CPU. **Rule of thumb**: use a spinlock when the expected hold time is **shorter than two context switches**.
+   <details>
+   <summary>Answer</summary>
 
-8. State the semaphore `wait` and `signal` operations. Why must they be atomic?
+   Each process Pi sets `flag[i] = true` and then `turn = j`, and waits while `flag[j] && turn == j`. **Mutual exclusion**: if both processes were inside the critical section, both `flag[0]` and `flag[1]` would be `true`, so each could have left only when `turn` held its own number. But `turn` holds a single value, which is a contradiction. **Modern hardware** can reorder the writes `flag[i] = true` and `turn = j`; if `turn = j` becomes visible first, both processes can pass the entry check. The fix is to insert a memory barrier between the two writes.
 
-   > **Answer:** `wait(S)`: while `S <= 0`, spin; then `S--`. `signal(S)`: `S++`. They must be atomic because the test of `S` and the update must happen as one indivisible step — otherwise two threads can both read `S = 1`, both decrement, and both think they entered, leaving `S = -1` and two threads in the CS.
+   </details>
 
-9. With a semaphore implemented via a waiting queue, what does a **negative** value of `S->value` mean?
+5. **test_and_set and CAS:** Give pseudocode for `test_and_set` and `compare_and_swap`, and show how each implements a lock. Why is CAS strictly more powerful?
 
-   > **Answer:** Its **absolute value equals the number of processes blocked on the semaphore**. Each `wait` decrements first and, if the result is negative, enqueues the caller; each `signal` increments and, if the result is ≤ 0, dequeues and wakes one waiter.
+   <details>
+   <summary>Answer</summary>
 
-10. List three common semaphore-misuse bugs. Why are they so hard to debug?
+   - `test_and_set(target)` atomically reads `*target`, sets it to `true`, and returns the old value. Lock: spin while `test_and_set(&lock)` returns `true`.
+   - `compare_and_swap(value, expected, new_value)` atomically writes `new_value` only if `*value == expected` and returns the original value. Lock: spin while `compare_and_swap(&lock, 0, 1) != 0`.
+   - CAS works on **arbitrary integers**, not just booleans, and can express an update that happens only if the value is unchanged since it was last read. This property is the basis of optimistic concurrency and lock-free data structures, which is why CAS is more powerful.
 
-     > **Answer:** Reversing the order (`signal(mutex); CS; wait(mutex)`) admits multiple threads to the critical section. Calling `wait` twice (`wait(mutex); CS; wait(mutex)`) deadlocks at the second call. Omitting `wait` or `signal` leaves the section unprotected or fails to wake a waiter. These bugs depend on thread interleavings, so they can pass ordinary tests; a monitor provides a safer, higher-level construct.
+   </details>
 
-11. What is a monitor, and how does it differ from semaphores? Why are condition variables needed in addition?
+6. **Atomic variables:** What is an atomic variable, and what is it **not** good for?
 
-    > **Answer:** A monitor is an **ADT that automatically enforces mutual exclusion** on its operations — only one thread can be inside at a time, and the runtime (not the programmer) inserts the lock/unlock. **Condition variables** (`x.wait()`, `x.signal()`) are needed because mutual exclusion alone cannot express "wait until the buffer is non-empty"; `wait` releases the monitor so others can change the state, and `signal` wakes a waiter when they have.
+   <details>
+   <summary>Answer</summary>
 
-12. Distinguish **signal-and-wait** and **signal-and-continue** policies for monitors. What problem are they solving?
+   An atomic variable, typically built on CAS, provides race-free **single-variable** updates (e.g., `atomic_inc(&counter)`). It is **not** sufficient for invariants that span multiple variables. For example, the `count`, `in`, and `out` fields of a bounded buffer must be updated together, so unless they are protected by a single mutex or semaphore, an observer can see them in an inconsistent state.
 
-    > **Answer:** When a thread P inside a monitor calls `x.signal()` and another thread Q is waiting on `x`, both want to be the active thread inside the monitor — but only one can be. **Signal-and-wait**: P pauses, Q runs immediately. **Signal-and-continue**: P keeps running until it leaves the monitor, then Q runs. Different languages pick different policies; condition predicates should be re-checked in a `while` loop in either case.
+   </details>
 
-13. Define **deadlock** and give a two-semaphore example.
+7. **Spinlocks and sleeping mutexes:** Compare a spinlock and a sleeping mutex. When is each preferable, and what is the rule of thumb?
 
-    > **Answer:** A **deadlock** is a state where every process in a set is waiting for an event that only another process in the set can cause. Example with semaphores S, Q (both 1): P0 does `wait(S); wait(Q);` and P1 does `wait(Q); wait(S);`. If P0 acquires S and is preempted, then P1 acquires Q and tries `wait(S)`, while P0 tries `wait(Q)` — each holds what the other needs.
+   <details>
+   <summary>Answer</summary>
 
-14. Explain priority inversion with three priorities L < M < H. How does the priority-inheritance protocol fix it, and what real-world incident motivated wider adoption?
+   A **spinlock** waits in a busy loop, and a **sleeping mutex** blocks (two context switches). Spinlocks are preferable when the lock is held very briefly, especially on multicore systems where one core can spin while another finishes the critical section. Sleeping locks win for long-held locks because the sleeping waiter gives up its CPU. The **rule of thumb** is to use a spinlock when the expected hold time is **shorter than two context switches**.
 
-    > **Answer:** L holds a lock; H needs the lock and blocks; M becomes runnable and preempts L (since M > L); now H is delayed by M. **Priority inheritance** temporarily raises L to H's priority while L holds the lock H needs, so M cannot preempt L; L finishes and releases the lock; L reverts. **Mars Pathfinder (1997)**: repeated system resets traced to a priority-inversion bug in VxWorks; JPL fixed it remotely by enabling priority inheritance.
+   </details>
 
-15. Solve the Bounded-Buffer Problem with three semaphores. Why does the order of `wait` calls matter?
+8. **Semaphore operations:** State the semaphore `wait` and `signal` operations. Why must they be atomic?
 
-    > **Answer:** Use `mutex = 1` (binary), `empty = n`, `full = 0` (counting). Producer: `wait(empty); wait(mutex); insert; signal(mutex); signal(full)`. Consumer: `wait(full); wait(mutex); remove; signal(mutex); signal(empty)`. **Order matters** because if a producer reverses to `wait(mutex); wait(empty)`, then when the buffer is full the producer blocks on `empty` *while still holding* `mutex` — the consumer cannot enter to free a slot → **deadlock**.
+   <details>
+   <summary>Answer</summary>
 
-16. Distinguish the first and second Readers-Writers Problems. Can starvation be eliminated?
+   `wait(S)` spins while `S <= 0` and then performs `S--`, and `signal(S)` performs `S++`. They must be atomic because the test of `S` and the update must happen as one indivisible step. Otherwise two threads can both read `S = 1`, both decrement, and both conclude that they entered, leaving `S = -1` with two threads in the critical section at the same time.
 
-    > **Answer:** **First**: readers have priority — a reader may enter even with writers waiting → **writer starvation**. **Second**: writers have priority — once a writer is waiting, no new readers may enter → **reader starvation**. Both variants permit starvation of the disfavored party; eliminating it requires an additional fairness mechanism (e.g., a queue that interleaves readers and writers).
+   </details>
 
-17. Why does the naive semaphore solution to dining-philosophers deadlock? List three remedies.
+9. **Negative value of a waiting-queue semaphore:** With a semaphore implemented with a waiting queue, what does a **negative** value of `S->value` mean?
 
-    > **Answer:** If every philosopher simultaneously executes `wait(chopstick[i])` (her left), all five chopsticks become 0; each then blocks on her right chopstick → **circular wait → deadlock**. Remedies: **(1) at most 4 diners** at a time (limits the cycle); **(2) pick up both chopsticks atomically** in a CS, e.g., the monitor solution; **(3) asymmetric protocol** (odd philosophers pick left first, even pick right first) breaks circular wait.
+   <details>
+   <summary>Answer</summary>
 
-18. Compare Windows Dispatcher Objects and Critical-Section Objects. When is each used?
+   It means that its absolute value **equals the number of processes blocked on the semaphore**. Each `wait` decrements first and, if the result is negative, enqueues the caller. Each `signal` increments and, if the result is 0 or less, dequeues one waiter and wakes it.
 
-    > **Answer:** **Dispatcher Objects** (Mutex, Semaphore, Event, Timer) are kernel objects with signaled/nonsignaled state; acquiring a nonsignaled object blocks the thread in the kernel. **Critical-Section Objects** are user-mode mutexes that **first try a spinlock** in user space, falling back to a kernel mutex only when contention is heavy. Critical-Section is much faster in the common (uncontended) case because it avoids the kernel.
+   </details>
 
-19. Compare Linux's `spinlock_t` and `mutex`. What does it mean that they are **nonrecursive**?
+10. **Semaphore misuse:** List three common semaphore-misuse bugs. Why are these bugs hard to debug?
 
-    > **Answer:** `spinlock_t` busy-waits and is suited to very short kernel critical sections; `mutex` is a **sleeping** lock for longer waits. **Nonrecursive** means a thread that already holds the lock will deadlock if it tries to acquire the same lock again — there is no internal "I already hold this" counter. Recursive locking would have to be expressed by structuring code so the same lock is never re-entered.
+    <details>
+    <summary>Answer</summary>
 
-20. State the three rules every POSIX condition-variable user must follow.
+    Reversing the order (`signal(mutex); CS; wait(mutex)`) admits multiple threads to the critical section. Calling `wait` twice (`wait(mutex); CS; wait(mutex)`) deadlocks at the second call. Omitting `wait` or `signal` leaves the critical section unprotected or fails to wake a waiter. These errors appear only under particular execution orders, so they easily pass ordinary tests. Using a higher-level construct such as a monitor reduces the risk.
 
-    > **Answer:**
-    > **(1)** `pthread_cond_wait()` atomically releases the mutex and blocks; it reacquires the mutex on wakeup.
-    > **(2)** `pthread_cond_signal()` does not release the mutex — the signaler must call `pthread_mutex_unlock()` itself.
-    > **(3)** Always test the predicate inside a **`while`** loop, not an `if` — the standard permits spurious wakeups, and another thread may have changed state between your wakeup and reacquiring the mutex.
+    </details>
 
-21. Why do Java named `Condition` objects (via `ReentrantLock.newCondition()`) help the bounded-buffer pattern compared to a single anonymous `notify()`?
+11. **Monitors and condition variables:** What is a monitor, and how does it differ from semaphores? Why are condition variables needed in addition?
 
-    > **Answer:** A bounded buffer has two distinct conditions: "not full" (waited on by producers) and "not empty" (waited on by consumers). With a single anonymous `notify()`, the runtime might wake a producer when in fact a consumer's condition has been satisfied (or vice versa) — the awakened thread checks its `while` and goes back to sleep, wasting a wakeup. **Named conditions** let the signaler target the **specific** condition that has been satisfied, eliminating the wasted round-trip.
+    <details>
+    <summary>Answer</summary>
+
+    A monitor is an **ADT that automatically enforces mutual exclusion** on its operations. Only one thread can be inside at a time, and the runtime, not the programmer, inserts the lock and unlock. **Condition variables** (`x.wait()`, `x.signal()`) are needed because mutual exclusion alone cannot express behavior such as waiting until the buffer becomes non-empty. `wait` releases the monitor so other threads can change the state, and `signal` wakes a waiter when the state has changed.
+
+    </details>
+
+12. **Signal policies:** Distinguish the **signal-and-wait** and **signal-and-continue** policies for monitors. What problem do these policies solve?
+
+    <details>
+    <summary>Answer</summary>
+
+    When a thread P inside a monitor calls `x.signal()` and another thread Q is waiting on `x`, both want to be the active thread inside the monitor, but only one can be. Under **signal-and-wait**, P pauses and Q runs immediately. Under **signal-and-continue**, P keeps running until it leaves the monitor, and then Q runs. Different languages pick different policies, and in either case the condition predicate should be re-checked in a `while` loop.
+
+    </details>
+
+13. **Deadlock:** Define **deadlock** and give an example that uses two semaphores.
+
+    <details>
+    <summary>Answer</summary>
+
+    A **deadlock** is a state where every process in a set is waiting for an event that only another process in the set can cause. As an example with semaphores S and Q (both 1), P0 executes `wait(S); wait(Q);` and P1 executes `wait(Q); wait(S);`. If P0 acquires S and is preempted, P1 then acquires Q and tries `wait(S)`, and P0 tries `wait(Q)`, each holds what the other needs.
+
+    </details>
+
+14. **Priority inversion:** Explain priority inversion with three priorities L < M < H. How does the priority-inheritance protocol fix it, and what real-world incident made the problem widely known?
+
+    <details>
+    <summary>Answer</summary>
+
+    While L holds a lock, H requests the lock and blocks; when M becomes runnable and preempts L (since M > L), H is delayed by M. **Priority inheritance** temporarily raises L to H's priority while L holds the lock H needs, so M cannot preempt L. L finishes its critical section, releases the lock, and reverts to its original priority. In **Mars Pathfinder (1997)**, repeated system resets were traced to priority inversion in VxWorks, and JPL fixed the problem remotely by enabling priority inheritance.
+
+    </details>
+
+15. **Bounded buffer:** Solve the Bounded-Buffer Problem with three semaphores. Why does the order of `wait` calls matter?
+
+    <details>
+    <summary>Answer</summary>
+
+    Use `mutex = 1` (binary), `empty = n`, and `full = 0` (counting). The producer executes `wait(empty); wait(mutex); insert; signal(mutex); signal(full)`, and the consumer executes `wait(full); wait(mutex); remove; signal(mutex); signal(empty)`. **Why the order matters**: if a producer reverses the order to `wait(mutex); wait(empty)`, then when the buffer is full the producer blocks on `empty` *while still holding* `mutex`, and the consumer cannot enter to free a slot, causing **deadlock**.
+
+    </details>
+
+16. **Readers-Writers variants:** Distinguish the first and second Readers-Writers Problems. Can starvation be eliminated?
+
+    <details>
+    <summary>Answer</summary>
+
+    The **first** problem gives readers priority. A reader may enter even while writers are waiting, so **writer starvation** can occur. The **second** problem gives writers priority. Once a writer is waiting, no new reader may enter, so **reader starvation** can occur. Both variants permit starvation of the disfavored side, and eliminating it requires an additional fairness mechanism, such as a queue that admits readers and writers alternately.
+
+    </details>
+
+17. **Deadlock in dining philosophers:** Explain why the naive semaphore solution deadlocks, and list three remedies.
+
+    <details>
+    <summary>Answer</summary>
+
+    If every philosopher simultaneously executes `wait(chopstick[i])` (her left), all five chopsticks become 0, and each philosopher then blocks on her right chopstick, so **circular wait causes deadlock**. The remedies are **(1) at most 4 diners** at a time (limiting the cycle), **(2) picking up both chopsticks atomically** in a critical section (e.g., the monitor solution), and **(3) an asymmetric protocol** (odd-numbered philosophers pick up the left first, even-numbered philosophers the right first) that breaks circular wait.
+
+    </details>
+
+18. **Windows synchronization objects:** Compare Windows Dispatcher Objects and Critical-Section Objects. When is each used?
+
+    <details>
+    <summary>Answer</summary>
+
+    **Dispatcher Objects** (Mutex, Semaphore, Event, Timer) are kernel objects with signaled/nonsignaled states, and a thread that tries to acquire a nonsignaled object blocks in the kernel. **Critical-Section Objects** are user-mode mutexes that **first try a spinlock** in user space and fall back to a kernel mutex only when heavy contention makes the spin too long. In the common uncontended case they avoid the kernel, so they are much faster.
+
+    </details>
+
+19. **Locks in Linux:** Compare Linux's `spinlock_t` and `mutex`. What does it mean that both locks are **nonrecursive**?
+
+    <details>
+    <summary>Answer</summary>
+
+    `spinlock_t` busy-waits and is suited to very short kernel critical sections, while `mutex` is a **sleeping** lock for longer waits. **Nonrecursive** means that a thread that already holds the lock will deadlock if it tries to acquire the same lock again. The lock has no internal counter recording that its owner already holds it. If recursive acquisition seems necessary, the code must be structured so that the same lock is never acquired again.
+
+    </details>
+
+20. **Rules for POSIX condition variables:** State the three rules to follow when using POSIX condition variables.
+
+    <details>
+    <summary>Answer</summary>
+
+    1. `pthread_cond_wait()` atomically releases the mutex and blocks, and it reacquires the mutex on wakeup.
+    2. `pthread_cond_signal()` does not release the mutex, so the signaling thread must call `pthread_mutex_unlock()` itself.
+    3. Always test the predicate inside a **`while`** loop, not an `if`. The standard permits spurious wakeups, and another thread may have changed the state between the wakeup and the reacquisition of the mutex.
+
+    </details>
+
+21. **Named conditions in Java:** Why do Java named `Condition` objects created with `ReentrantLock.newCondition()` help the bounded-buffer pattern compared to a single anonymous `notify()`?
+
+    <details>
+    <summary>Answer</summary>
+
+    A bounded buffer has two separate conditions: the buffer not being full, which producers wait on, and the buffer not being empty, which consumers wait on. With a single anonymous `notify()`, the runtime might wake a producer when in fact a consumer's condition has been satisfied (or vice versa), and the awakened thread checks its `while` condition and goes back to sleep, wasting the wakeup. **Named conditions** let the signaling thread target the **specific** condition that has been satisfied, eliminating the wasted round trip.
+
+    </details>
+

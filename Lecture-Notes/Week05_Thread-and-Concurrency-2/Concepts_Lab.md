@@ -1,10 +1,10 @@
 # Week 5 Lab — Implicit Threading and Threading Issues
 
-> **Last Updated:** 2026-05-13
+[Repository Guide](../../README.md) | [English](Concepts_Lab.md) | [한국어](Concepts_Lab.ko.md)
 
-> **Prerequisites**: Week 5 Lecture concepts (implicit threading, threading issues). Ability to compile C with `-pthread` and `-fopenmp`.
->
-> **Learning Objectives**: After completing this lab, you should be able to:
+> **Last Updated:** 2026-10-18
+
+> **Learning Objectives:**
 > 1. Implement a thread pool with a task queue and pre-created worker threads
 > 2. Use OpenMP compiler directives for automatic loop parallelization
 > 3. Explain why fork() in a multithreaded program copies only the calling thread
@@ -29,8 +29,28 @@
 ## 1. Lab Overview
 
 - **Objective**: Practice implicit threading techniques and understand common threading issues.
-- **Duration**: Approximately 50 minutes · 4 labs
+- **Duration**: Approximately 50 minutes, 4 labs
 - **Topics**: Thread Pool, OpenMP, `fork()` with threads, Thread-Local Storage (TLS)
+
+The four labs fall into implicit threading (Textbook Section 4.5) and threading issues (Textbook Section 4.6).
+
+```mermaid
+graph TD
+    IT["Implicit Threading<br/>(Ch 4.5)"] --> TP["Thread Pool<br/>pre-created workers"]
+    IT --> OMP["OpenMP<br/>compiler directives"]
+    TI["Threading Issues<br/>(Ch 4.6)"] --> FK["fork() + Threads<br/>only caller copied"]
+    TI --> TLS["TLS<br/>per-thread globals"]
+    style IT fill:#c8e6c9
+    style TI fill:#bbdefb
+    style TP fill:#c8e6c9
+    style OMP fill:#c8e6c9
+    style FK fill:#ffcdd2
+    style TLS fill:#fff3e0
+```
+
+*Figure 1. Lab topics grouped into implicit threading and threading issues*
+
+The labs proceed in the following order.
 
 ```mermaid
 graph LR
@@ -42,6 +62,8 @@ graph LR
     style L3 fill:#ffcdd2
     style L4 fill:#fff3e0
 ```
+
+*Figure 2. Order of the four labs*
 
 **Build all labs**:
 
@@ -86,13 +108,17 @@ graph LR
     style W3 fill:#c8e6c9
 ```
 
+*Figure 3. Thread pool made of a task queue and worker threads*
+
 **Three benefits** of thread pools:
 
 | Benefit | Description |
 |---------|-------------|
-| Faster response | Reuse existing threads — no creation overhead |
+| Faster response | Reuses existing threads, so there is no creation overhead |
 | Bounded concurrency | Limit threads to prevent resource exhaustion |
 | Task/execution separation | Decouple *what* runs from *how* it runs |
+
+*Table 1. Three benefits of thread pools*
 
 ### Data Structures
 
@@ -167,7 +193,7 @@ void *worker_thread(void *arg)
 }
 ```
 
-> **Why `while` instead of `if` for the wait loop?** Condition variables can have **spurious wakeups** — the thread may wake up even though no signal was sent. Using `while` re-checks the condition, ensuring the thread only proceeds when the queue truly has a task.
+> **Note:** **Why `while` instead of `if` for the wait loop?** Condition variables can have **spurious wakeups**: the thread may wake up even though no signal was sent. Using `while` re-checks the condition, ensuring the thread only proceeds when the queue truly has a task.
 
 ### Task Submission (Producer)
 
@@ -206,13 +232,13 @@ void pool_shutdown(void)
 
 **Pattern**: Producer (main) submits tasks → Queue → Consumer (workers) execute
 
-- Workers sleep when queue is empty (no busy-wait thanks to `pthread_cond_wait`)
-- Shutdown: set flag + `pthread_cond_broadcast` to wake all sleeping workers
-- Compare with Java's `ExecutorService.newFixedThreadPool(4)`
+- Workers sleep when the queue is empty (no busy-wait thanks to `pthread_cond_wait`).
+- On shutdown, the main thread sets a flag and calls `pthread_cond_broadcast` to wake all sleeping workers.
+- This structure is a fixed-size thread pool like Java's `Executors.newFixedThreadPool(4)` from Week 4.
 
-> **[Data Structures]** The task queue here is a **bounded circular buffer** protected by a mutex. The producer-consumer coordination uses two condition variables (`not_empty` and `not_full`) — the same pattern you studied in concurrent data structures.
+> **[Data Structures]** The task queue here is a **bounded circular buffer** protected by a mutex, that is, a circular queue implemented with an array. `head` and `tail` advance modulo `QUEUE_SIZE`, wrapping from the end of the array back to the start. The producer-consumer coordination uses two condition variables (`not_empty` and `not_full`), the same pattern as the bounded-buffer problem covered in Week 9.
 
-> **Key Point:** The worker executes `t.function(t.arg)` **outside** the critical section (`pthread_mutex_unlock` comes first). This maximizes concurrency — the lock is only held while accessing the shared queue, not during task execution.
+> **Key Point:** The worker executes `t.function(t.arg)` **outside** the critical section (`pthread_mutex_unlock` comes first). This maximizes concurrency because the lock is only held while accessing the shared queue, not during task execution.
 
 ---
 
@@ -231,7 +257,7 @@ This lab has **three demos** that progressively build on each other.
 
 ### Demo 1: Parallel Hello
 
-The simplest OpenMP program — each thread prints its ID:
+The simplest OpenMP program, in which each thread prints its ID:
 
 ```c
 #pragma omp parallel
@@ -265,11 +291,11 @@ t_end = omp_get_wtime();
 printf("Parallel:   %.4f sec\n", t_end - t_start);
 ```
 
-> `omp_get_wtime()` provides portable wall-clock timing. The array has **50 million** elements (`ARRAY_SIZE = 50000000`), large enough to see a clear speedup.
+> **Note:** `omp_get_wtime()` provides portable wall-clock timing. The array has **50 million** elements (`ARRAY_SIZE = 50000000`), large enough to see a clear speedup.
 
 ### Demo 3: Reduction
 
-Parallel summation — the most important demo:
+Parallel summation, the most important demo:
 
 ```c
 /* Sequential sum */
@@ -292,6 +318,8 @@ for (int i = 0; i < ARRAY_SIZE; i++)
 | `#pragma omp parallel for` | Split loop iterations across threads |
 | `reduction(+:var)` | Each thread gets a private copy; combined at end |
 
+*Table 2. Key OpenMP directives and the reduction clause*
+
 ### How `reduction` Works
 
 ```text
@@ -304,7 +332,9 @@ Thread 1: sum += a[1]       Thread 1: local_sum1 += a[1]
                                 (safe merge at end)
 ```
 
-> **[Programming Languages]** OpenMP is a **declarative** parallelism model — you tell the compiler *what* to parallelize, not *how*. The runtime decides thread count, scheduling, and synchronization. This contrasts with the **imperative** `pthread_create` approach from Week 4 where you manage every detail yourself.
+*Figure 4. Updating a shared variable with and without reduction*
+
+> **[Programming Languages]** OpenMP is a **declarative** parallelism model: you tell the compiler *what* to parallelize, not *how*. The runtime decides thread count, scheduling, and synchronization. This contrasts with the **imperative** `pthread_create` approach from Week 4 where you manage every detail yourself.
 
 > **Key Point:** Without `reduction`, multiple threads writing to the same `sum` variable would cause a race condition. The `reduction` clause gives each thread a private copy and safely combines them after the loop completes.
 
@@ -325,11 +355,11 @@ This lab has **two demos**: the first shows the problem, the second shows the sa
 ### Two Variants of fork() Semantics
 
 1. Duplicate **ALL** threads (rarely used)
-2. Duplicate **ONLY** the calling thread (POSIX default)
+2. Duplicate **ONLY** the calling thread (the behavior of POSIX `fork()`)
 
-Rule of thumb:
-- If the child calls `exec()` immediately → fork only caller (safe)
-- If the child continues executing → beware of lost threads/locks
+The rule of thumb is as follows.
+- If the child calls `exec()` immediately, duplicating only the calling thread is safe.
+- If the child continues executing without `exec()`, beware of lost threads and locked locks.
 
 ### Demo 1: fork() Copies Only the Calling Thread
 
@@ -362,17 +392,19 @@ Parent Process                Parent Process       Child Process
 └──────────────┘             └──────────────┘     └──────────────┘
 ```
 
+*Figure 5. Threads of the parent and child processes before and after `fork()`*
+
 **Key observations**:
 
-- **Parent**: counter keeps incrementing (all threads alive and running)
-- **Child**: counter stays at 7 (threads were NOT copied — only the calling thread exists)
-- The child process gets a **snapshot** of memory at the moment of `fork()`, but none of the other threads
+- **Parent**: counter keeps incrementing (all threads are alive and running).
+- **Child**: counter stays at 7 (the other threads were NOT copied; only the calling thread exists).
+- The child process gets a **snapshot** of memory at the moment of `fork()`, but none of the other threads.
 
 ### Why This Is Dangerous
 
-If another thread held a mutex at the time of `fork()`, the child inherits a **locked mutex** with no thread to unlock it — **deadlock**.
+If another thread held a mutex at the time of `fork()`, the child inherits a **locked mutex** with no thread to unlock it, so the child reaches a **deadlock** when it tries to acquire that mutex.
 
-### Demo 2: fork() + exec() — The Safe Pattern
+### Demo 2: The Safe Pattern of fork() + exec()
 
 ```c
 pid_t pid = fork();
@@ -388,11 +420,11 @@ if (pid == 0) {
 }
 ```
 
-The `exec()` call replaces the **entire address space**, so the inherited locked-mutex problem disappears. It doesn't matter that other threads are missing because the whole process image is replaced.
+The `exec()` call replaces the **entire address space**, so the inherited locked-mutex problem disappears. It does not matter that other threads are missing because the whole process image is replaced.
 
-> **[Operating Systems]** Recall from Week 2–3 that `fork()` creates a copy of the calling process. In a single-threaded process, this copies everything. In a multithreaded process, POSIX specifies that only the calling thread is duplicated. This design avoids the complexity of duplicating thread synchronization state, but it means the child is in a fragile state until it calls `exec()`.
+> **Note:** **`fork()` in a multithreaded process.** Recall from Weeks 2-3 that `fork()` creates a copy of the calling process. In a single-threaded process, this copies everything. In a multithreaded process, POSIX specifies that only the calling thread is duplicated. This design avoids the complexity of duplicating thread synchronization state, but it means the child is in a fragile state until it calls `exec()`.
 
-> **Exam Tip:** `fork()` in a multithreaded program is a frequently tested topic. Remember: only the calling thread is copied. The safe pattern is `fork()` + `exec()` immediately.
+> **Note:** **Exam Tip.** `fork()` in a multithreaded program is a frequently tested topic. Only the calling thread is copied, and the safe pattern is calling `exec()` immediately after `fork()`.
 
 ---
 
@@ -417,6 +449,8 @@ This lab has **two demos**: the first compares shared vs TLS variables, the seco
 | `__thread` | GCC extension |
 | `_Thread_local` | C11 standard |
 | `pthread_key_t` | Pthreads API |
+
+*Table 3. Ways to implement TLS*
 
 ### Demo 1: Shared Global vs Thread-Local
 
@@ -461,11 +495,13 @@ tls_var:    [ Thread 0 copy ] [ Thread 1 copy ] [ Thread 2 copy ] [ Thread 3 cop
                      ↓ each thread has its own — no conflict
 ```
 
+*Figure 6. Memory layout of a shared variable and a thread-local variable*
+
 The `__thread` keyword tells the compiler to create a **separate instance** of the variable for each thread. Each thread reads and writes its own copy, so no synchronization is needed.
 
 ### Demo 2: Per-Thread State (errno Pattern)
 
-`errno` is a global variable in the C library that stores an error code whenever a system call fails (e.g., `errno = ENOENT` means 'file not found'). Without TLS, concurrent threads would overwrite each other's `errno`, so modern C libraries use TLS to give each thread its own private copy.
+`errno` is a global variable in the C library that stores an error code whenever a system call fails (e.g., `errno = ENOENT` means that no such file or directory exists). Without TLS, concurrent threads would overwrite each other's `errno`, so modern C libraries use TLS to give each thread its own private copy.
 
 A practical demonstration of TLS mimicking how `errno` works:
 
@@ -494,9 +530,9 @@ void *demo2_worker(void *arg)
 }
 ```
 
-Each thread sets its own error code via `set_error()` and reads it back via `get_error()`. Despite running concurrently, each thread's value is independent — just like `errno` in the C library.
+Each thread sets its own error code via `set_error()` and reads it back via `get_error()`. Despite running concurrently, each thread's value is independent, just like `errno` in the C library.
 
-> **Key Point:** TLS is useful when you need per-thread global state without the overhead of passing data through function parameters. It works for **independent** copies only. If threads need to share and coordinate on the same data, you need proper synchronization (mutexes, covered in Chapter 6).
+> **Key Point:** TLS is useful when you need per-thread global state without the overhead of passing data through function parameters. It works for **independent** copies only. If threads need to share and coordinate on the same data, you need proper synchronization (mutexes, covered in Week 9).
 
 ---
 
@@ -504,26 +540,12 @@ Each thread sets its own error code via `set_error()` and reads it back via `get
 
 ## Summary
 
-```mermaid
-graph TD
-    IT["Implicit Threading<br/>(Ch 4.5)"] --> TP["Thread Pool<br/>pre-created workers"]
-    IT --> OMP["OpenMP<br/>compiler directives"]
-    TI["Threading Issues<br/>(Ch 4.6)"] --> FK["fork() + Threads<br/>only caller copied"]
-    TI --> TLS["TLS<br/>per-thread globals"]
-    style IT fill:#c8e6c9
-    style TI fill:#bbdefb
-    style TP fill:#c8e6c9
-    style OMP fill:#c8e6c9
-    style FK fill:#ffcdd2
-    style TLS fill:#fff3e0
-```
-
-| Lab | Topic | Key Takeaway |
-|:----|:------|:-------------|
-| Lab 1 | Thread Pool | Workers wait on queue — reuse threads, bound concurrency |
-| Lab 2 | OpenMP | `#pragma omp parallel for reduction(+:var)` → automatic parallelization |
-| Lab 3 | fork() + Threads | Only calling thread copied — call `exec()` right away |
-| Lab 4 | TLS | `__thread` = per-thread copy, no locks needed |
+| Concept | Key Summary |
+|:--------|:------------|
+| Thread Pool (Lab 1) | Pre-created worker threads wait on a task queue, so threads are reused and concurrency is bounded. |
+| OpenMP (Lab 2) | Compiler directives such as `#pragma omp parallel for reduction(+:var)` parallelize loops automatically. |
+| `fork()` and Threads (Lab 3) | `fork()` copies only the calling thread, so it is safe for the child to call `exec()` right away. |
+| TLS (Lab 4) | A `__thread` variable has a separate copy per thread, so it can be used without locks. |
 
 ---
 
@@ -531,28 +553,58 @@ graph TD
 
 ## Self-Check Questions
 
-1. What are the three benefits of using a thread pool instead of creating a new thread for each task?
+1. **Benefits of a thread pool:** What are the three benefits of using a thread pool instead of creating a new thread for each task?
 
-   > **Answer:** ① No per-task creation/destruction cost; ② bounds the number of live threads, preventing resource exhaustion under load; ③ cleanly separates task submission from thread management. Creating a thread per task risks bringing down the process on traffic spikes.
+   <details>
+   <summary>Answer</summary>
 
-2. Why does the worker thread use `while (pool.count == 0)` instead of `if (pool.count == 0)` before calling `pthread_cond_wait`?
+   First, reusing existing threads removes the per-task cost of creating and destroying threads. Second, bounding the number of live threads prevents resource exhaustion under load spikes. Third, it cleanly separates task submission from thread management. Creating a thread per task risks bringing down the process on traffic spikes.
 
-   > **Answer:** Because of **spurious wakeups** (the kernel/library may wake a waiter even without a signal) and because `pthread_cond_broadcast` can wake multiple threads that then race for the same condition. Re-testing the predicate with `while` ensures the condition is still true after waking; `if` would proceed with a false condition and cause bugs.
+   </details>
 
-3. What are the three demos in Lab 2, and what OpenMP directive does each demonstrate?
+2. **Re-checking the condition:** Why does the worker thread use `while (pool.count == 0)` instead of `if (pool.count == 0)` before calling `pthread_cond_wait`?
 
-    > **Answer:** A typical mapping is: Demo 1 uses `#pragma omp parallel for` for loop parallelism; Demo 2 uses `#pragma omp parallel for reduction(+:x)` for safe accumulation; Demo 3 uses `#pragma omp sections` or `#pragma omp task` for task parallelism. Check the lab body for the exact mapping.
+   <details>
+   <summary>Answer</summary>
 
-4. When `fork()` is called in a multithreaded program, how many threads does the child process have? Why is this dangerous?
+   There are two reasons. First, **spurious wakeups** can occur, in which the kernel or library wakes a waiter even without a signal. Second, `pthread_cond_broadcast` can wake multiple threads that then race for the same condition. Re-testing the predicate with `while` ensures that the condition is still true after waking. `if` would proceed with a false condition and cause bugs.
 
-   > **Answer:** The child has **only the calling thread** (POSIX default). Danger: if another thread held a mutex at the moment of `fork()`, the child inherits it locked with no owner thread to release it — deadlock. Library-internal locks (e.g., inside `malloc`) are notorious for this; the standard recommendation is to `exec()` immediately after `fork()`.
+   </details>
 
-5. What is the difference between Demo 1 and Demo 2 in Lab 4? What real-world system uses the same pattern as Demo 2?
+3. **Directives in Lab 2:** What are the three demos in Lab 2, and what OpenMP directive does each demonstrate?
 
-   > **Answer:** Demo 1 delivers signals to **every** thread (default behavior). Demo 2 uses a **dedicated signal-handling thread** while all other threads block the signal via `sigprocmask` — keeping signal logic in one place. Real-world systems using this pattern include **nginx** and many JVM implementations.
+   <details>
+   <summary>Answer</summary>
 
-6. Name three different ways to declare a thread-local variable in C.
+   Demo 1 (Parallel Hello) uses `#pragma omp parallel` to create a team of threads that all run the same block. Demo 2 (Parallel For with Speedup) uses `#pragma omp parallel for` to split the iterations of the array initialization loop across threads. Demo 3 (Reduction) uses `#pragma omp parallel for reduction(+:sum_par)` so that each thread accumulates a partial sum in a private copy and the copies are combined safely after the loop.
 
-   > **Answer:** ① `__thread int x;` (GCC/Clang extension), ② `_Thread_local int x;` (C11 standard), ③ `pthread_key_create(&key, NULL); pthread_setspecific(key, ptr);` (POSIX API).
+   </details>
+
+4. **`fork()` in a multithreaded program:** When `fork()` is called in a multithreaded program, how many threads does the child process have? Why is this dangerous?
+
+   <details>
+   <summary>Answer</summary>
+
+   The child has **only the calling thread** (the behavior of POSIX `fork()`). If another thread held a mutex at the moment of `fork()`, the child inherits it locked with no owner thread to release it, so the child deadlocks when it tries to acquire that mutex. Library-internal locks (e.g., inside `malloc`) are notorious for this. The standard recommendation is to call `exec()` immediately after `fork()`.
+
+   </details>
+
+5. **The two demos of Lab 4:** What is the difference between Demo 1 and Demo 2 in Lab 4? What real-world example uses the same pattern as Demo 2?
+
+   <details>
+   <summary>Answer</summary>
+
+   Demo 1 increments the shared global `shared_var` and the thread-local `tls_var` in the same loop and compares them. The shared variable can lose updates to the race condition and end below 400000, while each thread's `tls_var` is always exactly 100000. Demo 2 stores a per-thread error code and name in the `__thread` variables `thread_error` and `thread_name`, showing that each thread reads back the value it set even when the threads overlap. A real-world example of the Demo 2 pattern is `errno` in the C library; modern C libraries keep a separate `errno` for each thread.
+
+   </details>
+
+6. **Declaring TLS:** Name three different ways to declare a thread-local variable in C.
+
+   <details>
+   <summary>Answer</summary>
+
+   The three ways are ① `__thread int x;` (GCC/Clang extension), ② `_Thread_local int x;` (C11 standard), and ③ `pthread_key_create(&key, NULL); pthread_setspecific(key, ptr);` (POSIX API).
+
+   </details>
 
 ---

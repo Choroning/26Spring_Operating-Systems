@@ -1,45 +1,17 @@
-# Week 2 Assignment Explanation — pingpong & minishell
+# HW1 Assignment Explanation — pingpong & minishell
 
-> **Last Updated:** 2026-03-21
+[Repository Guide](../../README.md) | [English](Assignment-Explanation.md) | [한국어](Assignment-Explanation.ko.md)
+
+> **Last Updated:** 2026-10-18
 >
-> Lecture reference: Lecture (Ch 3.1–3.3 Processes), Lab (Labs 3–4 pipe/dup2)
+> Operating System Concepts, Silberschatz, Ch 3 (3.1-3.3)
 
----
-
-## File Structure and Usage
-
-```plaintext
-W02_Process-1/Assignment/
-├── pingpong.c                  # Assignment 1 — A program where two processes exchange 1 byte via pipe
-├── minishell.c                 # Assignment 2 — A simple shell supporting pipes and I/O redirection
-├── test_pingpong.sh            # Automated grading script for pingpong.c
-├── test_minishell.sh           # Automated grading script for minishell.c
-└── Assignment-Explanation.md   # Assignment explanation document (this file)
-```
-
-### Build and Run
-
-```bash
-# pingpong
-gcc -Wall -o pingpong pingpong.c
-./pingpong
-
-# minishell
-gcc -Wall -o minishell minishell.c
-./minishell
-```
-
-### Testing
-
-```bash
-# Run in the same directory (default: compiles .c files in the same path)
-./test_pingpong.sh
-./test_minishell.sh
-
-# You can also specify a source file at a different path
-./test_pingpong.sh /path/to/pingpong.c
-./test_minishell.sh /path/to/minishell.c
-```
+> **Learning Objectives:**
+> 1. Implement bidirectional communication between a parent and a child process with two pipes and measure the round-trip time
+> 2. Explain why each process must close its unused pipe fds, in connection with EOF delivery
+> 3. Implement single-command execution in a shell with `fork()`, `execvp()`, and `waitpid()`
+> 4. Implement input and output redirection with `open()` and `dup2()`
+> 5. Implement a `cmd1 | cmd2` pipeline with `pipe()` and two `fork()` calls
 
 ---
 
@@ -47,7 +19,10 @@ gcc -Wall -o minishell minishell.c
 
 - [1. Assignment Overview](#1-assignment-overview)
   - [1.1 System Calls Covered in This Assignment](#11-system-calls-covered-in-this-assignment)
-- [2. Assignment 1 — pingpong.c Explanation](#2-assignment-1--pingpongc-explanation)
+  - [1.2 File Structure and Usage](#12-file-structure-and-usage)
+  - [1.3 Build and Run](#13-build-and-run)
+  - [1.4 Testing](#14-testing)
+- [2. Assignment 1: pingpong.c Explanation](#2-assignment-1-pingpongc-explanation)
   - [2.1 What Are We Implementing?](#21-what-are-we-implementing)
   - [2.2 Why Are Two Pipes Needed?](#22-why-are-two-pipes-needed)
   - [2.3 TODO 1: Create Two Pipes](#23-todo-1-create-two-pipes)
@@ -56,7 +31,7 @@ gcc -Wall -o minishell minishell.c
   - [2.6 TODO 7, 8, 9: Parent Process Operations](#26-todo-7-8-9-parent-process-operations)
   - [2.7 Complete Data Flow Summary](#27-complete-data-flow-summary)
   - [2.8 Key Learning Points](#28-key-learning-points)
-- [3. Assignment 2 — minishell.c Explanation (execute_command)](#3-assignment-2--minishellc-explanation-execute_command)
+- [3. Assignment 2: minishell.c Explanation (execute_command)](#3-assignment-2-minishellc-explanation-execute_command)
   - [3.1 What Are We Implementing?](#31-what-are-we-implementing)
   - [3.2 Understanding the Given Data Structure](#32-understanding-the-given-data-structure)
   - [3.3 TODO 1: Create a Child with fork()](#33-todo-1-create-a-child-with-fork)
@@ -65,7 +40,7 @@ gcc -Wall -o minishell minishell.c
   - [3.6 TODO 2c, 2d: Command Execution](#36-todo-2c-2d-command-execution)
   - [3.7 TODO 3: Parent Waiting](#37-todo-3-parent-waiting)
   - [3.8 execute_command Complete Flow Summary](#38-execute_command-complete-flow-summary)
-- [4. Assignment 2 — minishell.c Explanation (execute_pipe)](#4-assignment-2--minishellc-explanation-execute_pipe)
+- [4. Assignment 2: minishell.c Explanation (execute_pipe)](#4-assignment-2-minishellc-explanation-execute_pipe)
   - [4.1 What Does a Pipe Do?](#41-what-does-a-pipe-do)
   - [4.2 TODO 4: Create a Pipe](#42-todo-4-create-a-pipe)
   - [4.3 TODO 5: Child 1 (Execute cmd1)](#43-todo-5-child-1-execute-cmd1)
@@ -77,8 +52,9 @@ gcc -Wall -o minishell minishell.c
   - [5.1 System Call Combination Patterns Summary](#51-system-call-combination-patterns-summary)
   - [5.2 fd Management Rules](#52-fd-management-rules)
   - [5.3 Connecting This Assignment to Lecture Content](#53-connecting-this-assignment-to-lecture-content)
-  - [5.4 Exam Preparation — Frequently Tested Topics](#54-exam-preparation--frequently-tested-topics)
+  - [5.4 Exam Preparation: Frequently Tested Topics](#54-exam-preparation-frequently-tested-topics)
 - [Summary](#summary)
+- [Self-Check Questions](#self-check-questions)
 
 ---
 
@@ -90,23 +66,67 @@ gcc -Wall -o minishell minishell.c
 
 | System Call | Role | Lecture Reference |
 |:-----------|:-----|:-----------------|
-| **fork()** | Create a copy (child process) of the current process | Lecture: Process Creation (Ch 3.3.1) |
-| **exec()** | Replace the process image with a new program | Lecture: exec() after fork() |
-| **wait()** | Wait for child process termination; prevent zombies | Lecture: Process Termination (Ch 3.3.2) |
-| **pipe()** | Create a unidirectional IPC channel (kernel buffer) | Lab: Lab 3 — pipe() |
-| **dup2()** | Duplicate a file descriptor (FD) for I/O redirection | Lab: Lab 4 — dup2() |
-| **read() / write()** | Read/write data through file descriptors | Lab: Lab 3 — pipe() |
-| **close()** | Close a file descriptor | Lab: Always close unused fds |
+| **fork()** | Create a copy (child process) of the current process | Week 2 Lecture: Process Creation (Ch 3.3.1) |
+| **exec()** | Replace the process image with a new program | Week 2 Lecture: exec() after fork() |
+| **wait()** | Wait for child process termination to prevent zombies | Week 2 Lecture: Process Termination (Ch 3.3.2) |
+| **pipe()** | Create a unidirectional IPC channel (kernel buffer) | Week 2 Lab 3: pipe() |
+| **dup2()** | Duplicate a file descriptor (FD) for I/O redirection | Week 2 Lab 4: dup2() |
+| **read() / write()** | Read and write data through file descriptors | Week 2 Lab 3: pipe() |
+| **close()** | Close a file descriptor | Week 2 Lab: Always close unused fds |
+
+*Table 1. System calls covered in the assignment and their lecture references*
 
 **Assignment Structure:**
-- **pingpong** (basic): A program where two processes exchange 1 byte via pipes
-- **minishell** (intermediate): A simple shell supporting pipes and I/O redirection
+- **pingpong** (basic): a program where two processes exchange 1 byte via pipes.
+- **minishell** (intermediate): a simple shell supporting pipes and I/O redirection.
+
+### 1.2 File Structure and Usage
+
+```plaintext
+Coursework/HW01_Process-1/
+├── Assignment-Explanation.md       # Assignment explanation document (English, this file)
+├── Assignment-Explanation.ko.md    # Assignment explanation document (Korean)
+└── Solution/
+    ├── pingpong.c                  # Assignment 1: a program where two processes exchange 1 byte via pipe
+    ├── minishell.c                 # Assignment 2: a simple shell supporting pipes and I/O redirection
+    ├── test_pingpong.sh            # Automated grading script for pingpong.c
+    └── test_minishell.sh           # Automated grading script for minishell.c
+```
+
+*Figure 1. Directory layout of HW1*
+
+### 1.3 Build and Run
+
+```bash
+# Move from the repository root to the solution directory
+cd Coursework/HW01_Process-1/Solution
+
+# pingpong
+gcc -Wall -o pingpong pingpong.c
+./pingpong
+
+# minishell
+gcc -Wall -o minishell minishell.c
+./minishell
+```
+
+### 1.4 Testing
+
+```bash
+# Run in the Solution directory (default: compiles .c files in the same path)
+./test_pingpong.sh
+./test_minishell.sh
+
+# You can also specify a source file at a different path
+./test_pingpong.sh /path/to/pingpong.c
+./test_minishell.sh /path/to/minishell.c
+```
 
 ---
 
 <br>
 
-## 2. Assignment 1 — pingpong.c Explanation
+## 2. Assignment 1: pingpong.c Explanation
 
 ### 2.1 What Are We Implementing?
 
@@ -123,25 +143,29 @@ Parent Process                              Child Process
      └── Reap child with wait()                  └── exit(0)
 ```
 
+*Figure 2. Ping and pong exchange in pingpong*
+
 **Expected Output:**
-```
+```text
 12345: received ping
 12344: received pong
 Round-trip time: 156.000 us
 ```
 
-> **[Computer Networks — RTT]** Round-trip Time (RTT) in networking refers to the time it takes for a packet to travel to a destination and back. In this assignment, we measure the RTT of inter-process pipe communication, which is useful for understanding IPC (Inter-Process Communication) overhead. Typically, pipe RTT within the same host is on the order of hundreds of microseconds.
+> **[Computer Networks]** Round-trip Time (RTT) in networking refers to the time it takes for a packet to travel to a destination and back. In this assignment, we measure the RTT of inter-process pipe communication, which is useful for understanding IPC (Inter-Process Communication) overhead. Pipe RTT within the same host ranges from a few microseconds to hundreds of microseconds, depending on the hardware, the operating system, and the scheduling state.
 
 ### 2.2 Why Are Two Pipes Needed?
 
 A pipe is a **unidirectional** communication channel. Data is written to one end (`fd[1]`) and read from the other end (`fd[0]`).
 
-For **bidirectional communication**, two pipes are required:
+For **bidirectional communication**, two pipes are required.
 
 ```text
 parent_to_child[2]:   Parent writes to [1] → Child reads from [0]
 child_to_parent[2]:   Child writes to [1] → Parent reads from [0]
 ```
+
+*Figure 3. Data directions of the two pipes*
 
 ```c
 int parent_to_child[2];   /* Parent → Child direction */
@@ -153,7 +177,9 @@ int child_to_parent[2];   /* Child → Parent direction */
 | `parent_to_child` | Used by parent | Used by child |
 | `child_to_parent` | Used by child | Used by parent |
 
-> **[Lab 3]** Recall from the lab that the `pipe()` function fills an `int fd[2]` array with `fd[0]` (read end) and `fd[1]` (write end). This assignment extends that principle to implement **bidirectional communication** using **two pipes**.
+*Table 2. Users of each pipe end*
+
+> **Note:** **Week 2 Lab 3.** The `pipe()` function fills an `int fd[2]` array with `fd[0]` (read end) and `fd[1]` (write end). This assignment extends that principle to implement bidirectional communication using **two pipes**.
 
 ### 2.3 TODO 1: Create Two Pipes
 
@@ -173,13 +199,13 @@ if (pipe(child_to_parent) < 0) {
 - After calling `pipe()`, the return value must be checked for **error handling**.
 - `pipe()` returns `-1` on failure and sets `errno`.
 - `perror()` automatically prints the error message corresponding to `errno`.
-- Pipes must be created **before** `fork()` — because the child process inherits the parent's file descriptor table.
+- Pipes must be created **before** `fork()`, because the child process inherits the parent's file descriptor table.
 
-> **[Lecture]** As learned in lecture, `fork()` creates a **copy of the parent process's address space**. The file descriptor table is also copied, so both parent and child will have the pipe fds created before `fork()`. This is why communication between parent and child through pipes is possible.
+> **Note:** **Week 2 Lecture.** `fork()` creates a **copy of the parent process's address space**. The file descriptor table is also copied, so both parent and child will have the pipe fds created before `fork()`. This is why communication between parent and child through pipes is possible.
 
 ### 2.4 TODO 2, 6: Close Unused fds
 
-After `fork()`, both parent and child hold 4 fds. Each process must close the **unused ends**.
+After `fork()`, both parent and child hold 4 pipe fds. Each process must close the **unused ends**.
 
 **Child Process (TODO 2):**
 ```c
@@ -195,7 +221,7 @@ close(parent_to_child[0]);   /* Read end of parent→child pipe (parent doesn't 
 close(child_to_parent[1]);   /* Write end of child→parent pipe (parent doesn't write) */
 ```
 
-> **[Lab 3]** In the lab, we learned the rule "always close the unused end." The reasons: (1) If the write end remains open, the reading side **cannot receive EOF**, causing the program to block forever. (2) File descriptors are a finite resource, so unnecessary fds should be released immediately.
+> **Note:** **Week 2 Lab 3.** The lab covers the rule of always closing the unused end. There are two reasons. (1) If the write end remains open, the reading side **cannot receive EOF**, causing the program to block forever. (2) File descriptors are a finite resource, so unnecessary fds should be released immediately.
 
 ### 2.5 TODO 3, 4, 5: Child Process Operations
 
@@ -215,12 +241,12 @@ exit(0);
 ```
 
 **Execution Flow:**
-1. `read()` **blocks** until the parent sends data — serves as synchronization
-2. After reading the byte, print `"received ping"`
-3. Send the same byte back to the parent via `write()` (pong)
-4. Close all used fds and terminate normally with `exit(0)`
+1. `read()` **blocks** until the parent sends data, which serves as synchronization.
+2. After reading the byte, the child prints `"received ping"`.
+3. The child sends the same byte back to the parent via `write()` (pong).
+4. The child closes all used fds and terminates normally with `exit(0)`.
 
-> **[Lecture]** When a child process terminates with `exit(0)`, it becomes a **zombie process** until the parent calls `wait()`. In this assignment, the parent calls `wait(NULL)` at the end to reap the zombie.
+> **Note:** **Week 2 Lecture.** When a child process terminates with `exit(0)`, it becomes a **zombie process** until the parent calls `wait()`. In this assignment, the parent calls `wait(NULL)` at the end to reap the zombie.
 
 ### 2.6 TODO 7, 8, 9: Parent Process Operations
 
@@ -245,7 +271,7 @@ close(child_to_parent[0]);
 wait(NULL);   /* Reap child process — prevent zombie */
 ```
 
-> **[Lecture — Context Switch]** The round-trip time includes **context switch** overhead. For the child to wake up on `read()` after the parent calls `write()`, the CPU must switch from parent to child, and for the parent to wake up on `read()` after the child calls `write()`, another switch is needed. In other words, measured RTT = data copy time + context switch time x 2.
+> **Note:** **Week 2 Lecture: Context Switch.** The round-trip time includes **context switch** overhead. With a single CPU core, for the child to wake up on `read()` after the parent calls `write()`, the CPU must switch from parent to child, and for the parent to wake up on `read()` after the child calls `write()`, another switch is needed. In other words, the RTT measured on a single core is roughly data copy time + context switch time × 2. On a multicore machine the parent and child can run on different cores, so the cost is waking a process that sleeps on another core instead of a context switch.
 
 ### 2.7 Complete Data Flow Summary
 
@@ -272,22 +298,26 @@ close(...)                                      │
 wait(NULL) ──────────────────────────────→ [Reaped]
 ```
 
+*Figure 4. Complete data flow of pingpong*
+
 ### 2.8 Key Learning Points
 
 | Learning Point | Lecture Reference | Application in This Assignment |
 |:--------------|:-----------------|:------------------------------|
-| **Pipes are unidirectional** | Lab: `pipe()` exercise | Two pipes used for bidirectional communication |
-| **fork() inherits fds** | Lecture: How fork() works | Create pipe() before fork() → both parent and child hold fds |
-| **Close unused fds** | Lab: Pipe rules | close() 2 unnecessary fds in each process |
-| **read() blocks** | Lab: Producer-consumer pattern | Child's read() waits until parent writes → natural synchronization |
-| **Prevent zombies with wait()** | Lecture: Zombie processes | Parent calls wait(NULL) at the end |
-| **Context switch overhead** | Lecture: Context switch | RTT includes context switch cost |
+| **Pipes are unidirectional** | Week 2 Lab: `pipe()` exercise | Two pipes used for bidirectional communication |
+| **fork() inherits fds** | Week 2 Lecture: How fork() works | Create pipe() before fork() → both parent and child hold fds |
+| **Close unused fds** | Week 2 Lab: Pipe rules | close() 2 unnecessary fds in each process |
+| **read() blocks** | Week 2 Lab: Producer-consumer pattern | Child's read() waits until parent writes → natural synchronization |
+| **Prevent zombies with wait()** | Week 2 Lecture: Zombie processes | Parent calls wait(NULL) at the end |
+| **Context switch overhead** | Week 2 Lecture: Context switch | RTT includes context switch cost |
+
+*Table 3. Key learning points of pingpong*
 
 ---
 
 <br>
 
-## 3. Assignment 2 — minishell.c Explanation (execute_command)
+## 3. Assignment 2: minishell.c Explanation (execute_command)
 
 ### 3.1 What Are We Implementing?
 
@@ -301,11 +331,13 @@ wait(NULL) ───────────────────────
 | Pipe | `ls \| wc -l` | pipe + fork×2 + dup2 + execvp |
 | Exit | `exit` | Loop exit |
 
+*Table 4. Features of minishell and the system calls they use*
+
 **Already implemented:** `main()` (input reading, pipe splitting, exit handling), `parse_command()` (command parsing, redirection parsing), `struct command`
 
 **To be implemented by the student:** `execute_command()`, `execute_pipe()`
 
-> **[Lecture — How Shells Work]** As taught in lecture, "the basic operating principle of a UNIX shell = repeated fork() + exec() + wait()." This assignment directly implements that principle in code.
+> **Note:** **Week 2 Lecture: How Shells Work.** The basic operating principle of a UNIX shell is the repetition of fork(), exec(), and wait(). This assignment directly implements that principle in code.
 
 ### 3.2 Understanding the Given Data Structure
 
@@ -326,7 +358,9 @@ struct command {
 | `sort < data.txt` | `{"sort", NULL}` | `"data.txt"` | `NULL` |
 | `cat < in.txt > out.txt` | `{"cat", NULL}` | `"in.txt"` | `"out.txt"` |
 
-The `parse_command()` function recognizes `<` and `>` as tokens, stores them in `infile`/`outfile`, and places the rest in `argv[]` — this is already implemented.
+*Table 5. Parsing examples of parse_command()*
+
+The `parse_command()` function, which recognizes `<` and `>` as tokens, stores them in `infile` and `outfile`, and places the rest in `argv[]`, is already implemented.
 
 ### 3.3 TODO 1: Create a Child with fork()
 
@@ -344,11 +378,11 @@ static int execute_command(struct command *cmd)
 ```
 
 **Why is fork() necessary?**
-- The shell itself must continue running (to accept the next command).
+- The shell itself must continue running to accept the next command.
 - `exec()` **overwrites** the current process image, so it must run in a child to keep the shell alive.
 - This is the core reason for the **fork() + exec()** pattern.
 
-> **[Lecture — fork() Return Values]** The fork() return value rules taught in lecture are directly applied here. The parent receives a positive value (child pid) to use with `waitpid()`, and the child receives 0 to branch into the `exec()` path. `-1` indicates fork failure (e.g., process table full), which must be handled appropriately.
+> **Note:** **Week 2 Lecture: fork() Return Values.** The fork() return value rules are directly applied here. The parent receives a positive value (child pid) to use with `waitpid()`, and the child receives 0 to branch into the `exec()` path. `-1` indicates fork failure (e.g., process table full), which must be handled appropriately.
 
 ### 3.4 TODO 2a: Input Redirection
 
@@ -371,11 +405,11 @@ if (pid == 0) {
 ```
 
 **How `dup2(fd, STDIN_FILENO)` works:**
-1. In the file descriptor table, change what `STDIN_FILENO` (= 0) points to so it is the same as `fd`
-2. When the program executed via `exec()` reads from `stdin`, it actually reads from the file
-3. The program is **unaware** of the redirection — it simply reads from stdin
+1. In the file descriptor table, what `STDIN_FILENO` (= 0) points to is changed to the same target as `fd`.
+2. When the program executed via `exec()` reads from `stdin`, it actually reads from the file.
+3. The program is **unaware** of the redirection and simply reads from stdin.
 
-> **[Lab 4]** When you run `sort < data.txt`, the `sort` program reads from `stdin` as usual, but the actual content read comes from `data.txt`. This is why UNIX I/O redirection is powerful — you can change the input/output target without modifying the program.
+> **Note:** **Week 2 Lab 4.** When you run `sort < data.txt`, the `sort` program reads from `stdin` as usual, but the actual content read comes from `data.txt`. The strength of UNIX I/O redirection is that the input/output target can be changed without modifying the program.
 
 ### 3.5 TODO 2b: Output Redirection
 
@@ -402,7 +436,9 @@ if (pid == 0) {
 | `O_CREAT` | Create the file if it does not exist |
 | `O_TRUNC` | If the file exists, truncate it and write from the beginning (shell `>` behavior) |
 
-**Permissions `0644`**: Owner can read+write, group and others can only read
+*Table 6. Meanings of open() flags*
+
+**Permissions `0644`:** the owner can read and write, and the group and others can only read.
 
 ### 3.6 TODO 2c, 2d: Command Execution
 
@@ -417,18 +453,18 @@ if (pid == 0) {
 ```
 
 **Why `execvp()` is used:**
-- `v` (vector): Arguments are passed as a `char *argv[]` array — the `argv` from `struct command` can be used directly
-- `p` (path): Automatically searches for the executable in the `PATH` environment variable — no need to specify the full path (`/bin/ls`), just `ls` is sufficient
+- `v` (vector): arguments are passed as a `char *argv[]` array, so the `argv` from `struct command` can be used directly.
+- `p` (path): the executable is searched for automatically in the `PATH` environment variable, so `ls` alone is sufficient without the full path (`/bin/ls`).
 
 **When exec succeeds:**
-- The child process's text, data, heap, and stack are **completely replaced** with the new program
-- Code after `execvp()` is **never executed**
+- The child process's text, data, heap, and stack are **completely replaced** with the new program.
+- Code after `execvp()` is **never executed**.
 
 **When exec fails (e.g., non-existent command):**
-- `execvp()` returns and the code below it executes
-- `exit(127)`: By shell convention, "command not found" uses exit code 127
+- `execvp()` returns and the code below it executes.
+- `exit(127)`: by shell convention, "command not found" uses exit code 127.
 
-> **[Lecture — exec() Family]** Among the exec() family functions taught in lecture (execl, execlp, execle, execv, execvp, execve), `execvp` is chosen because the arguments are in array form (`argv`) and PATH searching is needed. l/v determines the argument passing method, p determines PATH searching, and e determines environment variable specification.
+> **Note:** **Week 2 Lecture: exec() Family.** Among the exec() family functions (execl, execlp, execle, execv, execvp, execve), `execvp` is chosen because the arguments are in array form (`argv`) and PATH searching is needed. l/v determines the argument passing method, p determines PATH searching, and e determines environment variable specification.
 
 ### 3.7 TODO 3: Parent Waiting
 
@@ -449,11 +485,13 @@ if (pid == 0) {
 | `wait(NULL)` | Any one child | Convenient when there is only 1 child |
 | `waitpid(pid, &status, 0)` | Specific child by pid | Precise control when there are multiple children |
 
+*Table 7. Comparison of wait() and waitpid()*
+
 Here there is only 1 child, but `waitpid()` is used to receive the termination status of **exactly that child**.
 
 **Termination Status Macros:**
-- `WIFEXITED(status)` — Check whether the child terminated normally via `exit()`
-- `WEXITSTATUS(status)` — Extract the exit code (0–255)
+- `WIFEXITED(status)` checks whether the child terminated normally via `exit()`.
+- `WEXITSTATUS(status)` extracts the exit code (0-255).
 
 ### 3.8 execute_command Complete Flow Summary
 
@@ -478,17 +516,19 @@ execute_command(cmd) called — e.g., "ls -l > out.txt"
     └── Returns to shell's main() → prints next command prompt
 ```
 
-This is the concrete implementation of the **"fork() + exec() + wait() = shell's basic operation"** pattern taught in lecture.
+*Figure 5. Execution flow of execute_command()*
+
+This is the concrete implementation of the **fork() + exec() + wait() = shell's basic operation** pattern covered in the Week 2 lecture.
 
 ---
 
 <br>
 
-## 4. Assignment 2 — minishell.c Explanation (execute_pipe)
+## 4. Assignment 2: minishell.c Explanation (execute_pipe)
 
 ### 4.1 What Does a Pipe Do?
 
-When you type `cmd1 | cmd2` in a shell:
+When you type `cmd1 | cmd2` in a shell, the commands are connected as follows.
 - `cmd1`'s **standard output (stdout)** is connected to `cmd2`'s **standard input (stdin)** through a pipe.
 
 ```text
@@ -500,13 +540,15 @@ Example: ls | wc -l
  (outputs file list)                                          (counts lines)
 ```
 
-**What execute_pipe() must do:**
-1. Create 1 pipe (cmd1 → cmd2 direction)
-2. Create 2 children (one for cmd1, one for cmd2)
-3. In each child, connect the pipe to stdin/stdout using `dup2()`
-4. In the parent, close the pipe fds + `wait()` for both children
+*Figure 6. Two processes connected by a pipe in `ls | wc -l`*
 
-> **[Lab 4]** The lab included a practice exercise for implementing `ls | wc -l`. The `execute_pipe()` in this assignment is a generalization of that implementation, allowing any two commands to be connected via a pipe.
+**What execute_pipe() must do:**
+1. Create 1 pipe (cmd1 → cmd2 direction).
+2. Create 2 children (one for cmd1, one for cmd2).
+3. In each child, connect the pipe to stdin or stdout using `dup2()`.
+4. In the parent, close the pipe fds and `wait()` for both children.
+
+> **Note:** **Week 2 Lab 4.** The lab includes a practice exercise for implementing `ls | wc -l`. The `execute_pipe()` in this assignment is a generalization of that implementation, allowing any two commands to be connected via a pipe.
 
 ### 4.2 TODO 4: Create a Pipe
 
@@ -524,13 +566,15 @@ static int execute_pipe(struct command *cmd1, struct command *cmd2)
 ```
 
 **Difference from pingpong:**
-- pingpong: Bidirectional communication → **2** pipes
-- minishell pipe: Unidirectional communication (cmd1 → cmd2) → **1** pipe
+- pingpong uses bidirectional communication, so it needs **2** pipes.
+- The minishell pipe uses unidirectional communication (cmd1 → cmd2), so **1** pipe suffices.
 
 ```text
 fd[0] = read end  → will be connected to cmd2's stdin
 fd[1] = write end → will be connected to cmd1's stdout
 ```
+
+*Figure 7. Connection of the pipe ends to the two commands*
 
 ### 4.3 TODO 5: Child 1 (Execute cmd1)
 
@@ -563,7 +607,7 @@ if (pid1 == 0) {
 }
 ```
 
-**Key Point:** `dup2(fd[1], STDOUT_FILENO)` — when cmd1 outputs via `printf()` or `write(1,...)`, the data goes into the **pipe's kernel buffer**.
+**Key Point:** after `dup2(fd[1], STDOUT_FILENO)`, when cmd1 outputs via `printf()` or `write(1,...)`, the data goes into the **pipe's kernel buffer**.
 
 ### 4.4 TODO 6: Child 2 (Execute cmd2)
 
@@ -596,7 +640,7 @@ if (pid2 == 0) {
 }
 ```
 
-**Key Point:** `dup2(fd[0], STDIN_FILENO)` — when cmd2 reads via `scanf()` or `read(0,...)`, the data is read from the **pipe's kernel buffer**. In other words, cmd1's output becomes cmd2's input.
+**Key Point:** after `dup2(fd[0], STDIN_FILENO)`, when cmd2 reads via `scanf()` or `read(0,...)`, the data is read from the **pipe's kernel buffer**. In other words, cmd1's output becomes cmd2's input.
 
 ### 4.5 TODO 7: Cleanup in the Parent
 
@@ -617,11 +661,11 @@ return -1;
 **Why is it important for the parent to close both ends of the pipe?**
 
 - The parent also holds `fd[0]` and `fd[1]` created before `fork()`.
-- If the parent does not close `fd[1]` (write end):
-  - cmd2's `read()` will **never receive EOF** → blocks forever → program hangs!
-- UNIX pipe rule: **All write ends must be closed** for the read side to receive EOF
+- If the parent does not close `fd[1]` (write end), the following happens.
+  - cmd2's `read()` **never receives EOF** and blocks forever, so the program hangs.
+- By the UNIX pipe rule, **all write ends must be closed** for the read side to receive EOF.
 
-> **[Lab 3]** This is the practical application of the rule learned in the lab: "closing the write end → the read side receives EOF." Since the parent, child 1, and child 2 (a total of 3 processes) all hold pipe fds, **all unused fds must be closed in each process** for correct operation.
+> **Note:** **Week 2 Lab 3.** This is the practical application of the lab rule that the read side receives EOF only when the write end is closed. Since the parent, child 1, and child 2 (a total of 3 processes) all hold pipe fds, **all unused fds must be closed in each process** for correct operation.
 
 ### 4.6 execute_pipe Complete Flow Summary
 
@@ -649,17 +693,19 @@ execute_pipe(cmd1, cmd2) called — e.g., "ls | wc -l"
     └── waitpid(pid2, &status, ...)
 ```
 
+*Figure 8. Execution flow of execute_pipe()*
+
 ### 4.7 Pipe + Redirection Combination
 
-This implementation also supports **combining pipes with redirection**:
+This implementation also supports **combining pipes with redirection**.
 
 ```bash
 minishell> echo hello | cat > /tmp/pipe_test.txt
 ```
 
-In this case:
-- **cmd1** = `echo hello` → stdout connected to **pipe**
-- **cmd2** = `cat > /tmp/pipe_test.txt` → stdin from **pipe**, stdout to **file**
+This case works as follows.
+- **cmd1** = `echo hello`, and its stdout is connected to the **pipe**.
+- **cmd2** = `cat > /tmp/pipe_test.txt`, and its stdin comes from the **pipe** while its stdout goes to the **file**.
 
 ```text
 echo hello                  Pipe                       cat
@@ -667,6 +713,8 @@ echo hello                  Pipe                       cat
 stdout → [pipe] → stdin
                                                   stdout → /tmp/pipe_test.txt
 ```
+
+*Figure 9. Combination of a pipe and output redirection*
 
 In the code, child 2 checks `cmd2->outfile` to additionally set up output redirection, which handles this case.
 
@@ -683,18 +731,20 @@ In the code, child 2 checks `cmd2->outfile` to additionally set up output redire
 | **fork() + wait()** | Create child and wait for termination | pingpong: parent waits for child |
 | **fork() + exec() + wait()** | Execute a new program (shell's basic operation) | minishell: execute_command() |
 | **pipe() + fork() + read/write** | Exchange data between processes | pingpong: 1-byte round-trip |
-| **pipe() + fork()x2 + dup2() + exec()** | Implement shell pipeline | minishell: execute_pipe() |
+| **pipe() + fork()×2 + dup2() + exec()** | Implement shell pipeline | minishell: execute_pipe() |
 | **open() + dup2() + close()** | I/O redirection | minishell: input/output redirection |
+
+*Table 8. System call combination patterns*
 
 ### 5.2 fd Management Rules
 
-**Rule 1: Always close unused pipe fds**
-- If not closed, EOF will not be delivered and the program will block forever
+**Rule 1: Always close unused pipe fds.**
+- If they are not closed, EOF is not delivered and the program blocks forever.
 
-**Rule 2: Close the original fd after `dup2()`**
-- After `dup2(fd, STDOUT_FILENO)`, call `close(fd)` — since both fd and STDOUT point to the same file, the original fd is unnecessary
+**Rule 2: Close the original fd after `dup2()`.**
+- After `dup2(fd, STDOUT_FILENO)`, call `close(fd)`. Since both fd and STDOUT point to the same file, the original fd is unnecessary.
 
-**Rule 3: After fork(), all 3 processes (parent, child 1, child 2) hold pipe fds**
+**Rule 3: After fork(), all 3 processes (parent, child 1, child 2) hold pipe fds.**
 - Unnecessary fds must be closed in each process.
 
 ```text
@@ -706,6 +756,8 @@ Child 1(cmd1):   ✕      ✓     ← close fd[0], connect fd[1] to stdout then 
 Child 2(cmd2):   ✓      ✕     ← close fd[1], connect fd[0] to stdin then close
 ```
 
+*Figure 10. Handling of pipe fds in each process after fork()*
+
 ### 5.3 Connecting This Assignment to Lecture Content
 
 **Theory (Lecture) Connections:**
@@ -713,12 +765,14 @@ Child 2(cmd2):   ✓      ✕     ← close fd[1], connect fd[0] to stdin then c
 | Lecture Concept | What You Directly Experienced in This Assignment |
 |:---------------|:------------------------------------------------|
 | Process = running program | After `fork()`, the child process becomes an independent execution unit |
-| Process creation (parent→child) | Created child with `fork()`, verified relationship with `getpid()`/`getppid()` |
-| fork() return values | Parent gets child pid, child gets 0 — branched with if-else |
+| Process creation (parent→child) | Created a child with `fork()` and printed each process's PID with `getpid()` |
+| fork() return values | Parent gets child pid, child gets 0, and the code branches with if-else |
 | Loading a new program with exec() | Replaced child's memory image with `execvp()` |
-| Zombie process | Occurs if `wait()`/`waitpid()` is not called |
+| Zombie process | Occurs if `wait()` or `waitpid()` is not called |
 | Context switch | pingpong's RTT includes context switch overhead |
 | fork() + exec() + wait() = shell | minishell's execute_command() is exactly this pattern |
+
+*Table 9. Connections between the Week 2 lecture and the assignment*
 
 **Lab Connections:**
 
@@ -726,34 +780,36 @@ Child 2(cmd2):   ✓      ✕     ← close fd[1], connect fd[0] to stdin then c
 |:-----------|:------------------------------------------------|
 | pipe() is unidirectional | Used 2 pipes for bidirectional communication in pingpong |
 | Close unused fds | Called close() on unnecessary fds in every process |
-| I/O redirection with dup2() | Connected files/pipes to stdin/stdout in minishell |
+| I/O redirection with dup2() | Connected files or pipes to stdin/stdout in minishell |
 | Producer-consumer pattern | Data flow from cmd1→cmd2 through pipes |
 
-### 5.4 Exam Preparation — Frequently Tested Topics
+*Table 10. Connections between the Week 2 lab and the assignment*
+
+### 5.4 Exam Preparation: Frequently Tested Topics
 
 **1. fork() Related:**
-- fork() return values (parent: child pid, child: 0, failure: -1)
-- After fork(), the execution order of parent and child is **not guaranteed** (scheduler-dependent)
-- When fork() is called, the parent's address space is **copied** (including fd table)
+- fork() returns the child pid in the parent, 0 in the child, and -1 on failure.
+- After fork(), the execution order of parent and child is **not guaranteed** (scheduler-dependent).
+- When fork() is called, the parent's address space is **copied**, and the fd table is copied as well.
 
 **2. exec() Related:**
-- On exec() success, it **does not return** to the original code (memory is overwritten)
-- exec() does not change the PID
+- On success, exec() **does not return** to the original code because memory is overwritten.
+- exec() does not change the PID.
 
 **3. wait() Related:**
-- Not calling wait() → **zombie process**
-- If the parent terminates first → **orphan process** → adopted by init/systemd
+- Not calling wait() leaves a **zombie process**.
+- If the parent terminates first, the child becomes an **orphan process** and is adopted by init or systemd.
 
 **4. pipe() Related:**
-- Pipes are **unidirectional** — bidirectional requires 2
-- All write ends must be closed for the read side to receive **EOF**
-- Failing to close unused fds can cause **deadlock**
+- Pipes are **unidirectional**, so bidirectional communication requires 2.
+- All write ends must be closed for the read side to receive **EOF**.
+- Failing to close unused fds can cause **deadlock**.
 
 **5. dup2() Related:**
-- `dup2(oldfd, newfd)` — makes newfd point to the same target as oldfd
-- Shell's `>`, `<`, `|` are all implemented using dup2()
+- `dup2(oldfd, newfd)` makes newfd point to the same target as oldfd.
+- The shell's `>`, `<`, and `|` are all implemented using dup2().
 
-> **Exam Tip:** You must understand the operating principles of the above 5 system calls precisely, and master the order in which they must be called in code (pipe before fork, dup2 after fork, set up redirection before exec, etc.).
+> **Note:** **Exam Tip.** You must understand the operating principles of the above 5 system calls precisely, and master the order in which they must be called in code (pipe before fork, dup2 after fork, set up redirection before exec, etc.).
 
 ---
 
@@ -763,14 +819,54 @@ Child 2(cmd2):   ✓      ✕     ← close fd[1], connect fd[0] to stdin then c
 
 | Concept | Key Summary |
 |:--------|:-----------|
-| pingpong.c | `pipe()` (bidirectional = 2) + `fork()` + `read()`/`write()` + `wait()`; inter-process synchronization and RTT measurement via pipes |
-| fd management | Always close() unused fds; close original fd after dup2(); clean up unnecessary fds in all processes after fork() |
-| execute_command() | `fork()` + `exec()` + `wait()` = shell's basic operating principle; `open()` + `dup2()` + `close()` = I/O redirection |
-| execute_pipe() | `pipe()` + `fork()x2` + `dup2()` = shell pipeline; close unnecessary fds in all 3 processes including parent |
-| Why execvp() | `v`(array args) + `p`(PATH search) — uses struct command's argv directly with automatic PATH searching |
-| Pipe + redirection combo | cmd1's stdout → pipe → cmd2's stdin; cmd2 can additionally have output redirection |
-| System call combination patterns | fork+wait, fork+exec+wait, pipe+fork+read/write, pipe+fork×2+dup2+exec, open+dup2+close |
-| Exam essentials | Distinguishing fork return values, exec does not return on success, zombie on missing wait, unidirectional pipe principle, dup2 operating principle |
-| Lecture connections | Lecture: process creation/termination/zombie/context switch (Ch 3.1–3.3); Lab: pipe/dup2/fd management (Labs 3–4) |
+| pingpong.c | It combines two `pipe()`s (bidirectional), `fork()`, `read()`/`write()`, and `wait()` to synchronize processes and measure RTT through pipes. |
+| fd management | Unused fds must always be closed, the original fd is closed after dup2(), and unnecessary fds are cleaned up in all processes after fork(). |
+| execute_command() | `fork()` + `exec()` + `wait()` is the shell's basic operating principle, and `open()` + `dup2()` + `close()` implements I/O redirection. |
+| execute_pipe() | `pipe()` + `fork()×2` + `dup2()` builds a shell pipeline, and unnecessary fds are closed in all 3 processes including the parent. |
+| Why execvp() | `v` (array arguments) and `p` (PATH search) let it use struct command's argv directly while searching PATH automatically. |
+| Pipe + redirection combo | cmd1's stdout is connected through the pipe to cmd2's stdin, and cmd2 can additionally have output redirection. |
+| System call combination patterns | The main patterns are fork+wait, fork+exec+wait, pipe+fork+read/write, pipe+fork×2+dup2+exec, and open+dup2+close. |
+| Exam essentials | The essentials are distinguishing fork return values, exec not returning on success, a zombie on a missing wait, the unidirectional pipe principle, and how dup2 works. |
+| Lecture connections | It applies process creation, termination, zombies, and context switches from the Week 2 lecture (Ch 3.1-3.3) and pipe, dup2, and fd management from the Week 2 lab (Labs 3-4). |
 
 ---
+
+<br>
+
+## Self-Check Questions
+
+1. **Number of pipes and fds to close:** Explain why pingpong needs two pipes, and name the two fds the child process must close right after `fork()`.
+
+   <details>
+   <summary>Answer</summary>
+
+   A pipe is a unidirectional channel written at one end and read at the other, so `parent_to_child` (parent to child) and `child_to_parent` (child to parent) are each needed. The child reads from `parent_to_child[0]` and writes to `child_to_parent[1]`, so it closes `parent_to_child[1]`, which it does not write, and `child_to_parent[0]`, which it does not read.
+
+   </details>
+
+2. **If the parent does not close the write end:** Explain what happens if the parent omits `close(fd[1])` in `execute_pipe()` while running `ls | wc -l`.
+
+   <details>
+   <summary>Answer</summary>
+
+   `wc` reads from stdin until it receives EOF, and EOF is not delivered while any write end of the pipe remains open. Even after `ls` finishes and child 1's write end is closed, the parent keeps `fd[1]` open, so `wc`'s `read()` blocks forever. The parent waits for `wc` to terminate in `waitpid(pid2, &status, 0)`, so the parent and `wc` wait for each other and the shell hangs.
+
+   </details>
+
+3. **Non-existent command:** When the non-existent command `foo` is entered in minishell, state what the child process and the parent's `execute_command()` each do and what value `execute_command()` returns.
+
+   <details>
+   <summary>Answer</summary>
+
+   In the child, `execvp("foo", ...)` fails and returns, so the next line `perror("minishell")` prints an error message such as `minishell: No such file or directory`, and the child terminates with `exit(127)`. The parent's `execute_command()` reaps the child with `waitpid()`; since the child terminated normally via `exit()`, `WIFEXITED(status)` is true, and it returns `WEXITSTATUS(status)`, which is 127.
+
+   </details>
+
+4. **Order of redirection setup:** Explain why the child must call `open()`, `dup2()`, `close()`, and `execvp()` in this order when running `sort < data.txt`.
+
+   <details>
+   <summary>Answer</summary>
+
+   `open()` must first open `data.txt` to obtain an fd to duplicate. `dup2(fd, STDIN_FILENO)` makes fd 0 point to that file, and this setting persists across `exec()`. Then `close(fd)` closes the original fd, because fd 0 already points to the same file and the original fd is no longer needed. On success, `execvp()` replaces the process image and does not return, so redirection must be completed before `execvp()`. As a result, `sort` reads from stdin as usual without knowing about the redirection, but actually reads the contents of `data.txt`.
+
+   </details>

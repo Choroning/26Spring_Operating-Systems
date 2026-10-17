@@ -1,24 +1,18 @@
 # Week 12 Lecture — Virtual Memory
 
-> **Last Updated:** 2026-06-19
->
-> Operating System Concepts, Silberschatz - Ch 10
+[Repository Guide](../../README.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **Learning Objectives**:
-> 1. State the **definition** of virtual memory and explain why separating logical from physical address space is useful
-> 2. Describe **demand paging** and the role of the **lazy swapper / pager**
-> 3. Walk through the **page-fault handling** sequence step by step
-> 4. Explain **pure demand paging** and the **hardware requirements** for instruction restart
-> 5. Compute **Effective Access Time (EAT)** under demand paging and quantify the cost of a single page fault
-> 6. Describe **copy-on-write (COW)** and the difference between `fork()` and `vfork()`
-> 7. Distinguish **frame allocation** (how many frames per process) from **page replacement** (which page to evict)
-> 8. Execute **FIFO, OPT, LRU** page-replacement algorithms on a reference string and tabulate the page-fault counts
-> 9. Define **Belady's anomaly** and explain why **stack algorithms** (LRU, OPT) are immune
-> 10. Describe **LRU-approximation** algorithms: **additional reference bits, second-chance (clock), enhanced second-chance, LFU/MFU**
-> 11. Compare **equal vs proportional allocation** and **global vs local replacement**
-> 12. Define **thrashing**, the **locality model**, the **working-set model**, and the **page-fault frequency (PFF)** scheme
-> 13. Explain **memory compression**, the **buddy system**, and **slab allocation** for kernel memory
-> 14. Describe **prepaging**, the impact of **program structure** on locality, and **I/O interlock** with page pinning
+> **Last Updated:** 2026-10-18
+>
+> Operating System Concepts, Silberschatz, Ch 10
+
+> **Learning Objectives:**
+> 1. Define virtual memory and explain why separating the logical address space from the physical address space is useful
+> 2. Explain demand paging, the role of the lazy swapper (pager), the page-fault handling sequence, pure demand paging, and the hardware required for instruction restart
+> 3. Compute the Effective Access Time (EAT) under demand paging to quantify the cost of a single page fault, and describe copy-on-write (COW) and the difference between `fork()` and `vfork()`
+> 4. Distinguish frame allocation from page replacement, apply FIFO, OPT, LRU, and the LRU-approximation algorithms (additional reference bits, second-chance (clock), enhanced second-chance, LFU, MFU) to a reference string, and explain how Belady's anomaly relates to stack algorithms
+> 5. Compare equal and proportional allocation and global and local replacement, and define thrashing, the locality model, the working-set model, and page-fault frequency (PFF)
+> 6. Explain memory compression, the buddy system, slab allocation for kernel memory, prepaging, the impact of program structure on locality, and I/O interlock with page locking
 
 ---
 
@@ -30,11 +24,11 @@
   - [1.3 Shared Libraries via Virtual Memory](#13-shared-libraries-via-virtual-memory)
   - [1.4 Demand Paging and the Lazy Pager](#14-demand-paging-and-the-lazy-pager)
   - [1.5 Valid / Invalid Bit](#15-valid--invalid-bit)
-  - [1.6 Page-Fault Handling — Step by Step](#16-page-fault-handling--step-by-step)
+  - [1.6 Page-Fault Handling Step by Step](#16-page-fault-handling-step-by-step)
   - [1.7 Pure Demand Paging and Hardware Requirements](#17-pure-demand-paging-and-hardware-requirements)
   - [1.8 The Difficulty of Instruction Restart](#18-the-difficulty-of-instruction-restart)
   - [1.9 Free-Frame List and Zero-Fill-on-Demand](#19-free-frame-list-and-zero-fill-on-demand)
-  - [1.10 Demand-Paging Performance — EAT](#110-demand-paging-performance--eat)
+  - [1.10 Demand-Paging Performance and EAT](#110-demand-paging-performance-and-eat)
   - [1.11 Swap Space Utilization](#111-swap-space-utilization)
 - [2. Copy-on-Write](#2-copy-on-write)
   - [2.1 The COW Idea](#21-the-cow-idea)
@@ -55,8 +49,8 @@
   - [4.1 Why Approximate?](#41-why-approximate)
   - [4.2 Additional-Reference-Bits](#42-additional-reference-bits)
   - [4.3 Second-Chance (Clock) Algorithm](#43-second-chance-clock-algorithm)
-  - [4.4 Clock Algorithm — Visualization](#44-clock-algorithm--visualization)
-  - [4.5 Enhanced Second-Chance — (R, M) Classes](#45-enhanced-second-chance--r-m-classes)
+  - [4.4 Clock Algorithm Visualization](#44-clock-algorithm-visualization)
+  - [4.5 Enhanced Second-Chance and (R, M) Classes](#45-enhanced-second-chance-and-r-m-classes)
   - [4.6 LFU and MFU](#46-lfu-and-mfu)
   - [4.7 Page Buffering](#47-page-buffering)
 - [5. Frame Allocation and Thrashing](#5-frame-allocation-and-thrashing)
@@ -79,7 +73,7 @@
   - [8.1 Prepaging](#81-prepaging)
   - [8.2 Program Structure and Locality](#82-program-structure-and-locality)
   - [8.3 I/O Interlock and Page Locking](#83-io-interlock-and-page-locking)
-- [9. Lab — Page-Replacement Algorithm Simulator](#9-lab--page-replacement-algorithm-simulator)
+- [9. Lab: Page-Replacement Algorithm Simulator](#9-lab-page-replacement-algorithm-simulator)
 - [Summary](#summary)
 - [Self-Check Questions](#self-check-questions)
 
@@ -91,31 +85,31 @@
 
 ### 1.1 What Virtual Memory Buys You
 
-**Virtual memory** is a technique that **separates logical (virtual) memory from physical memory**. It is built on top of paging (Week 11) and turns the page-table indirection into a powerful lie: *the process believes it has a huge, contiguous address space, while the OS quietly serves only the parts that are actually being used*.
+**Virtual memory** is a technique that **separates logical (virtual) memory from physical memory**. It is built on top of paging (Week 11) and turns the page-table indirection into a powerful illusion: the process believes it has a huge, contiguous address space, while the OS quietly serves only the parts that are actually being used.
 
-Why bother? Three structural wins:
+Virtual memory is worth the effort because of three structural wins:
 
 - **Programs can be larger than physical RAM.** Only the pages actively touched need to be resident. Error-handling code, unused features, and over-sized declared arrays cost zero physical memory until they are referenced.
-- **More processes fit in RAM simultaneously.** Higher multiprogramming → higher CPU utilization (Week 6).
-- **Faster process startup.** A new process can start running as soon as a handful of pages are in memory; the rest stream in on demand.
+- **More processes fit in RAM simultaneously.** A higher degree of multiprogramming raises CPU utilization (Week 6).
+- **Processes start faster.** A new process can start running as soon as a handful of pages are in memory; the rest are brought in on demand.
 
-Bonus features that ride on the same machinery:
+The same machinery also provides these features:
 
-- Shared libraries via **shared frames** (Week 11 §6.2 was the foundation).
-- **Inter-process communication** via shared memory.
-- **Fast `fork()`** via copy-on-write (§2).
+- Shared libraries are implemented with **shared frames** (the foundation is Week 11, Section 6.2).
+- **Inter-process communication** works via shared memory.
+- Copy-on-write implements a **fast `fork()`** (Section 2).
 
-![Silberschatz Figure 10.1 — Virtual memory larger than physical memory](../images/figures/p003_fig10.1.png)
+![Figure 1. Virtual memory larger than physical memory](../../images/Week12_p03a.png)
 
-*Silberschatz Figure 10.1 — Virtual memory larger than physical memory*
+*Figure 1. Virtual memory larger than physical memory*
 
-> **Why this is the right abstraction:** the addressing layer of Week 11 (page tables, MMU, TLB) gives us *spatial* virtualization. Demand paging adds *temporal* virtualization — a page only needs to exist in RAM at the moment the CPU references it, not before. Everything in this lecture is some consequence of "make absent pages cheap."
+> **Note:** **Why this is the right abstraction.** The addressing layer of Week 11 (page tables, MMU, TLB) provides spatial virtualization. Demand paging adds temporal virtualization: a page only needs to exist in RAM at the moment the CPU references it, not before. Everything in this unit follows from the principle of making absent pages cheap.
 
 ### 1.2 The Virtual Address Space of a Process
 
-Each process sees its own independent virtual address space, typically starting from 0 and *appearing* contiguous — but the underlying physical frames may be scattered anywhere in RAM, or partly on disk.
+Each process sees its own independent virtual address space. It typically starts from 0 and appears contiguous, but the underlying physical frames may be scattered anywhere in RAM, or partly on disk.
 
-```
+```text
 Virtual Address Space (one process):
 
   HIGH ┌─────────────┐
@@ -133,62 +127,64 @@ Virtual Address Space (one process):
    LOW └─────────────┘
 ```
 
-- **Sparse address space**: large *holes* sit between text/data, heap, and stack.
-- Holes occupy **no** physical memory — they have no page-table entries pointing to frames.
-- Shared libraries are usually mapped into the middle region (between heap and stack).
+*Figure 2. Layout of the virtual address space of one process*
 
-![Silberschatz Figure 10.2 — Virtual address space](../images/figures/p003_fig10.2.png)
+- **Sparse address space**: large holes sit between text/data, heap, and stack.
+- Holes occupy **no physical memory**, because they have no page-table entries pointing to frames.
+- Shared libraries are usually mapped into the middle region between heap and stack.
 
-*Silberschatz Figure 10.2 — Virtual address space*
+![Figure 3. Virtual address space of text, data, heap, stack, and a hole](../../images/Week12_p03b.png)
 
-> **Key insight:** because holes are free, processes can declare massive maximum sizes without paying for them. A 64-bit process can mmap a 2 TB sparse file; only the touched pages allocate frames.
+*Figure 3. Virtual address space of text, data, heap, stack, and a hole*
+
+> **Key Point:** Because holes cost nothing, processes can declare massive maximum sizes without paying for them. A 64-bit process can mmap a 2 TB sparse file, and only the touched pages are allocated frames.
 
 ### 1.3 Shared Libraries via Virtual Memory
 
 Multiple processes can **share** libraries such as the standard C library:
 
-- The library is mapped into each process's virtual address space at some virtual address (often the same in every process for relocation simplicity, but it doesn't have to be).
-- The **physical frames** that hold the library code are **shared** — one set of frames, many page-table entries pointing at them.
-- Libraries are mapped **read-only**, which is what makes sharing safe (Week 11 §6.2).
+- The library is mapped into each process's virtual address space at some virtual address. The address is often the same in every process for relocation simplicity, but it does not have to be.
+- The **physical frames** that hold the library code are **shared**: one set of frames, many page-table entries pointing at them.
+- Libraries are mapped **read-only**, which is what makes sharing safe (Week 11, Section 6.2).
 - The same mechanism implements shared-memory IPC.
-- `fork()` initially shares all pages between parent and child via page-table copying — see copy-on-write below.
+- `fork()` initially shares all pages between parent and child by copying the page table. Section 2 covers this as copy-on-write.
 
-![Silberschatz Figure 10.3 — Shared library using virtual memory](../images/figures/p004_fig10.3.png)
+![Figure 4. Shared library using virtual memory](../../images/Week12_p04.png)
 
-*Silberschatz Figure 10.3 — Shared library using virtual memory*
+*Figure 4. Shared library using virtual memory*
 
 ### 1.4 Demand Paging and the Lazy Pager
 
-**Demand paging**: load a page into memory **only when it is actually referenced**.
+**Demand paging** loads a page into memory **only when it is actually referenced**.
 
-The OS component that performs the loading is sometimes called a **lazy swapper** or **pager** — emphatically *lazy*: it never speculatively brings pages in.
+The OS component that performs the loading is called a **lazy swapper** or **pager**. As the name says, it is lazy: it never speculatively brings pages in.
 
 Advantages:
-- **Reduced I/O** — pages that are never touched are never read from disk.
-- **Memory savings** — only the working set is resident.
-- **Faster startup** — the process begins running as soon as the first instruction page is in.
-- **More concurrent processes** — each one occupies less RAM.
+- **Reduced I/O:** pages that are never touched are never read from disk.
+- **Memory savings:** only the working set is resident.
+- **Faster startup:** the process begins running as soon as the first instruction page is in.
+- **More concurrent processes:** each one occupies less RAM.
 
 ### 1.5 Valid / Invalid Bit
 
-Each page-table entry (PTE) carries a **valid/invalid bit** (Week 11 §6.1, now reinterpreted for demand paging):
+Each page-table entry (PTE) carries a **valid/invalid bit**. It is the bit from Week 11, Section 6.1, now reinterpreted for demand paging:
 
-- **Valid** — the page is legal *and* currently resident in a physical frame.
-- **Invalid** — either the page is outside the process's address space, **or** it is a legal page that is currently on disk.
+- **Valid:** the page is legal and **currently resident in a physical frame**.
+- **Invalid:** either the page is outside the process's address space, **or** it is a legal page that is currently on disk.
 
-The CPU does not distinguish the two flavours of "invalid" — both raise the same hardware trap. The OS decides which it is in the trap handler.
+The CPU does not distinguish the two kinds of invalid page; both raise the same hardware trap. The OS decides which it is in the trap handler.
 
-> **Why this design is clean:** the existence-vs-residency check is fused with the same protection check the MMU already had to do. Demand paging is essentially "free" once the MMU supports the valid bit — no new datapath, just new OS logic on the trap.
+> **Note:** **Why this design is clean.** The check of whether a page exists and whether it is resident is fused with the protection check the MMU already performs. Once the MMU supports the valid bit, demand paging needs no new datapath, only new OS logic on the trap. The instruction-restart capability it also needs is covered in Section 1.7.
 
-![Silberschatz Figure 10.4 — Page table when some pages are not in main memory](../images/figures/p005_fig10.4.png)
+![Figure 5. Page table when some pages are not in main memory](../../images/Week12_p05.png)
 
-*Silberschatz Figure 10.4 — Page table when some pages are not in main memory*
+*Figure 5. Page table when some pages are not in main memory*
 
-### 1.6 Page-Fault Handling — Step by Step
+### 1.6 Page-Fault Handling Step by Step
 
 When the CPU touches a page whose PTE is invalid, a **page-fault trap** transfers control to the kernel:
 
-```
+```text
 1. CPU references virtual address  →  MMU checks PTE.
 2. Valid bit = invalid              →  PAGE FAULT trap to OS.
 3. OS classifies:
@@ -202,92 +198,94 @@ When the CPU touches a page whose PTE is invalid, a **page-fault trap** transfer
 8. The instruction re-executes; this time the PTE is valid → succeeds.
 ```
 
-The whole sequence (typically 5–10 ms on a spinning disk, hundreds of μs on SSD, tens of μs on NVMe) is **orders of magnitude slower** than a normal memory access (~100 ns). This is why page-fault rate must be kept tiny.
+The whole sequence is **orders of magnitude slower** than a normal memory access (about 100 ns): typically 5-10 ms on a spinning disk, hundreds of μs on an SSD, and tens of μs on NVMe. This is why the page-fault rate must be kept tiny.
 
-![Silberschatz Figure 10.5 — Steps in handling a page fault](../images/figures/p006_fig10.5.png)
+![Figure 6. Steps in handling a page fault](../../images/Week12_p06.png)
 
-*Silberschatz Figure 10.5 — Steps in handling a page fault*
+*Figure 6. Steps in handling a page fault*
 
 ### 1.7 Pure Demand Paging and Hardware Requirements
 
-**Pure demand paging** is the extreme strategy: start the process with **no** pages in memory. Even the first instruction triggers a page fault. As execution proceeds, **locality of reference** (defined precisely via the locality model in §5.7) rapidly populates the working set, and the fault rate plummets.
+**Pure demand paging** is the extreme strategy of starting the process with **no** pages in memory. Even the first instruction triggers a page fault. As execution proceeds, **locality of reference** (defined precisely via the locality model in Section 5.7) rapidly populates the working set, and the fault rate plummets.
 
-The **hardware required** to support demand paging:
+The **hardware** required to support demand paging:
 
-- **Page table with a valid/invalid bit** (and protection bits).
+- A **page table** with a valid/invalid bit (and protection bits).
 - **Secondary memory (swap space)** to hold non-resident pages.
-- **Instruction restart capability** — the CPU must be able to re-execute the trapped instruction cleanly after the fault is serviced.
+- **Instruction restart capability**. The CPU must be able to re-execute the trapped instruction cleanly after the fault is serviced.
 
 ### 1.8 The Difficulty of Instruction Restart
 
 Restarting an instruction is conceptually simple but architecturally tricky:
 
-- **Easy case** — fault occurs during instruction *fetch*: just re-fetch and start over.
-- **Hard case** — multi-step instruction `ADD A, B, C`:
-  1. Fetch & decode instruction.
-  2. Fetch operand at A.
-  3. Fetch operand at B.
+- **Easy case:** if the fault occurs during instruction fetch, just re-fetch and start over.
+- **Hard case:** consider the multi-step instruction `ADD A, B, C`:
+  1. Fetch and decode the instruction.
+  2. Fetch the operand at A.
+  3. Fetch the operand at B.
   4. Compute A + B.
-  5. Store result to C — **page fault here!**
-  - If we naively re-execute, steps 1–4 are repeated, which is fine because they have no side effects. But what about instructions that *do* have side effects?
-- **IBM MVC instruction** — copies up to 256 bytes; if the destination crosses a page boundary and the second page is invalid, a fault occurs mid-copy.
-  - **Fix 1:** before any byte is written, probe both end addresses; if either would fault, take the fault *before* any side effect.
+  5. Store the result to C. **The page fault happens here.**
+  - Naive re-execution repeats steps 1-4, which is fine because they have no side effects. But what about instructions that **do** have side effects?
+- **IBM MVC instruction:** copies up to 256 bytes from one location to another. If the source or destination block crosses a page boundary and the next page is invalid, a fault occurs mid-copy. If the two blocks overlap, the source may already have been modified, so the instruction cannot simply be restarted either.
+  - **Fix 1:** before any byte is written, probe both end addresses; if either would fault, take the fault **before** any side effect.
   - **Fix 2:** save overwritten destination bytes into temporary registers; on a fault, restore them before transferring control to the trap handler.
 
-> **Why this matters historically:** instruction restart determines whether demand paging is even *possible* on a given architecture. Some early CPUs could not support it cleanly, which is why virtual memory took a generation of hardware design to become universal.
+> **Note:** **Historical significance.** Whether instructions can be restarted determines whether demand paging is possible on a given architecture at all. Some early CPUs could not support it cleanly, which is why virtual memory took a generation of hardware design to become universal.
 
 ### 1.9 Free-Frame List and Zero-Fill-on-Demand
 
-The OS maintains a **free-frame list** — a pool of physical frames available for allocation.
+The OS maintains a **free-frame list**, a pool of physical frames available for allocation.
 
-- At system boot, *all* user-available memory is registered in the list.
+- At system boot, **all** user-available memory is registered in the list.
 - Page-fault handling pulls one frame off the list and uses it.
-- When the list shrinks below a threshold, **page replacement** (§3) refills it by evicting victims.
+- When the list shrinks below a threshold, **page replacement** (Section 3) refills it by evicting victims.
 
-**Zero-fill-on-demand**: before handing a frame to a new process, the kernel **zeroes it out**. Why? *Security* — the frame previously belonged to some other process, and its leftover contents must not leak.
+**Zero-fill-on-demand**: before handing a frame to a new process, the kernel **zeroes it out**. The reason is security: the frame previously belonged to some other process, and its leftover contents must not leak to the new one.
 
-![Silberschatz Figure 10.6 — List of free frames](../images/figures/p008_fig10.6.png)
+![Figure 7. Structure of the free-frame list](../../images/Week12_p08.png)
 
-*Silberschatz Figure 10.6 — List of free frames*
+*Figure 7. Structure of the free-frame list*
 
-### 1.10 Demand-Paging Performance — EAT
+### 1.10 Demand-Paging Performance and EAT
 
 Let:
-- $p$ = page-fault rate, $0 \leq p \leq 1$
-- $\text{mem}$ = memory access time
-- $\text{pf}$ = page-fault service time (interrupt + disk I/O + process restart)
+- $p$: page-fault rate, $0 \leq p \leq 1$
+- $\text{mem}$: memory access time
+- $\text{pf}$: page-fault service time (interrupt handling, disk I/O, and process restart)
 
 $$
 \text{EAT} = (1 - p) \cdot \text{mem} + p \cdot \text{pf}
 $$
 
-**Worked example** — $\text{mem} = 200\ \text{ns}$, $\text{pf} = 8\ \text{ms} = 8\,000\,000\ \text{ns}$:
+**Worked example:** with $\text{mem} = 200\ \text{ns}$ and $\text{pf} = 8\ \text{ms} = 8\,000\,000\ \text{ns}$:
 
 $$
 \text{EAT} = 200 + 7\,999\,800 \cdot p
 $$
 
-- $p = 1/1000$ (one fault per 1000 accesses): $\text{EAT} = 200 + 7999.8 \approx 8200\ \text{ns}$ — **40× slower** than raw memory!
-- To keep slowdown within 10% ($\text{EAT} \leq 220$): $p < 0.0000025 \approx 1/400\,000$.
+- With $p = 1/1000$ (one fault per 1000 accesses), $\text{EAT} = 200 + 7999.8 \approx 8200\ \text{ns}$, which is **about 40× slower** than raw memory.
+- To keep the slowdown within 10% ($\text{EAT} \leq 220$), we need $20 \geq 7\,999\,800 \cdot p$, that is, $p \leq 0.0000025 \approx 1/400\,000$.
 
-> **The lesson:** page faults must be **extremely rare** (fewer than one per ~400,000 references) for demand paging to feel free. This is why everything else in this lecture (good replacement, working sets, locality) matters: a small jump in fault rate translates to a huge jump in effective access time.
+> **Note:** **The lesson.** Page faults must be **extremely rare** (at most one per about 400,000 references) for demand paging to feel free. This is why good replacement policies, working sets, and locality management matter: a small jump in fault rate translates into a huge jump in effective access time.
 
-> **[Computer Architecture]** This EAT formula is the *same* expected-value technique you saw for the **TLB** in Week 11 (`α·(T+M) + (1−α)·(T+2M)`), just one rung lower on the **memory hierarchy**. The TLB version balanced a cache hit (cycles) against a memory access (≈100 ns); this version balances a memory access (≈100 ns) against a disk/SSD fault (millions of cycles). The numbers are brutal here precisely because each step down the hierarchy (register → cache → DRAM → SSD → disk) costs roughly **two orders of magnitude** more latency. A TLB miss merely doubles a fast operation; a page fault replaces a 100 ns operation with an 8 ms one, which is why the tolerable miss rate collapses from ~2% (TLB) to ~0.00025% (page fault).
+> **[Computer Architecture]** This EAT formula is the same expected-value technique used for the **TLB** in Week 11 ($\alpha(T+M) + (1-\alpha)(T+2M)$), just one rung lower on the **memory hierarchy**. The TLB version balanced a cache hit (cycles) against a memory access (about 100 ns); this version balances a memory access (about 100 ns) against a fault serviced by disk or SSD (millions of cycles). The numbers are brutal here because each step down the hierarchy (register, cache, DRAM, SSD, disk) costs roughly **two orders of magnitude** more latency. A TLB miss merely doubles a fast operation, while a page fault replaces a 100 ns operation with an 8 ms one. That is why the tolerable miss rate collapses from about 2% (TLB) to about 0.00025% (page fault).
 
 ### 1.11 Swap Space Utilization
 
-Swap space sits on disk; reads from it are typically faster than ordinary file-system reads because:
-- The OS uses **larger block transfers** (no per-file lookup overhead).
-- No file-system metadata indirection.
+Swap space is a region on disk, and reads from it are typically faster than ordinary file-system reads because:
+- The OS uses **larger block transfers** with no per-file lookup overhead.
+- There is no file-system metadata indirection.
 
-Two strategies for where a page "lives":
+There are two strategies for where a page lives:
 
 - **Strategy 1:** at process start, copy the whole executable into swap space, then demand-page from swap.
-- **Strategy 2:** demand-page from the file system initially; when a page is evicted, write the *dirty* version to swap and read it back from swap thereafter. This is what **Linux and Windows** do.
+- **Strategy 2:** demand-page from the file system initially; when a page is evicted, write the modified (dirty) version to swap and read it back from swap thereafter. **Linux and Windows** use this approach.
 
-A nuance:
-- **Binary executable pages** (text, read-only data) come from the file system; since they are never modified, on eviction they are simply discarded and re-read from the file system next time.
-- **Anonymous memory** (stack, heap — no file backing) must be written to swap on eviction; that is where swap space is actually used.
+Details:
+- **Binary executable pages** (text, read-only data) come from the file system. Since they are never modified, on eviction they are simply discarded and re-read from the file system next time.
+- **Anonymous memory** (memory with no file backing, such as stack and heap) must be written to swap on eviction. This is where swap space is actually used.
+
+Mass-storage structure, including swap-space management, disk scheduling (FCFS, SCAN, C-SCAN, LOOK), and RAID, is covered in Week 13.
 
 ---
 
@@ -297,11 +295,11 @@ A nuance:
 
 ### 2.1 The COW Idea
 
-`fork()` would naively duplicate the parent's entire address space into a fresh set of frames for the child — wasteful, since the child very often calls `exec()` immediately and throws all of it away.
+A naive `fork()` duplicates the parent's entire address space into a fresh set of frames for the child. This is wasteful, since the child very often calls `exec()` immediately and throws all of it away.
 
-**Copy-on-write (COW)** defers the copy until it is provably necessary:
+**Copy-on-write (COW)** defers the copy until it is actually necessary:
 
-```
+```text
 1. fork():
       Build the child's page table by copying the parent's PTEs.
       Both parent and child PTEs point to the SAME physical frames.
@@ -319,16 +317,18 @@ A nuance:
 4. Pages neither side modifies are NEVER copied.
 ```
 
-Used by **Linux, Windows, macOS**. The performance win is huge for `fork()`-then-`exec()` workloads (shells, servers).
+**Linux, Windows, and macOS** use COW. The performance win is large for workloads that call `exec()` right after `fork()` (shells, servers).
+
+> **Note:** Step 3 above is simplified. Depending on the implementation, the other process's PTE may stay read-only; when that process later tries to write, the fault handler sees that the frame is no longer shared and simply restores write permission without copying.
 
 ### 2.2 Non-Modifiable Pages and vfork()
 
-- **Non-modifiable pages** (executable code) never need COW — they are always shared and read-only by nature. COW is only relevant for pages that *might* be written.
+- **Non-modifiable pages** (executable code) never need COW, because they are always shared and read-only by nature. COW is only relevant for pages that **might** be written.
 - **`vfork()` (virtual memory fork)** is a more aggressive variant:
-  - Parent process is **suspended** until the child terminates or calls `exec()`.
-  - Pages are **shared without any copying or COW marking** — the child literally runs in the parent's address space.
-  - Extremely fast (no page-table copying at all), but **dangerous** — if the child does anything other than minimal setup-then-exec, it corrupts the parent.
-  - Used in classical UNIX shell implementations where the child immediately replaces itself.
+  - The parent process is **suspended** until the child terminates or calls `exec()`.
+  - Pages are **shared without any copying or COW marking**. The child literally runs in the parent's address space.
+  - It is extremely fast because not even the page table is copied, but it is **dangerous**: if the child does anything other than minimal setup followed by `exec()`, it corrupts the parent's address space.
+  - It is used in classical UNIX shell implementations, where the child immediately replaces itself with another program.
 
 ---
 
@@ -338,19 +338,19 @@ Used by **Linux, Windows, macOS**. The performance win is huge for `fork()`-then
 
 ### 3.1 Why Replacement Is Needed
 
-Demand paging leads to **over-allocation**: the OS keeps loading pages as faults occur, and eventually all frames are in use. A new page fault then has nowhere to put the incoming page.
+Demand paging leads to **over-allocation**. The OS keeps loading pages as faults occur, and eventually all frames are in use; a new page fault then has nowhere to put the incoming page.
 
-**Page replacement** = pick a resident page to evict ("the **victim**") to make room for the incoming page.
+**Page replacement** picks a resident page to evict (the **victim**) to make room for the incoming page.
 
-This is what makes the lie of virtual memory complete — a 20-page process can run with only 10 frames, because the OS continuously rotates the 10 most useful ones in and out.
+Page replacement completes the illusion of virtual memory. Because the OS continuously rotates the 10 most useful pages in and out, a 20-page process can run with only 10 frames.
 
-![Silberschatz Figure 10.9 — Need for page replacement](../images/figures/p014_fig10.9.png)
+![Figure 8. Need for page replacement](../../images/Week12_p14.png)
 
-*Silberschatz Figure 10.9 — Need for page replacement*
+*Figure 8. Need for page replacement*
 
 ### 3.2 Basic Replacement Procedure and the Dirty Bit
 
-```
+```text
 1. Locate the desired page on disk.
 2. Find a free frame:
    - If one exists in the free-frame list, take it.
@@ -364,11 +364,11 @@ This is what makes the lie of virtual memory complete — a 20-page process can 
 
 The **dirty bit (modify bit)** is set by hardware whenever the page is written. If it is still 0 at eviction time, the in-memory copy is identical to the on-disk copy and the write-back can be skipped.
 
-> **Why this matters:** swap-out I/O is the single most expensive thing the OS does on a page fault. Skipping it for clean pages cuts the disk traffic roughly in half on typical workloads.
+> **Note:** **Why the dirty bit matters.** Writing back the victim (swap-out) is, together with the page-in, the most expensive disk I/O in page-fault handling. Replacing a modified page needs two disk transfers (write-back and page-in), whereas a clean page skips the write-back, which halves the I/O time of that fault.
 
-![Silberschatz Figure 10.10 — Page replacement](../images/figures/p015_fig10.10.png)
+![Figure 9. Page replacement as victim eviction and new-page loading](../../images/Week12_p15.png)
 
-*Silberschatz Figure 10.10 — Page replacement*
+*Figure 9. Page replacement as victim eviction and new-page loading*
 
 ### 3.3 What Page Replacement Buys You
 
@@ -379,28 +379,28 @@ Page replacement is what **truly decouples logical memory from physical memory**
 
 Two algorithmic problems must be answered:
 
-1. **Frame allocation** — how many frames does each process get? (§5)
-2. **Page replacement** — given a fixed frame budget, which page do we evict? (§3.5 – §4)
+1. **Frame allocation:** decide how many frames each process gets (Section 5).
+2. **Page replacement:** given a fixed frame budget, decide which page to evict (Sections 3.5-4).
 
-The goal is always to **minimize the page-fault rate** (recall the EAT calculation in §1.10).
+The goal is always to **minimize the page-fault rate** (recall the EAT calculation in Section 1.10).
 
 ### 3.4 Reference Strings
 
-To compare algorithms fairly, we evaluate them against a **reference string** — the sequence of page numbers a process touches.
+To compare algorithms fairly, we evaluate them against a **reference string**, the sequence of page numbers a process touches.
 
-**Example**: with page size 100 bytes, byte addresses
-```
+**Example:** with a page size of 100 bytes, consider the byte addresses
+```text
 0100, 0432, 0101, 0612, 0102, 0103, ...
 ```
-collapse to page-number reference string
-```
+Converting addresses to page numbers, and merging consecutive references to the same page (the later ones cannot fault), collapses them to the reference string
+```text
 1, 4, 1, 6, 1, 6, 1, 6, 1, 6, 1
 ```
 
-We then simulate each algorithm against the same string and count page faults. Generally, **more frames → fewer faults** (with the famous exception in §3.6).
+We then simulate each algorithm against the same string and count page faults. Generally, **more frames mean fewer faults** (with the famous exception in Section 3.6).
 
 The canonical example reference string used below:
-```
+```text
 7, 0, 1, 2, 0, 3, 0, 4, 2, 3, 0, 3, 2, 1, 2, 0, 1, 7, 0, 1
 ```
 
@@ -408,10 +408,10 @@ The canonical example reference string used below:
 
 **FIFO** (First-In, First-Out) replaces the page that has been in memory the longest.
 
-- Managed with a FIFO queue: new pages enter the tail, victims leave the head.
-- Trivial to implement, but treats all pages identically regardless of recent activity.
+- It is managed with a FIFO queue: new pages enter the tail, and victims leave the head.
+- It is trivial to implement, but treats all pages identically regardless of recent activity.
 
-**FIFO trace** — 3 frames, reference string `7 0 1 2 0 3 0 4 2 3 0 3 2 1 2 0 1 7 0 1`:
+**FIFO trace:** 3 frames, reference string `7 0 1 2 0 3 0 4 2 3 0 3 2 1 2 0 1 7 0 1`
 
 | Ref | F1   | F2   | F3   | Fault? |
 |-----|------|------|------|--------|
@@ -436,20 +436,24 @@ The canonical example reference string used below:
 | 0   | 7    | **0**| 2    | F      |
 | 1   | 7    | 0    | **1**| F      |
 
+*Table 1. FIFO trace of the canonical reference string with 3 frames*
+
 **Total: 15 page faults.**
 
 ### 3.6 Belady's Anomaly
 
-You would expect that **adding frames always reduces faults**. With FIFO, this is *not always true*.
+One would expect that **adding frames always reduces faults**. With FIFO, this is **not always true**.
 
-**Reference string**: `1, 2, 3, 4, 1, 2, 5, 1, 2, 3, 4, 5`
+**Reference string:** `1, 2, 3, 4, 1, 2, 5, 1, 2, 3, 4, 5`
 
 | Frames | Page Faults |
 |--------|-------------|
 | 3      | **9**       |
 | 4      | **10**      |
 
-More frames → **more** faults. This is **Belady's anomaly**, a fundamental pathology of FIFO.
+*Table 2. FIFO page-fault counts by number of frames*
+
+More frames lead to **more** faults. This is **Belady's anomaly**, a fundamental pathology of FIFO.
 
 **3-frame trace** (9 faults):
 
@@ -468,6 +472,8 @@ More frames → **more** faults. This is **Belady's anomaly**, a fundamental pat
 | 4   | 5    | 3    | **4**| F      |
 | 5   | 5    | 3    | 4    |        |
 
+*Table 3. FIFO trace of the Belady example with 3 frames*
+
 **4-frame trace** (10 faults):
 
 | Ref | F1   | F2   | F3   | F4   | Fault? |
@@ -485,55 +491,59 @@ More frames → **more** faults. This is **Belady's anomaly**, a fundamental pat
 | 4   | **4**| 1    | 2    | 3    | F      |
 | 5   | 4    | **5**| 2    | 3    | F      |
 
-![Silberschatz Figure 10.13 — Page-fault curve for FIFO replacement (Belady's anomaly)](../images/figures/p018_fig10.13.png)
+*Table 4. FIFO trace of the Belady example with 4 frames*
 
-*Silberschatz Figure 10.13 — Page-fault curve for FIFO replacement (Belady's anomaly)*
+![Figure 10. Page-fault curve for FIFO replacement and Belady's anomaly](../../images/Week12_p18.png)
+
+*Figure 10. Page-fault curve for FIFO replacement and Belady's anomaly*
 
 ### 3.7 Optimal (OPT / MIN)
 
 The **OPT** algorithm replaces the page that **will not be used for the longest time in the future**.
 
-- Provably the **lowest possible page-fault rate** — no algorithm can do better.
-- **No Belady anomaly** — adding frames never hurts.
-- **Impossible to implement** in practice (requires perfect knowledge of the future).
-- Used as a **baseline** (upper-bound on quality) for evaluating real algorithms.
+- It provably gives the **lowest possible page-fault rate**; no algorithm can do better.
+- **No Belady anomaly:** adding frames never increases faults.
+- It is **impossible to implement** in practice, because it requires perfect knowledge of the future.
+- It is used as a **baseline** (upper bound on quality) for evaluating real algorithms.
 
-**OPT trace** — 3 frames, same string as FIFO:
+**OPT trace:** 3 frames, same string as FIFO
 
 | Ref | F1    | F2    | F3    | Fault? | Reason (victim = farthest next use) |
 |-----|-------|-------|-------|--------|-------------------------------------|
 | 7   | **7** | -     | -     | F      |        |
 | 0   | 7     | **0** | -     | F      |        |
 | 1   | 7     | 0     | **1** | F      |        |
-| 2   | **2** | 0     | 1     | F      | next use: 7→#18, 0→#5, 1→#14 — evict 7 |
+| 2   | **2** | 0     | 1     | F      | next use 7→#18, 0→#5, 1→#14, so evict 7 |
 | 0   | 2     | 0     | 1     |        |        |
-| 3   | 2     | 0     | **3** | F      | next use: 2→#9, 0→#7, 1→#14 — evict 1 |
+| 3   | 2     | 0     | **3** | F      | next use 2→#9, 0→#7, 1→#14, so evict 1 |
 | 0   | 2     | 0     | 3     |        |        |
-| 4   | 2     | **4** | 3     | F      | next use: 2→#9, 0→#11, 3→#10 — evict 0 |
+| 4   | 2     | **4** | 3     | F      | next use 2→#9, 0→#11, 3→#10, so evict 0 |
 | 2   | 2     | 4     | 3     |        |        |
 | 3   | 2     | 4     | 3     |        |        |
-| 0   | 2     | **0** | 3     | F      | next use: 2→#13, 4→never, 3→#12 — evict 4 |
+| 0   | 2     | **0** | 3     | F      | next use 2→#13, 4→never, 3→#12, so evict 4 |
 | 3   | 2     | 0     | 3     |        |        |
 | 2   | 2     | 0     | 3     |        |        |
-| 1   | 2     | 0     | **1** | F      | next use: 2→#15, 0→#16, 3→never — evict 3 |
+| 1   | 2     | 0     | **1** | F      | next use 2→#15, 0→#16, 3→never, so evict 3 |
 | 2   | 2     | 0     | 1     |        |        |
 | 0   | 2     | 0     | 1     |        |        |
 | 1   | 2     | 0     | 1     |        |        |
-| 7   | **7** | 0     | 1     | F      | next use: 2→never, 0→#19, 1→#20 — evict 2 |
+| 7   | **7** | 0     | 1     | F      | next use 2→never, 0→#19, 1→#20, so evict 2 |
 | 0   | 7     | 0     | 1     |        |        |
 | 1   | 7     | 0     | 1     |        |        |
 
-**Total: 9 page faults** — six fewer than FIFO. At every fault the victim is the resident page whose **next use lies farthest in the future** (a page never used again counts as infinitely far). Reference positions are 1-indexed against the string `7 0 1 2 0 3 0 4 2 3 0 3 2 1 2 0 1 7 0 1`.
+*Table 5. OPT trace of the canonical reference string with 3 frames*
+
+**Total: 9 page faults**, six fewer than FIFO. At every fault the victim is the resident page whose **next use lies farthest in the future** (a page never used again counts as infinitely far). Reference positions are 1-indexed against the string `7 0 1 2 0 3 0 4 2 3 0 3 2 1 2 0 1 7 0 1`.
 
 ### 3.8 LRU (Least Recently Used)
 
-Since we can't see the future, we approximate it with the past: **replace the page that has not been used for the longest time**.
+Since we cannot see the future, we approximate it with the past: **replace the page that has not been used for the longest time**.
 
-- **Key assumption:** locality of reference — a page that has been idle for a long time is unlikely to be needed soon.
-- Equivalent to running OPT *backwards in time*.
-- **No Belady anomaly** — LRU is a **stack algorithm** (§3.10).
+- **Key assumption:** locality of reference. A page that has been idle for a long time is unlikely to be needed soon.
+- It picks the farthest page looking backward instead of forward, so it is OPT run backward in time.
+- **No Belady anomaly:** LRU is a **stack algorithm** (Section 3.10).
 
-**LRU trace** — 3 frames, same reference string:
+**LRU trace:** 3 frames, same reference string
 
 | Ref | F1    | F2    | F3    | Fault? | Reason (LRU victim) |
 |-----|-------|-------|-------|--------|---------------------|
@@ -547,52 +557,54 @@ Since we can't see the future, we approximate it with the past: **replace the pa
 | 4   | **4** | 0     | 3     | F      | 2 least recent      |
 | 2   | 4     | 0     | **2** | F      | 3 least recent      |
 | 3   | 4     | **3** | 2     | F      | 0 least recent      |
-| 0   | **0** | 3     | 2     | F      |                     |
+| 0   | **0** | 3     | 2     | F      | 4 least recent      |
 | 3   | 0     | 3     | 2     |        |                     |
 | 2   | 0     | 3     | 2     |        |                     |
-| 1   | **1** | 3     | 2     | F      |                     |
+| 1   | **1** | 3     | 2     | F      | 0 least recent      |
 | 2   | 1     | 3     | 2     |        |                     |
-| 0   | 1     | **0** | 2     | F      |                     |
+| 0   | 1     | **0** | 2     | F      | 3 least recent      |
 | 1   | 1     | 0     | 2     |        |                     |
-| 7   | 1     | 0     | **7** | F      |                     |
+| 7   | 1     | 0     | **7** | F      | 2 least recent      |
 | 0   | 1     | 0     | 7     |        |                     |
 | 1   | 1     | 0     | 7     |        |                     |
 
-**Total: 12 page faults.** Comparison: **FIFO 15 > LRU 12 > OPT 9.**
+*Table 6. LRU trace of the canonical reference string with 3 frames*
+
+**Total: 12 page faults.** In comparison, **FIFO 15 > LRU 12 > OPT 9**.
 
 ### 3.9 LRU Implementation
 
-True LRU needs to know the **relative recency** of every resident page. Two hardware-supported implementations:
+True LRU needs to know the **relative recency** of every resident page. There are two hardware-supported implementations.
 
-**Method 1 — Counter (time stamp).**
-- Each PTE stores a "time-of-use" field.
-- Add a logical clock to the CPU; it ticks on every memory access.
-- On every reference, copy the clock into the referenced PTE.
-- Victim = the page with the smallest time stamp.
-- **Cost:** memory write on every access (the PTE), and a linear scan of resident pages to find the minimum.
+**Method 1: Counter (time stamp).**
+- Each PTE stores a time-of-use field.
+- A logical clock is added to the CPU; it ticks on every memory access.
+- On every reference, the clock value is copied into the referenced page's PTE.
+- The victim is the page with the smallest time stamp.
+- **Cost:** a memory write (the PTE) on every access, and a linear scan of resident pages to find the minimum.
 
-**Method 2 — Stack (doubly linked list).**
-- Maintain a doubly linked list of resident pages ordered by recency.
-- On reference, move the page to the **top** of the stack — six pointer updates worst case.
-- Victim = the page at the **bottom** of the stack — O(1) lookup, no scan needed.
+**Method 2: Stack (doubly linked list).**
+- A doubly linked list of resident pages is kept in recency order.
+- On a reference, the page moves to the **top** of the stack; this changes six pointers in the worst case.
+- The victim is the page at the **bottom** of the stack, found in O(1) without a scan.
 
-Both demand hardware help; without it, doing this in software via interrupts would slow memory access by an order of magnitude.
+Both demand hardware help. Doing this in software via interrupts would slow every memory access by a factor of at least ten.
 
-> **[Data Structures]** Method 2 is exactly a **doubly linked list** used as a recency-ordered queue, and the "six pointer updates" figure is the standard cost of an unlink-then-push-to-front: detaching a node touches its predecessor's and successor's pointers, and reinserting at the head touches the old head, the new node's two links, and the head pointer. The reason a doubly (not singly) linked list is required is that LRU must **remove a node from the middle** in O(1) — and you can only splice out an interior node in constant time if it carries a back-pointer to its predecessor. Pairing this list with a hash map from page number → node is precisely the textbook **LRU cache** design (O(1) lookup, O(1) move-to-front, O(1) evict-from-tail).
+> **[Data Structures]** Method 2 is exactly a **doubly linked list** used as a recency-ordered queue, and the figure of six pointer updates is the standard cost of an unlink-then-push-to-front: detaching a node touches its predecessor's and successor's pointers, and reinserting at the head touches the old head, the new node's two links, and the head pointer. A doubly (not singly) linked list is required because LRU must **remove a node from the middle in O(1)**, and an interior node can only be spliced out in constant time if it carries a back-pointer to its predecessor. Pairing this list with a hash map from page number to node is precisely the textbook **LRU cache** design (O(1) lookup, O(1) move-to-front, O(1) evict-from-tail).
 
-![Silberschatz Figure 10.16 — Use of a stack to record the most recent page references](../images/figures/p021_fig10.16.png)
+![Figure 11. Stack recording the most recent page references](../../images/Week12_p21.png)
 
-*Silberschatz Figure 10.16 — Use of a stack to record the most recent page references*
+*Figure 11. Stack recording the most recent page references*
 
 ### 3.10 Stack Algorithms and Why They Avoid Belady
 
-A replacement algorithm is a **stack algorithm** if, for every reference string, the set of resident pages with $n$ frames is **always a subset** of the set with $n + 1$ frames.
+A replacement algorithm is a **stack algorithm** if, at every point of every reference string, the set of resident pages with $n$ frames is a **subset** of the set with $n + 1$ frames.
 
-- **LRU is a stack algorithm:** with $n$ frames, the resident set is exactly "the $n$ most-recently-referenced pages." With $n + 1$ frames, those $n$ pages are still in the resident set, plus one more.
+- **LRU is a stack algorithm.** With $n$ frames, the resident set is exactly the $n$ most recently referenced pages. With $n + 1$ frames, those $n$ pages are still in the resident set, plus one more.
 - **OPT is a stack algorithm** as well (by a symmetric argument on the future).
-- **FIFO is *not* a stack algorithm** — the resident set with $n$ frames is not necessarily a subset of that with $n + 1$ frames. This is exactly what allows Belady's anomaly.
+- **FIFO is not a stack algorithm.** The resident set with $n$ frames is not necessarily a subset of the one with $n + 1$ frames, and this is exactly what allows Belady's anomaly.
 
-**Theorem (intuition):** for any stack algorithm, adding a frame can **never increase** the number of faults — each page that would have been a fault on a smaller cache is still a fault (or a hit) on the larger one, never the reverse.
+**Theorem (intuition):** for a stack algorithm, adding a frame can **never increase** the number of faults. A reference that hits with $n$ frames must also hit with $n + 1$ frames, because the resident set at that moment is contained in the larger resident set. Hence the faults of the larger memory are a subset of the faults of the smaller one.
 
 ### 3.11 Algorithm Comparison
 
@@ -604,6 +616,8 @@ Same reference string, 3 frames:
 | LRU       | **12**      | Good performance, expensive implementation |
 | OPT       | **9**       | Optimal but unimplementable |
 
+*Table 7. Page-fault counts of FIFO, LRU, and OPT with 3 frames*
+
 ---
 
 <br>
@@ -612,30 +626,30 @@ Same reference string, 3 frames:
 
 ### 4.1 Why Approximate?
 
-True LRU requires hardware that updates a clock or stack on **every** memory reference. Most architectures don't provide that. Most architectures *do* provide a **reference bit**:
+True LRU requires hardware that updates a clock or stack on **every** memory reference, and most architectures do not provide that. What most architectures **do** provide is a **reference bit**:
 
-- Set to 1 by hardware whenever the page is read or written.
-- Cleared by the OS on its own schedule.
-- Tells us **which pages were used** in some recent window, but not the **order**.
+- It is set to 1 by hardware whenever the page is read or written.
+- It is cleared by the OS on its own schedule.
+- It tells us **which pages were used** in some recent window, but not the **order**.
 
 LRU-approximation algorithms use this single bit (or a few bits) to make replacement decisions that approximate LRU at a fraction of the cost.
 
-> **[Computer Architecture]** The **reference bit** and **dirty bit** are stored in the **page-table entry** that the MMU already reads during each translation (Week 11). Hardware sets them as a side effect of memory access, so they add no access-time cost. Exact LRU would require an extra write on every memory reference to update a timestamp or reorder a list, which the datapath cannot handle. Real systems therefore approximate LRU, and the clock algorithm extracts as much information as possible from the reference bit.
+> **[Computer Architecture]** The **reference bit** and **dirty (modify) bit** are stored in the **page-table entry** that the MMU already reads during each translation (Week 11). Hardware sets them as a side effect of memory access, so they add no access-time cost. Exact LRU would require an extra write on every memory reference to update a timestamp or reorder a list, which the datapath cannot handle. Real systems therefore approximate LRU, and the clock algorithm extracts as much information as possible from the single reference bit that hardware sets for free.
 
 ### 4.2 Additional-Reference-Bits
 
-Maintain an **8-bit byte** (shift register) per page, updated by the OS on a periodic timer interrupt (say, every 100 ms):
+The OS maintains an **8-bit byte** (shift register) per page and updates it on a periodic timer interrupt (say, every 100 ms):
 
-```
+```text
 On each timer tick:
   1. Shift the current reference bit into the MSB of the page's byte.
   2. Shift the rest of the byte right by one.
   3. Clear the hardware reference bit (ready for the next interval).
 ```
 
-Read the byte left-to-right: the **MSB (bit 7) is the most recent interval**, and each step to the right is one interval further into the past (bit 0 = oldest tracked interval). A `1` in a position means "referenced during that interval."
+Read the byte left to right: the **MSB (bit 7) is the most recent interval**, and each step to the right is one interval further into the past (bit 0 is the oldest tracked interval). A `1` in a position means the page was referenced during that interval.
 
-```
+```text
 Bit position:  7 6 5 4 3 2 1 0   ← MSB = most recent interval, LSB = oldest
 Example histories:
   1 1 0 0 0 1 0 0   →  used in the last 2 intervals, idle for 3, then used once long ago
@@ -645,17 +659,17 @@ Compared as unsigned integers, 11000100 (196) > 01110111 (119)
 → the second page is the better eviction candidate (smaller value = less recent use)
 ```
 
-Because the most-recent interval sits in the highest-value bit, ordinary unsigned comparison automatically ranks "recently used" above "used long ago" — the larger the integer, the more recent the activity.
+Because the most recent interval sits in the highest-value bit, ordinary unsigned comparison automatically ranks recent use above use long ago: the larger the integer, the more recent the activity.
 
-- Victim: page with the **smallest** byte value (= least recent use).
-- Ties broken by FIFO order.
-- Increasing the history bit count improves accuracy but raises the interrupt cost.
+- The victim is the page with the **smallest** byte value, that is, the least recently used one.
+- Ties are broken by FIFO order.
+- Increasing the number of history bits improves accuracy but raises the interrupt cost.
 
 ### 4.3 Second-Chance (Clock) Algorithm
 
 Combine **FIFO** with the **reference bit**:
 
-```
+```text
 Maintain pages in a FIFO order (a circular queue).
 On replacement need:
    Look at the head page of the FIFO.
@@ -664,68 +678,72 @@ On replacement need:
                           advance to the next page in the FIFO, and repeat.
 ```
 
-Implemented as a **circular queue** with a hand pointer: the algorithm looks exactly like a clock with a sweeping hand — hence the name **Clock Algorithm**.
+It is implemented as a **circular queue** with a hand pointer. The algorithm looks exactly like a clock with a sweeping hand, hence the name **Clock Algorithm**.
 
-> **[Data Structures]** The "hand" is just an index/pointer into a **circular buffer** (or a circular singly linked list whose tail links back to the head). Advancing the hand is the classic `i = (i + 1) % n` wrap-around — there is no front or back, so unlike the plain FIFO queue of §3.5 nothing is ever shifted or re-enqueued; clearing a reference bit is an O(1) in-place mutation and the hand simply moves on. The whole structure is what makes "give the page a second chance" cost nothing: a real FIFO would have to dequeue and re-append the survivor, whereas the circular list leaves it in place and only moves the cursor.
+> **[Data Structures]** The hand is just an index or pointer into a **circular buffer** (or a circular singly linked list whose tail links back to the head). Advancing the hand is the classic `i = (i + 1) % n` wrap-around. There is no front or back, so unlike the plain FIFO queue of Section 3.5, nothing is ever shifted or re-enqueued; clearing a reference bit is an O(1) in-place mutation, and the hand simply moves on. This structure makes giving a page a second chance cost nothing: a real FIFO would have to dequeue and re-append the survivor, whereas the circular list leaves it in place and only moves the cursor.
 
-- Worst case (all bits = 1): one full revolution clears every bit; the next pass falls back to plain FIFO.
-- Frequently-used pages always have ref bit = 1 by the time the hand reaches them → effectively *never* replaced.
+- Worst case (all bits = 1): one full revolution clears every bit, and the next pass behaves like plain FIFO.
+- Frequently used pages have reference bit = 1 whenever the hand reaches them, so they are rarely replaced.
 
-> **Why this works:** the reference bit gives a binary "recently used or not" signal. The clock turns that single bit into something close to LRU by giving recently-used pages a free pass and letting only the truly stale pages get evicted.
+> **Note:** **Why clock works.** The reference bit gives a binary signal of whether a page was recently used. The clock turns that single bit into something close to LRU: recently used pages get a free pass, and only pages that have gone unused for a long time are evicted.
 
-![Silberschatz Figure 10.17 — Second-chance (clock) page-replacement algorithm](../images/figures/p023_fig10.17.png)
+![Figure 12. Second-chance (clock) page-replacement algorithm](../../images/Week12_p23.png)
 
-*Silberschatz Figure 10.17 — Second-chance (clock) page-replacement algorithm*
+*Figure 12. Second-chance (clock) page-replacement algorithm*
 
-### 4.4 Clock Algorithm — Visualization
+### 4.4 Clock Algorithm Visualization
 
-```
+```text
 [Initial state]                [After search]
    v (pointer)                    v (pointer, points to new victim)
 +------+                    +------+
 | P1: 1| → clear to bit=0   | P1: 0|
 | P2: 1| → clear to bit=0   | P2: 0|
-| P3: 0| → VICTIM!           | NEW  | ← incoming page inserted here
-| P4: 1|                     | P4: 1|
-| P5: 0|                     | P5: 0|
+| P3: 0| → VICTIM!          | NEW  | ← incoming page inserted here
+| P4: 1|                    | P4: 1|
+| P5: 0|                    | P5: 0|
 +------+                    +------+
 
 P1, P2 survive — given a "second chance" by clearing their bit.
 P3 is replaced because its bit was already 0.
 ```
 
-### 4.5 Enhanced Second-Chance — (R, M) Classes
+*Figure 13. Clock search that clears the bits of P1 and P2 and replaces P3*
 
-Refine clock by using both the **reference bit (R)** and the **modify (dirty) bit (M)**. Each page falls into one of **4 classes**:
+### 4.5 Enhanced Second-Chance and (R, M) Classes
+
+The clock is refined by using both the **reference bit (R)** and the **modify (dirty) bit (M)**. Each page falls into one of **4 classes**:
 
 | Class | (R, M) | Meaning                                | Replacement priority |
 |-------|--------|----------------------------------------|----------------------|
 | 1     | (0, 0) | Not recently used, not modified        | **Highest** (cheap to drop) |
-| 2     | (0, 1) | Not recently used, but modified        | 2nd — needs write-back  |
+| 2     | (0, 1) | Not recently used, but modified        | 2nd (needs write-back)  |
 | 3     | (1, 0) | Recently used, not modified            | 3rd                    |
 | 4     | (1, 1) | Recently used **and** modified         | **Lowest** priority    |
 
-Pages in lower classes are evicted first. Replacing a modified page costs an additional disk write, so we prefer to evict clean pages — and absolutely prefer not to evict pages that are both recent and dirty.
+*Table 8. (R, M) classes and replacement priority of enhanced second-chance*
+
+Pages in lower-numbered classes are evicted first. Replacing a modified page costs an additional disk write, so clean pages are evicted first, and pages that are both recent and dirty are evicted last.
 
 ### 4.6 LFU and MFU
 
 Count how many times each page has been referenced:
 
-- **LFU (Least Frequently Used)** — evict the page with the **fewest** references.
-  - Problem: a page used heavily during initialization and then never again hangs around forever because its count is huge.
+- **LFU (Least Frequently Used):** evict the page with the **fewest** references.
+  - Problem: a page used heavily during initialization and then never again hangs around because its count is huge.
   - Fix: periodically right-shift every counter (exponential decay), so old activity fades.
-- **MFU (Most Frequently Used)** — evict the page with the **most** references.
-  - Logic: pages with small counts just arrived and probably *will* be used; the heavily-referenced ones have already done their work.
+- **MFU (Most Frequently Used):** evict the page with the **most** references.
+  - Logic: pages with small counts just arrived and probably will be used; the heavily referenced ones have already done their work.
 
-Neither approximates OPT well in general. **Rarely used in practice** — implementation cost is high relative to the (modest) benefit.
+Neither approximates OPT well in general. They are **rarely used in practice**, because the implementation cost is high relative to the modest benefit.
 
 ### 4.7 Page Buffering
 
-Several complementary techniques layered on top of any replacement policy:
+Several complementary techniques can be layered on top of any replacement policy:
 
-- **Maintain a free-frame pool.** On a page fault, *immediately* take a frame from the pool — don't wait for the replacement algorithm. The victim is written back **later, asynchronously**. The faulting process restarts quickly.
+- **Maintain a free-frame pool.** On a page fault, take a frame from the pool **immediately** instead of waiting for the replacement algorithm. The victim is written back **later, asynchronously**. The faulting process restarts quickly.
 - **Modified-page list (batched write-back).** Collect dirty pages and write them out in a batch when the paging device is idle.
-- **Cache victims in the free-frame pool.** When a frame is freed, remember which page it used to hold. If that page is needed again *before* the frame is reused, recover it without any disk I/O. (Used in UNIX-style systems combined with second-chance.)
+- **Cache victims in the free-frame pool.** When a frame is freed, remember which page it used to hold. If that page is needed again **before** the frame is reused, recover it without any disk I/O. Some UNIX-style systems use this together with second-chance.
 
 ---
 
@@ -735,54 +753,54 @@ Several complementary techniques layered on top of any replacement policy:
 
 ### 5.1 Minimum Frames and Where the Bound Comes From
 
-Each process needs at least a **minimum number of frames** so that any *single* instruction (together with every page its operands touch) can run to completion after a page-fault restart. If even one instruction needed more distinct pages than the process owns, the restart would fault again on the same instruction forever, and it could never make progress.
+Each process needs at least a **minimum number of frames** so that any **single** instruction, together with every page its operands touch, can run to completion after a page-fault restart. If even one instruction needed more distinct pages than the process owns, every restart would fault again on the same instruction, and the process could never make progress.
 
-- The minimum is **determined by the architecture**: the maximum number of distinct pages any single instruction can reference (the instruction's own page plus all of its operand pages).
-- Indirect addressing increases the bound. Example: 1 level of indirect addressing → minimum **3 frames** (instruction page, operand-pointer page, operand page).
+- The minimum is **determined by the architecture**: it is the maximum number of distinct pages any single instruction can reference (the instruction's own page plus all of its operand pages).
+- Indirect addressing increases the bound. For example, on a machine whose memory-reference instructions reference only one memory address, allowing one level of indirect addressing requires at least **3 frames** (instruction page, operand-pointer page, operand page).
 
 The **maximum** is bounded by the available physical memory.
 
 ### 5.2 Equal vs Proportional Allocation
 
-Given $m$ available frames and $n$ processes, how should the OS distribute them?
+Given $m$ available frames and $n$ processes, the OS must decide how to distribute them.
 
 - **Equal allocation:** $m / n$ frames each.
-  - Example: 93 frames, 5 processes → 18 each (with 3 spare).
+  - Example: 93 frames and 5 processes give 18 frames each, with 3 spare (the spare frames can serve as a free-frame buffer pool).
 - **Proportional allocation:** give a process frames in proportion to its size $s_i$:
   $$ a_i = \frac{s_i}{S} \cdot m, \qquad S = \sum_i s_i $$
   - Example: 62 frames, process A (10 KB), process B (127 KB), $S = 137\ \text{KB}$:
-    - A: $10/137 \times 62 \approx 4$ frames.
-    - B: $127/137 \times 62 \approx 57$ frames.
+    - A: $10/137 \times 62 \approx 4$ frames
+    - B: $127/137 \times 62 \approx 57$ frames
   - **Priority-based allocation:** replace size with priority weights.
 
 ### 5.3 Global vs Local Replacement
 
-When a process page-faults and no free frame is available, where do we look for a victim?
+When a process page-faults and no free frame is available, the OS must decide where to look for a victim.
 
-- **Global replacement:** victim chosen from **all** frames in the system. The faulting process can steal a frame from another process.
-  - Better **throughput** overall — generally used in modern OSes.
-  - **Downside:** a process cannot predict its own page-fault rate, because its working set may be silently raided.
-- **Local replacement:** victim chosen only from the **faulting process's own** frames.
-  - Predictable per-process page-fault rate.
-  - **Downside:** if one process has too few frames it thrashes alone, even while other processes have surplus; available memory may go underused.
+- **Global replacement:** the victim is chosen from **all** frames in the system. The faulting process can take a frame from another process.
+  - Overall **throughput** is better, so it is generally used in modern OSes.
+  - **Downside:** a process cannot predict its own page-fault rate, because other processes may silently take frames from its working set.
+- **Local replacement:** the victim is chosen only from the **faulting process's own** frames.
+  - The per-process page-fault rate is predictable.
+  - **Downside:** if one process has too few frames, it thrashes alone even while other processes have surplus, and available memory may go underused.
 
 ### 5.4 Reclaiming Pages and the Reaper
 
 Practical global replacement uses a **reaper** routine that runs in the background:
 
-- Triggered when the free-frame list drops below a **minimum threshold**.
-- Walks pages using an LRU-approximation algorithm and reclaims them.
-- Stops when free memory rises above a **maximum threshold**.
+- It is triggered when the free-frame list drops below a **minimum threshold**.
+- It walks pages using an LRU-approximation algorithm and reclaims them.
+- It stops when free memory rises above a **maximum threshold**.
 
-When free memory is critically low and the reaper cannot keep up, **Linux runs the OOM Killer** (Out-Of-Memory Killer), which terminates the process with the worst OOM score — a heuristic combining size, age, and "killability."
+When free memory is critically low and the reaper cannot keep up, **Linux runs the OOM Killer** (Out-Of-Memory Killer), which terminates the process with the highest OOM score. The OOM score rises mainly with the percentage of memory a process uses, and depending on the implementation it also combines factors such as running time or an adjustment value for how killable the process is.
 
-![Silberschatz Figure 10.18 — Reclaiming pages](../images/figures/p029_fig10.18.png)
+![Figure 14. Page reclamation by the reaper between the minimum and maximum thresholds](../../images/Week12_p29.png)
 
-*Silberschatz Figure 10.18 — Reclaiming pages*
+*Figure 14. Page reclamation by the reaper between the minimum and maximum thresholds*
 
 ### 5.5 NUMA and Frame Allocation
 
-On **NUMA (Non-Uniform Memory Access)** machines each CPU has its own *local* memory bank; accessing local memory is significantly faster than accessing memory attached to another CPU.
+On **NUMA (Non-Uniform Memory Access)** machines, each CPU has its own local memory bank, and accessing local memory is significantly faster than accessing memory attached to another CPU.
 
 - On a page fault, the OS should allocate a frame on the NUMA node **closest to the CPU** that is running the faulting process.
 - Linux maintains a separate free-frame list per NUMA node.
@@ -790,11 +808,11 @@ On **NUMA (Non-Uniform Memory Access)** machines each CPU has its own *local* me
 
 ### 5.6 Thrashing
 
-**Thrashing** = the process is spending more time handling page faults than executing real instructions.
+**Thrashing** is the state in which a process spends more time handling page faults than executing real instructions.
 
 **Vicious cycle:**
 
-```
+```text
 1. Process has too few frames for its current working set
 2. Page faults happen on nearly every instruction
 3. I/O surges; the process is mostly blocked
@@ -804,64 +822,68 @@ On **NUMA (Non-Uniform Memory Access)** machines each CPU has its own *local* me
 7. Go to step 2 — faults explode further
 ```
 
-**Symptom plot:** as the degree of multiprogramming rises, CPU utilization first climbs (good), then **suddenly collapses** past a critical point. That collapse is thrashing.
+*Figure 15. Vicious cycle of thrashing*
 
-![Silberschatz Figure 10.20 — Thrashing](../images/figures/p032_fig10.20.png)
+**Symptom plot:** as the degree of multiprogramming rises, CPU utilization first climbs, then **suddenly collapses** past a critical point. That collapse is thrashing.
 
-*Silberschatz Figure 10.20 — Thrashing*
+![Figure 16. CPU utilization and thrashing by degree of multiprogramming](../../images/Week12_p32.png)
 
-> **Why this is the canonical OS pathology:** thrashing is what happens when *the abstraction breaks*. The whole point of virtual memory is that programs can be larger than RAM — but only if their *active* footprint fits. Push that footprint past available frames and the system spends more time shuffling pages than computing.
+*Figure 16. CPU utilization and thrashing by degree of multiprogramming*
 
-**Defense:** prefer **local replacement** (one process's bad behaviour does not poison the others) or, better, prevent over-commitment in the first place using working sets or PFF (below).
+> **Note:** **The canonical OS pathology.** Thrashing is what happens when the abstraction breaks. The whole point of virtual memory is that programs can be larger than RAM, but only if their active footprint fits in the available frames. Push that footprint past the available frames and the system spends more time shuffling pages than computing.
+
+**Defense:** preferring **local replacement** keeps one process's bad behavior from spreading to the others. A better approach is to prevent over-commitment in the first place using working sets or PFF (below).
 
 ### 5.7 Locality Model
 
 A process **moves from locality to locality** during execution:
 
 - A **locality** is a set of pages used intensively over some interval.
-- Function calls define new localities — the function's code, its local variables, and the globals it touches.
+- Function calls define new localities: the function's code, its local variables, and the globals it touches.
 - Returning from a function exits that locality.
-- Localities can overlap (caller's data is still warm after callee returns).
+- Localities can overlap (the caller's data is still in frequent use after the callee returns).
 
-**Implication:** if you give a process enough frames for its **current** locality, faults only occur during the brief transition between localities — almost never during steady-state execution. If the locality doesn't fit, the process thrashes.
+**Implication:** if a process gets enough frames for its **current** locality, faults occur only during the brief transitions between localities and almost never during steady-state execution. If the locality does not fit, the process thrashes.
 
 ### 5.8 Working-Set Model
 
-A **practical** approximation of "current locality." Define a working-set window $\Delta$ (number of recent memory references).
+The working-set model is a **practical** approximation of the current locality. It defines a working-set window $\Delta$ as a number of recent memory references.
 
 $$
 WS_i(t) = \{\text{pages referenced by process } i \text{ in the last } \Delta \text{ references}\}
 $$
 
-- $\Delta$ too small: doesn't capture the locality → false misses.
-- $\Delta$ too large: spans multiple localities → over-allocation.
-- $\Delta = \infty$: every page the process ever touched.
+- If $\Delta$ is too small, it does not capture the whole locality, which causes needless misses.
+- If $\Delta$ is too large, it spans multiple localities, which causes over-allocation.
+- If $\Delta = \infty$, it covers every page the process ever touched.
 
-**Example, $\Delta = 10$:**
+**Example:** $\Delta = 10$
 
-```
-...2 6 1 5 7 7 7 7 5 1 | 6 2 3 4 1 2 3 4 4 4 | 3 4 3 4...
-                    t1                     t2
+```text
+...2 6 1 5 7 7 7 7 5 1 | 6 2 3 4 1 2 | 3 4 4 4 3 4 3 4 4 4 | 1 3 2 3 4...
+   └──── Δ = 10 ─────┘t1               └──── Δ = 10 ─────┘t2
 
 WS(t1) = {1, 2, 5, 6, 7}   WS(t2) = {3, 4}
 ```
 
-![Silberschatz Figure 10.22 — Working-set model](../images/figures/p034_fig10.22.png)
+*Figure 17. Working sets at two moments with a window of 10*
 
-*Silberschatz Figure 10.22 — Working-set model*
+![Figure 18. Working-set model](../../images/Week12_p34.png)
+
+*Figure 18. Working-set model*
 
 **Thrashing prevention with WS:**
-- $WSS_i = |WS_i|$ — number of frames needed by process $i$.
-- $D = \sum_i WSS_i$ — total system frame demand.
-- If $D > m$ (frames available) → **thrashing imminent**.
+- $WSS_i = |WS_i|$ is the number of frames needed by process $i$.
+- $D = \sum_i WSS_i$ is the total frame demand of the system.
+- If $D > m$ (frames available), **thrashing is imminent**.
   - **Solution:** suspend one process to free its frames.
-- If $D \leq m$ → unused frames can support a new process.
+- If $D \leq m$, the unused frames can support a new process.
 
 ### 5.9 Working-Set Implementation
 
-Tracking the working set exactly is expensive; the typical approximation uses **timer interrupts + reference bits**:
+Tracking the working set exactly is expensive, so the typical approximation uses **timer interrupts and reference bits**:
 
-```
+```text
 Suppose Δ = 10,000 references; timer interrupt every 5,000 references.
 
 On each timer tick:
@@ -876,7 +898,7 @@ On a page-fault decision:
   If all are 0, the page is OUTSIDE the working set
 ```
 
-More history bits → finer accuracy but more bookkeeping per timer interrupt. As always with approximation, the right knob setting is a workload-dependent compromise.
+More history bits give finer accuracy but more bookkeeping per timer interrupt. As always with approximation, the right setting is a workload-dependent compromise.
 
 ### 5.10 Page-Fault Frequency (PFF)
 
@@ -888,14 +910,16 @@ The **PFF** strategy controls thrashing **directly** by monitoring the page-faul
 | Process's PFF < lower bound                      | **Reclaim frames** from it          |
 | PFF > upper bound but no free frames in system   | **Suspend the process**             |
 
+*Table 9. Actions of the PFF strategy by situation*
+
 Compared to the working-set model:
-- **Simpler to implement** — just count faults.
-- **Directly controls** what we ultimately care about (the fault rate).
-- Less informed about *why* the rate is what it is.
+- It is **simpler to implement**, because it only counts faults.
+- It **directly controls** what we ultimately care about (the fault rate).
+- It is less informed about **why** the rate is what it is.
 
-![Silberschatz Figure 10.23 — Page-fault frequency](../images/figures/p036_fig10.23.png)
+![Figure 19. Page-fault frequency controlled by upper and lower bounds](../../images/Week12_p36.png)
 
-*Silberschatz Figure 10.23 — Page-fault frequency*
+*Figure 19. Page-fault frequency controlled by upper and lower bounds*
 
 ---
 
@@ -903,28 +927,30 @@ Compared to the working-set model:
 
 ## 6. Memory Compression
 
-An alternative to writing dirty pages out to disk: **compress them in RAM**.
+Memory compression is an alternative to writing dirty pages out to disk: it **compresses them in RAM**.
 
-- Collect several pages, run them through a compressor (Apple WKdm, Microsoft Xpress), and **pack the compressed forms into a single frame**.
-- Trade some CPU for a *lot* less disk I/O. On modern hardware, compression is often faster than SSD paging — and on mobile devices with limited or no swap, it is essentially the only option.
+- Several pages are collected, run through a compressor (Apple WKdm, Microsoft Xpress), and the **compressed forms are packed into a single frame**.
+- It trades some CPU for a lot less disk I/O. On modern hardware, compression is often faster than SSD paging, and on mobile devices with limited or no swap, it is essentially the only option.
 
+```text
+Before compression                     After compression
+modified-frame list: [F12][F45][F88]   F99 = compressed pack of pages F12, F45, F88
+free-frame list:     [F99][F07]        free-frame list: [F07][F12][F45][F88]
 ```
-Free-frame list                  After compression:
-[F12][F45][F88][F03]             [Compressed page-pack F99]
-                                 [F12][F45][F88] released back to free-frame list
-```
 
-![Silberschatz Figure 10.24 — Free-frame list before compression](../images/figures/p037_fig10.24.png)
+*Figure 20. Compressing three modified pages into one frame and returning the original frames*
 
-*Silberschatz Figure 10.24 — Free-frame list before compression*
+![Figure 21. Free-frame list and modified-frame list before compression](../../images/Week12_p37.png)
 
-![Silberschatz Figure 10.25 — Free-frame list after compression](../images/figures/p038_fig10.25.png)
+*Figure 21. Free-frame list and modified-frame list before compression*
 
-*Silberschatz Figure 10.25 — Free-frame list after compression*
+![Figure 22. Free-frame list after compression](../../images/Week12_p38.png)
 
-When a compressed page is referenced again, the OS decompresses it back into a fresh frame. This costs a page fault and a decompress step, but no disk I/O.
+*Figure 22. Free-frame list after compression*
 
-Used by **macOS, iOS, Android, Windows 10+**. Compression ratios typically 30–50% — a 4 KB page becomes 1.2–2 KB.
+When a compressed page is referenced again, the OS decompresses it into a fresh frame. This costs a page fault and a decompression step, but no disk I/O.
+
+**macOS, iOS, Android, and Windows 10 and later** use memory compression. Compressed pages typically take 30-50% of the original size, so a 4 KB page becomes about 1.2-2 KB.
 
 ---
 
@@ -934,25 +960,25 @@ Used by **macOS, iOS, Android, Windows 10+**. Compression ratios typically 30–
 
 ### 7.1 Why Kernel Memory Is Special
 
-The kernel can't use the same paging-based allocator it gives to user processes. Two reasons:
+The kernel cannot simply use the paging-based allocator it gives to user processes. There are two reasons:
 
-1. **Many tiny objects.** Kernel structures (PCBs, file objects, semaphores, network packets) are often *smaller than a page*. Allocating a whole frame per object would waste 90%+ of memory.
-2. **Some hardware demands physically contiguous memory** — DMA controllers in particular. Page-level allocation gives you pages, but not necessarily *contiguous* pages.
+1. **Many tiny objects.** Kernel structures (PCBs, file objects, semaphores, network packets) are often **smaller than a page**. Allocating a whole frame per object would waste 90% or more of memory for small objects.
+2. **Some hardware demands physically contiguous memory**, DMA controllers in particular. Page-level allocation gives you pages, but not necessarily **contiguous** pages.
 
 Two classical strategies coexist in real kernels:
 
-- **Buddy system** — coarse-grained, contiguous, fast coalesce.
-- **Slab allocation** — fine-grained, per-object-type caches.
+- **Buddy system:** coarse-grained contiguous allocation with fast coalescing.
+- **Slab allocation:** fine-grained, per-object-type caches.
 
 ### 7.2 Buddy System
 
 Memory is managed in **power-of-two-sized blocks** within a contiguous physical region.
 
 - A request of size $r$ is rounded up to the next power of 2.
-  - Example: 21 KB request → 32 KB block.
-- If no block of that size exists, recursively split a larger one in half (each half being a "buddy" of the other) until you get the right size.
+  - Example: a 21 KB request gets a 32 KB block.
+- If no block of that size exists, a larger one is recursively split in half (each half being the buddy of the other) until the right size is reached.
 
-```
+```text
 Allocating 21 KB from a 256 KB segment:
 
    [           256 KB             ]
@@ -961,53 +987,57 @@ Allocating 21 KB from a 256 KB segment:
    [32 CL][32 CR][ 64 BR ]...         ← split BL — 32 KB allocated for 21 KB request
 ```
 
-![Silberschatz Figure 10.26 — Buddy system allocation](../images/figures/p040_fig10.26.png)
+*Figure 23. Splitting a 256 KB segment to allocate a 32 KB block for a 21 KB request*
 
-*Silberschatz Figure 10.26 — Buddy system allocation*
+![Figure 24. Block splitting in the buddy system](../../images/Week12_p40a.png)
 
-**Deallocation triggers coalescing:** when a block is freed and its buddy is also free, they merge back into the larger size — recursively up the tree.
+*Figure 24. Block splitting in the buddy system*
 
-- **Pro:** coalescing is trivial and fast (constant-time per level, $O(\log n)$ total).
-- **Con:** **internal fragmentation** — a 33 KB request still costs a 64 KB block (~50% waste).
+**Deallocation triggers coalescing.** When a block is freed and its buddy is also free, the two merge back into the next larger size, recursively up the tree.
+
+- **Pro:** coalescing is simple and fast (constant time per level, $O(\log n)$ total).
+- **Con:** **internal fragmentation**. A 33 KB request still occupies a 64 KB block (about 50% waste).
 
 ### 7.3 Slab Allocation
 
 **Per-object-type caches** keep pre-allocated, ready-to-use instances of a particular kernel data structure.
 
-- **Slab** = one or more contiguous physical pages.
-- **Cache** = a collection of slabs that all hold instances of a specific object type (e.g., "PCB cache", "file-object cache", "semaphore cache").
+- A **slab** is one or more contiguous physical pages.
+- A **cache** is a collection of slabs that all hold instances of a specific object type (e.g., PCB cache, file-object cache, semaphore cache).
 - Each cache has its own slabs and its own free list of objects.
 
-```
+```text
 Cache: "PCB"   ─── slab 1: [PCB][PCB][PCB][PCB]
                 ── slab 2: [PCB][PCB][PCB][PCB]
                 ── ...
 ```
 
-![Silberschatz Figure 10.27 — Slab allocation](../images/figures/p040_fig10.27.png)
+*Figure 25. PCB cache made of several slabs*
 
-*Silberschatz Figure 10.27 — Slab allocation*
+![Figure 26. Relationship among kernel objects, caches, and slabs](../../images/Week12_p40b.png)
+
+*Figure 26. Relationship among kernel objects, caches, and slabs*
 
 **Operations:**
-- Allocate → grab the first free object from the cache.
-- Free → return the object to the cache's free list (no destruction, no re-init).
+- Allocating grabs the first free object from the cache.
+- Freeing returns the object to the cache's free list (no destruction, no re-initialization).
 
 **Slab states:**
-- **Full** — every object in the slab is in use.
-- **Partial** — mixed.
-- **Empty** — every object free.
+- **Full:** every object in the slab is in use.
+- **Partial:** used and free objects are mixed.
+- **Empty:** every object is free.
 
-Allocator preference: **partial → empty → allocate a new slab**.
+The allocator prefers a **partial slab, then an empty slab, then a newly allocated slab**.
 
 **Advantages:**
-- **Zero internal fragmentation** — slot size exactly matches object size.
-- **Fast** — no malloc/free cost; reuses pre-initialized objects.
-- **Cache-friendly** — same-type objects clustered together.
+- **No internal fragmentation.** The slot size exactly matches the object size.
+- **Fast.** It reuses pre-initialized objects without the cost of general-purpose allocation and freeing.
+- **Cache-friendly.** Objects of the same type are clustered together.
 
 Linux variants:
-- **SLAB** — the original Linux implementation.
-- **SLOB** — minimal/list-based, for memory-constrained embedded systems.
-- **SLUB** — default since Linux 2.6.24; less metadata overhead, better SMP scaling.
+- **SLAB:** the original Linux implementation.
+- **SLOB:** a minimal list-based implementation for memory-constrained embedded systems.
+- **SLUB:** the default since Linux 2.6.24, with less metadata overhead and better SMP scaling.
 
 ---
 
@@ -1022,16 +1052,16 @@ Pure demand paging suffers a flood of faults at process startup. **Prepaging** p
 - On process suspension, remember the working set.
 - On resume, load all those pages **before** the first instruction executes.
 
-**Cost-benefit:** prepage $s$ pages, of which a fraction $\alpha$ end up actually used.
-- Useful work saved: $s \cdot \alpha$ faults avoided.
-- Wasted work: $s \cdot (1 - \alpha)$ pages loaded that are never used.
-- Beneficial when $\alpha$ is close to 1.
+**Cost and benefit:** suppose $s$ pages are prepaged and a fraction $\alpha$ of them end up actually used.
+- Benefit: $s \cdot \alpha$ faults are avoided.
+- Waste: $s \cdot (1 - \alpha)$ pages that are never used are loaded.
+- Prepaging pays off when $\alpha$ is close to 1.
 
-Linux's **`readahead()`** is a related mechanism — explicitly tells the kernel "I'm about to read this range of a file; please pre-fault it."
+Linux's **`readahead()`** is a related mechanism: it explicitly tells the kernel that a range of a file is about to be read, so the kernel should read it into memory in advance.
 
 ### 8.2 Program Structure and Locality
 
-Programmer-controlled locality can dwarf any OS optimization. Consider a 128 × 128 `int` array where one row exactly fills one page:
+Programmer-controlled locality can outweigh any OS optimization. Consider a 128 × 128 `int` array with a page size of 128 words (128 `int`s), so that one row exactly fills one page:
 
 ```c
 // BAD — column-major access on a row-major language: jumps to a new page on every access
@@ -1049,15 +1079,17 @@ for (int i = 0; i < 128; i++)
         data[i][j] = 0;          // only 128 page faults
 ```
 
-Data structure locality matters too:
-- **Stack** — excellent locality (always touches the top).
-- **Hash table** — poor locality (references scatter by design).
+Both fault counts assume that fewer than 128 frames are allocated to the whole program. Column-major access touches all 128 pages in every outer iteration, so every access faults and the total is 128 × 128 = 16,384 faults; row-major access fills one row (one page) before moving to the next, so it incurs only 128 faults.
+
+Data-structure locality matters too:
+- A **stack** has excellent locality, because it always touches the top.
+- A **hash table** has poor locality, because its references scatter by design.
 
 ### 8.3 I/O Interlock and Page Locking
 
-A subtle problem with global replacement and concurrent I/O:
+Global replacement combined with concurrent I/O causes a subtle problem:
 
-```
+```text
 Process A: starts a disk READ into buffer page X of process A
 Process B: page-faults; OS picks page X as the victim (global replacement!)
          OS rewrites page X with process B's new contents
@@ -1065,26 +1097,28 @@ DMA completes: writes the original disk read into the (now hijacked) page X
               → corruption!
 ```
 
+*Figure 27. Global replacement hijacking the buffer page of an in-progress DMA*
+
 **Solutions:**
 
-- **Indirect I/O via kernel buffers** — always read into kernel memory first, then copy to user. Safe but adds a copy.
-- **Lock bit (pin)** — set a "this frame is locked, do not replace" bit. The page-replacement algorithm skips locked frames. Unlock when the I/O completes. Kernel pages are typically permanently pinned for the same reason.
+- **Indirect I/O via kernel buffers:** always read into kernel memory first, then copy to user memory. This is safe but adds a copy.
+- **Lock bit (pin):** set a bit meaning the frame is locked and must not be replaced. The page-replacement algorithm skips locked frames, and the lock is released when the I/O completes. Kernel pages are typically pinned permanently for the same reason.
 
 ---
 
 <br>
 
-## 9. Lab — Page-Replacement Algorithm Simulator
+## 9. Lab: Page-Replacement Algorithm Simulator
 
-**Goal:** simulate **FIFO, LRU, OPT** on the same reference string and the same number of frames; compare page-fault counts.
+**Goal:** simulate **FIFO, LRU, and OPT** on the same reference string with the same number of frames and compare page-fault counts.
 
 **Requirements:**
-- **Input:** a reference string (integer array) and a frame count.
-- **Output for each algorithm:** the frame state after each reference, with `* Fault` marked when applicable.
-- **Final output:** a comparison table.
+- The **input** is a reference string (integer array) and a frame count.
+- The **output for each algorithm** is the frame state after each reference, with `* Fault` marked when applicable.
+- The **final output** is a comparison table.
 
 **Input example:**
-```
+```text
 Reference String: 7 0 1 2 0 3 0 4 2 3 0 3 2 1 2 0 1 7 0 1
 Number of Frames: 3
 ```
@@ -1110,7 +1144,7 @@ def fifo(ref_string, num_frames):
 
 **Expected output:**
 
-```
+```text
 === FIFO Algorithm ===
 Ref: 7  Frames: [7, -, -]  * Page Fault
 Ref: 0  Frames: [7, 0, -]  * Page Fault
@@ -1128,40 +1162,32 @@ Total Page Faults: 15
 | Optimal   |  9          |
 ```
 
+> **Note:** The sketch keeps frames in queue order (`pop(0)` followed by `append`) and does not print empty slots, so its output format differs from the expected output. For example, after reference 2 the sketch prints `[0, 1, 2]`, whereas the expected output keeps fixed frame slots like Table 1 and shows `[2, 0, 1]`. To match the expected format, put the new page into the victim's slot (`frames[frames.index(victim)] = page`), fill empty slots with `-`, and print the fault mark as `* Page Fault`. The fault count of 15 is the same either way.
+
 ---
 
 <br>
 
 ## Summary
 
-| Topic | Key Content |
+| Concept | Key Summary |
 |-------|-------------|
-| **Virtual memory** | Decouples logical from physical address space; programs may exceed RAM |
-| **Demand paging** | Pager (lazy) loads pages only on reference; valid/invalid bit + page-fault trap |
-| **EAT** | $(1-p)\cdot \text{mem} + p\cdot \text{pf}$; $p$ must be tiny ($\lesssim 10^{-5}$) |
-| **Copy-on-Write** | `fork()` shares pages, copies only on write; `vfork()` skips copying entirely |
-| **Page replacement** | FIFO, OPT, LRU; dirty bit halves write-backs |
-| **Belady's anomaly** | FIFO can fault more with *more* frames; stack algorithms (LRU/OPT) cannot |
-| **LRU approximation** | Reference bit + clock; enhanced clock uses (R, M) classes |
-| **Frame allocation** | Equal vs proportional; minimum bound from instruction architecture |
-| **Replacement scope** | Global (high throughput, unpredictable) vs Local (predictable, may underuse memory) |
-| **Thrashing** | Too few frames → fault explosion → CPU utilization collapse |
-| **Working-set / PFF** | Track recent references / fault rate to detect and prevent thrashing |
-| **Memory compression** | Compress pages in RAM instead of swapping to disk |
-| **Kernel memory** | Buddy system (powers of 2, contiguous, easy coalesce) + slab (per-object cache) |
-| **Other** | Prepaging, program-structure locality, page pinning for I/O |
-
-**Key takeaways:**
-- **EAT is brutally sensitive to fault rate.** Every later technique exists to keep $p$ near zero.
-- **Locality is the engine** that makes virtual memory work — without it, every algorithm here degrades to "random replacement."
-- **OPT is the ceiling, LRU is the practical ideal, clock is what real systems use.** The hierarchy of approximations is a direct response to hardware constraints.
-- **Belady's anomaly is FIFO's fault, not virtual memory's.** Stack algorithms eliminate it by construction.
-- **Thrashing is the failure mode** of virtual memory — and the working-set / PFF models exist specifically to prevent it.
-- **Kernel memory is its own world** because the kernel allocates lots of tiny structures and sometimes needs physical contiguity — buddy + slab is the textbook answer.
-
-> "Virtual memory is the lie that makes every other lie in the OS possible. Page replacement is what keeps the lie believable."
-
-**Next week:** Mass-Storage Structure — disk scheduling (FCFS, SCAN, C-SCAN, LOOK), RAID, storage device management.
+| Virtual memory | It decouples the logical from the physical address space so that programs may exceed RAM, and it is the foundation that makes the other OS abstractions possible. |
+| Demand paging | A lazy pager loads pages only on reference, implemented with the valid/invalid bit and the page-fault trap. |
+| EAT | $(1-p)\cdot \text{mem} + p\cdot \text{pf}$ is brutally sensitive to the fault rate, so $p$ must be in the parts-per-million range (at most $2.5 \times 10^{-6}$ in the example of Section 1.10), and every later technique exists to keep $p$ near zero. |
+| Copy-on-Write | `fork()` shares pages and copies only on write, while `vfork()` skips copying entirely. |
+| Page replacement | FIFO, OPT, and LRU are the basic algorithms, the dirty bit lets clean pages skip the write-back, and page replacement is what keeps the virtual-memory abstraction believable. |
+| Hierarchy of replacement algorithms | OPT is the ceiling, LRU is the practical ideal, and clock is what real systems use; this hierarchy of approximations is a direct response to hardware constraints. |
+| Belady's anomaly | FIFO can fault more with more frames, but this is FIFO's fault rather than virtual memory's, and stack algorithms (LRU, OPT) eliminate it by construction. |
+| LRU approximation | The reference bit and the clock approximate LRU, and the enhanced clock uses (R, M) classes. |
+| Frame allocation | Allocation can be equal or proportional, and the minimum number of frames comes from the instruction architecture. |
+| Replacement scope | Global replacement gives high throughput but is unpredictable, while local replacement is predictable but may underuse memory. |
+| Locality | Locality is the engine that makes virtual memory work, and without it every replacement algorithm degrades to random replacement. |
+| Thrashing | Too few frames cause a fault explosion and a collapse of CPU utilization, which is the failure mode of virtual memory. |
+| Working-set, PFF | They track recent references or the fault rate and exist specifically to detect and prevent thrashing. |
+| Memory compression | Pages are compressed in RAM instead of being swapped to disk. |
+| Kernel memory | Because the kernel allocates many tiny structures and sometimes needs physically contiguous memory, the buddy system (powers of 2, contiguous, easy coalescing) plus slab (per-object caches) is the textbook answer. |
+| Other | Prepaging, program-structure locality, and page pinning for I/O also affect performance and correctness. |
 
 ---
 
@@ -1169,50 +1195,110 @@ Total Page Faults: 15
 
 ## Self-Check Questions
 
-1. **Definition:** What does it mean to "separate logical memory from physical memory," and what does that buy you?
+1. **Definition:** What does it mean to separate logical memory from physical memory, and what does that buy you?
 
-   > **Answer:** Logical addresses live in each process's private virtual address space; physical addresses live in the shared DRAM. A page table maps the former to the latter, but **not every logical page needs to be mapped** at a given moment — absent pages are simply marked invalid in the PTE. This decoupling lets the OS (1) run programs larger than physical RAM by streaming pages in on demand, (2) keep many processes resident simultaneously, (3) start a process before it is fully loaded, (4) share physical frames between processes, and (5) implement fast `fork()` via copy-on-write. None of these are possible without the indirection.
+   <details>
+   <summary>Answer</summary>
 
-2. **Page-fault walkthrough:** A process executes `MOV [0x4000], EAX`. The page containing 0x4000 is marked invalid. Walk through every step from CPU to instruction-restart.
+   Logical addresses live in each process's private virtual address space; physical addresses live in the shared DRAM. A page table maps the former to the latter, but **not every logical page needs to be mapped** at a given moment; absent pages are simply marked invalid in the PTE. This decoupling lets the OS (1) run programs larger than physical RAM by bringing pages in on demand, (2) keep many processes resident simultaneously, (3) start a process before it is fully loaded, (4) share physical frames between processes, and (5) implement a fast `fork()` via copy-on-write. None of these is possible without the indirection.
 
-   > **Answer:** (1) CPU forms the effective address 0x4000 and presents it to the MMU. (2) MMU walks the page table, finds the PTE has valid bit = 0, raises a **page-fault trap**. (3) Kernel trap handler examines the faulting address and PTE. (4) It distinguishes "illegal address" (deliver SIGSEGV) from "valid but on disk." Here, valid-but-on-disk. (5) Kernel pulls a free frame from the free-frame list (running the reaper if the list is empty). (6) Issues a disk I/O to read the page into that frame; process blocks waiting on I/O. (7) On I/O completion, kernel writes the new (frame #, valid=1, permissions) into the PTE. (8) Returns from trap, **restarting** the faulting `MOV` instruction. (9) MMU translates 0x4000 again (now valid) and the store succeeds.
+   </details>
 
-3. **EAT impact:** With mem = 100 ns and pf = 5 ms, what page-fault rate keeps slowdown within 5%?
+2. **Page-fault walkthrough:** A process executes `MOV [0x4000], EAX`. The page containing 0x4000 is marked invalid. Walk through every step from the CPU to the instruction restart.
 
-   > **Answer:** EAT = $(1-p)\cdot 100 + p \cdot 5{,}000{,}000$ = $100 + 4{,}999{,}900 p$. Slowdown within 5% means EAT ≤ 105, so $5 \geq 4{,}999{,}900 p$, giving $p \leq 10^{-6}$ — about **one fault per million memory accesses**. A spinning-disk page fault is so expensive that the fault rate must be in the parts-per-million range; SSDs relax this somewhat (~10⁻⁵ for the same 5% target with pf ~50 μs).
+   <details>
+   <summary>Answer</summary>
 
-4. **Copy-on-write trace:** Parent has pages P1 (code, read-only) and P2 (data, writable). Parent calls `fork()`; child writes to P2. Describe the frame and PTE state at each step.
+   (1) The CPU forms the effective address 0x4000 and presents it to the MMU. (2) The MMU walks the page table, finds that the PTE has valid bit = 0, and raises a **page-fault trap**. (3) The kernel trap handler examines the faulting address and the PTE. (4) It distinguishes an illegal address (deliver SIGSEGV) from a valid page on disk; here, the page is valid but on disk. (5) The kernel pulls a free frame from the free-frame list. If the list is empty, page replacement picks a victim, although the reaper normally keeps the list stocked. (6) It issues a disk I/O to read the page into that frame, and the process blocks waiting on the I/O. (7) On I/O completion, the kernel writes (frame number, valid=1, permissions) into the PTE. (8) It returns from the trap, **restarting** the faulting `MOV` instruction. (9) The MMU translates 0x4000 again (now valid), and the store succeeds.
 
-   > **Answer:** **Before fork:** parent's PTEs point to frames F1 (P1, RO) and F2 (P2, RW). **fork():** kernel copies parent's PTEs into child's page table. Both processes now have PTEs pointing at F1 (still RO — code, never needed COW) and F2 (which the kernel **marks RO in both PTEs**, even though P2 is logically writable). **Child writes to P2:** MMU sees RO PTE, raises **protection fault**. Kernel allocates a new frame F2'; copies F2 → F2'; updates child's PTE for P2 to point at F2' and mark it RW. Parent's PTE for P2 is also flipped back to RW (so it doesn't fault on its next write). **Result:** F1 still shared (one frame for code); F2 and F2' now hold independent copies of the writable data — but only because the child wrote. If the child had `exec()`-ed instead, F2 would never have been duplicated.
+   </details>
 
-5. **FIFO vs LRU vs OPT:** Run all three on reference string `1 2 3 4 1 2 5 1 2 3 4 5` with 4 frames. Tabulate fault counts.
+3. **EAT impact:** With mem = 100 ns and pf = 5 ms, what page-fault rate keeps the slowdown within 5%?
 
-   > **Answer:** With 4 frames, **FIFO has 10 faults** (per the §3.6 trace). **LRU has 8 faults**: after loading 1, 2, 3, and 4, the misses on 5, 3, 4, and 5 evict 3, 4, 5, and 1 in turn. **OPT has 6 faults**. It first evicts 4, whose next use is farthest away, then evicts a page that is never used again. Thus FIFO (10) > LRU (8) > OPT (6). FIFO also shows Belady's anomaly: it has 9 faults with 3 frames and 10 with 4, while LRU and OPT are monotonic.
+   <details>
+   <summary>Answer</summary>
 
-6. **Belady's anomaly:** Why does FIFO suffer it while LRU does not? Use the stack-algorithm property to justify.
+   EAT = $(1-p)\cdot 100 + p \cdot 5{,}000{,}000$ = $100 + 4{,}999{,}900 p$. A slowdown within 5% means EAT ≤ 105, so $5 \geq 4{,}999{,}900 p$, giving $p \leq 10^{-6}$, which is about **one fault per million memory accesses**. A spinning-disk page fault is so expensive that the fault rate must be in the parts-per-million range. SSDs relax this condition: with pf of about 50 μs, the same 5% target gives $p \leq 5/49{,}900 \approx 10^{-4}$.
 
-   > **Answer:** A replacement algorithm is a **stack algorithm** if, for every prefix of any reference string, the resident set with $n$ frames is a subset of the resident set with $n+1$ frames. **LRU** trivially satisfies this — with $n$ frames the resident set is "the $n$ most-recently-referenced pages," which is a subset of "the $n+1$ most-recently-referenced pages." Adding a frame can only add to the resident set, never change which other pages are kept; therefore page faults can only stay the same or decrease. **FIFO** is *not* a stack algorithm: the resident set with $n$ frames depends on insertion order, and with $n+1$ frames the order shifts so that a page evicted in the $n$-frame run may *not* be in the $n+1$-frame resident set. Different eviction patterns → Belady's anomaly is possible.
+   </details>
 
-7. **Reference bit + clock:** 5 pages in a circular queue with reference bits (1,1,0,1,0). The hand points at page 1. We need to evict. Walk the clock pointer; which page is evicted?
+4. **Copy-on-write trace:** A parent has pages P1 (code, read-only) and P2 (data, writable). The parent calls `fork()`, and the child then writes to P2. Describe the frame and PTE state at each step.
 
-   > **Answer:** Start at page 1, bit=1 → clear to 0, advance. Page 2, bit=1 → clear to 0, advance. Page 3, bit=0 → **VICTIM**: evict page 3. (Pages 1 and 2 survive having received "second chances," and their bits are now 0 — they will be the next victims if no further references occur. Pages 4 and 5 are untouched this pass.) Final state of bits before insertion: (0, 0, ?, 1, 0); page 3 is replaced with the new page (typically with bit=0).
+   <details>
+   <summary>Answer</summary>
+
+   **Before fork:** the parent's PTEs point to frames F1 (P1, RO) and F2 (P2, RW). **fork():** the kernel copies the parent's PTEs into the child's page table. Both processes now have PTEs pointing at F1 (still RO; code never needs COW) and F2, which the kernel **marks RO in both PTEs** even though P2 is logically writable. **Child writes to P2:** the MMU sees the RO PTE and raises a **protection fault**. The kernel allocates a new frame F2', copies F2 into F2', and updates the child's PTE for P2 to point at F2' and be RW. The parent's PTE for P2 still points at F2, which is no longer shared, so it can be made RW again (depending on the implementation, the fault handler restores write permission without copying when the parent next tries to write). **Result:** F1 is still shared (one frame for code), and F2 and F2' now hold independent copies of the writable data, but only **because the child wrote**. Had the child called `exec()` instead, F2 would never have been duplicated.
+
+   </details>
+
+5. **FIFO vs LRU vs OPT:** Run all three on the reference string `1 2 3 4 1 2 5 1 2 3 4 5` with 4 frames. Tabulate the fault counts.
+
+   <details>
+   <summary>Answer</summary>
+
+   With 4 frames, **FIFO has 10 faults** (per the trace in Section 3.6). **LRU has 8 faults**: after loading 1, 2, 3, and 4, the misses on 5, 3, 4, and 5 evict 3, 4, 5, and 1 in turn. **OPT has 6 faults**. Its first replacement evicts 4, whose next use is farthest away, and its second replacement evicts a page that is never used again. Thus FIFO (10) > LRU (8) > OPT (6). FIFO also shows Belady's anomaly here: it has 9 faults with 3 frames and 10 with 4, while the fault counts of LRU (10 with 3 frames, 8 with 4) and OPT (7 with 3 frames, 6 with 4) decrease as frames are added.
+
+   </details>
+
+6. **Belady's anomaly:** Why does FIFO suffer from it while LRU does not? Use the stack-algorithm property to justify.
+
+   <details>
+   <summary>Answer</summary>
+
+   A replacement algorithm is a **stack algorithm** if, for every prefix of any reference string, the resident set with $n$ frames is a subset of the resident set with $n+1$ frames. **LRU** trivially satisfies this: with $n$ frames the resident set is the $n$ most recently referenced pages, which is a subset of the $n+1$ most recently referenced pages. Adding a frame can only add to the resident set and never changes which other pages are kept, so the number of page faults can only stay the same or decrease. **FIFO** is **not** a stack algorithm: the resident set with $n$ frames depends on insertion order, and with $n+1$ frames the order shifts so that a page resident in the $n$-frame run may **not** be in the $n+1$-frame resident set. Different eviction patterns make Belady's anomaly possible.
+
+   </details>
+
+7. **Reference bit and clock:** Five pages sit in a circular queue with reference bits (1, 1, 0, 1, 0). The hand points at page 1, and one page must be evicted. Walk the clock pointer and state which page is evicted.
+
+   <details>
+   <summary>Answer</summary>
+
+   Starting at page 1, its bit is 1, so it is cleared to 0 and the hand advances. Page 2 also has bit 1, so it is cleared to 0 and the hand advances. Page 3 has bit 0, so it is the **victim** and is evicted. Pages 1 and 2 survive after receiving second chances, and their bits are now 0, so they become the next victims if they are not referenced again in the meantime. Pages 4 and 5 are untouched in this pass. The bits just before insertion are (0, 0, ?, 1, 0), and the new page takes page 3's slot. Depending on the implementation, the new page's reference bit starts at 0 or 1, and the hardware sets it to 1 when the restarted instruction accesses the page.
+
+   </details>
 
 8. **Enhanced second-chance:** A frame is (R=0, M=1). What does this say about the page, and what is the eviction cost compared to (R=0, M=0)?
 
-   > **Answer:** R=0 means the page has not been referenced in the current cycle ("not recently used"); M=1 means it has been written to since being loaded ("dirty"). So this page is **stale but modified**. Compared to (R=0, M=0) (also stale, but **clean**) evicting (0, 1) is more expensive because the dirty contents must be **written back to swap/disk** before the frame can be reused. The clean page can simply be dropped (the disk already has the same bytes). The enhanced-second-chance algorithm prefers to evict (0, 0) first precisely to avoid the write-back, eviting (0, 1) only when no clean stale page is available.
+   <details>
+   <summary>Answer</summary>
 
-9. **Working-set:** $\Delta = 8$, reference string `1 2 1 3 4 5 1 2 3 4 5 6`. What is the working set after the last reference?
+   R=0 means the page has not been referenced in the current cycle (not recently used); M=1 means it has been written to since it was loaded (dirty). So this page is **stale but modified**. Compared to (R=0, M=0), which is also stale but **clean**, evicting (0, 1) is more expensive, because the dirty contents must be **written back to swap or disk** before the frame can be reused. The clean page can simply be dropped, because the disk already has the same bytes. The enhanced second-chance algorithm evicts (0, 0) first precisely to avoid the write-back, evicting (0, 1) only when no clean stale page is available.
 
-   > **Answer:** The last 8 references are `5 1 2 3 4 5 6` ... wait, let me count: positions 5–12 are `4, 5, 1, 2, 3, 4, 5, 6`. So $WS = \{1, 2, 3, 4, 5, 6\}$ — six distinct pages in the last 8 references. The process needs at least 6 frames to avoid thrashing in its current locality.
+   </details>
 
-10. **Thrashing diagnosis:** A server's CPU utilization mysteriously drops from 80% to 15% after the OS admits one more process. Page-fault rate has spiked. What is happening, and what is the fix under (a) global replacement, (b) local replacement, (c) PFF?
+9. **Working set:** With $\Delta = 8$ and the reference string `1 2 1 3 4 5 1 2 3 4 5 6`, what is the working set right after the last reference?
 
-    > **Answer:** Classic thrashing onset: total working-set demand $D = \sum WSS_i$ now exceeds physical frames $m$, so every process is missing pages, page-fault I/O dominates, and CPU idles waiting on disk. **(a) Global replacement:** the OS should *suspend* one process (typically the most-recently-admitted, or the one with the largest fault rate) until $D \leq m$; suspending frees the suspended process's frames for the others. **(b) Local replacement:** local already prevents one bad process from poisoning others — but the admission control failed. Fix: don't admit the new process if $\sum WSS_i + WSS_\text{new} > m$. **(c) PFF:** the page-fault rate of one or more processes will exceed the upper bound; the algorithm will try to give them more frames, fail (no free frames), and then suspend a process. Same outcome — the *signal* is just measured directly rather than inferred from working-set sizes.
+   <details>
+   <summary>Answer</summary>
 
-11. **Buddy vs slab:** Why does the kernel need *both* allocators? What is each good and bad at?
+   The last 8 references are positions 5-12, `4, 5, 1, 2, 3, 4, 5, 6`. So $WS = \{1, 2, 3, 4, 5, 6\}$: six distinct pages in the last 8 references. The process needs at least 6 frames to avoid thrashing in its current locality.
 
-    > **Answer:** **Buddy** handles **coarse-grained, contiguous physical memory** — pages and multi-page blocks. It coalesces freed buddies in $O(\log n)$, so fragmentation of large blocks recovers cleanly. But it suffers **internal fragmentation** for sub-page objects (a 17-byte allocation costs a 32-byte block, or worse, the page-sized minimum), and that is unacceptable for the *millions* of tiny kernel structures (PCBs, file objects, inodes). **Slab** complements buddy by sitting *on top of* it: a slab is one or more contiguous pages (obtained from buddy) divided into fixed-size object slots. Each slab cache is dedicated to one type, so the slot size exactly matches the object size — **zero internal fragmentation** for those objects, and allocation/free is O(1) free-list pop/push. Slab is bad at variable-sized large allocations (it would need a separate cache per size), which buddy handles naturally. So the kernel uses **buddy** for raw page-frame allocation and large contiguous blocks (e.g., DMA buffers), and **slab** for high-frequency typed objects.
+   </details>
 
-12. **Program structure:** You have a 4 KB-page system and a `double M[1024][1024]` (each row = 8 KB = 2 pages). Compare the page-fault behavior of `for i, for j: M[i][j] = 0` versus `for j, for i: M[i][j] = 0`.
+10. **Thrashing diagnosis:** After the OS admits one more process, a server's CPU utilization drops from 80% to 15% and the page-fault rate spikes. What is happening, and what is the fix under (a) global replacement, (b) local replacement, and (c) PFF?
 
-    > **Answer:** **Row-major access (`for i, for j`)** writes adjacent elements and visits both pages of each row in sequence. The 1024 rows occupy 2048 pages, so this order incurs **2048 page faults**, one per distinct page, regardless of frame count. **Column-major access (`for j, for i`)** visits a different row, and therefore a different page, at each inner-loop step. Each outer-loop iteration touches all 2048 pages. With at least 2048 frames, the first pass loads the matrix and total faults remain about 2048. With fewer frames, pages are evicted before the next pass, potentially causing up to **1024 × 1024 ≈ 10⁶ faults**, about **500×** more. This comparison assumes the matrix does not fit in the available frames, as does the §8.2 example (16,384 versus 128 faults). Row-major order remains optimal for this layout.
+    <details>
+    <summary>Answer</summary>
+
+    This is the classic onset of thrashing. The total working-set demand $D = \sum WSS_i$ now exceeds the number of physical frames $m$, so every process is missing pages, page-fault I/O dominates, and the CPU idles waiting on disk. **(a) Global replacement:** the OS should **suspend** one process (typically the most recently admitted one, or the one with the highest fault rate) until $D \leq m$; suspending it frees its frames for the others. **(b) Local replacement:** local replacement already keeps one bad process from spreading its behavior to others, but here the admission control failed. The fix is not to admit the new process if $\sum WSS_i + WSS_\text{new} > m$. **(c) PFF:** the page-fault rate of one or more processes exceeds the upper bound. The algorithm tries to give them more frames, fails because no frames are free, and then suspends a process. The outcome is the same; the signal is simply measured directly rather than inferred from working-set sizes.
+
+    </details>
+
+11. **Buddy vs slab:** Why does the kernel need **both** allocators? What is each good and bad at?
+
+    <details>
+    <summary>Answer</summary>
+
+    **Buddy** handles **coarse-grained, contiguous physical memory** such as pages and multi-page blocks. It coalesces freed buddies in $O(\log n)$, so fragmentation of large blocks recovers cleanly. But it suffers heavy **internal fragmentation** for sub-page objects (a 17-byte allocation costs a 32-byte block, or worse, the page-sized minimum), which is unacceptable for the millions of tiny kernel structures (PCBs, file objects, inodes). **Slab** complements buddy by sitting **on top of** it: a slab is one or more contiguous pages obtained from buddy and divided into fixed-size object slots. Each slab cache is dedicated to one type, so the slot size exactly matches the object size, giving **no internal fragmentation** for those objects, and allocation and freeing are O(1) free-list pops and pushes. Slab is bad at large allocations of varying sizes (it would need a separate cache per size), which buddy handles naturally. So the kernel uses **buddy** for page-frame allocation and large contiguous blocks (e.g., DMA buffers), and **slab** for frequently used typed objects.
+
+    </details>
+
+12. **Program structure:** On a system with 4 KB pages, consider `double M[1024][1024]` (each row is 8 KB, that is, 2 pages). Compare the page-fault behavior of `for i, for j: M[i][j] = 0` and `for j, for i: M[i][j] = 0`.
+
+    <details>
+    <summary>Answer</summary>
+
+    **Row-major access (`for i, for j`)** writes adjacent elements in turn, so it visits the two pages of each row in sequence. The 1024 rows occupy 2048 pages, so regardless of the frame count this order incurs **2048 page faults**, one per distinct page, and it cannot do better. **Column-major access (`for j, for i`)** visits a different row, and therefore a different page, at each inner-loop step. One outer-loop iteration touches one page per row, the page that holds column j, for a total of 1024 pages. Assuming LRU, with at least 1024 frames the first page of each row stays resident while j = 0-511, and the second pages take over from j = 512, so the total is again 2048 faults. With fewer than 1024 frames, pages are evicted before the next outer iteration, potentially causing up to **1024 × 1024 ≈ $10^6$ faults**, about **500×** more. The example of Section 8.2 (16,384 versus 128 faults) rests on the same assumption that the array does not fit in the available frames. For this layout, C's row-major order is always optimal.
+
+    </details>

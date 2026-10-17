@@ -1,10 +1,12 @@
 # Week 2 Lecture — Process (1)
 
-> **Last Updated:** 2026-06-19
->
-> Operating System Concepts, Silberschatz - Ch 3 (3.1–3.3)
+[Repository Guide](../../README.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **Learning Objectives**:
+> **Last Updated:** 2026-10-18
+>
+> Operating System Concepts, Silberschatz, Ch 3 (3.1-3.3)
+
+> **Learning Objectives:**
 > 1. Describe the structure of a process (memory layout, PCB, states)
 > 2. Explain how fork(), exec(), and wait() work together
 > 3. Trace process state transitions through a lifecycle diagram
@@ -22,7 +24,7 @@
   - [1.5 Program vs Process](#15-program-vs-process)
   - [1.6 Process States](#16-process-states)
   - [1.7 Process Control Block (PCB)](#17-process-control-block-pcb)
-  - [1.8 PCB in Linux — task_struct](#18-pcb-in-linux--task_struct)
+  - [1.8 PCB in Linux: task_struct](#18-pcb-in-linux-task_struct)
   - [1.9 Thread Overview](#19-thread-overview)
 - [2. Process Scheduling](#2-process-scheduling)
   - [2.1 Why is it Needed?](#21-why-is-it-needed)
@@ -36,12 +38,12 @@
   - [3.2 fork() in UNIX/Linux](#32-fork-in-unixlinux)
   - [3.3 exec() after fork()](#33-exec-after-fork)
   - [3.4 fork() Code Example](#34-fork-code-example)
-  - [3.5 Process Creation — Windows Comparison](#35-process-creation--windows-comparison)
+  - [3.5 Process Creation: Windows Comparison](#35-process-creation-windows-comparison)
   - [3.6 Process Termination](#36-process-termination)
   - [3.7 Zombie and Orphan Processes](#37-zombie-and-orphan-processes)
   - [3.8 Android Process Hierarchy](#38-android-process-hierarchy)
   - [3.9 Chrome Multi-Process Architecture](#39-chrome-multi-process-architecture)
-- [4. Practice — fork(), exec(), wait()](#4-practice--fork-exec-wait)
+- [4. Practice: fork(), exec(), wait()](#4-practice-fork-exec-wait)
   - [4.1 Basic Usage of fork()](#41-basic-usage-of-fork)
   - [4.2 Creating Multiple Children with fork()](#42-creating-multiple-children-with-fork)
   - [4.3 Running a New Program with exec()](#43-running-a-new-program-with-exec)
@@ -59,46 +61,46 @@
 
 ### 1.1 What is a Process?
 
-**Process** = a program in execution
+A **process** is a program in execution.
 
-- Early computers: only one program ran at a time
-- Modern computers: multiple programs are loaded into memory and run **concurrently**
+- Early computers ran only one program at a time.
+- In modern computers, multiple programs are loaded into memory and run **concurrently**.
 - This evolution demanded stricter control and compartmentalization, giving rise to the **process** concept.
 
-> "A process is the unit of work in a modern computing system."
+> **Key Point:** The textbook defines it as follows: "A process is the unit of work in a modern computing system."
 
 - From the OS's perspective, there exist both processes executing user code and processes executing OS code.
 - The CPU(s) are **multiplexed** among these processes.
 
 > **Definition:** Multiplexing means the CPU is shared among multiple processes by rapidly switching between them, giving the illusion of simultaneous execution.
 
-> **Exam Tip:** The definition "a program in execution" is the key. An executable file stored on disk is a program (a passive entity), and when it is loaded into memory and given CPU time to run, it becomes a process (an active entity). This distinction is frequently tested on exams.
+> **Note:** **Exam tip.** The definition "a program in execution" is the key. An executable file stored on disk is a program (a passive entity), and when it is loaded into memory and given CPU time to run, it becomes a process (an active entity). This distinction is frequently tested on exams.
 
 ### 1.2 Memory Layout
 
 A process's memory layout is divided into several **sections**:
 
-![Process layout in memory](../images/figures/p002_fig.png)
+![Figure 1. Layout of a process in memory](../../images/Week02_p02.png)
 
-*Silberschatz Figure 3.1 — Layout of a process in memory*
+*Figure 1. Layout of a process in memory*
 
-- **Text** — executable code
-- **Data** — global variables
-- **Heap** — dynamically allocated at runtime (`malloc`, `new`)
-- **Stack** — temporary data during function calls (parameters, return addresses, local variables)
+- **Text**: holds the executable code.
+- **Data**: holds global variables.
+- **Heap**: memory dynamically allocated at runtime (`malloc`, `new`).
+- **Stack**: holds temporary data during function calls (parameters, return addresses, local variables).
 
-> **Note:** The name "text" is used for the code section because it originates from early assembly language. The `.text` directive in assembly indicated "the following content is machine instructions (= the body, or text, of the program)." It is a historical convention derived from the metaphor of a program's "text."
+> **Note:** The name "text" is used for the code section because it originates from early assembly language. The `.text` directive in assembly indicated that the following content was machine instructions, that is, the body (text) of the program. It is a historical convention derived from the metaphor of a program's body (text).
 
 Text and data are **fixed** in size, while stack and heap **dynamically** expand and contract.
 
-> **[Programming Languages]** Recall the memory regions from C programming. Global variables are stored in the data section, memory allocated with `malloc()` goes in the heap section, and function local variables reside on the stack. The stack grows from high to low addresses, and the heap grows from low to high addresses; the OS manages them so they do not collide.
+> **[Computer Programming]** Recall the memory regions from C programming. Global variables are stored in the data section, memory allocated with `malloc()` goes in the heap section, and function local variables reside on the stack. The stack grows from high to low addresses, and the heap grows from low to high addresses; the OS manages them so they do not collide.
 
 ### 1.3 Dynamic Growth of Stack and Heap
 
 **Stack growth:**
-- Each time a function is called, an **activation record** (function parameters, local variables, return address) is pushed onto the stack. An activation record (also called a **stack frame**) is the block of memory pushed onto the stack each time a function is called; it holds the function's local variables, parameters, and the address to return to when the function finishes.
+- Each time a function is called, an **activation record** (function parameters, local variables, return address) is pushed onto the stack. An activation record, also called a **stack frame**, is the block of memory pushed onto the stack each time a function is called; it holds the function's local variables, parameters, and the address to return to when the function finishes.
 - When a function returns, the activation record is popped.
-- The stack grows **from high addresses toward low addresses** (downward).
+- On most architectures, the stack grows **from high addresses toward low addresses** (downward).
 
 **Heap growth:**
 - The heap grows when memory is dynamically allocated via `malloc()`, `new`, etc.
@@ -107,7 +109,7 @@ Text and data are **fixed** in size, while stack and heap **dynamically** expand
 
 **Role of the OS:** Since the stack and heap grow toward each other, the OS must ensure they do **not overlap**.
 
-> **[Data Structures]** The LIFO (Last In, First Out) principle of the stack data structure is applied here. If function A calls function B, and B calls function C, the return order is C → B → A — the last function called returns first. This is managed through stack frames (activation records).
+> **[Data Structures]** The LIFO (Last In, First Out) principle of the stack data structure is applied here. If function A calls function B, and B calls function C, the return order is C → B → A, so the last function called returns first. This is managed through stack frames (activation records).
 
 ### 1.4 Memory Layout of a C Program
 
@@ -137,9 +139,9 @@ The `size` command can be used to check the size of each section:
 
 The `dec` and `hex` columns show the total size of all sections combined, in decimal and hexadecimal respectively. Run `size ./your_program` after compiling to see these values for your own programs.
 
-- **data**: initialized global variables, **bss** (block started by symbol): uninitialized global variables
+- **data** holds initialized global variables, and **bss** (block started by symbol) holds uninitialized global variables.
 
-> **Note:** The reason BSS is separated from data is **to reduce the executable file size**. Variables in the data section (`int y = 15`) must store their initial value of 15 in the executable, but variables in the BSS section (`int x`) will be initialized to 0 anyway, so the executable only needs to record "the BSS size is 8 bytes." In other words, BSS does not store actual data on disk, making the executable smaller. When the program is loaded, the OS fills the BSS region with zeros.
+> **Note:** The reason BSS is separated from data is **to reduce the executable file size**. Variables in the data section (`int y = 15`) must store their initial value of 15 in the executable, but variables in the BSS section (`int x`) will be initialized to 0 anyway, so the executable only needs to record the BSS size (8 bytes in this example). In other words, BSS does not store actual data on disk, making the executable smaller. When the program is loaded, the OS fills the BSS region with zeros.
 
 ### 1.5 Program vs Process
 
@@ -149,12 +151,14 @@ The `dec` and `hex` columns show the total size of all sections combined, in dec
 | Form | Executable file stored on disk | Execution unit with a program counter (PC) and associated resources |
 | Conversion | An executable becomes a process when loaded into memory | |
 
+*Table 1. Comparison of a program and a process*
+
 **Key differences:**
 - The same program can be run as multiple processes.
-  - Example: multiple users simultaneously running the same web browser
+  - For example, multiple users can run the same web browser simultaneously.
   - The text section is the same, but **data, heap, and stack are each separate**.
 - A process itself can serve as the execution environment for other code.
-  - Example: the JVM runs as a single process and interprets/executes Java programs.
+  - For example, the JVM runs as a single process and interprets and executes Java programs.
 
 ### 1.6 Process States
 
@@ -168,34 +172,38 @@ A process changes **state** during its execution:
 | **Ready** | The process is waiting to be assigned to a processor |
 | **Terminated** | The process has finished execution |
 
+*Table 2. The five process states*
+
 **Important:** At any given time, only **one process** can be in the running state on a single processor core. However, multiple processes can be in the ready or waiting states simultaneously.
 
-![Process state diagram](../images/figures/p005_fig.png)
+![Figure 2. Diagram of process state](../../images/Week02_p05a.png)
 
-*Silberschatz Figure 3.2 — Diagram of process state*
+*Figure 2. Diagram of process state*
 
 **State transition details:**
 
 | Transition | Cause |
 |:-----------|:------|
-| **New → Ready** | admitted — OS approves process creation; memory allocation complete |
-| **Ready → Running** | scheduler dispatch — CPU scheduler selects and assigns the process to a CPU core |
-| **Running → Ready** | interrupt — time slice expired, CPU is preempted |
-| **Running → Waiting** | I/O or event wait — an I/O request is issued or a specific event is awaited |
-| **Waiting → Ready** | I/O or event completion — the awaited I/O or event has completed |
-| **Running → Terminated** | exit — the process finishes execution and terminates |
+| **New → Ready** | admitted: OS approves process creation; memory allocation complete |
+| **Ready → Running** | scheduler dispatch: CPU scheduler selects and assigns the process to a CPU core |
+| **Running → Ready** | interrupt: time slice expired (or a similar event), CPU is preempted |
+| **Running → Waiting** | I/O or event wait: an I/O request is issued or a specific event is awaited |
+| **Waiting → Ready** | I/O or event completion: the awaited I/O or event has completed |
+| **Running → Terminated** | exit: the process finishes execution and terminates |
+
+*Table 3. Process state transitions and their causes*
 
 > **Definition:** A **time slice** (or quantum) is the fixed amount of CPU time the OS allocates to each process before preempting it.
 
-> **Exam Tip:** Clearly distinguish between Running → Ready (an **involuntary** transition due to time slice expiration) and Running → Waiting (a **voluntary** transition due to an I/O request).
+> **Note:** **Exam tip.** Clearly distinguish between Running → Ready (an **involuntary** transition due to time slice expiration) and Running → Waiting (a **voluntary** transition due to an I/O request).
 
 ### 1.7 Process Control Block (PCB)
 
 Each process is represented in the OS by a **PCB (Process Control Block)**. It is also known as a **task control block**.
 
-![Process Control Block](../images/figures/p005_fig2.png)
+![Figure 3. Process control block (PCB)](../../images/Week02_p05b.png)
 
-*Silberschatz Figure 3.3 — Process Control Block (PCB)*
+*Figure 3. Process control block (PCB)*
 
 The PCB serves as a repository for all data needed to **start or restart** a process.
 
@@ -203,21 +211,23 @@ The PCB serves as a repository for all data needed to **start or restart** a pro
 |:------|:------------|
 | **Process state** | Current state (new, ready, running, waiting, terminated) |
 | **Program counter** | Address of the next instruction to execute |
-| **CPU registers** | Accumulator, index registers, stack pointer, general-purpose registers, condition codes (flags set by the CPU after arithmetic operations, e.g., zero flag, carry flag — indicating properties of the last result), etc. |
+| **CPU registers** | Accumulator, index registers, stack pointer, general-purpose registers, condition codes (flags set by the CPU after arithmetic operations to indicate properties of the last result, e.g., zero flag, carry flag), etc. |
 | **CPU scheduling info** | Process priority, scheduling queue pointers, other parameters |
 | **Memory management info** | Base/limit register values, page table or segment table |
 | **Accounting info** | CPU time used, elapsed real time, time limits, process number |
 | **I/O status info** | List of allocated I/O devices, list of open files |
 
-> **Why these fields?** Among these fields, the **program counter** and **process state** are the most critical — they determine where execution resumes and whether the process is ready to run.
+*Table 4. Fields of the PCB and their contents*
+
+> **Note:** **Why these fields?** Among these fields, the **program counter** and **process state** are the most critical, because they determine where execution resumes and whether the process is ready to run.
 
 > **[Computer Architecture]** The **base register** stores the **starting address** of memory a process can access, and the **limit register** stores the **size (range)** of that process's memory. When the CPU accesses memory, the hardware automatically checks whether the address falls within the [base, base+limit) range, preventing access to another process's memory. This was the memory protection method before virtual memory (page tables) emerged, and more advanced methods are covered in Week 11.
 
 > **Key Point:** The PCB is the core data structure through which the OS manages processes. When a context switch occurs, the current process's PC and register values are saved to its PCB, and values are restored from the new process's PCB. Without the PCB, it would be impossible to pause a process and later resume its execution.
 
-### 1.8 PCB in Linux — task_struct
+### 1.8 PCB in Linux: task_struct
 
-In the Linux kernel, the PCB is represented by the **`task_struct`** C structure. Location: `<include/linux/sched.h>`
+In the Linux kernel, the PCB is represented by the **`task_struct`** C structure, which is defined in `<include/linux/sched.h>`.
 
 ```c
 long state;                    /* process state */
@@ -235,31 +245,31 @@ struct mm_struct *mm;          /* address space (memory management) */
 current->state = new_state;  // Change the current process's state
 ```
 
-> **Note:** The `->` operator accesses a field through a pointer — `current->state` means "look at the `state` field of the struct that `current` points to."
+> **Note:** The `->` operator accesses a field through a pointer. `current->state` means the `state` field of the struct that `current` points to.
 
 > **[Data Structures]** The reason the Linux kernel manages processes as a doubly linked list is that insertions and deletions of processes occur frequently, making O(1) insertion/deletion performance important. Managing them with an array would incur O(n) movement cost on insertion/deletion.
 
 ### 1.9 Thread Overview
 
 The process model discussed so far assumes a **single thread of execution**.
-- A process can only perform one task at a time
-- Example: in a word processor, typing and spell-checking cannot happen simultaneously.
+- A process can only perform one task at a time.
+- For example, in a word processor, typing and spell-checking cannot happen simultaneously.
 
-**Thread** = a unit of execution within a process
+A **thread** is a unit of execution within a process.
 
 Modern OSes allow **multi-threaded execution**:
-- A single process can perform multiple tasks simultaneously
-- **Parallel execution** is possible on multi-core systems
+- A single process can perform multiple tasks simultaneously.
+- **Parallel execution** is possible on multi-core systems.
 
-> **Example: Multithreaded Word Processor.** Thread 1 manages user input while Thread 2 runs the spell checker, allowing both tasks to proceed concurrently. This overcomes the single-thread limitation described above.
+**Example: Multithreaded Word Processor.** Thread 1 manages user input while Thread 2 runs the spell checker, allowing both tasks to proceed concurrently. This overcomes the single-thread limitation described above.
 
 **What threads of the same process share:** text section, data section, heap, open files, signals, etc.
 
 **What is independent per thread:** program counter (PC), register set, stack
 
-> In systems that support threads, the PCB is extended to include information for each thread. System-wide changes are needed to support threads.
+> **Note:** In systems that support threads, the PCB is extended to include information for each thread. System-wide changes are needed to support threads.
 
-> Details on threads are covered in **Ch 4**.
+> **Note:** Details on threads are covered in **Week 4**.
 
 ---
 
@@ -273,41 +283,43 @@ Modern OSes allow **multi-threaded execution**:
 
 **Goal of time sharing:** Switch the CPU core frequently among processes so users can **interact** with each program.
 
-→ **Process Scheduler**: selects a process from the available processes for execution on a CPU core.
+The **Process Scheduler** selects a process from the available processes for execution on a CPU core.
 
-- Single core: only one process can run at a time
-- Multi-core: multiple processes can run simultaneously
+- On a single core, only one process can run at a time.
+- On multiple cores, multiple processes can run simultaneously.
 - When the number of processes exceeds the number of cores, the rest must wait.
 
 ### 2.2 Degree of Multiprogramming and Process Types
 
-**Degree of Multiprogramming:** the number of processes currently in memory
+The **Degree of Multiprogramming** is the number of processes currently in memory.
 
 | Type | Characteristics |
 |:-----|:----------------|
 | **I/O-bound process** | Spends more time on I/O than computation; frequent I/O requests |
 | **CPU-bound process** | Spends more time on computation than I/O; infrequent I/O requests |
 
+*Table 5. Characteristics of I/O-bound and CPU-bound processes*
+
 A proper mix of I/O-bound and CPU-bound processes is important for efficient scheduling.
 
-> **Why a proper mix matters:** If only I/O-bound processes exist, the ready queue empties and the CPU idles. If only CPU-bound processes exist, the wait queue empties and I/O devices idle.
+> **Note:** **Why a proper mix matters.** If only I/O-bound processes exist, the ready queue empties and the CPU idles. If only CPU-bound processes exist, the wait queue empties and I/O devices idle.
 
 ### 2.3 Scheduling Queues
 
 When a process enters the system, it is placed in a **scheduling queue**.
 
-- **Ready Queue:** a queue of processes waiting for the CPU; implemented as a **linked list**
-- **Wait Queue:** a queue of processes waiting for a specific event (e.g., I/O completion)
+- The **Ready Queue** is a queue of processes waiting for the CPU and is typically implemented as a **linked list**.
+- A **Wait Queue** is a queue of processes waiting for a specific event (e.g., I/O completion).
 
-![Ready queue and wait queues](../images/figures/p008_fig.png)
+![Figure 4. Ready queue and wait queues](../../images/Week02_p08.png)
 
-*Silberschatz Figure 3.4 — Ready queue and wait queues*
+*Figure 4. Ready queue and wait queues*
 
-![Queueing diagram](../images/figures/p009_fig.png)
+![Figure 5. Queueing-diagram representation of process scheduling](../../images/Week02_p09.png)
 
-*Silberschatz Figure 3.5 — Queueing-diagram representation of process scheduling*
+*Figure 5. Queueing-diagram representation of process scheduling*
 
-A process repeats this cycle until it terminates. Upon termination, it is removed from all queues, and its PCB and resources are deallocated.
+A process repeats the cycle in Figure 5 until it terminates. Upon termination, it is removed from all queues, and its PCB and resources are deallocated.
 
 ### 2.4 CPU Scheduling
 
@@ -315,12 +327,12 @@ A process repeats this cycle until it terminates. Upon termination, it is remove
 
 **Scheduling frequency:** The CPU scheduler typically runs at least every **100 ms**.
 
-> I/O-bound processes execute for only a few milliseconds before waiting for I/O. CPU-bound processes execute longer, but the scheduler forcibly reclaims the CPU.
+> **Note:** I/O-bound processes execute for only a few milliseconds before waiting for I/O. CPU-bound processes execute longer, but the scheduler forcibly reclaims the CPU.
 
 **Swapping:**
 - Moving a process from memory to disk (**swap out**) and later reloading it (**swap in**).
 - Reduces the degree of multiprogramming to relieve memory pressure.
-- Only needed when memory is **overcommitted** (i.e., the total memory demanded by all running processes exceeds the available physical RAM). Covered in detail in Ch 9.
+- Only needed when memory is **overcommitted** (i.e., the total memory demanded by all running processes exceeds the available physical RAM). The details are covered in Week 11.
 
 > **Definition:** Swapping moves an entire process out of main memory to disk (swap out) and back (swap in) to free memory for other processes.
 
@@ -330,19 +342,19 @@ A process repeats this cycle until it terminates. Upon termination, it is remove
 
 **Context Switch:** The task of switching a CPU core to a different process. Consists of **saving the state** of the current process + **restoring the state** of the new process.
 
-![Context switch diagram](../images/figures/p010_fig.png)
+![Figure 6. Context switch from process to process](../../images/Week02_p10.png)
 
-*Silberschatz Figure 3.6 — Diagram showing context switch from process to process*
+*Figure 6. Context switch from process to process*
 
-> **Key Point:** The context switch is a core OS mechanism. Users perceive multiple programs running simultaneously because the OS performs context switches between processes extremely quickly. However, no useful work is performed during a context switch — it is pure overhead.
+> **Key Point:** The context switch is a core OS mechanism. Users perceive multiple programs running simultaneously because the OS performs context switches between processes extremely quickly. However, no useful work is performed during a context switch, so it is pure overhead.
 
-> **Analogy:** Imagine you are taking an exam and need to switch to a different test paper — you save your current answers (register state), put away the current sheet (save PCB), and pick up the new one (restore PCB). The time you spend shuffling papers is wasted (overhead), but it lets you work on multiple tests "simultaneously."
+> **Note:** **Analogy.** Consider taking an exam and needing to switch to a different test paper. You save your current answers (register state), put away the current sheet (save PCB), and pick up the new one (restore PCB). The time you spend shuffling papers is wasted (overhead), but it lets you proceed as if you were working on multiple tests simultaneously.
 
-> **Note:** A concrete example: while Process A (word processor) is running and a timer interrupt occurs, the OS (1) saves A's PC, register values, stack pointer, etc. to A's PCB, (2) selects Process B (web browser) from the ready queue, and (3) restores the PC, register values, etc. previously saved in B's PCB to the CPU. This entire process completes within microseconds, making the user perceive A and B as running simultaneously.
+> **Note:** A concrete example is as follows. While Process A (word processor) is running and a timer interrupt occurs, the OS (1) saves A's PC, register values, stack pointer, etc. to A's PCB, (2) selects Process B (web browser) from the ready queue, and (3) restores the PC, register values, etc. previously saved in B's PCB to the CPU. This entire process completes within microseconds, making the user perceive A and B as running simultaneously.
 
 **Context switch overhead:**
-- Typical speed: **a few microseconds**
-- Factors affecting speed: memory speed, number of registers to copy, availability of special instructions
+- A context switch typically takes **a few microseconds**.
+- Factors affecting speed include memory speed, the number of registers to copy, and the availability of special instructions.
 - Some processors provide **multiple sets of registers** to reduce context switch cost.
 
 > **[Computer Architecture]** Registers are the fastest storage inside the CPU. During a context switch, all register values must be saved to memory (PCB) and restored, so the more registers there are, the higher the context switch cost. Some CPUs (e.g., SPARC) use the register window technique to reduce this overhead.
@@ -350,9 +362,9 @@ A process repeats this cycle until it terminates. Upon termination, it is remove
 ### 2.6 Multitasking on Mobile Systems
 
 **iOS:**
-- Early iOS: no multitasking for user apps (only the foreground app ran; others were suspended)
-- From iOS 4: limited multitasking (1 foreground + multiple background)
-- iPad: two foreground apps simultaneously via split screen
+- Early iOS did not support multitasking for user apps (only the foreground app ran; others were suspended).
+- From iOS 4, limited multitasking (1 foreground + multiple background) was supported.
+- iPad can run two foreground apps simultaneously via split screen.
 - Later iOS versions introduced richer multitasking support as hardware capabilities improved.
 
 **Android:**
@@ -378,32 +390,34 @@ A process can create several new processes during its execution.
 | **Process tree** | The tree structure formed by parent-child relationships |
 | **Process ID (pid)** | A unique identifier for each process (typically an integer) |
 
-![Linux process tree](../images/figures/p012_fig.png)
+*Table 6. Terms related to process creation*
 
-*Silberschatz Figure 3.7 — A tree of processes on a typical Linux system*
+![Figure 7. A tree of processes on a typical Linux system](../../images/Week02_p12.png)
 
-- **systemd** (pid = 1): the **root parent** of all user processes — the first user process created during system boot. It creates processes for additional services such as web servers, SSH servers, etc.
+*Figure 7. A tree of processes on a typical Linux system*
+
+- **systemd** (pid = 1) is the **root parent** of all user processes and the first user process created during system boot. It creates processes for additional services such as web servers, SSH servers, etc.
 - In traditional UNIX, **init** (pid = 1) performed this role.
 
-> **Definition:** `systemd` (or `init` in older systems) is the first user-space program the Linux kernel launches at boot — it then starts all other services, so every user process is ultimately a descendant of PID 1.
+> **Definition:** `systemd` (or `init` in older systems) is the first user-space program the Linux kernel launches at boot; it then starts all other services, so every user process is ultimately a descendant of PID 1.
 
 > **[Data Structures]** The process tree is literally a tree structure. The root node is the first process (systemd, pid=1 on Linux), and each node can have child nodes (child processes). The clear parent-child relationship enables systematic process management (termination, resource reclamation, etc.).
 
 **Resource and execution options:**
 
 How a child process obtains resources:
-1. Acquires resources directly from the OS
-2. Receives a subset of the parent's resources
+1. The child acquires resources directly from the OS.
+2. The child receives a subset of the parent's resources.
 
 Execution options:
-1. Parent continues executing **concurrently** with the child
-2. Parent **waits** until the child terminates
+1. The parent continues executing **concurrently** with the child.
+2. The parent **waits** until the child terminates.
 
 Address space options:
-1. Child is a **duplicate** of the parent — same program and data
-2. A **new program** is loaded into the child
+1. The child is a **duplicate** of the parent (same program and data).
+2. A **new program** is loaded into the child.
 
-> Resource limits prevent excessive child process creation.
+> **Note:** Resource limits prevent excessive child process creation.
 
 ### 3.2 fork() in UNIX/Linux
 
@@ -414,7 +428,7 @@ In UNIX, new processes are created using the **`fork()`** system call.
 2. **Both** parent and child continue execution from the instruction after fork().
 3. The child inherits the parent's privileges, scheduling attributes, open files, etc.
 
-> **Why copy the entire address space?** This design enables COW (Copy-On-Write) optimization — initially sharing pages and only copying on write, making fork() nearly free when followed immediately by exec().
+> **Note:** **Why copy the entire address space?** So that the child can continue running the same program with the same data right after fork() and can communicate easily with the parent. Actual implementations optimize this copy with COW (Copy-On-Write). Pages are initially shared and copied only on write, which makes fork() very cheap when followed immediately by exec().
 
 **Return values of fork():**
 
@@ -424,11 +438,13 @@ In UNIX, new processes are created using the **`fork()`** system call.
 | **Positive (> 0)** | Parent process (the child's pid is returned) |
 | **-1** | fork failed (error) |
 
-> **Exam Tip:** Distinguishing fork()'s return values is almost guaranteed to appear on exams. The key is that after fork(), both parent and child execute the same code, but the return value differs.
+*Table 7. Return values of fork() and their meanings*
+
+> **Note:** **Exam tip.** Distinguishing fork()'s return values is almost guaranteed to appear on exams. The key is that after fork(), both parent and child execute the same code, but the return value differs.
 
 ### 3.3 exec() after fork()
 
-**exec()** system call: **replaces** the process's memory space with a new program.
+The **exec()** system call **replaces** the process's memory space with a new program.
 
 ```text
 fork() → Child process created (copy of parent)
@@ -439,8 +455,10 @@ fork() → Child process created (copy of parent)
     (original program is destroyed)
 ```
 
-- On exec() success: it does **not return** to the original code (memory is overwritten).
-- On exec() failure: control returns (error handling possible).
+*Figure 8. The child loading a new program with exec() after fork()*
+
+- If exec() succeeds, it does **not return** to the original code (memory is overwritten).
+- If exec() fails, control returns (error handling possible).
 
 ### 3.4 fork() Code Example
 
@@ -448,6 +466,7 @@ fork() → Child process created (copy of parent)
 #include <sys/types.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <sys/wait.h>
 
 int main() {
     pid_t pid;
@@ -498,7 +517,9 @@ Parent Process
     └── return 0
 ```
 
-This is the fundamental operating principle of UNIX shells!
+*Figure 9. Execution flow of fork(), exec(), and wait()*
+
+This is the fundamental operating principle of UNIX shells.
 
 **In-depth analysis of fork() return values:**
 
@@ -519,7 +540,7 @@ Why is it designed this way?
 - Parent: needs the child's pid for management purposes (wait, kill, etc.).
 - Child: can obtain its own pid via `getpid()` and the parent's pid via `getppid()`.
 
-### 3.5 Process Creation — Windows Comparison
+### 3.5 Process Creation: Windows Comparison
 
 | Comparison | UNIX fork() | Windows CreateProcess() |
 |:-----------|:-----------|:------------------------|
@@ -528,7 +549,9 @@ Why is it designed this way?
 | Waiting for child | `wait()` | `WaitForSingleObject()` |
 | Process info | pid (integer) | `PROCESS_INFORMATION` structure |
 
-> **Windows structures:** `STARTUPINFO` specifies the new process's window size, appearance, and standard I/O handles. `PROCESS_INFORMATION` contains handles and identifiers for the created process and thread.
+*Table 8. Comparison of UNIX fork() and Windows CreateProcess()*
+
+> **Note:** **Windows structures.** `STARTUPINFO` specifies the new process's window size, appearance, and standard I/O handles. `PROCESS_INFORMATION` contains handles and identifiers for the created process and thread.
 
 ### 3.6 Process Termination
 
@@ -552,24 +575,24 @@ exit(1);  // child returns status to parent
 pid = wait(&status);  // parent collects child's exit status
 ```
 
-> To forcibly terminate a process: in Linux, use the `kill` command or the `kill()` system call. In Windows, use the `TerminateProcess()` API.
+> **Note:** To forcibly terminate a process in Linux, use the `kill` command or the `kill()` system call. In Windows, use the `TerminateProcess()` API.
 
-**Cascading Termination:** A system where all children must be terminated when the parent terminates. Typically initiated by the OS.
+**Cascading Termination:** A scheme in which all children must be terminated when the parent terminates. Typically initiated by the OS.
 
-> **Note:** Linux does **not** implement cascading termination by default — orphaned children are re-parented to init/systemd instead (see Section 3.7).
+> **Note:** Linux does **not** implement cascading termination by default. Orphaned children are re-parented to init/systemd instead (see Section 3.7).
 
 ### 3.7 Zombie and Orphan Processes
 
 **Zombie Process:**
-- A child process has **exited**, but the parent has not yet **called wait()**
-- The process has finished executing but its **process table entry remains**
-- All processes briefly pass through the zombie state upon termination
-- If the parent never calls `wait()`, zombies accumulate and waste system resources
+- A child process has **exited**, but the parent has not yet **called wait()**.
+- The process has finished executing but its **process table entry remains**.
+- All processes briefly pass through the zombie state upon termination.
+- If the parent never calls `wait()`, zombies accumulate and waste system resources.
 
 **Orphan Process:**
-- A child process left behind because its parent **terminated first** without calling `wait()`
-- In UNIX/Linux, init/systemd becomes the new parent of orphan processes and cleans them up
-- **Orphan cleanup procedure:** 1. Parent terminates -> 2. Orphan is adopted by init/systemd -> 3. init/systemd periodically calls wait() -> 4. Process table entry is released.
+- An orphan is a child process left behind because its parent **terminated first** without calling `wait()`.
+- In UNIX/Linux, init/systemd becomes the new parent of orphan processes and cleans them up.
+- **Orphan cleanup procedure:** 1. Parent terminates → 2. Orphan is adopted by init/systemd → 3. init/systemd periodically calls wait() → 4. Process table entry is released.
 - Linux also allows processes other than systemd to inherit and manage orphan processes.
 
 | Aspect | Zombie Process | Orphan Process |
@@ -579,20 +602,22 @@ pid = wait(&status);  // parent collects child's exit status
 | Resources | Only occupies a process table entry | Running normally |
 | Resolution | Parent calls wait() | init/systemd adopts and manages |
 
-> **Exam Tip:** A **zombie** is when a child dies but the parent does not clean up (wait); an **orphan** is when the parent dies first and the child is left alone. Questions presenting a scenario and asking you to distinguish between zombie and orphan are frequently given.
+*Table 9. Comparison of zombie and orphan processes*
 
-> **Mnemonic:** Zombie = dead but still listed in the process table (like a zombie that won't lie down). Orphan = parent disappeared, so the child is adopted by init/systemd (like an orphanage taking in a child).
+> **Note:** **Exam tip.** A **zombie** is when a child dies but the parent does not clean up (wait); an **orphan** is when the parent dies first and the child is left alone. Questions presenting a scenario and asking you to distinguish between zombie and orphan are frequently given.
+
+> **Note:** **Mnemonic.** A zombie is a process that is dead but still listed in the process table (like a zombie that will not lie down). An orphan is a process whose parent disappeared, so it is adopted by init/systemd (like an orphanage taking in a child).
 
 > **Note:** When viewing the process list with `ps aux`, processes with status `Z` are zombie processes. Zombies themselves do not consume CPU or memory, but they occupy process table entries, reducing the number of processes the system can create.
 
 > **Definition:** A **signal** is a software notification the OS sends to a process to trigger a specific action. `SIGCHLD` is automatically sent to a parent whenever one of its children terminates.
 
 > **Note:** How to remove zombie processes:
-> 1. **Send SIGCHLD signal to the parent**: `kill -SIGCHLD <parent_PID>` — prompts the parent to call `wait()` in its signal handler
-> 2. **Kill the parent process**: killing the parent changes the zombie's parent to init/systemd, which automatically calls `wait()` to reap the zombie
-> 3. **Code-level prevention**: setting `signal(SIGCHLD, SIG_IGN)` causes the OS to automatically reap zombies upon child termination (POSIX standard)
+> 1. **Send SIGCHLD signal to the parent**: `kill -SIGCHLD <parent_PID>` prompts the parent to call `wait()` in its signal handler. This works only if the parent has such a handler.
+> 2. **Kill the parent process**: killing the parent changes the zombie's parent to init/systemd, which automatically calls `wait()` to reap the zombie.
+> 3. **Code-level prevention**: setting `signal(SIGCHLD, SIG_IGN)` causes the OS to automatically reap zombies upon child termination (POSIX standard).
 >
-> Directly `kill`-ing a zombie is impossible — it is already a terminated process. It must always be resolved through the parent.
+> Removing a zombie directly with `kill` is impossible, because it is already a terminated process. It must always be resolved through the parent.
 
 ### 3.8 Android Process Hierarchy
 
@@ -606,7 +631,9 @@ Android determines the termination order based on an **importance hierarchy**:
 | 4 | **Background process** | Performing activity not visible to the user | |
 | 5 | **Empty process** | Not associated with any app component | Terminated first |
 
-> If a process serves multiple roles, the highest rank applies.
+*Table 10. Importance hierarchy and termination priority of Android processes*
+
+> **Note:** If a process serves multiple roles, the highest rank applies.
 
 ### 3.9 Chrome Multi-Process Architecture
 
@@ -620,15 +647,17 @@ Android determines the termination order based on an **importance hierarchy**:
 | **Renderer** | Web page rendering (HTML, JS, images) | 1 per tab |
 | **Plug-in** | Plugin code execution | 1 per type |
 
-**Advantages:** Websites are **isolated** from each other — a crash in one site only affects its renderer. Renderer processes run in a **sandbox** to minimize the impact of security vulnerabilities.
+*Table 11. Process types of the Chrome multi-process architecture*
 
-> **Note:** Chrome's multi-process architecture is a great example of how process isolation and independent address spaces are applied in practice. If you check Chrome's processes in the task manager, you can see as many processes as there are tabs.
+**Advantages:** Websites are **isolated** from each other, so a crash in one site only affects its renderer. Renderer processes run in a **sandbox** to minimize the impact of security vulnerabilities.
+
+> **Note:** Chrome's multi-process architecture is a great example of how process isolation and independent address spaces are applied in practice. If you check Chrome's processes in the task manager, you can see multiple processes that grow with the number of tabs.
 
 ---
 
 <br>
 
-## 4. Practice — fork(), exec(), wait()
+## 4. Practice: fork(), exec(), wait()
 
 ### 4.1 Basic Usage of fork()
 
@@ -691,7 +720,7 @@ int main() {
 }
 ```
 
-**Warning:** If `return 0` is omitted in the child process, the child will also loop and call fork()! This creates a risk of a **fork bomb**!
+> **Caution:** If `return 0` is omitted in the child process, the child also calls fork() in the remaining iterations. In this example, the 3 iterations create $2^3 = 8$ processes including the original, and with a large iteration count or an infinite loop, the number of processes grows exponentially, creating a risk of a **fork bomb**.
 
 > **Note:** A fork bomb is an attack where a process infinitely replicates itself to exhaust system resources. A famous fork bomb command in Linux is `:(){ :|:& };:`, which defines a function that recursively calls itself twice and then executes it.
 
@@ -733,10 +762,12 @@ int main() {
 | `execvp()` | Array (v) | PATH search (p) | Inherited |
 | `execve()` | Array (v) | Full path | Specified (e) |
 
-- **l** (list): passed as a variadic argument list — `execlp("ls", "ls", "-l", NULL)`
-- **v** (vector): passed as a string array — `execvp("ls", args)`
+*Table 12. Argument passing, path search, and environment handling of the exec() family*
+
+- **l** (list): passed as a variadic argument list (e.g., `execlp("ls", "ls", "-l", NULL)`).
+- **v** (vector): passed as a string array (e.g., `execvp("ls", args)`).
 - **p** (path): searches for the executable in the PATH environment variable. The `PATH` environment variable is a colon-separated list of directories the OS searches when you type a command name without a full path (e.g., typing `ls` works because `/bin` is in PATH).
-- **e** (environment): explicitly specifies environment variables
+- **e** (environment): explicitly specifies environment variables.
 
 ### 4.5 Detailed Behavior of wait()
 
@@ -766,9 +797,9 @@ int main() {
 }
 ```
 
-- `WIFEXITED(status)`: checks if the child terminated normally
-- `WEXITSTATUS(status)`: extracts the exit status value (0-255)
-- `WIFSIGNALED(status)`: checks if the child was terminated by a signal
+- `WIFEXITED(status)`: checks if the child terminated normally.
+- `WEXITSTATUS(status)`: extracts the exit status value (0-255).
+- `WIFSIGNALED(status)`: checks if the child was terminated by a signal.
 
 > **Note:** The OS encodes multiple pieces of information (normal exit vs signal kill, exit code, signal number) into different bit ranges of the single `status` integer. The `W*` macros extract the specific piece you need, so you never have to inspect the bits manually.
 
@@ -819,7 +850,9 @@ Shell (parent process)
     └── Loop back to the beginning for the next command
 ```
 
-> **Note:** Real shells like bash and zsh also fundamentally use this fork() + exec() + wait() pattern. When you append `&` after a command in the shell, the parent (shell) does not call wait() and can immediately accept the next command — this is the principle behind background execution.
+*Figure 10. The loop in which a simple shell processes one command*
+
+> **Note:** Real shells like bash and zsh also fundamentally use this fork() + exec() + wait() pattern. When you append `&` after a command in the shell, the parent (shell) does not call wait() and can immediately accept the next command; this is the principle behind background execution.
 
 **Practice key summary:**
 
@@ -830,10 +863,12 @@ Shell (parent process)
 | **wait()** | Wait for a child process to terminate | Collects exit status; prevents zombies |
 | **exit()** | Terminate the process | Passes exit status to parent |
 
+*Table 13. Roles and key characteristics of fork(), exec(), wait(), and exit()*
+
 **Combination patterns:**
-- `fork() + exec()` = run a new program
-- `fork() + exec() + wait()` = basic shell behavior
-- `fork()` alone = create a child running the same code as the parent
+- `fork() + exec()` runs a new program.
+- `fork() + exec() + wait()` is the basic shell behavior.
+- `fork()` alone creates a child running the same code as the parent.
 
 ---
 
@@ -843,27 +878,26 @@ Shell (parent process)
 
 | Concept | Key Summary |
 |:--------|:-----------|
-| Process | A program in execution (program = passive, process = active) |
-| Memory layout | Text (code) / Data (globals) / Heap (dynamic alloc) / Stack (function calls); text & data fixed, heap & stack dynamic |
-| Process states | New → Ready → Running → Waiting → Terminated; at most 1 Running on a single core |
-| State transitions | Running→Ready: involuntary (timer), Running→Waiting: voluntary (I/O) |
-| PCB | Data structure storing all process information; state, PC, registers, scheduling, memory, I/O info |
-| Linux task_struct | Linux implementation of the PCB; managed as a doubly linked list; `current` pointer |
-| Threads | Execution unit within a process; shares code, data, files; PC, registers, stack are independent |
-| Scheduling queues | Ready queue (CPU wait) + Wait queue (event wait); implemented as linked lists |
-| Context switch | Save current process state + restore new process state; pure overhead (microseconds) |
-| fork() | Duplicate a process; parent → child pid, child → 0 |
-| exec() | Replace memory image with a new program; does not return on success |
-| wait() | Wait for child termination + collect exit status; prevents zombies |
-| Zombie process | Child terminated + parent did not call wait() → only process table entry remains |
-| Orphan process | Parent terminated first → init/systemd adopts and cleans up |
-| Android hierarchy | Foreground > Visible > Service > Background > Empty process (terminated in reverse order) |
-| Chrome | Separate renderer process per tab → isolation + sandbox security |
-| Shell operation | Repeated fork() + exec() + wait() |
-| Textbook scope | Silberschatz Ch 3, Sections 3.1–3.3 |
+| Process | A process is a program in execution; a program is a passive entity and a process is an active entity. |
+| Memory layout | Memory is divided into text (code), data (globals), heap (dynamic allocation), and stack (function calls); text and data are fixed in size, while heap and stack change dynamically. |
+| Process states | There are five states, New, Ready, Running, Waiting, and Terminated, and at most one process is Running on a single core. |
+| State transitions | Running → Ready is an involuntary transition caused by the timer, and Running → Waiting is a voluntary transition caused by I/O. |
+| PCB | The PCB is the data structure that stores all process information, including state, PC, registers, scheduling, memory, and I/O information. |
+| Linux task_struct | It is the Linux implementation of the PCB, managed as a doubly linked list, with the `current` pointer pointing to the running process. |
+| Threads | A thread is an execution unit within a process that shares code, data, and files but has its own PC, registers, and stack. |
+| Scheduling queues | There are the ready queue (CPU wait) and wait queues (event wait), implemented as linked lists. |
+| Context switch | It saves the current process state and restores the new process state, taking a few microseconds of pure overhead. |
+| fork() | It duplicates a process and returns the child pid to the parent and 0 to the child. |
+| exec() | It replaces the memory image with a new program and does not return on success. |
+| wait() | It waits for child termination and collects the exit status, preventing zombies. |
+| Zombie process | It is a terminated child whose parent did not call wait(), so only its process table entry remains. |
+| Orphan process | It is a process whose parent terminated first, and init/systemd adopts and cleans it up. |
+| Android hierarchy | Importance runs Foreground > Visible > Service > Background > Empty process, and processes are terminated in reverse order. |
+| Chrome | Chrome uses a separate renderer process per tab to gain isolation and sandbox security. |
+| Shell operation | A shell repeats fork() + exec() + wait(). |
+| Textbook scope | The textbook scope is Silberschatz Ch 3, Sections 3.1-3.3. |
 
 ---
-
 
 <br>
 
@@ -871,22 +905,47 @@ Shell (parent process)
 
 1. **Process States:** A process is currently waiting for disk I/O to complete. What state is it in? What event will move it to the Ready state?
 
-   > **Answer:** The process is in the **Waiting (Blocked)** state. When the disk raises an I/O-completion interrupt, the kernel's ISR marks the waiting process as **Ready** and places it back on the ready queue for the scheduler to pick.
+   <details>
+   <summary>Answer</summary>
+
+   The process is in the **Waiting (Blocked)** state. When the disk raises an I/O-completion interrupt, the kernel's ISR marks the waiting process as **Ready** and places it back on the ready queue for the scheduler to pick.
+
+   </details>
 
 2. **fork() Return Values:** After `pid = fork()`, what value does `pid` hold in the parent process and in the child process? How can the child obtain its own PID?
 
-   > **Answer:** In the **parent**, `pid` holds the child's PID (a positive integer). In the **child**, `pid` is **0**. The child can retrieve its own PID by calling `getpid()`.
+   <details>
+   <summary>Answer</summary>
+
+   In the **parent**, `pid` holds the child's PID (a positive integer). In the **child**, `pid` is **0**. The child can retrieve its own PID by calling `getpid()`.
+
+   </details>
 
 3. **Zombie vs Orphan:** Process A creates child process B and then enters an infinite loop without calling `wait()`. Process B finishes execution. Is B a zombie or an orphan? What changes if A terminates before B finishes?
 
-   > **Answer:** B becomes a **zombie** — it has exited but its PCB and exit status persist because the parent never called `wait()`. If instead **A terminates first**, B is reparented to `init` (PID 1); B is then an **orphan**, and init automatically calls `wait()` when B exits, preventing the zombie state.
+   <details>
+   <summary>Answer</summary>
+
+   B becomes a **zombie**: it has exited, but its process table entry (PCB) and exit status persist because the parent never called `wait()`. If instead **A terminates first**, B is reparented to `init` (PID 1); B is then an **orphan**, and init automatically calls `wait()` when B exits, preventing the zombie state.
+
+   </details>
 
 4. **Context Switch Cost:** Why is a context switch considered pure overhead? Name two hardware features that can reduce context switch time.
 
-   > **Answer:** During a context switch the CPU saves/restores registers and address-space state — no user work is performed, so the time is pure overhead. Hardware features that help: ① **multiple register sets / register windows** (SPARC) so registers need not be spilled to memory; ② **tagged TLB with ASIDs (Address Space Identifiers)** so the TLB need not be flushed when switching address spaces.
+   <details>
+   <summary>Answer</summary>
 
-5. **fork + exec:** Explain why shells use the `fork()` + `exec()` + `wait()` pattern instead of a single "create-and-run" system call. What advantage does separating fork and exec provide?
+   During a context switch the CPU saves/restores registers and address-space state; no user work is performed, so the time is pure overhead. Hardware features that help: ① **multiple register sets or register windows** (SPARC) so registers need not be spilled to memory; ② **tagged TLB with ASIDs (Address Space Identifiers)** so the TLB need not be flushed when switching address spaces.
 
-   > **Answer:** Between `fork()` and `exec()`, the child (a copy of the parent) can reconfigure its environment (redirect file descriptors with `dup2()`, set environment variables, change working directory, install signal handlers) before loading the new program. A single combined `spawn()` call would require the parent to pre-specify every possible customization as options. The fork/exec split provides a simple, composable interface: "customize, then load".
+   </details>
+
+5. **fork + exec:** Explain why shells use the `fork()` + `exec()` + `wait()` pattern instead of a single create-and-run system call. What advantage does separating fork and exec provide?
+
+   <details>
+   <summary>Answer</summary>
+
+   Between `fork()` and `exec()`, the child (a copy of the parent) can reconfigure its environment (redirect file descriptors with `dup2()`, set environment variables, change working directory, install signal handlers) before loading the new program. A single combined `spawn()` call would require the parent to pre-specify every possible customization as options. The fork/exec split provides a simple, composable interface that customizes the environment and then loads the program.
+
+   </details>
 
 ---
