@@ -90,7 +90,7 @@
 - 강의자료는 주차마다 이론 자료(`W##_LEC_`)와 실습 자료(`W##_LAB_`)로 배포되었으며, 같은 번호의 `Week##` 단원에 각각 `Concepts_Lecture`와 `Concepts_Lab`으로 정리했다. 단원 목록은 [`Lecture-Notes` 색인](Lecture-Notes/README.ko.md)에 있다.
 - 7주차와 14주차에는 실습 자료가 없고, 9~13주차의 실습 자료(`W09_LAB_Sleep-Wakeup-And-Pipes`, `W10_LAB_Deadlocks`, `W11_LAB_Page-Tables`, `W12_LAB_COW-Fork-And-Lazy-Allocation`, `W13_LAB_File-System-Internals`)는 실습 노트를 만들지 않았다.
 - 보안 및 보호는 13주차에 계획된 주제이지만 강의자료가 14주차 자료(`W14_LEC_Security-And-Protection`)로 배포되어 `Week14` 단원에 정리했다.
-- HW1\~HW4는 2\~5주차의 가정 과제이며 [`Coursework` 색인](Coursework/README.ko.md)에 있다. 6주차의 가정 과제(HW5)는 수업 결과물에 포함되어 있지 않다.
+- HW1\~HW5는 2\~6주차의 가정 과제이며 [`Coursework` 색인](Coursework/README.ko.md)에 있다.
 
 ---
 
