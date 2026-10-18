@@ -90,7 +90,7 @@
 - Each week's slides were distributed as a lecture deck (`W##_LEC_`) and a lab deck (`W##_LAB_`), and they are organized in the `Week##` unit of the same number as `Concepts_Lecture` and `Concepts_Lab`, respectively. The units are listed in the [`Lecture-Notes` index](Lecture-Notes/README.md).
 - Weeks 7 and 14 have no lab deck, and no lab notes were made for the lab decks of Weeks 9-13 (`W09_LAB_Sleep-Wakeup-And-Pipes`, `W10_LAB_Deadlocks`, `W11_LAB_Page-Tables`, `W12_LAB_COW-Fork-And-Lazy-Allocation`, `W13_LAB_File-System-Internals`).
 - Security and protection was planned for Week 13, but its slides were distributed as a Week 14 deck (`W14_LEC_Security-And-Protection`), so it is organized in the `Week14` unit.
-- HW1-HW4 are the take-home assignments of Weeks 2-5 and are listed in the [`Coursework` index](Coursework/README.md). The take-home assignment of Week 6 (HW5) is not part of the coursework.
+- HW1-HW5 are the take-home assignments of Weeks 2-6 and are listed in the [`Coursework` index](Coursework/README.md).
 
 ---
 
