@@ -22,16 +22,13 @@ This repository archives bilingual lecture notes and coursework for the Operatin
 <br><a name="about-this-repository"></a>
 ## 📝 About This Repository
 
-This repository contains the lecture notes, coursework, and system-level code of an Operating Systems course on the design and implementation of operating systems, based on the Dinosaur Book (Operating System Concepts).
-
-- `Lecture-Notes/` holds lecture notes on the concepts of each week's lectures and lab notes on the lab sessions of Weeks 1-6. The lecture slides were distributed by week, so the units are also numbered by week (`Week##`), and together they cover the full Dinosaur Book curriculum. Week 8, the midterm exam week, has no unit.
-- Every lecture note and lab note comes as an English file (`.md`) and a Korean file (`.ko.md`) with the same structure.
-- `Coursework/` holds the assignment solutions (C implementations, an xv6 kernel patch, and submitted reports) and midterm exam preparation materials. HW1 also comes with bilingual explanation documents (`.ko.md`, `.md`) and `.sh` grading scripts that check the solutions automatically.
-- The code of the team-based term project and the lab environment xv6-riscv are linked under `Coursework/` as git submodules.
+- `Lecture-Notes/` holds a lecture note for each week (`Week##`), and Weeks 1-6 also hold lab notes.
+- `Coursework/` holds the assignment solutions (C implementations, xv6 kernel patches, and reports) and midterm review materials, with the term project and xv6-riscv linked as git submodules.
+- Every note comes as an English (`.md`) and Korean (`.ko.md`) pair.
 
 > **🤖 AI Agent Usage**
 > This course encourages the use of AI agents.
-> [Claude Code](https://claude.ai/download) and [Gemini CLI](https://github.com/google-gemini/gemini-cli) were used as coding assistants throughout the course, and Claude Code was used to restructure the repository.
+> [Claude Code](https://claude.ai/download) and [Gemini CLI](https://github.com/google-gemini/gemini-cli) were used as coding assistants throughout the course.
 
 <br><a name="course-information"></a>
 ## 📚 Course Information
@@ -50,9 +47,9 @@ This course covers the design and implementation of operating systems, including
 <br><a name="prerequisites"></a>
 ## ✅ Prerequisites
 
-- An understanding of computer architecture and C programming is required.
-- A C compiler (e.g., GCC, Clang) must be installed.
-- Familiarity with Unix/Linux shell environments is required.
+- Understanding of computer architecture and C programming
+- C compiler (e.g., GCC, Clang) installed
+- Familiarity with Unix/Linux shell environments
 
 - **💻 Development Environment**
 

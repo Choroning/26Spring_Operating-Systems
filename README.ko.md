@@ -22,16 +22,13 @@
 <br><a name="about-this-repository"></a>
 ## 📝 레포지토리 소개
 
-이 레포지토리에는 공룡책(Operating System Concepts)을 바탕으로 운영체제의 설계와 구현을 다루는 운영체제 과목의 강의 노트와 수업 결과물, 시스템 수준 코드가 담겨 있습니다.
-
-- `Lecture-Notes/`에는 주차마다 이론 강의의 개념을 정리한 강의 노트와 1~6주차 실습 세션을 정리한 실습 노트가 있습니다. 강의자료가 주차별로 배포되어 단원도 주차(`Week##`)로 나눴으며, 단원들은 공룡책 기반의 전체 커리큘럼을 다룹니다. 중간고사가 있는 8주차에는 단원이 없습니다.
-- 모든 강의 노트와 실습 노트는 영어 파일(`.md`)과 한국어 파일(`.ko.md`)이 같은 구성으로 짝을 이룹니다.
-- `Coursework/`에는 과제 풀이(C 구현, xv6 커널 패치, 제출 보고서)와 중간고사 대비 자료가 있습니다. HW1에는 이중 언어 해설 문서(`.ko.md`, `.md`)와 풀이를 자동으로 확인하는 `.sh` 채점 스크립트가 함께 있습니다.
-- 팀 단위 텀 프로젝트의 코드와 실습 환경인 xv6-riscv는 `Coursework/` 아래에 git submodule로 연결되어 있습니다.
+- `Lecture-Notes/`에는 주차별(`Week##`) 강의 노트가 있고, 1\~6주차에는 실습 노트가 함께 있습니다.
+- `Coursework/`에는 과제 풀이(C 구현, xv6 커널 패치, 보고서)와 중간고사 대비 자료가 있으며, 텀 프로젝트와 xv6-riscv는 git submodule로 연결되어 있습니다.
+- 모든 노트는 영어(`.md`)와 한국어(`.ko.md`) 파일이 짝을 이룹니다.
 
 > **🤖 AI 에이전트 활용**
 > 이 과목은 AI 에이전트 사용을 권장합니다.
-> 수업 전반에 걸쳐 [Claude Code](https://claude.ai/download)와 [Gemini CLI](https://github.com/google-gemini/gemini-cli)를 코딩 어시스턴트로 활용했고, 레포지토리 구조 정리에는 Claude Code를 활용했습니다.
+> 수업 전반에 걸쳐 [Claude Code](https://claude.ai/download)와 [Gemini CLI](https://github.com/google-gemini/gemini-cli)를 코딩 어시스턴트로 활용했습니다.
 
 <br><a name="course-information"></a>
 ## 📚 강의 정보
@@ -50,9 +47,9 @@
 <br><a name="prerequisites"></a>
 ## ✅ 사전 요구사항
 
-- 컴퓨터 구조와 C 프로그래밍에 대한 이해가 필요합니다.
-- C 컴파일러(예: GCC, Clang)가 설치되어 있어야 합니다.
-- Unix/Linux 셸 환경에 익숙해야 합니다.
+- 컴퓨터 구조와 C 프로그래밍에 대한 이해
+- C 컴파일러 설치(예: GCC, Clang)
+- Unix/Linux 셸 환경에 익숙함
 
 - **💻 개발 환경**
 
