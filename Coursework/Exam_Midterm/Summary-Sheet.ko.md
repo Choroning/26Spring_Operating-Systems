@@ -2,7 +2,7 @@
 
 [레포지토리 안내](../../README.ko.md) | [English](Summary-Sheet.md) | [한국어](Summary-Sheet.ko.md)
 
-> **최종 수정일:** 2026-10-18
+> **최종 수정일:** 2026-10-19
 
 ---
 
@@ -89,7 +89,7 @@
 
 ## 2. 1주차: OS 소개
 
-### OS = 커널(Kernel)
+### OS = 커널
 
 - **커널(Kernel):** 부팅~종료 메모리 상주, 하드웨어 자원 관리자
 - **시스템 프로그램(System Program)** (셸, 컴파일러): 유저 모드, OS와 함께 배포
@@ -130,8 +130,8 @@ user code
 
 *그림 1. RISC-V에서 시스템 콜의 처리 경로*
 
-### 인터럽트(Interrupt) vs 트랩(Trap)
-| | 인터럽트(Interrupt) | 트랩(Trap) |
+### 인터럽트 vs 트랩
+| | 인터럽트 | 트랩 |
 |---|---|---|
 | 발생 | 외부 장치 (비동기) | 소프트웨어 (동기) |
 | 예 | 디스크, 타이머, 키보드 | syscall, 0으로 나누기 |
@@ -139,7 +139,7 @@ user code
 *표 4. 인터럽트와 트랩의 비교*
 
 ### DMA
-CPU 개입 없이 메모리↔장치 전송. CPU는 DMA에 작업 명령만 전달 → DMA가 수행 → 완료 인터럽트(Interrupt)
+CPU 개입 없이 메모리↔장치 전송. CPU는 DMA에 작업 명령만 전달 → DMA가 수행 → 완료 인터럽트
 
 ### 저장 계층
 ```text
@@ -176,7 +176,7 @@ Text    ─ 실행 코드
 
 *그림 2. 프로세스의 메모리 레이아웃*
 
-### 프로세스(Process) 상태
+### 프로세스 상태
 ```text
 New ─admitted→ Ready ─dispatch→ Running ─exit→ Terminated
                 ↑      ↑              │
@@ -190,7 +190,7 @@ New ─admitted→ Ready ─dispatch→ Running ─exit→ Terminated
 |---|---|
 | New→Ready | 메모리 할당 완료 |
 | Ready→Running | 스케줄러 선택 |
-| Running→Ready | **타이머 인터럽트(Interrupt) (비자발)** |
+| Running→Ready | **타이머 인터럽트 (비자발)** |
 | Running→Waiting | **I/O 요청 (자발)** |
 | Waiting→Ready | I/O 완료 |
 | Running→Terminated | exit() |
@@ -198,7 +198,7 @@ New ─admitted→ Ready ─dispatch→ Running ─exit→ Terminated
 *표 6. 프로세스 상태 전이와 원인*
 
 ### PCB 주요 필드
-- **프로세스(Process) 상태**
+- **프로세스 상태**
 - **PC(프로그램 카운터, Program Counter)**
 - **CPU 레지스터**
 - **CPU 스케줄링 정보** (우선순위)
@@ -227,12 +227,12 @@ if (pid == 0) {                          // 자식
 ```
 
 ### 좀비(Zombie) vs 고아(Orphan)
-| | 좀비(Zombie) | 고아(Orphan) |
+| | 좀비 | 고아 |
 |---|---|---|
 | 자식 상태 | **종료됨** (exit) | 실행 중 |
 | 원인 | 부모 wait() 미호출 | 부모가 먼저 종료 |
 | 해결 | 부모가 wait() / 부모 죽여 init 입양 | init/systemd 자동 입양 |
-| 누적 위험 | **있음** (프로세스(Process) 테이블 고갈) | 없음 |
+| 누적 위험 | **있음** (프로세스 테이블 고갈) | 없음 |
 
 *표 8. 좀비 프로세스와 고아 프로세스의 비교*
 
@@ -258,7 +258,7 @@ if (pid == 0) {                          // 자식
 
 *표 10. wait() 상태 매크로*
 
-### 컨텍스트 스위치(Context Switch)
+### 컨텍스트 스위치
 - 수 마이크로초
 - **순수 오버헤드** (유용한 작업 X)
 - 오버헤드 요인: 메모리 속도, 레지스터 수, 특수 명령어 유무
@@ -271,12 +271,12 @@ if (pid == 0) {                          // 자식
 ## 4. 3주차: IPC
 
 ### 공유 메모리(Shared Memory) vs 메시지 전달(Message Passing)
-| | 공유 메모리(Shared Memory) | 메시지 전달(Message Passing) |
+| | 공유 메모리 | 메시지 전달 |
 |---|---|---|
-| 속도 | 빠름 (초기 설정 후 커널(Kernel) X) | 느림 (매 호출 syscall) |
+| 속도 | 빠름 (초기 설정 후 커널 X) | 느림 (매 호출 syscall) |
 | 동기화 | 프로그래머 | OS |
 | 적합 | 대량 데이터, 로컬 | 소량, 분산 |
-| 구현 | 페이지 테이블(Page Table)로 같은 물리 프레임 공유 | 커널 버퍼 복사 |
+| 구현 | 페이지 테이블로 같은 물리 프레임 공유 | 커널 버퍼 복사 |
 
 *표 11. 공유 메모리와 메시지 전달의 비교*
 
@@ -286,7 +286,7 @@ if (pid == 0) {                          // 자식
 - 최대 저장: **SIZE − 1**개
 - 왜 한 슬롯 비우나: 빈/가득 구분 위해
 
-### 메시지 전달(Message Passing) 설계 3축
+### 메시지 전달 설계 3축
 | 축 | 옵션 |
 |---|---|
 | 네이밍 | 직접 대칭 / 직접 비대칭 / 간접(메일박스(Mailbox)) |
@@ -295,7 +295,7 @@ if (pid == 0) {                          // 자식
 
 *표 12. 메시지 전달의 설계 축과 선택지*
 
-### POSIX 공유 메모리(Shared Memory)
+### POSIX 공유 메모리
 ```c
 int fd = shm_open("name", O_CREAT|O_RDWR, 0666);
 ftruncate(fd, SIZE);
@@ -330,7 +330,7 @@ int fd = open("/tmp/my_fifo", O_WRONLY);
 
 | | Ordinary Pipe | Named Pipe |
 |---|---|---|
-| 관계 | 부모-자식 | 무관한 프로세스(Process) 가능 |
+| 관계 | 부모-자식 | 무관한 프로세스 가능 |
 | 수명 | 프로세스 종료 시 | 파일 시스템에 영구 |
 | 방향 | 단방향 | UNIX: 반이중 / Windows: 전이중 |
 
@@ -367,16 +367,16 @@ printf("redirected");       // out.txt에 기록
 
 ## 5. 4주차: 스레드(Thread)와 동시성(Concurrency)
 
-### 스레드(Thread) 공유 vs 독립
+### 스레드 공유 vs 독립
 | 공유 | 독립 |
 |---|---|
-| 코드, 데이터, 힙, 열린 파일 | PC, 레지스터, **스택**, 스레드(Thread) ID |
+| 코드, 데이터, 힙, 열린 파일 | PC, 레지스터, **스택**, 스레드 ID |
 
 *표 14. 스레드 간에 공유하는 자원과 스레드마다 독립인 자원*
 
-### 스레드(Thread)가 프로세스(Process)보다 빠른 이유
+### 스레드가 프로세스보다 빠른 이유
 - 생성: 스택과 레지스터만 초기화
-- 컨텍스트 스위치(Context Switch): **같은 주소 공간 → TLB 플러시 불필요**
+- 컨텍스트 스위치: **같은 주소 공간 → TLB 플러시 불필요**
 - 통신: 전역 변수 (IPC 불필요)
 
 ### 멀티스레딩 4가지 이점
@@ -385,11 +385,11 @@ printf("redirected");       // out.txt에 기록
 3. **경제성(Economy)** (생성과 전환 저비용)
 4. **확장성(Scalability)** (멀티코어 활용)
 
-### 동시성(Concurrency) vs 병렬성(Parallelism)
+### 동시성 vs 병렬성(Parallelism)
 | | 단일 코어 | 멀티 코어 |
 |---|---|---|
-| 동시성(Concurrency) | O (인터리빙) | O |
-| 병렬성(Parallelism) | **X** | O |
+| 동시성 | O (인터리빙) | O |
+| 병렬성 | **X** | O |
 
 *표 15. 단일 코어와 멀티 코어에서의 동시성과 병렬성*
 
@@ -409,10 +409,10 @@ N→∞ 에서 **speedup → 1/S** (상한)
 
 *표 16. 순차 비율 S와 코어 수 N에 따른 속도 향상*
 
-### 병렬성(Parallelism) 유형
+### 병렬성 유형
 | 데이터 병렬성(Data Parallelism) | 작업 병렬성(Task Parallelism) |
 |---|---|
-| 같은 연산 분산 데이터에 | 다른 연산 여러 스레드(Thread)에 |
+| 같은 연산 분산 데이터에 | 다른 연산 여러 스레드에 |
 | 배열 합산 | 웹 브라우저 (다운/렌더/입력) |
 
 *표 17. 데이터 병렬성과 작업 병렬성*
@@ -420,8 +420,8 @@ N→∞ 에서 **speedup → 1/S** (상한)
 ### 멀티스레딩 모델
 | 모델 | 매핑 | 단점 | 현재 |
 |---|---|---|---|
-| 다대일(Many-to-One) | N:1 | 블로킹 전파, 병렬성(Parallelism) X | 미사용 |
-| **일대일(One-to-One)** | 1:1 | 스레드(Thread) 수 제한 | **Linux, Windows** |
+| 다대일(Many-to-One) | N:1 | 블로킹 전파, 병렬성 X | 미사용 |
+| **일대일(One-to-One)** | 1:1 | 스레드 수 제한 | **Linux, Windows** |
 | 다대다(Many-to-Many) | N:M | 구현 복잡 (업콜(Upcall)) | Go, Java 가상 스레드 |
 | 두 수준(Two-Level) | N:M + 1:1 | 복잡 | 구 Solaris |
 
@@ -459,7 +459,7 @@ for (int i = 0; i < N; i++) {
 }
 ```
 
-### Java 스레드(Thread)
+### Java 스레드
 ```java
 // 권장: Runnable 구현 (Thread 상속은 다중 상속 제한)
 new Thread(() -> { /* 람다 */ }).start();
@@ -471,7 +471,7 @@ int ans = f.get();
 pool.shutdown();
 ```
 
-`start()` = 새 스레드(Thread) / `run()` 직접 = 같은 스레드 (버그)
+`start()` = 새 스레드 / `run()` 직접 = 같은 스레드 (버그)
 
 ---
 
@@ -529,16 +529,16 @@ pool.shutdown();
 
 ### 스레딩 이슈 5가지
 #### ① fork() / exec()
-- POSIX: **호출 스레드(Thread)만 복제**
+- POSIX: **호출 스레드만 복제**
 - 다른 스레드가 mutex 보유 중 → 자식이 **고아 락(Orphaned Lock)** 상속 위험
 - 안전: fork 직후 즉시 exec
 
-#### ② 시그널(Signal)
-- **동기 시그널(Synchronous Signal)** (SIGSEGV) → 유발 스레드(Thread)
+#### ② 시그널
+- **동기 시그널(Synchronous Signal)** (SIGSEGV) → 유발 스레드
 - **비동기** (SIGTERM, SIGINT) → 옵션 4가지
 - **권장:** 모두 차단, 전담 스레드가 `sigwait()`
 
-#### ③ 스레드(Thread) 취소
+#### ③ 스레드 취소
 | | 비동기 | **지연(기본)** |
 |---|---|---|
 | 시점 | 즉시 | 취소 지점(Cancellation Point)에서만 |
@@ -555,12 +555,12 @@ __thread int tls_var;              // GCC
 _Thread_local int v;                // C11
 ThreadLocal<Integer> t;             // Java
 ```
-각 스레드(Thread) 독립 복사본. `errno`, transaction ID 등.
+각 스레드 독립 복사본. `errno`, transaction ID 등.
 
 #### ⑤ 스케줄러 활성화(Scheduler Activation)와 LWP
-- LWP: 유저 스레드(Thread) 라이브러리의 가상 CPU
-- **업콜(Upcall):** 커널(Kernel) → 유저 라이브러리에 이벤트 알림
-- 다대다(Many-to-Many) 복잡성 → 현대 OS는 일대일(One-to-One) 선택
+- LWP: 유저 스레드 라이브러리의 가상 CPU
+- **업콜:** 커널 → 유저 라이브러리에 이벤트 알림
+- 다대다 복잡성 → 현대 OS는 일대일 선택
 
 ### Linux clone()
 | 플래그 | 공유 |
@@ -568,8 +568,8 @@ ThreadLocal<Integer> t;             // Java
 | `CLONE_VM` | 가상 메모리(Virtual Memory) |
 | `CLONE_FS` | 파일시스템 정보 |
 | `CLONE_FILES` | fd 테이블 |
-| `CLONE_SIGHAND` | 시그널(Signal) 핸들러 |
-| `CLONE_THREAD` | 스레드(Thread) 그룹 |
+| `CLONE_SIGHAND` | 시그널 핸들러 |
+| `CLONE_THREAD` | 스레드 그룹 |
 | `CLONE_NEWNS/PID/NET` | 네임스페이스(Namespace) (컨테이너(Container)) |
 
 *표 23. clone() 플래그와 공유 대상*
@@ -577,10 +577,10 @@ ThreadLocal<Integer> t;             // Java
 - `fork()` = `clone(0)` (공유 X)
 - pthread_create = `clone(VM|FS|FILES|SIGHAND|THREAD)`
 
-### Windows 스레드(Thread) 구조
+### Windows 스레드 구조
 | 구조 | 위치 | 내용 |
 |---|---|---|
-| ETHREAD | 커널(Kernel) | 시작주소, 부모, KTHREAD→ |
+| ETHREAD | 커널 | 시작주소, 부모, KTHREAD→ |
 | KTHREAD | 커널 | 상태, 우선순위, 커널 스택, TEB→ |
 | TEB | 유저 | TID, 유저 스택, TLS 배열 |
 
@@ -592,11 +592,11 @@ ThreadLocal<Integer> t;             // Java
 
 ## 7. 6주차: CPU 스케줄링 기본 알고리즘
 
-### CPU-I/O 버스트(I/O Burst)
-프로세스(Process) = CPU 버스트(CPU Burst) ↔ I/O 버스트(I/O Burst) 반복. I/O-bound (짧은 버스트 많음) / CPU-bound (긴 버스트 적음).
+### CPU-I/O 버스트
+프로세스 = CPU 버스트(CPU Burst) ↔ I/O 버스트(I/O Burst) 반복. I/O-bound (짧은 버스트 많음) / CPU-bound (긴 버스트 적음).
 
 ### 스케줄링 결정 시점
-1. Running → Waiting (비선점(Non-preemptive))
+1. Running → Waiting (비선점)
 2. Running → Ready (선점)
 3. Waiting → Ready (선점 가능)
 4. 종료
@@ -604,8 +604,8 @@ ThreadLocal<Integer> t;             // Java
 **선점형(Preemptive):** 1, 4 외에도 가능 | **비선점형(Non-preemptive):** 1, 4만
 
 ### 디스패처(Dispatcher) 3역할
-1. 컨텍스트 스위칭(Context Switching)
-2. 유저/커널 모드(Kernel Mode) 전환
+1. 컨텍스트 스위칭
+2. 유저/커널 모드 전환
 3. PC 점프
 
 **디스패치 지연(Dispatch Latency)** = 중단→시작 시간
@@ -615,7 +615,7 @@ ThreadLocal<Integer> t;             // Java
 |---|---|---|
 | CPU 이용률(CPU Utilization) | CPU 사용 비율 | 최대 |
 | 처리량(Throughput) | 단위 시간당 완료 수 | 최대 |
-| 반환 시간 (Turnaround) | 제출~완료 | 최소 |
+| 반환 시간(Turnaround Time) | 제출~완료 | 최소 |
 | **대기 시간(Waiting Time)** | 준비 큐(Ready Queue) 체류 | **최소 (주요)** |
 | 응답 시간(Response Time) | 제출~첫 응답 | 최소 (대화형) |
 
@@ -623,7 +623,7 @@ ThreadLocal<Integer> t;             // Java
 
 반환 = 대기 + 버스트 + I/O. 스케줄링이 영향 주는 건 **대기**.
 
-### FCFS (선착순(First-Come First-Served), 비선점(Non-preemptive))
+### FCFS (선착순(First-Come First-Served), 비선점)
 - 간단, 구현 쉬움
 - **호위 효과(Convoy Effect):** 긴 작업이 앞이면 뒤 짧은 작업들 전부 대기 → 평균 대기↑
 - 도착 순서에 극도로 민감
@@ -651,10 +651,10 @@ ThreadLocal<Integer> t;             // Java
 $$ \tau_{n+1} = \alpha t_n + (1-\alpha)\tau_n $$
 - α=0 → 과거 고정 / α=1 → 최근만 / 보통 α=0.5
 
-### SRTF (SJF 선점형(Preemptive))
-- 새 도착의 버스트 < 현재 남은 시간 → 선점(Preemption)
+### SRTF (SJF 선점형)
+- 새 도착의 버스트 < 현재 남은 시간 → 선점
 - SJF보다 평균 대기 ↓
-- 기아(Starvation) 위험 ↑
+- 기아 위험 ↑
 
 **예시:** P1(0,8) P2(1,4) P3(2,9) P4(3,5), 괄호 안은 (도착, 버스트)
 ```text
@@ -667,10 +667,10 @@ $$ \tau_{n+1} = \alpha t_n + (1-\alpha)\tau_n $$
 대기: P1=9, P2=0, P3=15, P4=2 → **평균 6.5**
 
 ### Round Robin (RR)
-- 각 프로세스(Process)에 **타임 퀀텀(Time Quantum)** 할당 (보통 10~100ms)
-- 퀀텀 초과 → 선점(Preemption) → 큐 끝으로
-- **기아(Starvation) 없음:** 한 프로세스 최대 대기 = (N-1)×q
-- **응답 시간(Response Time) 우수** (대화형)
+- 각 프로세스에 **타임 퀀텀(Time Quantum)** 할당 (보통 10~100ms)
+- 퀀텀 초과 → 선점 → 큐 끝으로
+- **기아 없음:** 한 프로세스 최대 대기 = (N-1)×q
+- **응답 시간 우수** (대화형)
 
 **예시:** P1(24) P2(3) P3(3), q=4, 모두 t=0 도착
 ```text
@@ -684,23 +684,23 @@ $$ \tau_{n+1} = \alpha t_n + (1-\alpha)\tau_n $$
 
 **타임 퀀텀 선택:**
 - 너무 크면 → FCFS로 수렴
-- 너무 작으면 → 컨텍스트 스위칭(Context Switching) 오버헤드
+- 너무 작으면 → 컨텍스트 스위칭 오버헤드
 - **80% 규칙:** 버스트의 80%가 한 퀀텀 내 완료
 
 ### 우선순위 스케줄링(Priority Scheduling)
 - 우선순위 숫자 (낮을수록 높은 경우 많음)
-- 선점(Preemption)/비선점 모두 가능
+- 선점/비선점 모두 가능
 - SJF는 우선순위 = 1/다음 버스트의 특수 경우
-- **기아(Starvation) → 노화(Aging)**로 해결 (대기할수록 우선순위 ↑)
+- **기아 → 노화**로 해결 (대기할수록 우선순위 ↑)
 
 ### 알고리즘 요약
-| | 유형 | 평균 대기 | 응답 | 기아(Starvation) |
+| | 유형 | 평균 대기 | 응답 | 기아 |
 |---|---|---|---|---|
-| FCFS | 비선점(Non-preemptive) | 큼 (호위 효과(Convoy Effect)) | 나쁨 | 없음 |
+| FCFS | 비선점 | 큼 (호위 효과) | 나쁨 | 없음 |
 | SJF | 비선점 | **최소** | 좋음 | 있음 |
 | SRTF | 선점 | SJF보다 더 작음 | 좋음 | 있음 |
 | RR | 선점 | 큼 (타임 슬라이스(Time Slice)) | **매우 좋음** | 없음 |
-| Priority | 양쪽 | 정책 따라 | 정책 따라 | 있음 (→노화(Aging)) |
+| Priority | 양쪽 | 정책 따라 | 정책 따라 | 있음 (→노화) |
 
 *표 26. 기본 스케줄링 알고리즘의 특성 요약*
 
@@ -711,24 +711,24 @@ $$ \tau_{n+1} = \alpha t_n + (1-\alpha)\tau_n $$
 ## 8. 7주차: 고급 스케줄링
 
 ### 다단계 큐 (MLQ)
-- 프로세스(Process)를 유형별 **영구 배정** (포그라운드-RR / 백그라운드-FCFS)
+- 프로세스를 유형별 **영구 배정** (포그라운드-RR / 백그라운드-FCFS)
 - 큐 이동 **불가**
-- 큐 간 스케줄링: 고정 우선순위 또는 타임 슬라이스(Time Slice) 분배
+- 큐 간 스케줄링: 고정 우선순위 또는 타임 슬라이스 분배
 
 ### 다단계 피드백 큐 (MLFQ)
 - **3가지 규칙:**
-  1. 새 프로세스(Process) → 최상위 큐
+  1. 새 프로세스 → 최상위 큐
   2. 퀀텀 소진 → 하위로 **강등(Demotion)**
   3. 오래 대기 → 상위로 **승격(Promotion)** (aging)
 - 행동 관찰로 **자동 분류** → SJF 근사
 - 짧은 작업과 I/O bound = 상위 / CPU bound = 하위로 자연 분화
 - 현대 UNIX 계열 기본
 
-### 스레드(Thread) 스케줄링 범위
+### 스레드 스케줄링 범위
 | | 의미 | 사용 모델 |
 |---|---|---|
-| **PCS** | 프로세스(Process) 내 경쟁 | 다대일(Many-to-One), 다대다(Many-to-Many) |
-| **SCS** | 시스템 전체 경쟁 | 일대일(One-to-One) (**현대 표준**) |
+| **PCS** | 프로세스 내 경쟁 | 다대일, 다대다 |
+| **SCS** | 시스템 전체 경쟁 | 일대일 (**현대 표준**) |
 
 *표 27. 스레드 스케줄링 범위 PCS와 SCS*
 
@@ -746,10 +746,10 @@ $$ \tau_{n+1} = \alpha t_n + (1-\alpha)\tau_n $$
 #### 부하 분산(Load Balancing)
 - **Push migration:** 과부하 → 다른 CPU로 밀어냄
 - **Pull migration:** 유휴 → 바쁜 큐에서 끌어옴
-- **친화도 vs 부하 분산(Load Balancing) 상충** → 균형 필요
+- **친화도 vs 부하 분산 상충** → 균형 필요
 
 #### SMT/하이퍼스레딩(Hyperthreading)
-물리 코어 1개에 HW 스레드(Thread) 여러 개. 메모리 스톨 시 다른 스레드 실행.
+물리 코어 1개에 HW 스레드 여러 개. 메모리 스톨 시 다른 스레드 실행.
 **스케줄링 힌트:** 같은 물리 코어의 두 번째 HW 스레드보다 **다른 물리 코어 먼저** 할당.
 
 ### 실시간 스케줄링(Real-Time Scheduling)
@@ -763,12 +763,12 @@ $$ \tau_{n+1} = \alpha t_n + (1-\alpha)\tau_n $$
 - **이용률 한계:** $U \le N(2^{1/N} - 1)$ → N→∞ 에서 **69.3%**
 
 #### EDF (Earliest-Deadline-First)
-- **동적 우선순위 = 가장 가까운 마감(Deadline)**
+- **동적 우선순위 = 가장 가까운 마감**
 - 이론상 **100%** 이용률 가능
 - 마감 정보 필요
 
 #### Priority Inversion과 상속 프로토콜
-- T3(낮) 뮤텍스(Mutex) 보유 + T1(높) 대기 + T2(중)이 T3 선점(Preemption) → T1이 T2에 간접 블록
+- T3(낮) 뮤텍스 보유 + T1(높) 대기 + T2(중)이 T3 선점 → T1이 T2에 간접 블록
 - **해결:** 블로킹하는 태스크의 우선순위를 일시 상승 (우선순위 상속(Priority Inheritance))
 
 ### Linux CFS
@@ -778,7 +778,7 @@ $$ \tau_{n+1} = \alpha t_n + (1-\alpha)\tau_n $$
 
 ### Windows
 - **32 우선순위 레벨**
-- 동적 부스트: 키보드/포커스 윈도 우대 → 인터랙티브 응답성(Responsiveness)
+- 동적 부스트: 키보드/포커스 윈도 우대 → 인터랙티브 응답성
 
 ### 스케줄링 평가 4방법
 | 방법 | 정확도 | 비용 | 비고 |
@@ -803,7 +803,7 @@ $$ \tau_{n+1} = \alpha t_n + (1-\alpha)\tau_n $$
 
 ## 9. API 치트시트
 
-### 프로세스(Process)
+### 프로세스
 ```c
 pid_t fork(void);                     // 0=자식, >0=자식PID, <0=오류
 int execlp(const char *file, ...);    // PATH 검색, NULL 종결
@@ -879,12 +879,12 @@ OMP_NUM_THREADS=4 ./prog                   # OpenMP 스레드(Thread) 수
 
 ## 10. 공식과 계산 모음
 
-### 암달의 법칙(Amdahl's Law)
+### 암달의 법칙
 $$ \text{speedup} \le \frac{1}{S + \frac{1-S}{N}} $$
 - S: 순차 비율, N: 코어 수
 - N→∞: speedup → 1/S
 
-### SJF 지수 평균(Exponential Averaging)
+### SJF 지수 평균
 $$ \tau_{n+1} = \alpha t_n + (1-\alpha)\tau_n $$
 
 ### Little's Formula
@@ -894,18 +894,18 @@ $$ n = \lambda W $$
 $$ U \le N(2^{1/N} - 1) $$
 N→∞ 에서 ≈ **0.693** (69.3%)
 
-### 스케줄링 평균 대기 시간(Waiting Time) 계산 절차
+### 스케줄링 평균 대기 시간 계산 절차
 1. 간트 차트(Gantt Chart) 그리기
-2. 각 프로세스(Process) **완료 시각** 읽기
-3. 반환 시간(Turnaround Time) = 완료 − 도착
-4. 대기 시간(Waiting Time) = 반환 − 버스트
+2. 각 프로세스 **완료 시각** 읽기
+3. 반환 시간 = 완료 − 도착
+4. 대기 시간 = 반환 − 버스트
 5. 평균 = 합 / 프로세스 수
 
-### 컨텍스트 스위치(Context Switch) 오버헤드 요인
+### 컨텍스트 스위치 오버헤드 요인
 - 레지스터 수 (많을수록 ↑)
 - 메모리 속도
 - 특수 HW 명령
-- TLB 플러시 (프로세스(Process) 간만)
+- TLB 플러시 (프로세스 간만)
 - 캐시 효과
 
 ---
@@ -914,12 +914,12 @@ N→∞ 에서 ≈ **0.693** (69.3%)
 
 ## 11. 시험 단골 비교표
 
-### 프로세스(Process) vs 스레드(Thread)
-| | 프로세스(Process) | 스레드(Thread) |
+### 프로세스 vs 스레드
+| | 프로세스 | 스레드 |
 |---|---|---|
 | 메모리 | 독립 | 공유 (스택 제외) |
 | 생성 비용 | 높음 | 낮음 |
-| 컨텍스트 스위치(Context Switch) | 느림 (TLB 플러시) | 빠름 |
+| 컨텍스트 스위치 | 느림 (TLB 플러시) | 빠름 |
 | 통신 | IPC 필요 | 전역 변수 |
 | 격리 | 강함 | 약함 |
 
@@ -934,11 +934,11 @@ N→∞ 에서 ≈ **0.693** (69.3%)
 
 *표 30. fork, clone, pthread_create의 공유 범위*
 
-### 공유 메모리(Shared Memory) vs 메시지 전달(Message Passing) vs 파이프(Pipe) vs 소켓(Socket)
+### 공유 메모리 vs 메시지 전달 vs 파이프 vs 소켓
 | | 범위 | 속도 | 복잡도 |
 |---|---|---|---|
-| 공유 메모리(Shared Memory) | 로컬 | 매우 빠름 | 동기화 직접 |
-| 메시지 전달(Message Passing) | 로컬/분산 | 느림 | OS 관리 |
+| 공유 메모리 | 로컬 | 매우 빠름 | 동기화 직접 |
+| 메시지 전달 | 로컬/분산 | 느림 | OS 관리 |
 | Pipe | 로컬 (관련) | 보통 | 쉬움 |
 | Named Pipe | 로컬 (무관) | 보통 | 쉬움 |
 | Socket | 로컬/원격 | 느림 | 보통 |
@@ -946,34 +946,34 @@ N→∞ 에서 ≈ **0.693** (69.3%)
 *표 31. IPC 방식별 범위, 속도, 복잡도*
 
 ### 스케줄링 알고리즘 요약
-| | 유형 | 평균 대기 | 응답 | 기아(Starvation) | 장점 | 단점 |
+| | 유형 | 평균 대기 | 응답 | 기아 | 장점 | 단점 |
 |---|---|---|---|---|---|---|
-| FCFS | 비선점(Non-preemptive) | 큼 | 나쁨 | X | 단순 | 호위 효과(Convoy Effect) |
+| FCFS | 비선점 | 큼 | 나쁨 | X | 단순 | 호위 효과 |
 | SJF | 비선점 | **최소** | 보통 | O | 최적 | 예측 불가 |
 | SRTF | 선점 | 더 작음 | 좋음 | O | SJF보다↓ | 오버헤드 |
-| RR | 선점 | 큼 | **매우 좋음** | X | 공정, 응답성(Responsiveness) | 퀀텀 선택 |
-| Priority | 양쪽 | 가변 | 가변 | O (→노화(Aging)) | 중요도 반영 | 기아 |
+| RR | 선점 | 큼 | **매우 좋음** | X | 공정, 응답성 | 퀀텀 선택 |
+| Priority | 양쪽 | 가변 | 가변 | O (→노화) | 중요도 반영 | 기아 |
 | MLQ | 가변 | 가변 | 가변 | O | 유형별 정책 | 고정 분류 |
-| MLFQ | 선점 | 낮음 | 좋음 | X (승격(Promotion)) | 자동 분류 | 복잡 |
+| MLFQ | 선점 | 낮음 | 좋음 | X (승격) | 자동 분류 | 복잡 |
 | RMS | 선점 | - | - | - | 정적, 예측 가능 | 이용률 69.3% |
-| EDF | 선점 | - | - | - | 이용률 100% | 마감(Deadline) 필요 |
+| EDF | 선점 | - | - | - | 이용률 100% | 마감 필요 |
 
 *표 32. 스케줄링 알고리즘의 장단점 종합 비교*
 
 ### 멀티스레딩 모델 선택
 | 경우 | 모델 |
 |---|---|
-| 대부분의 현대 OS | 일대일(One-to-One) |
-| Go 언어 런타임 | 다대다(Many-to-Many) |
+| 대부분의 현대 OS | 일대일 |
+| Go 언어 런타임 | 다대다 |
 | 블로킹 I/O 많음 | 일대일 또는 다대다 |
-| 스레드(Thread) 수 매우 많음 | 다대다 |
+| 스레드 수 매우 많음 | 다대다 |
 
 *표 33. 상황별 멀티스레딩 모델 선택*
 
 ### RPC 의미론 선택
 | 연산 종류 | 의미론 |
 |---|---|
-| 조회 (멱등(Idempotent)) | at-least-once |
+| 조회 (멱등) | at-least-once |
 | 금융 거래 (비멱등) | **exactly-once** |
 | 이벤트 알림 | at-most-once |
 
@@ -987,24 +987,24 @@ N→∞ 에서 ≈ **0.693** (69.3%)
 
 1. **fork() 반환값:** 자식은 0, 부모는 자식 PID를 받음. 순서 혼동 주의
 2. **exec() 성공 후 코드:** 실행되지 않음 (메모리 교체됨)
-3. **좀비(Zombie) kill 불가:** 이미 죽었음, 부모를 처리해야 함
+3. **좀비 kill 불가:** 이미 죽었음, 부모를 처리해야 함
 4. **Pipe close 규칙:** 사용 안 하는 끝 **모두** close (부모도 포함)
 5. **write(fd, msg, strlen(msg)) vs `sizeof(msg)`:** 포인터면 포인터 크기 반환됨
 6. **`fd[WRITE_END]`와 `+1`:** null 포함해 전송해야 `printf("%s")` 정상 동작
 7. **`pthread_create(&t, NULL, f, &i)` 루프:** `i` 주소 공유 → race. `ids[i]` 배열로 해결
-8. **Thread.start() vs run():** run() 직접 호출은 같은 스레드(Thread)에서 실행 (버그)
+8. **Thread.start() vs run():** run() 직접 호출은 같은 스레드에서 실행 (버그)
 9. **fork() 후 mutex 상속:** 다른 스레드가 잡고 있었으면 자식은 영원히 풀 수 없음
-10. **FCFS 호위 효과(Convoy Effect):** 같은 프로세스(Process) 집합이라도 **도착 순서**에 따라 평균 대기가 크게 다름
-11. **RR 타임 퀀텀(Time Quantum):** 너무 작으면 오버헤드, 너무 크면 FCFS. 80% 규칙 적용
-12. **SJF 기아(Starvation):** 긴 프로세스가 무한 대기 가능 → 노화(Aging)로 해결
+10. **FCFS 호위 효과:** 같은 프로세스 집합이라도 **도착 순서**에 따라 평균 대기가 크게 다름
+11. **RR 타임 퀀텀:** 너무 작으면 오버헤드, 너무 크면 FCFS. 80% 규칙 적용
+12. **SJF 기아:** 긴 프로세스가 무한 대기 가능 → 노화로 해결
 13. **RMS 69.3% 한계:** 이 이상은 EDF로
-14. **프로세스 vs 스레드 컨텍스트 스위치(Context Switch):** 속도 차이의 핵심 = **TLB 플러시 여부**
-15. **암달의 법칙(Amdahl's Law):** 무한 코어도 **1/S**가 상한. S=50% 이면 2배가 한계
-16. **일대일(One-to-One) vs 다대다(Many-to-Many):** 현대 표준은 **일대일**, 이유는 단순성과 안정성
+14. **프로세스 vs 스레드 컨텍스트 스위치:** 속도 차이의 핵심 = **TLB 플러시 여부**
+15. **암달의 법칙:** 무한 코어도 **1/S**가 상한. S=50% 이면 2배가 한계
+16. **일대일 vs 다대다:** 현대 표준은 **일대일**, 이유는 단순성과 안정성
 17. **RPC exactly-once:** 금융 거래에는 반드시 고유 트랜잭션 ID 필요
 18. **Named pipe:** 파일 시스템에 존재 → 무관한 프로세스 통신 가능
-19. **공유 메모리(Shared Memory) 성능 핵심:** 초기 설정 후 **커널(Kernel) 미개입**
-20. **시스템 콜(System Call) 모드 전환:** `ecall`(트랩(Trap)) → 자동으로 커널 모드(Kernel Mode), `sret` → 자동으로 유저 모드
+19. **공유 메모리 성능 핵심:** 초기 설정 후 **커널 미개입**
+20. **시스템 콜 모드 전환:** `ecall`(트랩) → 자동으로 커널 모드, `sret` → 자동으로 유저 모드
 
 ---
 
@@ -1021,10 +1021,10 @@ N→∞ 에서 ≈ **0.693** (69.3%)
 + [다른 개념과 연결 1문장 — 보너스!]
 ```
 
-### 예: 시스템 콜(System Call)이 왜 필요한가를 묻는 문제의 답안
+### 예: 시스템 콜이 왜 필요한가를 묻는 문제의 답안
 
-시스템 콜(System Call)은 사용자 프로그램이 OS 서비스를 요청하는 유일한 인터페이스다. 단일 모드 CPU라면 프로그램이 직접 I/O나 메모리 매핑을 조작해 OS를 파괴할 수 있기 때문에, 이중 모드(Dual-Mode)를 두고 커널 모드(Kernel Mode) 진입을 **트랩(Trap)** 으로만 가능하게 제한했다.
+시스템 콜은 사용자 프로그램이 OS 서비스를 요청하는 유일한 인터페이스다. 단일 모드 CPU라면 프로그램이 직접 I/O나 메모리 매핑을 조작해 OS를 파괴할 수 있기 때문에, 이중 모드를 두고 커널 모드 진입을 **트랩**으로만 가능하게 제한했다.
 
-호출 과정은 libc 래퍼가 시스템 콜 번호를 a7 레지스터(RISC-V)에 넣고 `ecall` 명령을 실행하면 하드웨어가 모드 비트를 0으로 바꾸고 트랩 핸들러로 점프하는 방식이다. 예컨대 `open()` 호출은 내부적으로 ecall을 일으켜 커널(Kernel)의 `sys_open()` 을 실행시키고 fd를 a0에 담아 리턴한다.
+호출 과정은 libc 래퍼가 시스템 콜 번호를 a7 레지스터(RISC-V)에 넣고 `ecall` 명령을 실행하면 하드웨어가 모드 비트를 0으로 바꾸고 트랩 핸들러로 점프하는 방식이다. 예컨대 `open()` 호출은 내부적으로 ecall을 일으켜 커널의 `sys_open()` 을 실행시키고 fd를 a0에 담아 리턴한다.
 
-이 구조의 한계는 **오버헤드**다. `cp` 같은 단순 명령도 수천 번의 시스템 콜을 발생시키므로, 버퍼링, DMA, mmap이 중요해진다. 이는 12주차 가상 메모리(Virtual Memory)의 메모리 맵 파일과 직접 연결된다.
+이 구조의 한계는 **오버헤드**다. `cp` 같은 단순 명령도 수천 번의 시스템 콜을 발생시키므로, 버퍼링, DMA, mmap이 중요해진다. 이는 12주차 가상 메모리의 메모리 맵 파일과 직접 연결된다.
