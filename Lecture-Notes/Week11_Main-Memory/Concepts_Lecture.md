@@ -2,9 +2,9 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **Last Updated:** 2026-10-18
+> **Last Updated:** 2026-10-20
 >
-> Operating System Concepts, Silberschatz, Ch 9
+> Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 9
 
 > **Learning Objectives:**
 > 1. Explain why the CPU can only directly address **registers and main memory**, not disk, distinguish **logical** and **physical** addresses, and describe the role of the **MMU**, **base register**, and **limit register**
@@ -99,7 +99,7 @@ The CPU can directly access only two kinds of storage: registers and main memory
    +-----------+
    |   Cache   |   <- a few cycles (transparent to ISA)
    +-----------+
-   |   Main    |   <- 10s–100s of cycles
+   |   Main    |   <- 10s-100s of cycles
    |  Memory   |
    +-----------+
    |   Disk    |   <- millions of cycles, NOT directly addressable
@@ -186,7 +186,7 @@ With **compile-time** or **load-time** binding, logical and physical addresses a
 
 The **MMU** is the hardware that performs logical-to-physical translation. In the simplest scheme (dynamic relocation) it just adds a **relocation register** to every logical address.
 
-> **Note:** In this simplest design the relocation register is the same physical register as the **base register** introduced in Section 1.3; the two names emphasize different roles. As "base", it sets the lower bound for the limit check; as "relocation", it is the addend that shifts the user's view of 0…max up to the actual physical range.
+> **Note:** In this simplest design the relocation register is the same physical register as the **base register** introduced in Section 1.3; the two names emphasize different roles. Viewed as the base register, it sets the lower bound for the limit check; viewed as the relocation register, it is the addend that shifts the user's view of 0…max up to the actual physical range.
 
 ```text
   logical addr  -->  +-----+
@@ -233,6 +233,8 @@ Notably, dynamic loading can be implemented **without OS support** (the programm
 *Table 2. Benefits of DLLs and shared libraries*
 
 A small **stub** in each program locates the library routine at first call and patches the call site to jump directly thereafter. Dynamic linking requires OS support because the library must be mapped into the process's protected address space.
+
+> **[Systems Programming]** A **linker** resolves the symbol references among object modules into addresses and combines them into one executable, and a **loader** places that executable in memory to prepare it for execution. With static linking this symbol resolution finishes at link time, whereas dynamic linking defers the resolution of library functions to execution time. The stub above is the code that performs this deferred resolution: in ELF executables, the PLT (Procedure Linkage Table) and the GOT (Global Offset Table) record the function address that the dynamic linker finds on the first call and send later calls straight to that address.
 
 ```text
   Static Linking                    Dynamic Linking
@@ -353,7 +355,7 @@ Worst-fit (use the largest hole):
   P3(358) -> 600  hole  (242 left)
   P4(200) -> 350  hole  (150 left)
   P5(375) -> FAILS
-            (remaining holes: 300, 242, 150, 200, 135, 125 — largest is 300 < 375)
+            (remaining holes: 300, 242, 150, 200, 135, 125, largest is 300 < 375)
 ```
 
 The lesson is not the exact numbers; it is that **the allocation strategy meaningfully changes which requests succeed**. Worst-fit always carves into the *largest* available hole, so it **shreds big holes early**. After spending the 750KB and then the 600KB holes on small or medium requests, no hole large enough for the final 375KB request remains, and **P5 fails** even though plenty of total free memory is left (external fragmentation). First-fit and Best-fit both preserve a large enough hole and complete all five requests.
@@ -635,7 +637,7 @@ Two processes running the same code can **share frames** for the read-only text 
 *Figure 24. Sharing of the standard C library in a paging environment*
 
 ```text
-Example — 40 users on a text editor (libc text 2MB):
+Example: 40 users on a text editor (libc text 2MB)
   Without sharing:  40 × 2MB = 80MB
   With sharing:      1 × 2MB =  2MB + 40 × (private data)
 ```
@@ -994,7 +996,7 @@ As extensions, feed a stream of randomized requests, compare the average externa
 | TLB | The TLB caches translations, and a hit ratio of 98% or more nearly eliminates the doubled access cost of paging without a TLB. |
 | ASID | ASIDs tag TLB entries with processes so that context switches avoid TLB flushes. |
 | Page-table structures | The four structures are single-level, hierarchical, hashed, and inverted page tables. |
-| 64-bit | Hierarchical paging alone is insufficient, so systems use 4-level paging that exploits sparsity, or hashed page tables. |
+| 64-bit | Covering the full 64-bit space with uniform hierarchical paging needs too many levels, so systems limit virtual addresses to 48 bits and use 4-level paging that exploits sparsity, or use hashed or inverted page tables. |
 | Swapping | Standard swapping moves whole processes and paged swapping moves individual pages, while mobile OSes mostly avoid swapping. |
 | Architectures | IA-32 uses segmentation with paging, x86-64 uses 4-level paging, and ARMv8 uses 4-level paging with ASIDs. |
 
@@ -1130,7 +1132,7 @@ As extensions, feed a stream of randomized requests, compare the average externa
 
     </details>
 
-15. Why does the OS need execution-time binding to use compaction, but not to use paging?
+15. Why does compaction require execution-time binding, and why does paging not need compaction at all?
 
     <details>
     <summary>Answer</summary>

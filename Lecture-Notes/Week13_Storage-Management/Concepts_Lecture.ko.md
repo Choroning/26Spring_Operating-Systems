@@ -1,18 +1,18 @@
-# 13주차 이론 — 저장 장치 관리 (Storage Management)
+# 13주차 이론 — 저장 장치 관리
 
 [레포지토리 안내](../../README.ko.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **최종 수정일:** 2026-10-18
+> **최종 수정일:** 2026-10-20
 >
-> Operating System Concepts, Silberschatz, Ch 11
+> Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 11
 
 > **학습 목표:**
 > 1. HDD의 물리적 구조(platter, track, sector, cylinder, head, arm, spindle)와 head crash를 설명하고, 접근 시간을 seek time, rotational latency, transfer time으로 분해하여 전형적인 총합을 계산할 수 있다
 > 2. HDD와 NVM/SSD를 기계적 특성, 성능, 내구성 측면에서 구분하고, NAND Flash의 특성(페이지 단위 읽기와 쓰기, 블록 단위 erase, 덮어쓰기 불가)과 컨트롤러 메커니즘(FTL, garbage collection, over-provisioning, wear leveling, TRIM, write amplification)을 설명할 수 있다
-> 3. 저장 장치 연결 인터페이스(SATA, NVMe, SAS, USB, Fibre Channel)와 LBA 주소 지정(CHS, CAV와 CLV)을 비교하고, HDD 스케줄링 알고리즘(FCFS, SCAN(elevator), C-SCAN, LOOK, C-LOOK)을 실행하고 비교할 수 있다
+> 3. 저장 장치 연결 인터페이스(SATA, NVMe, SAS, USB, Fibre Channel)와 LBA 주소 지정과 CHS 매핑, CAV와 CLV 기록 방식을 비교하고, HDD 스케줄링 알고리즘(FCFS, SCAN(elevator), C-SCAN, LOOK, C-LOOK)을 실행하고 비교할 수 있다
 > 4. 오류 탐지와 정정 기법(parity, CRC, ECC)과 HDD, SSD에서의 쓰임, 드라이브 포매팅(low-level 포매팅, 파티셔닝, 논리 포매팅), 볼륨 관리, 부트 블록, 불량 블록 처리(sector sparing, sector slipping)를 설명할 수 있다
 > 5. Linux의 swap 공간 관리(파티션과 파일, swap map)와 저장 장치 부착 방식(host-attached, NAS, SAN, 클라우드 스토리지)을 설명할 수 있다
-> 6. RAID 0/1/4/5/6/10을 striping, mirroring, parity, 내결함성, 사용 사례 측면에서 설명하고, mirrored array의 MTBF를 계산하여 독립성 가정이 깨지는 경우와 RAID가 보호하지 못하는 오류를 ZFS 방식 checksum이 메우는 방식을 설명할 수 있다
+> 6. RAID 0/1/4/5/6/10을 striping, mirroring, parity, 내결함성, 사용 사례 측면에서 설명하고, mirrored array의 MTBF를 계산하고, 독립성 가정이 깨지는 경우와 RAID가 보호하지 못하는 오류를 ZFS 방식 checksum이 메우는 방식을 설명할 수 있다
 
 ---
 
@@ -189,7 +189,7 @@ $$
   총 접근 시간:                ~12.18 ms
 ```
 
-- seek time이 전체의 약 **66%**를 차지한다.
+- seek time이 전체의 약 **66%** 를 차지한다.
 - 따라서 초당 약 **$1000 / 12.18 \approx 82$회의 랜덤 I/O**가 가능하며, 이 82 IOPS가 HDD의 성능을 규정한다.
 - seek와 회전 비용이 긴 연속 구간에 분산되므로 **순차 I/O가 훨씬 빠르다.** 따라서 HDD에서는 랜덤 I/O와 순차 I/O의 성능 차이가 크다.
 
@@ -304,7 +304,7 @@ SSD에는 **seek가 없다.** 따라서 4절의 HDD 스케줄링 알고리즘은
 - SSD는 보통 단순한 **FCFS** 정책을 쓴다(Linux NOOP 스케줄러).
 - 인접한 요청은 **병합**하여 더 크고 효율적인 전송으로 만든다.
 - read 서비스 시간은 균일하지만 **write 서비스 시간은 균일하지 않다.** GC, 현재 사용률, wear leveling 상태에 따라 달라진다.
-- HDD는 수백 IOPS, SSD는 **수십만 IOPS**를 낸다.
+- HDD는 수십에서 수백 IOPS, SSD는 **수십만 IOPS**를 낸다.
 
 ### 2.6 휘발성 메모리를 저장 장치로 (RAM Drive)
 
@@ -732,7 +732,7 @@ C-SCAN과 C-LOOK의 총 이동에는 끝에서 처음으로 돌아가는 귀환 
 
 ### 7.1 목적과 크기 설정
 
-**목적.** swap 공간은 가상 메모리를 확장하는 디스크 공간이다. 물리 메모리가 가득 차면 페이지를 디스크로 보내고(**swap out**) 필요할 때 다시 가져온다(**swap in**). 현대 OS는 프로세스 전체가 아니라 **페이지 단위로** swap한다(12주차).
+**목적.** swap 공간은 가상 메모리를 확장하는 디스크 공간이다. 물리 메모리가 가득 차면 페이지를 디스크로 보내고(**swap out**) 필요할 때 다시 가져온다(**swap in**). 현대 OS는 프로세스 전체가 아니라 **페이지 단위로** swap한다(11주차).
 
 **크기 설정.**
 - **과소 할당:** 시스템이 swap을 다 써서 프로세스를 강제 종료하거나 crash한다.
@@ -921,6 +921,8 @@ $$
 \text{MTBF}_{\text{데이터 손실}} = \frac{(10^5)^2}{2 \cdot 10} = 5 \cdot 10^8 \text{ 시간} \approx \mathbf{57{,}000\text{ 년}}.
 $$
 
+> **[확률및통계]** 서로 **독립**인 사건들의 발생률은 더할 수 있고, 두 독립 사건이 함께 일어날 확률은 각 확률의 곱이다. 디스크 한 대의 고장률이 시간당 $1/\text{MTBF}$이면 디스크 100개 중 하나라도 고장 나는 비율은 $100/\text{MTBF}$이므로 어레이의 MTBF가 100분의 1이 된다. 미러 쌍에서는 두 디스크 중 하나가 시간당 $2/\text{MTBF}$의 비율로 먼저 고장 나고, 수리 시간 MTTR 동안 나머지 디스크가 고장 날 확률은 약 $\text{MTTR}/\text{MTBF}$이다. 두 값을 곱한 데이터 손실률 $2 \cdot \text{MTTR}/\text{MTBF}^2$의 역수가 위 식의 $\text{MTBF}^2/(2 \cdot \text{MTTR})$이며, 이렇게 곱할 수 있는 것은 두 고장이 독립이라고 가정했기 때문이다.
+
 **주의할 점:** 실제로는 독립성 가정이 깨진다.
 - 전력 서지, 자연재해, 제조 배치 결함은 동시 장애를 일으킨다.
 - 노화한 디스크들은 장애 시점이 서로 상관되어 있다(한 장애가 다른 장애를 예고한다).
@@ -1081,7 +1083,7 @@ $$
 - 쓰기마다 parity 두 개를 갱신하므로 쓰기 오버헤드가 RAID 5보다 크다.
 - **대용량 어레이의 표준**이다. 단일 장애 뒤의 재구축 시간이 길어서 재구축 중의 두 번째 장애가 현실적인 위협이 되기 때문이다.
 
-> **[이산수학]** 단순 XOR로는 장애 **두 개**를 견딜 수 없다. 미지수가 둘이면 **독립인** 방정식이 두 개 필요한데, 두 번째 XOR 방정식은 첫 번째와 선형 종속이 된다. 그래서 RAID 6은 Q를 **갈루아 체(Galois field)** $GF(2^8)$ 위에서 계산한다. 이는 바이트를 $GF(2)$ 위의 다항식으로 보고 기약 다항식으로 나눈 나머지로 다루는 유한체 산술이다. 각 데이터 블록에 서로 다른 체 상수를 곱한 뒤 더하므로 P와 Q가 선형 독립인 두 방정식을 이룬다. 잃어버린 두 블록의 복구는 **체 위의 2×2 연립 일차 방정식 풀이**이며, 가우스 소거법의 유한체 판이다. 0이 아닌 체 원소는 모두 역원이 있으므로 항상 풀린다.
+> **[선형대수학]** 단순 XOR로는 장애 **두 개**를 견딜 수 없다. 미지수가 둘이면 **독립인** 방정식이 두 개 필요한데, 두 번째 XOR 방정식은 첫 번째와 선형 종속이 된다. 그래서 RAID 6은 Q를 **갈루아 체(Galois field)** $GF(2^8)$ 위에서 계산한다. 이는 바이트를 $GF(2)$ 위의 다항식으로 보고 기약 다항식으로 나눈 나머지로 다루는 유한체 산술이다. 각 데이터 블록에 서로 다른 체 상수를 곱한 뒤 더하므로 P와 Q가 선형 독립인 두 방정식을 이룬다. 잃어버린 두 블록의 복구는 **체 위의 2×2 연립 일차 방정식 풀이**이며, 가우스 소거법의 유한체 판이다. 0이 아닌 체 원소는 모두 역원이 있으므로 항상 풀린다.
 
 ### 9.9 RAID 0+1 vs RAID 1+0 (RAID 10)
 
@@ -1262,7 +1264,7 @@ for name, fn in [
 | RAID | striping, mirroring, parity로 성능과 신뢰성을 높인다. |
 | RAID 레벨 | 0, 1, 4, 5, 6, 10은 용량을 신뢰성이나 성능과 맞바꾸며, 최선의 레벨은 없고 워크로드에 맞는 레벨만 있다. |
 | RAID 너머 | 물리 매체 중복성은 장치 계층 위의 손상을 잡지 못하므로, 이 사각지대를 ZFS 방식의 종단 간(end-to-end) checksum이 메운다. |
-| OS 저장 스택 | swap, RAID, 저장 장치 부착은 모두 같은 OS 저장 스택을 거치며, 사용자 공간에는 블록 장치만 보이지만 OS는 그 아래에서 평평하고 무한하며 믿을 수 있는 바이트 배열이라는 추상화를 유지한다. |
+| OS 저장 스택 | swap, RAID, 저장 장치 부착은 모두 같은 OS 저장 스택을 거치며, OS는 장치마다 다른 물리적 세부를 숨기고 평평하고 믿을 수 있는 논리 블록 배열이라는 추상화를 위 계층에 제공한다. |
 
 ---
 
@@ -1306,7 +1308,7 @@ for name, fn in [
 
    </details>
 
-5. **SCAN과 C-SCAN의 공정성:** SCAN이 한 바퀴에 모든 cylinder를 두 번 방문하는데도 C-SCAN이 더 균일한 대기 시간을 주는 이유는 무엇인가?
+5. **SCAN과 C-SCAN의 공정성:** SCAN이 한 바퀴에 대부분의 cylinder를 두 번 방문하는데도 C-SCAN이 더 균일한 대기 시간을 주는 이유는 무엇인가?
 
    <details>
    <summary>정답</summary>

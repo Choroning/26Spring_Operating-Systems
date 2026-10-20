@@ -2,9 +2,9 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **Last Updated:** 2026-10-18
+> **Last Updated:** 2026-10-20
 >
-> Operating System Concepts, Silberschatz, Ch 6, 7
+> Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 6, 7
 
 > **Learning Objectives:**
 > 1. Define a race condition and explain the three requirements of the Critical-Section Problem (mutual exclusion, progress, bounded waiting)
@@ -130,7 +130,7 @@ The kernel manipulates extensive shared state on behalf of all processes, so rac
 - **Memory allocator** bookkeeping (free lists, zone counts) can be corrupted.
 - **Process list** updates during `fork()` and `exit()` and **interrupt handlers** that touch shared structures are similarly vulnerable.
 
-Kernel developers must **systematically prevent** these races, and user-space programmers benefit from that discipline.
+Kernel developers must **systematically prevent** these race conditions, and user-space programmers benefit from that discipline.
 
 ### 1.4 The Critical-Section Problem
 
@@ -282,7 +282,7 @@ boolean test_and_set(boolean *target) {
 ```c
 do {
     while (test_and_set(&lock))
-        ;                  /* busy wait until lock was false */
+        ;                  /* busy wait until the returned old value is false */
 
     /* critical section */
 
@@ -436,7 +436,7 @@ A **spinlock** is a mutex whose `acquire()` **busy-waits** (loops) until the loc
 | Wait strategy | **Spin** in a loop | **Block** (sleep) |
 | Wakeup cost | None (already running) | Two context switches (sleep + wake) |
 | Best when | Lock held for a **very short** time | Lock held for a **longer** time |
-| Risk | Wastes CPU on uniprocessor, only one core can spin productively | Higher latency to acquire |
+| Risk | Wastes CPU on a uniprocessor; spinning is productive only on a multicore, where another core can release the lock | Higher latency to acquire |
 
 *Table 1. Comparison of spinlocks and sleeping locks*
 
@@ -1223,6 +1223,8 @@ Its notable features are as follows.
 - A **fairness parameter** (`new ReentrantLock(true)`) makes the lock favor the longest-waiting thread.
 - **Reentrant**: a thread that already holds the lock may acquire it again without deadlocking (the lock counts the nesting depth).
 
+> **[Computer Programming]** In Java's `try`-`catch`-`finally` statement, the `finally` block always runs, whether the `try` block finishes normally or exits through an exception. Wrapping the critical section after `lock()` in `try` and placing `unlock()` in `finally` therefore releases the lock even if the critical section throws, so other threads never wait forever on a lock whose holder has left. The `catch (InterruptedException ie)` clause in each example handles the checked exception thrown by `wait()`, `acquire()`, and `await()`. This exception signals that a waiting thread was interrupted, and the Java compiler requires checked exceptions to be handled or declared.
+
 `java.util.concurrent.Semaphore` is the standard semaphore.
 
 ```java
@@ -1399,18 +1401,18 @@ Note the use of `while (state[i] != EATING)` around `pthread_cond_wait`. It is e
 |:--------|:-----------|
 | Race Condition | It arises when shared data is accessed concurrently without coordination, and the result depends on the interleaving order. |
 | Critical-Section Problem | A solution must satisfy the three requirements of **mutual exclusion**, **progress**, and **bounded waiting**. |
-| Preemptive vs Nonpreemptive Kernel | A nonpreemptive kernel avoids races on a single CPU but is less responsive, and modern kernels (Linux 2.6 and later, Windows, macOS) are preemptive. |
+| Preemptive vs Nonpreemptive Kernel | A nonpreemptive kernel avoids race conditions on kernel data on a single CPU but is less responsive, and modern kernels (Linux 2.6 and later, Windows, macOS) are preemptive. |
 | Peterson's Solution | It is a provably correct software-only solution for two processes, but it **breaks under instruction reordering** without memory barriers. |
 | Memory Barrier | It forces the ordering of loads and stores across CPUs and is the foundation of modern locks and atomic variables. |
 | `test_and_set` / `compare_and_swap` | They are hardware atomic primitives, and CAS is the building block of most modern lock-free data structures. |
-| Atomic Variables | They update a single variable without races but are **insufficient** for invariants that span multiple variables. |
+| Atomic Variables | They update a single variable without race conditions but are **insufficient** for invariants that span multiple variables. |
 | Mutex Lock | It is the simplest protection tool, and `acquire()` and `release()` must be atomic. |
 | Spinlock vs Sleeping Lock | A spinlock avoids context switches but wastes CPU, while a sleeping lock suits long critical sections, so the choice depends on the expected hold time. |
 | Semaphore | It is accessed through atomic `wait`/`signal`; a **counting** semaphore models resource pools, a **binary** semaphore behaves like a mutex, and a semaphore can also enforce execution order. |
 | Waiting Queue | It eliminates application-level busy waiting, and when `value` is negative, its absolute value is the number of waiters. |
 | Monitor | It is a high-level ADT with automatic mutual exclusion that replaces error-prone explicit `wait`/`signal` calls. |
 | Condition Variable | It waits for and announces conditions with `wait`/`signal` inside a monitor, under either the signal-and-wait or the signal-and-continue policy. |
-| Deadlock | It is a circular wait among processes, and its resolution and prevention are covered in Week 10. |
+| Deadlock | It is a state in which every process in a set waits for an event that only another process in the set can cause, and its diagnosis, prevention, avoidance, detection, and recovery are covered in Week 10. |
 | Priority Inversion | A lower-priority task indirectly blocks a higher-priority one, and **priority inheritance** fixes it (Mars Pathfinder, 1997). |
 | Bounded-Buffer | It uses the `mutex`, `empty`, and `full` semaphores and calls **wait on a counting semaphore before wait on mutex** to avoid deadlock. |
 | Readers-Writers | Either many readers or one writer may access the data, the first and second variants allow writer and reader starvation respectively, and reader-writer locks generalize the idea. |
@@ -1449,7 +1451,7 @@ Note the use of `while (state[i] != EATING)` around `pthread_cond_wait`. It is e
    <details>
    <summary>Answer</summary>
 
-   In a **single-CPU nonpreemptive** kernel, no other kernel thread can run until the current one yields, so kernel data races are inherently absent. In a **preemptive** kernel, another thread (even on **another core**) can interleave at any moment, so every shared kernel structure needs explicit protection. Disabling interrupts is enough on a uniprocessor but not across the cores of an SMP system.
+   In a **single-CPU nonpreemptive** kernel, no other kernel thread can run until the current one yields, so race conditions on kernel data inherently cannot occur. In a **preemptive** kernel, another thread (even on **another core**) can interleave at any moment, so every shared kernel structure needs explicit protection. Disabling interrupts is enough on a uniprocessor but not across the cores of an SMP system.
 
    </details>
 
@@ -1462,7 +1464,7 @@ Note the use of `while (state[i] != EATING)` around `pthread_cond_wait`. It is e
 
    </details>
 
-5. **test_and_set and CAS:** Give pseudocode for `test_and_set` and `compare_and_swap`, and show how each implements a lock. Why is CAS strictly more powerful?
+5. **test_and_set and CAS:** Give pseudocode for `test_and_set` and `compare_and_swap`, and show how each implements a lock. Why is CAS more powerful?
 
    <details>
    <summary>Answer</summary>
@@ -1532,7 +1534,7 @@ Note the use of `while (state[i] != EATING)` around `pthread_cond_wait`. It is e
     <details>
     <summary>Answer</summary>
 
-    When a thread P inside a monitor calls `x.signal()` and another thread Q is waiting on `x`, both want to be the active thread inside the monitor, but only one can be. Under **signal-and-wait**, P pauses and Q runs immediately. Under **signal-and-continue**, P keeps running until it leaves the monitor, and then Q runs. Different languages pick different policies, and in either case the condition predicate should be re-checked in a `while` loop.
+    When a thread P inside a monitor calls `x.signal()` and another thread Q is waiting on `x`, both want to be the active thread inside the monitor, but only one can be. Under **signal-and-wait**, P pauses and Q runs immediately. Under **signal-and-continue**, P keeps running until it leaves the monitor, and then Q runs. Different languages pick different policies. Under signal-and-continue, another thread may have changed the condition again by the time Q runs, so the condition predicate must be re-checked in a `while` loop.
 
     </details>
 

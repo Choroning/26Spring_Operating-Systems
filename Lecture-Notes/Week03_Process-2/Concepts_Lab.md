@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lab.md) | [한국어](Concepts_Lab.ko.md)
 
-> **Last Updated:** 2026-10-18
+> **Last Updated:** 2026-10-20
 
 > **Learning Objectives:**
 > 1. Navigate the xv6 source code structure
@@ -17,7 +17,7 @@
 - [1. Lab Overview](#1-lab-overview)
 - [2. Lab 0: Environment Setup](#2-lab-0-environment-setup)
   - [2.1 Prerequisites](#21-prerequisites)
-  - [2.2 Build Verification & Troubleshooting](#22-build-verification--troubleshooting)
+  - [2.2 Build Verification and Troubleshooting](#22-build-verification-and-troubleshooting)
 - [3. Lab 1: Source Structure](#3-lab-1-source-structure)
 - [4. Lab 2: System Call Tracing](#4-lab-2-system-call-tracing)
   - [4.1 System Call Path](#41-system-call-path)
@@ -57,7 +57,7 @@ graph LR
 
 ## 2. Lab 0: Environment Setup
 
-> **Note:** If you already set up the xv6 environment in Week 2, skip to [Section 3](#3-lab-1-source-structure).
+> **Note:** If the xv6 build environment is already set up, skip to [Section 3](#3-lab-1-source-structure).
 
 ### 2.1 Prerequisites
 
@@ -106,9 +106,9 @@ git clone https://github.com/mit-pdos/xv6-riscv.git
 
 > **Note:** U-mode (User mode) is where normal programs run with restricted privileges; S-mode (Supervisor mode) is the privileged level where the kernel runs, and the CPU enforces strict rules about which operations each mode can perform.
 
-### 2.2 Build Verification & Troubleshooting
+### 2.2 Build Verification and Troubleshooting
 
-#### Build & Run
+#### Build and Run
 
 ```bash
 cd xv6-riscv
@@ -329,13 +329,13 @@ struct proc {
 
 > **Note:** `pagetable_t` in xv6 is a typedef for a pointer to the root of a process's page table; it maps virtual addresses to physical memory. Its definition is `typedef uint64 *pagetable_t;` in `kernel/riscv.h`.
 
-> **Note:** `struct spinlock lock` is the **spinlock** for this process structure. A spinlock is the simplest synchronization tool that prevents other CPU cores from simultaneously modifying the same `struct proc`. It is called a "spin" lock because a core trying to acquire it spins in a `while (lock == held)` loop. Since xv6 supports multi-core, this lock must be acquired before changing the process state. Details on spinlocks and synchronization are covered in Weeks 9-10.
+> **Note:** `struct spinlock lock` is the **spinlock** for this process structure. A spinlock is the simplest synchronization tool that prevents other CPU cores from simultaneously modifying the same `struct proc`. It is called a spinlock because a core trying to acquire it spins in a `while (lock == held)` loop. Since xv6 supports multi-core, this lock must be acquired before changing the process state. Details on spinlocks and synchronization are covered in Week 9.
 
-> **Note:** A **sleep channel** is an **arbitrary address value** that identifies what a process is waiting for while sleeping. For example, if a process sleeps while waiting for data on a pipe, the address of that pipe structure is stored in `chan`. Later, when data arrives, `wakeup(chan)` is called to wake all processes sleeping on that address. This mechanism avoids busy waiting and uses the CPU efficiently. The `sleep()`/`wakeup()` implementation is covered in detail in Week 9.
+> **Note:** A **sleep channel** is an **arbitrary address value** that identifies what a process is waiting for while sleeping. For example, if a process sleeps while waiting for data on a pipe, the address of that pipe structure is stored in `chan`. Later, when data arrives, `wakeup(chan)` is called to wake all processes sleeping on that address. This mechanism avoids busy waiting and uses the CPU efficiently. The behavior of `sleep()`/`wakeup()` is traced in the Week 6 lab.
 
-> **[Computer Programming]** `struct proc` is a C structure representing a single process. Each field covers a different aspect of the process (scheduling state, memory layout, open files, etc.). In the Linux kernel, the corresponding `task_struct` has hundreds of fields, highlighting the simplicity of xv6 for learning purposes.
+> **[Computer Programming]** A C **structure (struct)** is a user-defined type that groups fields of different types, and `struct proc` is the structure representing a single process. Each field covers a different aspect of the process (scheduling state, memory layout, open files, etc.). In the Linux kernel, the corresponding `task_struct` has hundreds of fields, highlighting the simplicity of xv6 for learning purposes.
 
-> **Note:** **Exam tip.** `trapframe` is a structure for preserving user register values when transitioning from user mode to kernel mode. It is the core mechanism that allows a user program to resume exactly where it left off after a system call completes. Be sure to understand the role of each field.
+> **Key Point:** `trapframe` is a structure for preserving user register values when transitioning from user mode to kernel mode. It is the core mechanism that allows a user program to resume exactly where it left off after a system call completes. The representative registers saved in the trapframe are listed in Section 6.
 
 ---
 
@@ -398,9 +398,9 @@ struct proc {
 > 3. Copy the contents of the parent's page to the new frame **byte by byte** (`memmove`).
 > 4. Map the new frame to the same virtual address in the child's page table.
 >
-> This process becomes more expensive as the process memory grows. "u" stands for user, "vm" for virtual memory, and "copy" for copy; as the name suggests, it is a function that copies user virtual memory.
+> This process becomes more expensive as the process memory grows. In the function name, `u` stands for user, `vm` for virtual memory, and `copy` for copy; as the name suggests, it is a function that copies user virtual memory.
 
-> **[Computer Architecture]** The `a0` register in RISC-V is used to convey function return values. The mechanism by which `fork()` returns the child PID to the parent and 0 to the child is implemented through manipulation of `trapframe->a0`. The fact that identical code returns different values in two processes via this mechanism is a frequent exam question.
+> **[Computer Architecture]** The `a0` register in RISC-V is used to convey function return values. The mechanism by which `fork()` returns the child PID to the parent and 0 to the child is implemented through manipulation of `trapframe->a0`. This mechanism is what lets identical code return different values in two processes.
 
 > **Note:** Having `uvmcopy()` copy all pages is highly inefficient. In real Linux, the COW (Copy-On-Write) technique is used: at fork time, only page table entries are copied, and actual physical pages are copied only when a write is attempted. This optimization is covered in Week 12.
 

@@ -1,10 +1,10 @@
-# HW1 과제 해설 — pingpong & minishell
+# HW1 과제 해설 — pingpong과 minishell
 
 [레포지토리 안내](../../README.ko.md) | [English](Assignment-Explanation.md) | [한국어](Assignment-Explanation.ko.md)
 
-> **최종 수정일:** 2026-10-18
+> **최종 수정일:** 2026-10-20
 >
-> Operating System Concepts, Silberschatz, Ch 3 (3.1-3.3)
+> Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 3 (3.1-3.3)
 
 > **학습 목표:**
 > 1. 파이프 두 개로 부모와 자식 프로세스 사이의 양방향 통신을 구현하고 왕복 시간을 측정할 수 있다
@@ -48,11 +48,11 @@
   - [4.5 TODO 7: 부모에서 정리](#45-todo-7-부모에서-정리)
   - [4.6 execute_pipe 전체 흐름 요약](#46-execute_pipe-전체-흐름-요약)
   - [4.7 파이프 + 리디렉션 조합](#47-파이프--리디렉션-조합)
-- [5. 핵심 개념 정리 및 시험 대비 포인트](#5-핵심-개념-정리-및-시험-대비-포인트)
+- [5. 핵심 개념 정리](#5-핵심-개념-정리)
   - [5.1 시스템 콜 조합 패턴 총정리](#51-시스템-콜-조합-패턴-총정리)
   - [5.2 fd 관리 규칙](#52-fd-관리-규칙)
   - [5.3 이 과제와 강의 내용의 연결](#53-이-과제와-강의-내용의-연결)
-  - [5.4 시험 대비: 자주 출제되는 포인트](#54-시험-대비-자주-출제되는-포인트)
+  - [5.4 시스템 콜별 핵심 포인트](#54-시스템-콜별-핵심-포인트)
 - [요약](#요약)
 - [점검 문제](#점검-문제)
 
@@ -88,7 +88,7 @@ Coursework/HW01_Process-1/
 ├── Assignment-Explanation.ko.md    # 과제 해설 문서 (한국어, 이 파일)
 └── Solution/
     ├── pingpong.c                  # 과제 1: 두 프로세스가 pipe로 1바이트를 주고받는 프로그램
-    ├── minishell.c                 # 과제 2: 파이프 및 I/O 리다이렉션을 지원하는 간단한 셸
+    ├── minishell.c                 # 과제 2: 파이프 및 I/O 리디렉션을 지원하는 간단한 셸
     ├── test_pingpong.sh            # pingpong.c 자동 채점 스크립트
     └── test_minishell.sh           # minishell.c 자동 채점 스크립트
 ```
@@ -268,7 +268,7 @@ printf("Round-trip time: %.3f us\n", elapsed);
 /* TODO 9: 사용한 pipe fd를 닫고 wait()으로 자식을 기다리세요. */
 close(parent_to_child[1]);
 close(child_to_parent[0]);
-wait(NULL);   /* 자식 프로세스 회수 — 좀비 방지 */
+wait(NULL);   /* 자식 프로세스 회수: 좀비 방지 */
 ```
 
 > **참고:** **2주차 이론: 문맥 교환.** 왕복 시간에는 **문맥 교환(Context Switch)** 오버헤드가 포함된다. CPU 코어가 하나라면 부모가 `write()`한 뒤 자식이 `read()`에서 깨어나려면 CPU가 부모에서 자식으로 전환되어야 하고, 자식이 `write()`한 뒤 부모가 `read()`에서 깨어나려면 또 한 번 전환이 필요하다. 즉 단일 코어에서 측정된 RTT는 대략 데이터 복사 시간 + 문맥 교환 시간 × 2이다. 멀티코어에서는 부모와 자식이 서로 다른 코어에서 실행될 수 있으므로, 문맥 교환 대신 다른 코어에서 잠든 프로세스를 깨우는 비용이 든다.
@@ -390,7 +390,7 @@ static int execute_command(struct command *cmd)
 if (pid == 0) {
     /* TODO 2 (자식 프로세스): */
 
-    /* a. 입력 리다이렉션 */
+    /* a. 입력 리디렉션 */
     if (cmd->infile != NULL) {
         int fd = open(cmd->infile, O_RDONLY);   /* 파일을 읽기 전용으로 열기 */
         if (fd < 0) {
@@ -407,14 +407,14 @@ if (pid == 0) {
 **`dup2(fd, STDIN_FILENO)` 동작 원리:**
 1. 파일 디스크립터 테이블에서 `STDIN_FILENO`(= 0)이 가리키는 대상을 `fd`와 같은 대상으로 바꾼다.
 2. 이후 `exec()`로 실행되는 프로그램이 `stdin`에서 읽으면 실제로는 파일에서 읽게 된다.
-3. 프로그램은 리디렉션을 **인식하지 못하며**, 그냥 stdin에서 읽을 뿐이다.
+3. 프로그램은 리디렉션을 **인식하지 못하며**, 평소처럼 stdin에서 읽을 뿐이다.
 
 > **참고:** **2주차 실습 4.** `sort < data.txt`를 실행하면 `sort` 프로그램은 평소처럼 `stdin`에서 읽지만, 실제로는 `data.txt`의 내용이 읽힌다. 프로그램을 수정하지 않고도 입출력 대상을 바꿀 수 있다는 점이 UNIX I/O 리디렉션의 강점이다.
 
 ### 3.5 TODO 2b: 출력 리디렉션
 
 ```c
-    /* b. 출력 리다이렉션 */
+    /* b. 출력 리디렉션 */
     if (cmd->outfile != NULL) {
         int fd = open(cmd->outfile,
                       O_WRONLY | O_CREAT | O_TRUNC,   /* 쓰기용 | 없으면 생성 | 있으면 덮어쓰기 */
@@ -446,7 +446,7 @@ if (pid == 0) {
     /* c. 명령어 실행 */
     execvp(cmd->argv[0], cmd->argv);
 
-    /* d. exec 실패 — 이 줄에 도달하면 exec이 실패한 것 */
+    /* d. exec 실패: 이 줄에 도달하면 exec이 실패한 것 */
     perror("minishell");
     exit(127);
 }
@@ -496,7 +496,7 @@ if (pid == 0) {
 ### 3.8 execute_command 전체 흐름 요약
 
 ```text
-execute_command(cmd) 호출 — 예: "ls -l > out.txt"
+execute_command(cmd) 호출 (예: "ls -l > out.txt")
     │
     ├── fork()
     │     │
@@ -670,7 +670,7 @@ return -1;
 ### 4.6 execute_pipe 전체 흐름 요약
 
 ```text
-execute_pipe(cmd1, cmd2) 호출 — 예: "ls | wc -l"
+execute_pipe(cmd1, cmd2) 호출 (예: "ls | wc -l")
     │
     ├── pipe(fd)  → fd[0]=읽기, fd[1]=쓰기
     │
@@ -722,7 +722,7 @@ stdout → [파이프] → stdin
 
 <br>
 
-## 5. 핵심 개념 정리 및 시험 대비 포인트
+## 5. 핵심 개념 정리
 
 ### 5.1 시스템 콜 조합 패턴 총정리
 
@@ -785,7 +785,7 @@ fd 소유 상황 (fork() 후):
 
 *표 10. 2주차 실습과 과제의 연결*
 
-### 5.4 시험 대비: 자주 출제되는 포인트
+### 5.4 시스템 콜별 핵심 포인트
 
 **1. fork() 관련:**
 - fork()의 반환 값은 부모에서 자식 pid, 자식에서 0, 실패 시 -1이다.
@@ -807,9 +807,9 @@ fd 소유 상황 (fork() 후):
 
 **5. dup2() 관련:**
 - `dup2(oldfd, newfd)`는 newfd가 oldfd와 같은 대상을 가리키게 한다.
-- 셸의 `>`, `<`, `|`는 모두 dup2()로 구현된다.
+- 셸의 `>`, `<`, `|`는 모두 dup2()로 표준 입력이나 표준 출력을 다른 fd에 연결해 구현한다(`|`는 pipe()로 만든 fd를 연결한다).
 
-> **참고:** **시험 팁.** 위 5개 시스템 콜의 동작 원리를 정확히 이해하고, 코드에서 어떤 순서로 호출해야 하는지(fork 전에 pipe, fork 후에 dup2, exec 전에 리디렉션 설정 등)를 숙지해야 한다.
+> **핵심:** 위 5개 시스템 콜은 동작 원리와 함께 코드에서 호출하는 순서(fork 전에 pipe, fork 후에 dup2, exec 전에 리디렉션 설정 등)가 올바른 동작을 좌우한다.
 
 ---
 
@@ -826,7 +826,7 @@ fd 소유 상황 (fork() 후):
 | execvp()의 선택 이유 | `v`(배열 인자)와 `p`(PATH 검색) 덕분에 struct command의 argv를 그대로 사용하면서 PATH를 자동으로 검색한다. |
 | 파이프 + 리디렉션 조합 | cmd1의 stdout이 파이프를 거쳐 cmd2의 stdin으로 연결되고, cmd2에는 출력 리디렉션을 추가로 설정할 수 있다. |
 | 시스템 콜 조합 패턴 | 주요 패턴은 fork+wait, fork+exec+wait, pipe+fork+read/write, pipe+fork×2+dup2+exec, open+dup2+close이다. |
-| 시험 핵심 | fork 반환 값 구분, exec 성공 시 미반환, wait 미호출 시 좀비, 파이프 단방향 원칙, dup2 동작 원리가 핵심이다. |
+| 시스템 콜 동작의 핵심 | fork 반환 값 구분, exec 성공 시 미반환, wait 미호출 시 좀비, 파이프 단방향 원칙, dup2 동작 원리가 핵심이다. |
 | 강의 연계 | 2주차 이론의 프로세스 생성, 종료, 좀비, 문맥 교환(Ch 3.1\~3.3)과 2주차 실습의 pipe, dup2, fd 관리(실습 3\~4)를 적용한다. |
 
 ---

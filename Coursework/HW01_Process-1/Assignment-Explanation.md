@@ -2,9 +2,9 @@
 
 [Repository Guide](../../README.md) | [English](Assignment-Explanation.md) | [한국어](Assignment-Explanation.ko.md)
 
-> **Last Updated:** 2026-10-18
+> **Last Updated:** 2026-10-20
 >
-> Operating System Concepts, Silberschatz, Ch 3 (3.1-3.3)
+> Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 3 (3.1-3.3)
 
 > **Learning Objectives:**
 > 1. Implement bidirectional communication between a parent and a child process with two pipes and measure the round-trip time
@@ -48,11 +48,11 @@
   - [4.5 TODO 7: Cleanup in the Parent](#45-todo-7-cleanup-in-the-parent)
   - [4.6 execute_pipe Complete Flow Summary](#46-execute_pipe-complete-flow-summary)
   - [4.7 Pipe + Redirection Combination](#47-pipe--redirection-combination)
-- [5. Key Concepts Summary and Exam Preparation](#5-key-concepts-summary-and-exam-preparation)
+- [5. Key Concepts Summary](#5-key-concepts-summary)
   - [5.1 System Call Combination Patterns Summary](#51-system-call-combination-patterns-summary)
   - [5.2 fd Management Rules](#52-fd-management-rules)
   - [5.3 Connecting This Assignment to Lecture Content](#53-connecting-this-assignment-to-lecture-content)
-  - [5.4 Exam Preparation: Frequently Tested Topics](#54-exam-preparation-frequently-tested-topics)
+  - [5.4 Key Points by System Call](#54-key-points-by-system-call)
 - [Summary](#summary)
 - [Self-Check Questions](#self-check-questions)
 
@@ -210,15 +210,15 @@ After `fork()`, both parent and child hold 4 pipe fds. Each process must close t
 **Child Process (TODO 2):**
 ```c
 /* The child only reads from parent_to_child and only writes to child_to_parent */
-close(parent_to_child[1]);   /* Write end of parent→child pipe (child doesn't write) */
-close(child_to_parent[0]);   /* Read end of child→parent pipe (child doesn't read) */
+close(parent_to_child[1]);   /* Write end of parent→child pipe (child does not write) */
+close(child_to_parent[0]);   /* Read end of child→parent pipe (child does not read) */
 ```
 
 **Parent Process (TODO 6):**
 ```c
 /* The parent only writes to parent_to_child and only reads from child_to_parent */
-close(parent_to_child[0]);   /* Read end of parent→child pipe (parent doesn't read) */
-close(child_to_parent[1]);   /* Write end of child→parent pipe (parent doesn't write) */
+close(parent_to_child[0]);   /* Read end of parent→child pipe (parent does not read) */
+close(child_to_parent[1]);   /* Write end of child→parent pipe (parent does not write) */
 ```
 
 > **Note:** **Week 2 Lab 3.** The lab covers the rule of always closing the unused end. There are two reasons. (1) If the write end remains open, the reading side **cannot receive EOF**, causing the program to block forever. (2) File descriptors are a finite resource, so unnecessary fds should be released immediately.
@@ -268,7 +268,7 @@ printf("Round-trip time: %.3f us\n", elapsed);
 /* TODO 9: Close the used pipe fds and wait for the child with wait(). */
 close(parent_to_child[1]);
 close(child_to_parent[0]);
-wait(NULL);   /* Reap child process — prevent zombie */
+wait(NULL);   /* Reap child process: prevent zombie */
 ```
 
 > **Note:** **Week 2 Lecture: Context Switch.** The round-trip time includes **context switch** overhead. With a single CPU core, for the child to wake up on `read()` after the parent calls `write()`, the CPU must switch from parent to child, and for the parent to wake up on `read()` after the child calls `write()`, another switch is needed. In other words, the RTT measured on a single core is roughly data copy time + context switch time × 2. On a multicore machine the parent and child can run on different cores, so the cost is waking a process that sleeps on another core instead of a context switch.
@@ -446,7 +446,7 @@ if (pid == 0) {
     /* c. Execute the command */
     execvp(cmd->argv[0], cmd->argv);
 
-    /* d. exec failure — reaching this line means exec failed */
+    /* d. exec failure: reaching this line means exec failed */
     perror("minishell");
     exit(127);
 }
@@ -496,7 +496,7 @@ Here there is only 1 child, but `waitpid()` is used to receive the termination s
 ### 3.8 execute_command Complete Flow Summary
 
 ```text
-execute_command(cmd) called — e.g., "ls -l > out.txt"
+execute_command(cmd) called (e.g., "ls -l > out.txt")
     │
     ├── fork()
     │     │
@@ -670,7 +670,7 @@ return -1;
 ### 4.6 execute_pipe Complete Flow Summary
 
 ```text
-execute_pipe(cmd1, cmd2) called — e.g., "ls | wc -l"
+execute_pipe(cmd1, cmd2) called (e.g., "ls | wc -l")
     │
     ├── pipe(fd)  → fd[0]=read, fd[1]=write
     │
@@ -722,7 +722,7 @@ In the code, child 2 checks `cmd2->outfile` to additionally set up output redire
 
 <br>
 
-## 5. Key Concepts Summary and Exam Preparation
+## 5. Key Concepts Summary
 
 ### 5.1 System Call Combination Patterns Summary
 
@@ -785,7 +785,7 @@ Child 2(cmd2):   ✓      ✕     ← close fd[1], connect fd[0] to stdin then c
 
 *Table 10. Connections between the Week 2 lab and the assignment*
 
-### 5.4 Exam Preparation: Frequently Tested Topics
+### 5.4 Key Points by System Call
 
 **1. fork() Related:**
 - fork() returns the child pid in the parent, 0 in the child, and -1 on failure.
@@ -807,9 +807,9 @@ Child 2(cmd2):   ✓      ✕     ← close fd[1], connect fd[0] to stdin then c
 
 **5. dup2() Related:**
 - `dup2(oldfd, newfd)` makes newfd point to the same target as oldfd.
-- The shell's `>`, `<`, and `|` are all implemented using dup2().
+- The shell implements `>`, `<`, and `|` by using dup2() to connect standard input or output to another fd (for `|`, an fd created by pipe()).
 
-> **Note:** **Exam Tip.** You must understand the operating principles of the above 5 system calls precisely, and master the order in which they must be called in code (pipe before fork, dup2 after fork, set up redirection before exec, etc.).
+> **Key Point:** For the above 5 system calls, correct behavior depends on both their operating principles and the order in which they are called in code (pipe before fork, dup2 after fork, redirection set up before exec, etc.).
 
 ---
 
@@ -826,7 +826,7 @@ Child 2(cmd2):   ✓      ✕     ← close fd[1], connect fd[0] to stdin then c
 | Why execvp() | `v` (array arguments) and `p` (PATH search) let it use struct command's argv directly while searching PATH automatically. |
 | Pipe + redirection combo | cmd1's stdout is connected through the pipe to cmd2's stdin, and cmd2 can additionally have output redirection. |
 | System call combination patterns | The main patterns are fork+wait, fork+exec+wait, pipe+fork+read/write, pipe+fork×2+dup2+exec, and open+dup2+close. |
-| Exam essentials | The essentials are distinguishing fork return values, exec not returning on success, a zombie on a missing wait, the unidirectional pipe principle, and how dup2 works. |
+| Key system call behaviors | The essentials are distinguishing fork return values, exec not returning on success, a zombie on a missing wait, the unidirectional pipe principle, and how dup2 works. |
 | Lecture connections | It applies process creation, termination, zombies, and context switches from the Week 2 lecture (Ch 3.1-3.3) and pipe, dup2, and fd management from the Week 2 lab (Labs 3-4). |
 
 ---

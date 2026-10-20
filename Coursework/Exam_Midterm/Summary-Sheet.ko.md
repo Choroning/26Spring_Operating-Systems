@@ -2,7 +2,7 @@
 
 [레포지토리 안내](../../README.ko.md) | [English](Summary-Sheet.md) | [한국어](Summary-Sheet.ko.md)
 
-> **최종 수정일:** 2026-10-19
+> **최종 수정일:** 2026-10-20
 
 ---
 
@@ -37,7 +37,7 @@
 | Interrupt | 인터럽트 | 장치가 CPU에 보내는 비동기 신호 |
 | System Call | 시스템 콜(System Call) | 유저→커널 유일 인터페이스 |
 | DMA | 직접 메모리 접근(Direct Memory Access, DMA) | CPU 없이 메모리↔장치 전송 |
-| Context Switch | 컨텍스트 스위칭(Context Switching) | 프로세스(Process) 상태 저장/복원 |
+| Context Switch | 문맥 교환(Context Switching) | 프로세스(Process) 상태 저장/복원 |
 | PCB | 프로세스 제어 블록(Process Control Block, PCB) | 프로세스 정보 담는 커널 구조체 |
 | Process | 프로세스 | 실행 중인 프로그램 |
 | Thread | 스레드(Thread) | 프로세스 내 실행 단위 |
@@ -61,7 +61,7 @@
 | Mutex | 뮤텍스(Mutex) | 상호 배제 잠금 |
 | TLB | 변환 참조 버퍼 | 가상→물리 주소 변환 캐시 |
 | COW | Copy-on-Write | fork 최적화 (쓰기 시 복사) |
-| TLS | 스레드-로컬 저장소(Thread-Local Storage, TLS) | 스레드별 독립 전역 변수 |
+| TLS | 스레드 로컬 저장소(Thread-Local Storage, TLS) | 스레드별 독립 전역 변수 |
 | LWP | 경량 프로세스(Lightweight Process, LWP) | 유저/커널 스레드(Kernel Thread) 중간 계층 |
 | PCS / SCS | 경쟁 범위 | 프로세스 내 / 시스템 전체 |
 | SMP | 대칭 다중 프로세싱(Symmetric Multiprocessing, SMP) | 모든 CPU가 동등, 독립 스케줄링 |
@@ -76,7 +76,7 @@
 | Aging | 노화(Aging) | 대기 시간(Waiting Time)에 따라 우선순위 상승 |
 | Convoy Effect | 호위 효과(Convoy Effect) | FCFS에서 긴 작업이 앞을 막음 |
 | Starvation | 기아(Starvation) | 프로세스 무한 대기 |
-| Dispatcher | 디스패처(Dispatcher) | 실제 컨텍스트 스위치(Context Switch) 수행 |
+| Dispatcher | 디스패처(Dispatcher) | 실제 문맥 교환(Context Switch) 수행 |
 | RMS | Rate-Monotonic | 주기(Period) 짧을수록 우선 (실시간) |
 | EDF | Earliest-Deadline-First | 가장 가까운 마감(Deadline) 우선 |
 | Priority Inversion | 우선순위 역전(Priority Inversion) | 낮은 작업이 높은 작업 간접 블록 |
@@ -118,7 +118,7 @@
 ```text
 user code
   ↓ libc wrapper
-  ↓ a7 ← syscall#, 인자 ← a0~a6
+  ↓ a7 ← syscall#, 인자 ← a0~a5
   ↓ ecall (트랩)
 kernel trap handler
   ↓ syscall table lookup
@@ -145,13 +145,16 @@ CPU 개입 없이 메모리↔장치 전송. CPU는 DMA에 작업 명령만 전�
 ```text
 Register < L1/L2 Cache < RAM < SSD < HDD
 ```
+
+*그림 2. 저장 장치 계층*
+
 지역성(Locality) = **시간적** (재접근) + **공간적** (인접)
 
 ### OS 구조
 | | 장점 | 단점 | 예 |
 |---|---|---|---|
 | Monolithic | 빠름 | 한 버그→전체 다운 | Linux |
-| Microkernel | 격리, 검증 용이 | 컨텍스트 스위치(Context Switch) 오버헤드 | Mach, QNX |
+| Microkernel | 격리, 검증 용이 | 문맥 교환(Context Switch) 오버헤드 | Mach, QNX |
 | Hybrid | 장점 결합 | 복잡 | macOS, Windows |
 
 *표 5. OS 구조별 장단점과 예*
@@ -174,7 +177,7 @@ Text    ─ 실행 코드
 [↓ 낮은 주소]
 ```
 
-*그림 2. 프로세스의 메모리 레이아웃*
+*그림 3. 프로세스의 메모리 레이아웃*
 
 ### 프로세스 상태
 ```text
@@ -184,7 +187,7 @@ New ─admitted→ Ready ─dispatch→ Running ─exit→ Terminated
                └─Waiting ←─I/O요청──┘
 ```
 
-*그림 3. 프로세스 상태 전이도*
+*그림 4. 프로세스 상태 전이도*
 
 | 전이 | 원인 |
 |---|---|
@@ -258,7 +261,7 @@ if (pid == 0) {                          // 자식
 
 *표 10. wait() 상태 매크로*
 
-### 컨텍스트 스위치
+### 문맥 교환
 - 수 마이크로초
 - **순수 오버헤드** (유용한 작업 X)
 - 오버헤드 요인: 메모리 속도, 레지스터 수, 특수 명령어 유무
@@ -376,7 +379,7 @@ printf("redirected");       // out.txt에 기록
 
 ### 스레드가 프로세스보다 빠른 이유
 - 생성: 스택과 레지스터만 초기화
-- 컨텍스트 스위치: **같은 주소 공간 → TLB 플러시 불필요**
+- 문맥 교환: **같은 주소 공간 → TLB 플러시 불필요**
 - 통신: 전역 변수 (IPC 불필요)
 
 ### 멀티스레딩 4가지 이점
@@ -510,12 +513,12 @@ pool.shutdown();
 #pragma omp parallel for                // 루프 분할
 #pragma omp parallel for reduction(+:s) // 합계 안전 결합
 // 절: shared(), private(), reduction(op:var)
-// 연산자: + - * / & | ^ && || max min
+// 연산자: + - * & | ^ && || max min
 // 함수: omp_get_thread_num(), omp_get_num_threads(), omp_get_wtime()
 // 컴파일: gcc -fopenmp
 ```
 
-> **참고:** 위 연산자 목록의 `/`는 OpenMP `reduction` 절이 지원하는 연산자가 아니다. 지원하는 연산자는 `+`, `-`, `*`, `&`, `|`, `^`, `&&`, `||`, `max`, `min`이다.
+> **참고:** OpenMP `reduction` 절이 지원하는 연산자는 `+`, `-`, `*`, `&`, `|`, `^`, `&&`, `||`, `max`, `min`이며, 나눗셈 `/`는 지원하지 않는다.
 
 ### GCD QoS
 | 클래스 | 용도 |
@@ -604,7 +607,7 @@ ThreadLocal<Integer> t;             // Java
 **선점형(Preemptive):** 1, 4 외에도 가능 | **비선점형(Non-preemptive):** 1, 4만
 
 ### 디스패처(Dispatcher) 3역할
-1. 컨텍스트 스위칭
+1. 문맥 교환
 2. 유저/커널 모드 전환
 3. PC 점프
 
@@ -643,7 +646,7 @@ ThreadLocal<Integer> t;             // Java
 0    3      9       16        24
 ```
 
-*그림 4. SJF 예시의 간트 차트*
+*그림 5. SJF 예시의 간트 차트*
 
 대기: P4=0, P1=3, P3=9, P2=16 → **평균 7**
 
@@ -662,7 +665,7 @@ $$ \tau_{n+1} = \alpha t_n + (1-\alpha)\tau_n $$
 0    1       5       10       17        26
 ```
 
-*그림 5. SRTF 예시의 간트 차트*
+*그림 6. SRTF 예시의 간트 차트*
 
 대기: P1=9, P2=0, P3=15, P4=2 → **평균 6.5**
 
@@ -678,13 +681,13 @@ $$ \tau_{n+1} = \alpha t_n + (1-\alpha)\tau_n $$
 0    4    7   10   14   18   22   26   30
 ```
 
-*그림 6. RR(q=4) 예시의 간트 차트*
+*그림 7. RR(q=4) 예시의 간트 차트*
 
 대기: P1=6, P2=4, P3=7 → **평균 5.67**
 
 **타임 퀀텀 선택:**
 - 너무 크면 → FCFS로 수렴
-- 너무 작으면 → 컨텍스트 스위칭 오버헤드
+- 너무 작으면 → 문맥 교환 오버헤드
 - **80% 규칙:** 버스트의 80%가 한 퀀텀 내 완료
 
 ### 우선순위 스케줄링(Priority Scheduling)
@@ -901,7 +904,7 @@ N→∞ 에서 ≈ **0.693** (69.3%)
 4. 대기 시간 = 반환 − 버스트
 5. 평균 = 합 / 프로세스 수
 
-### 컨텍스트 스위치 오버헤드 요인
+### 문맥 교환 오버헤드 요인
 - 레지스터 수 (많을수록 ↑)
 - 메모리 속도
 - 특수 HW 명령
@@ -919,7 +922,7 @@ N→∞ 에서 ≈ **0.693** (69.3%)
 |---|---|---|
 | 메모리 | 독립 | 공유 (스택 제외) |
 | 생성 비용 | 높음 | 낮음 |
-| 컨텍스트 스위치 | 느림 (TLB 플러시) | 빠름 |
+| 문맥 교환 | 느림 (TLB 플러시) | 빠름 |
 | 통신 | IPC 필요 | 전역 변수 |
 | 격리 | 강함 | 약함 |
 
@@ -989,7 +992,7 @@ N→∞ 에서 ≈ **0.693** (69.3%)
 2. **exec() 성공 후 코드:** 실행되지 않음 (메모리 교체됨)
 3. **좀비 kill 불가:** 이미 죽었음, 부모를 처리해야 함
 4. **Pipe close 규칙:** 사용 안 하는 끝 **모두** close (부모도 포함)
-5. **write(fd, msg, strlen(msg)) vs `sizeof(msg)`:** 포인터면 포인터 크기 반환됨
+5. **`write(fd, msg, strlen(msg))` vs `sizeof(msg)`:** 포인터면 포인터 크기 반환됨
 6. **`fd[WRITE_END]`와 `+1`:** null 포함해 전송해야 `printf("%s")` 정상 동작
 7. **`pthread_create(&t, NULL, f, &i)` 루프:** `i` 주소 공유 → race. `ids[i]` 배열로 해결
 8. **Thread.start() vs run():** run() 직접 호출은 같은 스레드에서 실행 (버그)
@@ -997,8 +1000,8 @@ N→∞ 에서 ≈ **0.693** (69.3%)
 10. **FCFS 호위 효과:** 같은 프로세스 집합이라도 **도착 순서**에 따라 평균 대기가 크게 다름
 11. **RR 타임 퀀텀:** 너무 작으면 오버헤드, 너무 크면 FCFS. 80% 규칙 적용
 12. **SJF 기아:** 긴 프로세스가 무한 대기 가능 → 노화로 해결
-13. **RMS 69.3% 한계:** 이 이상은 EDF로
-14. **프로세스 vs 스레드 컨텍스트 스위치:** 속도 차이의 핵심 = **TLB 플러시 여부**
+13. **RMS 69.3% 한계:** 이용률이 이 상한을 넘으면 RMS는 스케줄 가능성을 보장하지 못하므로 EDF를 고려
+14. **프로세스 vs 스레드 문맥 교환:** 속도 차이의 핵심 = **TLB 플러시 여부**
 15. **암달의 법칙:** 무한 코어도 **1/S**가 상한. S=50% 이면 2배가 한계
 16. **일대일 vs 다대다:** 현대 표준은 **일대일**, 이유는 단순성과 안정성
 17. **RPC exactly-once:** 금융 거래에는 반드시 고유 트랜잭션 ID 필요
@@ -1018,13 +1021,13 @@ N→∞ 에서 ≈ **0.693** (69.3%)
 + [메커니즘/작동 원리 2~3문장]
 + [구체적 예시 1개]
 + [트레이드오프 or 한계 1문장]
-+ [다른 개념과 연결 1문장 — 보너스!]
++ [다른 개념과 연결 1문장]
 ```
 
 ### 예: 시스템 콜이 왜 필요한가를 묻는 문제의 답안
 
-시스템 콜은 사용자 프로그램이 OS 서비스를 요청하는 유일한 인터페이스다. 단일 모드 CPU라면 프로그램이 직접 I/O나 메모리 매핑을 조작해 OS를 파괴할 수 있기 때문에, 이중 모드를 두고 커널 모드 진입을 **트랩**으로만 가능하게 제한했다.
+시스템 콜은 사용자 프로그램이 OS 서비스를 요청하는 유일한 인터페이스이다. 단일 모드 CPU라면 프로그램이 직접 I/O나 메모리 매핑을 조작해 OS를 파괴할 수 있기 때문에, 이중 모드를 두고 커널 모드 진입을 **트랩**으로만 가능하게 제한했다.
 
-호출 과정은 libc 래퍼가 시스템 콜 번호를 a7 레지스터(RISC-V)에 넣고 `ecall` 명령을 실행하면 하드웨어가 모드 비트를 0으로 바꾸고 트랩 핸들러로 점프하는 방식이다. 예컨대 `open()` 호출은 내부적으로 ecall을 일으켜 커널의 `sys_open()` 을 실행시키고 fd를 a0에 담아 리턴한다.
+호출 과정은 libc 래퍼가 시스템 콜 번호를 a7 레지스터(RISC-V)에 넣고 `ecall` 명령을 실행하면 하드웨어가 모드 비트를 0으로 바꾸고 트랩 핸들러로 점프하는 방식이다. 예컨대 `open()` 호출은 내부적으로 ecall을 일으켜 커널의 `sys_open()`을 실행시키고 fd를 a0에 담아 리턴한다.
 
-이 구조의 한계는 **오버헤드**다. `cp` 같은 단순 명령도 수천 번의 시스템 콜을 발생시키므로, 버퍼링, DMA, mmap이 중요해진다. 이는 12주차 가상 메모리의 메모리 맵 파일과 직접 연결된다.
+이 구조의 한계는 **오버헤드**이다. `cp` 같은 단순 명령도 수천 번의 시스템 콜을 발생시키므로, 버퍼링, DMA, mmap이 중요해진다. 이는 가상 메모리 위에서 동작하는 메모리 맵 파일(`mmap()`)과 직접 연결된다.

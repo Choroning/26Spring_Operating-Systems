@@ -2,7 +2,7 @@
 
 [Repository Guide](../README.md) | [English](README.md) | [한국어](README.ko.md)
 
-> **Last Updated:** 2026-10-18
+> **Last Updated:** 2026-10-20
 
 | Unit | Topics | Documents |
 |:-----|:-----|:-----|
@@ -12,7 +12,7 @@
 | [Week 4 Threads and Concurrency (1)](Week04_Thread-and-Concurrency-1/) | Thread concepts and benefits of multithreading, multicore programming, user and kernel threads, multithreading models, Pthreads and Java threads, data parallelism and Amdahl's law | [Lecture notes](Week04_Thread-and-Concurrency-1/Concepts_Lecture.md), [Lab notes](Week04_Thread-and-Concurrency-1/Concepts_Lab.md) |
 | [Week 5 Threads and Concurrency (2)](Week05_Thread-and-Concurrency-2/) | Implicit threading (thread pools, fork-join, OpenMP, GCD, TBB), threading issues, operating-system examples, fork() in multithreaded programs, thread-local storage | [Lecture notes](Week05_Thread-and-Concurrency-2/Concepts_Lecture.md), [Lab notes](Week05_Thread-and-Concurrency-2/Concepts_Lab.md) |
 | [Week 6 CPU Scheduling (1)](Week06_CPU-Scheduling-1/) | Scheduling criteria, FCFS, SJF, SRTF, round-robin, algorithm comparison, context switching and scheduler tracing in xv6 | [Lecture notes](Week06_CPU-Scheduling-1/Concepts_Lecture.md), [Lab notes](Week06_CPU-Scheduling-1/Concepts_Lab.md) |
-| [Week 7 CPU Scheduling (2)](Week07_CPU-Scheduling-2/) | Priority scheduling, multilevel queue and MLFQ, thread scheduling, multi-processor scheduling, real-time CPU scheduling, algorithm evaluation | [Lecture notes](Week07_CPU-Scheduling-2/Concepts_Lecture.md) |
+| [Week 7 CPU Scheduling (2)](Week07_CPU-Scheduling-2/) | Priority scheduling, multilevel queue and MLFQ, thread scheduling, multiprocessor scheduling, real-time CPU scheduling, algorithm evaluation | [Lecture notes](Week07_CPU-Scheduling-2/Concepts_Lecture.md) |
 | [Week 9 Synchronization](Week09_Synchronization/) | Critical-section problem, Peterson's solution, hardware support for synchronization, mutex locks, semaphores, monitors, liveness, classic problems of synchronization | [Lecture notes](Week09_Synchronization/Concepts_Lecture.md) |
 | [Week 10 Deadlocks](Week10_Deadlocks/) | Deadlock characterization, deadlock prevention, avoidance, detection, and recovery, banker's algorithm | [Lecture notes](Week10_Deadlocks/Concepts_Lecture.md) |
 | [Week 11 Main Memory](Week11_Main-Memory/) | Address binding and the MMU, contiguous memory allocation, paging and the TLB, page-table structure, swapping | [Lecture notes](Week11_Main-Memory/Concepts_Lecture.md) |

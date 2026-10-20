@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lab.md) | [한국어](Concepts_Lab.ko.md)
 
-> **Last Updated:** 2026-10-18
+> **Last Updated:** 2026-10-20
 
 > **Learning Objectives:**
 > 1. Create and join threads using `pthread_create` and `pthread_join`
@@ -94,7 +94,7 @@ Main Thread          Thread 0        Thread 1        Thread 2        Thread 3
     |--create()-------------------------------------> Start
     |--create()------------------------------------------------------> Start
     |                   |               |               |                |
-    |                  (concurrent execution — order decided by scheduler)
+    |                  (concurrent execution: order decided by scheduler)
     |                   |               |               |                |
     |                   |               |       printf("Hello 2!")       |
     |           printf("Hello 0!")      |               |                |
@@ -155,7 +155,7 @@ Applying the same operation to different subsets of data in this way is called *
 ### 3.1 Core Code Pattern
 
 ```c
-/* Each thread computes its own range — no shared-write conflict */
+/* Each thread computes its own range: no shared-write conflict */
 void *sum_array(void *arg)
 {
     int id    = ((struct thread_arg *)arg)->id;
@@ -177,7 +177,7 @@ The `arg` parameter is cast to `struct thread_arg *`. `struct thread_arg { int i
 > - Each thread writes to **its own index**, so there is no conflict.
 > - If all threads wrote to a single `total` variable, a **race condition** would occur. A race condition is a bug where the program's output depends on the unpredictable timing of concurrent threads accessing shared data, and it is covered in detail in textbook Chapter 6 and Week 9.
 
-> **[Algorithms]** The divide-and-conquer approach here is similar to merge sort. It splits the data, processes each part independently, and combines the results. The key difference is that the split and process phases run **in parallel** across multiple cores.
+> **[Algorithms]** **Divide and conquer** is an algorithm design technique that splits a problem into smaller subproblems, solves each, and combines the results, with merge sort as a classic example. The approach here has the same structure: it splits the data, processes each part independently, and combines the results (unlike merge sort, it splits in a single step without recursion). The key difference is that the split and process phases run **in parallel** across multiple cores.
 
 ---
 
@@ -246,7 +246,7 @@ Main (loop)              Thread 0             Thread 1
 
 **Solution:** Store each value in a **separate memory location** (`tids[i]`), so the value each thread's pointer refers to remains stable even as the loop advances.
 
-> **Note:** **Exam tip.** This argument-passing pitfall is a frequently tested topic. `pthread_create` is **asynchronous**. The new thread may start running at any later point, not necessarily before the next line of the calling code executes. The root cause is that the new thread may not run immediately. By the time it dereferences the pointer, the pointed-to value may have changed. This is a race condition between the main thread's loop and each child thread's pointer dereference.
+> **Key Point:** `pthread_create` is **asynchronous**. The new thread may start running at any later point, not necessarily before the next line of the calling code executes. By the time it dereferences the pointer, the pointed-to value may therefore have changed. This is a race condition between the main thread's loop and each child thread's pointer dereference.
 
 ---
 
@@ -353,7 +353,7 @@ The first loop stores each thread's ID in separate storage `tids[i]` and passes 
    <details>
    <summary>Answer</summary>
 
-   All threads share the same memory address `&i`, and the loop keeps mutating `i` after each `pthread_create` call. By the time a thread reads `*arg`, the loop may have moved on, so multiple threads often see the same (or stale) value of `i`, causing a **race condition** on the thread ID. The fix is to give each thread its own copy (`int tid[N]; tid[i] = i; pthread_create(..., &tid[i]);`).
+   All threads share the same memory address `&i`, and the loop keeps mutating `i` after each `pthread_create` call. By the time a thread reads `*arg`, the loop may have moved on, so multiple threads often see the same (or stale) value of `i`, causing a **race condition** on the thread ID. The fix is to give each thread its own copy (`int tids[N]; tids[i] = i; pthread_create(..., &tids[i]);`).
 
    </details>
 

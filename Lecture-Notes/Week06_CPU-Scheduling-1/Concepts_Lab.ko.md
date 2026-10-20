@@ -1,8 +1,8 @@
-# 6주차 실습 — 문맥 교환 (Context Switching)
+# 6주차 실습 — 문맥 교환
 
 [레포지토리 안내](../../README.ko.md) | [English](Concepts_Lab.md) | [한국어](Concepts_Lab.ko.md)
 
-> **최종 수정일:** 2026-10-18
+> **최종 수정일:** 2026-10-20
 
 > **학습 목표:**
 > 1. `swtch.S`를 읽고 문맥 교환 시 어떤 레지스터가 저장/복원되는지 설명할 수 있다
@@ -113,7 +113,7 @@ RISC-V 호출 규약(calling convention)에서 CPU 레지스터는 두 그룹으
 struct context {
   uint64 ra;  // 반환 주소
   uint64 sp;  // 스택 포인터
-  uint64 s0;  // s0 – s11
+  uint64 s0;  // s0-s11
   uint64 s1;
   /* ... s2부터 s11까지 ... */
 };
@@ -311,7 +311,7 @@ make clean && make CPUS=3 qemu
 
 `CPUS=3`이면 여러 CPU가 동시에 서로 다른 프로세스를 선택한다. 추적 출력이 뒤섞여서, 서로 다른 CPU가 동시에 다른 프로세스를 실행할 수 있음을 보여준다.
 
-> **참고:** **CPU 스케줄링.** xv6 스케줄러는 우선순위, 타임 퀀텀 조정, 프로세스별 통계가 없는 선형 스캔으로, 가장 단순한 스케줄링 알고리즘을 구현한다. 실제 운영체제는 공정성과 응답성을 위해 더 정교한 알고리즘(리눅스의 CFS, FreeBSD의 MLFQ)을 사용하며, 이는 7주차에서 다룬다.
+> **참고:** **CPU 스케줄링.** xv6 스케줄러는 우선순위, 타임 퀀텀 조정, 프로세스별 통계가 없는 선형 스캔으로, 가장 단순한 스케줄링 알고리즘을 구현한다. 실제 운영체제는 공정성과 응답성을 위해 더 정교한 알고리즘(Linux의 CFS, FreeBSD의 MLFQ)을 사용하며, 이는 7주차에서 다룬다.
 
 > **핵심:** xv6의 라운드 로빈 공정성은 (1) 고정된 타이머 인터럽트 간격과 (2) 프로세스 테이블의 선형 스캔의 조합에서 비롯된다. 각 `RUNNABLE` 프로세스는 스케줄링 사이클마다 한 번 선택되어 최대 타이머 틱 하나만큼 실행된다.
 
@@ -355,7 +355,7 @@ sequenceDiagram
     participant Cat as cat (pid=3)
     participant Sched as 스케줄러
     participant Echo as echo (pid=4)
-    Cat->>Sched: sleep(pipe) — 버퍼 비어있음
+    Cat->>Sched: sleep(pipe) (버퍼 비어 있음)
     Sched->>Echo: echo로 전환
     Echo->>Echo: 파이프에 "hello" 쓰기
     Echo->>Cat: wakeup(pipe)

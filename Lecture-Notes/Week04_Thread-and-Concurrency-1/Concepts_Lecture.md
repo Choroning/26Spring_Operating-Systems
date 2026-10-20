@@ -2,9 +2,9 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **Last Updated:** 2026-10-18
+> **Last Updated:** 2026-10-20
 >
-> Operating System Concepts, Silberschatz, Ch 4 (4.1-4.4)
+> Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 4 (4.1-4.4)
 
 > **Learning Objectives:**
 > 1. Explain what a thread is and how it differs from a process
@@ -117,7 +117,7 @@ while a modern process can have **multiple threads** of control.
 - Multithreaded: **multiple execution flows**, each with its own independent PC and stack
 - **Code, data, and files are shared across all threads**
 
-> **[Computer Architecture]** Each thread having an independent PC means that each thread can execute different locations in the code simultaneously. During a context switch, the kernel saves/restores the thread's PC, registers, stack pointer, etc.
+> **[Computer Architecture]** The CPU fetches the instruction at the address in the PC and then updates the PC to the next instruction's address to continue execution. Each thread having an independent PC therefore means that each thread can execute different locations in the code simultaneously. During a context switch, the kernel saves/restores the thread's PC, registers, stack pointer, etc.
 
 ### 1.3 Thread vs Process Comparison
 
@@ -133,13 +133,13 @@ while a modern process can have **multiple threads** of control.
 
 > **Note:** **IPC (Inter-Process Communication)** was covered in detail in Week 3. Since threads share the same address space, they can communicate directly through shared memory without IPC.
 
-> **Note:** Threads are called **Lightweight Processes (LWP)** because, as the table shows, their creation and switching costs are lower than those of processes.
+> **Note:** Threads are called **Lightweight Processes** because, as the table shows, their creation and switching costs are lower than those of processes.
 
-> **[Computer Architecture]** Thread context switching is faster than process switching because the address space is the same, so **no TLB flush is needed**. When switching processes, the page table changes, so unless TLB entries are tagged with an address-space identifier such as an ASID, the TLB must be invalidated, which causes frequent TLB misses and degrades performance. A page table is the OS's mapping from a program's logical addresses to physical RAM locations; each process has its own, so switching processes forces the CPU to load a different one.
+> **[Computer Architecture]** The **TLB (Translation Lookaside Buffer)** is a hardware cache that stores recent virtual-to-physical address translations to speed up translation, and a **page table** is the OS's mapping from a program's logical addresses to physical RAM locations. Each process has its own page table, so switching processes forces the CPU to load a different one.
 >
-> The **TLB (Translation Lookaside Buffer)** is a hardware cache that speeds up virtual-to-physical address translation. Thread switches within the same process do not require a TLB flush since they share the same address space.
+> Thread context switching is faster than process switching because threads of the same process share the address space, so **no TLB flush is needed**. When switching processes, the page table changes, so unless TLB entries are tagged with an address-space identifier such as an ASID, the TLB must be invalidated, which causes frequent TLB misses and degrades performance.
 
-> **Note:** **Exam Tip.** The differences between threads and processes and the reason threads are called lightweight processes are frequently tested topics. You should be able to precisely distinguish what is **shared** (code, data, files) and what is **independent** (PC, registers, stack).
+> **Key Point:** The difference between threads and processes, and the reason threads are called lightweight processes, come down to distinguishing what is **shared** (code, data, files) from what is **independent** (PC, registers, stack).
 
 ### 1.4 Why Use Threads: Real-World Examples
 
@@ -213,7 +213,7 @@ while a modern process can have **multiple threads** of control.
 
 > **Note:** When a web server creates threads instead of processes for each request, overhead is significantly reduced.
 
-> **Note:** **Exam Tip.** The four benefits of threads (Responsiveness, Resource Sharing, Economy, Scalability) are frequently tested in short-answer or essay form. You should be able to explain the **key reason** for each benefit in a single sentence.
+> **Key Point:** Each of the four benefits of threads (Responsiveness, Resource Sharing, Economy, Scalability) comes down to one **key reason**. The program stays responsive during blocking, threads share the address space, creation and switching are cheap, and threads run in parallel on multiple cores.
 
 ---
 
@@ -337,7 +337,7 @@ Example: A program that is 75% parallel + 25% serial
 - The smaller S is (higher parallelization ratio), the greater the effect of adding cores
 - If S = 0.50, the maximum is 2x regardless of the number of cores
 
-> **Note:** **Exam Tip.** The Amdahl's Law formula and calculating the speedup on N cores for a given S are frequently tested. In particular, remember that **speedup = 1/S when N → ∞**.
+> **Key Point:** Substituting S and N into the Amdahl's Law formula gives the upper bound on speedup with N cores. In particular, **speedup = 1/S when N → ∞**.
 
 > **[Parallel Computing]** Amdahl's Law is a core concept in parallel algorithm design. No matter how excellent a parallel algorithm is, if there are portions that must execute sequentially (e.g., result merging, initialization), those portions determine the upper bound of speedup.
 
@@ -542,7 +542,7 @@ Two main thread creation strategies:
 
 ### 6.3 Pthreads Overview
 
-**POSIX Pthreads** = IEEE 1003.1c standard
+**POSIX Pthreads** is the IEEE 1003.1c standard.
 
 > **Note:** This is a **specification**, not an **implementation**.
 > OS designers are free to choose their implementation approach.
@@ -722,7 +722,7 @@ WaitForMultipleObjects(N, THandles, TRUE, INFINITE);
 
 ## 7. Java Threads
 
-> **Note:** Java threads are presented here for comparison with Pthreads. In this course's labs, we primarily use Pthreads. Focus on understanding the concepts; the Java syntax is secondary.
+> **Note:** Java threads are presented here for comparison with Pthreads. The C examples in this note, including the lab in Section 9, use Pthreads. The concepts of creating, starting, and joining threads matter more than the Java syntax.
 
 ### 7.1 Java Thread Overview
 
@@ -868,7 +868,7 @@ service.execute(new Task());
 
 > **Definition:** The **producer-consumer model** is a pattern where one part of the program generates work items (producer) and another part executes them (consumer). In an Executor, your code produces tasks (`Runnable` objects) and the thread pool's threads consume and run them.
 
-> **[Software Engineering]** The Executor pattern is an example of the **Strategy Pattern**. By separating the task (what to do) from the execution strategy (how to execute), the same task can be run in various ways: single thread, thread pool, scheduling, etc.
+> **[Software Engineering]** The **Strategy Pattern** is a design pattern that encapsulates an algorithm or execution policy in a separate object so that it can be swapped without changing the code that uses it, and the Executor pattern is an example of it. By separating the task (what to do) from the execution strategy (how to execute), the same task can be run in various ways: single thread, thread pool, scheduling, etc.
 
 ### 8.2 Thread Pool Types
 
@@ -1165,7 +1165,7 @@ for (int i = 0; i < NUM_THREADS; i++) {
 
 > **Note:** This is a classic example of a **race condition**, where new threads read the variable `i` while the main thread changes it, and it shows the **data dependency** challenge of Section 3.3.
 
-> **Note:** **Exam Tip.** Why you cannot pass `&i` directly is a frequently tested Pthreads question. The key is that `pthread_create()` creates threads asynchronously, so by the time the thread actually reads `*(int*)arg`, the value of `i` may have already changed.
+> **Key Point:** You cannot pass `&i` directly because `pthread_create()` creates threads asynchronously, so by the time the thread actually reads `*(int*)arg`, the value of `i` may have already changed.
 
 ### 9.6 Observing Race Conditions
 

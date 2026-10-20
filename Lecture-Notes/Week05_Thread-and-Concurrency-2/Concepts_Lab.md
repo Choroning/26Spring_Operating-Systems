@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lab.md) | [한국어](Concepts_Lab.ko.md)
 
-> **Last Updated:** 2026-10-18
+> **Last Updated:** 2026-10-20
 
 > **Learning Objectives:**
 > 1. Implement a thread pool with a task queue and pre-created worker threads
@@ -36,9 +36,9 @@ The four labs fall into implicit threading (Textbook Section 4.5) and threading 
 
 ```mermaid
 graph TD
-    IT["Implicit Threading<br/>(Ch 4.5)"] --> TP["Thread Pool<br/>pre-created workers"]
+    IT["Implicit Threading<br/>(Textbook Section 4.5)"] --> TP["Thread Pool<br/>pre-created workers"]
     IT --> OMP["OpenMP<br/>compiler directives"]
-    TI["Threading Issues<br/>(Ch 4.6)"] --> FK["fork() + Threads<br/>only caller copied"]
+    TI["Threading Issues<br/>(Textbook Section 4.6)"] --> FK["fork() + Threads<br/>only caller copied"]
     TI --> TLS["TLS<br/>per-thread globals"]
     style IT fill:#c8e6c9
     style TI fill:#bbdefb
@@ -75,7 +75,7 @@ gcc -Wall -pthread -o lab3_fork_threads  lab3_fork_threads.c
 gcc -Wall -pthread -o lab4_tls           lab4_tls.c
 ```
 
-> **Note:** Lab 1, 3, and 4 use `-pthread` for POSIX threads. Lab 2 uses `-fopenmp` to enable OpenMP compiler directives. On macOS, you may need `brew install libomp` and use `gcc-13` (or later) instead of the default `clang`.
+> **Note:** Labs 1, 3, and 4 use `-pthread` for POSIX threads. Lab 2 uses `-fopenmp` to enable OpenMP compiler directives. On macOS, you may need to run `brew install libomp` and use `gcc-13` (or later) instead of the default `clang`.
 
 ---
 
@@ -114,9 +114,9 @@ graph LR
 
 | Benefit | Description |
 |---------|-------------|
-| Faster response | Reuses existing threads, so there is no creation overhead |
-| Bounded concurrency | Limit threads to prevent resource exhaustion |
-| Task/execution separation | Decouple *what* runs from *how* it runs |
+| Speed | Reuses existing threads, so there is no creation overhead |
+| Resource bound | Limit threads to prevent resource exhaustion |
+| Separation of execution and creation | Decouple *what* runs from *how* it runs |
 
 *Table 1. Three benefits of thread pools*
 
@@ -127,7 +127,7 @@ graph LR
 #define QUEUE_SIZE  16    /* max tasks in queue */
 
 /* A task is simply a function pointer + argument */
-/* void (*function)(int) is a function pointer — it stores the address of
+/* void (*function)(int) is a function pointer; it stores the address of
    a function that takes one int parameter and returns nothing (void).
    This allows each task to specify which function to run. */
 struct task {
@@ -424,7 +424,7 @@ The `exec()` call replaces the **entire address space**, so the inherited locked
 
 > **Note:** **`fork()` in a multithreaded process.** Recall from Weeks 2-3 that `fork()` creates a copy of the calling process. In a single-threaded process, this copies everything. In a multithreaded process, POSIX specifies that only the calling thread is duplicated. This design avoids the complexity of duplicating thread synchronization state, but it means the child is in a fragile state until it calls `exec()`.
 
-> **Note:** **Exam Tip.** `fork()` in a multithreaded program is a frequently tested topic. Only the calling thread is copied, and the safe pattern is calling `exec()` immediately after `fork()`.
+> **Key Point:** When `fork()` is called in a multithreaded program, only the calling thread is copied, and the safe pattern is calling `exec()` immediately after `fork()`.
 
 ---
 
@@ -455,10 +455,10 @@ This lab has **two demos**: the first compares shared vs TLS variables, the seco
 ### Demo 1: Shared Global vs Thread-Local
 
 ```c
-/* Regular global variable — shared by all threads */
+/* Regular global variable: shared by all threads */
 int shared_var = 0;
 
-/* Thread-local variable — each thread gets its own copy */
+/* Thread-local variable: each thread gets its own copy */
 __thread int tls_var = 0;
 
 void *demo1_worker(void *arg)
@@ -466,8 +466,8 @@ void *demo1_worker(void *arg)
     int tid = *(int *)arg;
 
     for (int i = 0; i < ITERATIONS; i++) {
-        shared_var++;   /* shared — race condition! */
-        tls_var++;      /* thread-local — safe, private copy */
+        shared_var++;   /* shared: race condition! */
+        tls_var++;      /* thread-local: safe, private copy */
     }
 
     printf("[Thread %d] tls_var = %d (expected %d)\n",
@@ -488,11 +488,11 @@ Each thread's tls_var was 100000       (always correct)
 ```text
 Memory layout:
 
-shared_var: [     one copy — all threads read/write     ]
+shared_var: [     one copy, all threads read/write      ]
                      ↓ RACE CONDITION
 
 tls_var:    [ Thread 0 copy ] [ Thread 1 copy ] [ Thread 2 copy ] [ Thread 3 copy ]
-                     ↓ each thread has its own — no conflict
+                     ↓ each thread has its own, no conflict
 ```
 
 *Figure 6. Memory layout of a shared variable and a thread-local variable*

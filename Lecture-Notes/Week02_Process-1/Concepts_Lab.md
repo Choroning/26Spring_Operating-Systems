@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lab.md) | [한국어](Concepts_Lab.ko.md)
 
-> **Last Updated:** 2026-10-18
+> **Last Updated:** 2026-10-20
 
 > **Learning Objectives:**
 > 1. Use fork()/wait() to create and manage child processes
@@ -30,7 +30,7 @@
 
 - **Objective**: Practice core UNIX process system calls through C programs.
 - **Duration**: Approximately 50 minutes, 4 labs
-- **Topics**: `fork()`, `exec()`, `wait()`, `pipe()`, `dup()`
+- **Topics**: `fork()`, `exec()`, `wait()`, `pipe()`, `dup2()`
 
 ```mermaid
 graph LR
@@ -132,7 +132,7 @@ graph TD
 
 *Figure 4. The common pattern combining fork(), exec(), and wait()*
 
-> **Key Point:** Upon success, `exec()` completely overwrites the calling process's code, data, heap, and stack with the new program, so code after the call is never executed. It returns -1 only on failure. The `fork()` → `exec()` → `wait()` pattern is the core operating principle of UNIX shells and must be thoroughly understood.
+> **Key Point:** Upon success, `exec()` completely overwrites the calling process's code, data, heap, and stack with the new program, so code after the call is never executed. It returns -1 only on failure. The `fork()` → `exec()` → `wait()` pattern is the core operating principle of UNIX shells.
 
 ---
 
@@ -149,7 +149,7 @@ pipe(fd);  // fd[0]=read, fd[1]=write
 if (fork() == 0) {
     close(fd[0]);  // Close read end
     char *msg = "hello from child";
-    write(fd[1], msg, strlen(msg));  /* strlen(msg), not sizeof(msg) — see note below */
+    write(fd[1], msg, strlen(msg));  /* strlen(msg), not sizeof(msg) (see the note below) */
     close(fd[1]);
 } else {
     close(fd[1]);  // Close write end
@@ -190,7 +190,7 @@ graph LR
 
 > **Key Point:** The fact that pipes are manipulated using file I/O functions like `read()`/`write()` is based on the core UNIX design philosophy **"Everything is a file"**. In UNIX, regular files, directories, pipes, sockets, and devices (keyboard, disk, etc.) are all accessed through **file descriptors**, mostly with the same interface (`open/read/write/close`). This means that knowing just one API lets you work with many different resources, keeping programming concise.
 
-> **[Data Structures]** A pipe is a classic implementation of the producer-consumer pattern. One side (the child) writes data and the other side (the parent) reads it, synchronized through a bounded buffer inside the kernel. When the buffer is full, `write()` blocks; when it is empty, `read()` blocks.
+> **[Data Structures]** A pipe is a classic implementation of the producer-consumer pattern. One side (the child) writes data and the other side (the parent) reads it, synchronized through a bounded buffer inside the kernel. This buffer is a fixed-size **FIFO queue** in which the bytes written first are read first. When the buffer is full, `write()` blocks; when it is empty, `read()` blocks.
 
 > **Note:** A specific scenario when `close()` is omitted is as follows. If the parent does not close `fd[1]` (the write end) and calls `read(fd[0])`, even after the child finishes writing and closes `fd[1]`, the parent itself still holds `fd[1]`, so the kernel considers the write end still open. As a result, `read()` never receives EOF and **blocks forever**, causing the program to hang. This is the most common bug in pipe programming.
 

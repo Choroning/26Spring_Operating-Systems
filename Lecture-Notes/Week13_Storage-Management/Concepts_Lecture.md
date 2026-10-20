@@ -2,14 +2,14 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **Last Updated:** 2026-10-18
+> **Last Updated:** 2026-10-20
 >
-> Operating System Concepts, Silberschatz, Ch 11
+> Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 11
 
 > **Learning Objectives:**
 > 1. Describe the physical structure of an HDD (platter, track, sector, cylinder, head, arm, spindle) and head crashes, and decompose access time into seek time, rotational latency, and transfer time to compute typical totals
 > 2. Distinguish HDDs from NVM/SSDs by mechanics, performance, and durability, and explain the characteristics of NAND Flash (page-level reads and writes, block-level erase, no overwrite) and the controller mechanisms (FTL, garbage collection, over-provisioning, wear leveling, TRIM, write amplification)
-> 3. Compare storage connection interfaces (SATA, NVMe, SAS, USB, Fibre Channel) and LBA addressing (CHS, CAV and CLV), and execute and compare the HDD-scheduling algorithms (FCFS, SCAN (elevator), C-SCAN, LOOK, C-LOOK)
+> 3. Compare storage connection interfaces (SATA, NVMe, SAS, USB, Fibre Channel) LBA addressing with its CHS mapping, and the CAV and CLV recording methods, and execute and compare the HDD-scheduling algorithms (FCFS, SCAN (elevator), C-SCAN, LOOK, C-LOOK)
 > 4. Explain error detection and correction (parity, CRC, ECC) and its use in HDDs and SSDs, drive formatting (low-level formatting, partitioning, logical formatting), volume management, boot blocks, and bad-block handling (sector sparing, sector slipping)
 > 5. Describe swap-space management on Linux (partition vs file, swap map) and the storage attachment methods (host-attached, NAS, SAN, cloud storage)
 > 6. Explain RAID 0/1/4/5/6/10 in terms of striping, mirroring, parity, fault tolerance, and use cases, compute the MTBF of mirrored arrays, and explain when the independence assumption breaks and how ZFS-style checksums close the gaps RAID does not protect against
@@ -304,7 +304,7 @@ SSDs have **no seek**, so the HDD scheduling algorithms of Section 4 are largely
 - SSDs typically use a simple **FCFS** policy (the Linux NOOP scheduler).
 - Adjacent requests are **merged** into larger, more efficient transfers.
 - Read service times are uniform, but **write service times are not**; they depend on garbage collection, current utilization, and wear-leveling state.
-- An HDD delivers hundreds of IOPS; an SSD delivers **hundreds of thousands of IOPS**.
+- An HDD delivers tens to hundreds of IOPS; an SSD delivers **hundreds of thousands of IOPS**.
 
 ### 2.6 Volatile Memory as Storage (RAM Drives)
 
@@ -732,7 +732,7 @@ Security and protection (the CIA triad, threats, cryptography, access control, a
 
 ### 7.1 Purpose and Sizing
 
-**Purpose.** Swap space is disk space that extends virtual memory. When physical memory is full, pages are sent to disk (**swap out**) and brought back when needed (**swap in**). Modern OSes swap at **page granularity** (Week 12), not whole processes.
+**Purpose.** Swap space is disk space that extends virtual memory. When physical memory is full, pages are sent to disk (**swap out**) and brought back when needed (**swap in**). Modern OSes swap at **page granularity** (Week 11), not whole processes.
 
 **Sizing.**
 - **Under-allocation:** the system runs out of swap and aborts processes (or crashes).
@@ -921,6 +921,8 @@ $$
 \text{MTBF}_{\text{data loss}} = \frac{(10^5)^2}{2 \cdot 10} = 5 \cdot 10^8 \text{ hours} \approx \mathbf{57{,}000\ years}.
 $$
 
+> **[Probability and Statistics]** The rates of **independent** events add, and the probability that two independent events both occur is the product of their probabilities. If one disk fails at a rate of $1/\text{MTBF}$ per hour, some disk among 100 fails at a rate of $100/\text{MTBF}$, so the array MTBF is one hundredth of the single-disk value. In a mirrored pair, one of the two disks fails first at a rate of $2/\text{MTBF}$ per hour, and the probability that the other disk fails during the repair time MTTR is about $\text{MTTR}/\text{MTBF}$. Their product, a data-loss rate of $2 \cdot \text{MTTR}/\text{MTBF}^2$, is the reciprocal of the formula above, $\text{MTBF}^2/(2 \cdot \text{MTTR})$, and multiplying the two factors is valid only because the two failures are assumed to be independent.
+
 **Caveats:** the independence assumption breaks in practice.
 - Power surges, natural disasters, and manufacturing-batch defects cause simultaneous failures.
 - Aging disks have correlated failure timing (one failure foreshadows others).
@@ -1081,7 +1083,7 @@ It is the simplest form of redundancy. It costs twice as much, but rebuilds very
 - Write overhead is higher than RAID 5, because each write updates two parities.
 - It is the **standard for large-capacity arrays**, where the long rebuild time after a single failure makes a second failure during the rebuild a realistic threat.
 
-> **[Discrete Mathematics]** Plain XOR cannot tolerate **two** failures: with two unknowns you need two **independent** equations, and a second XOR equation would be linearly dependent on the first. RAID 6 therefore computes Q over a **Galois field** $GF(2^8)$, finite-field arithmetic in which bytes are treated as polynomials over $GF(2)$ reduced modulo an irreducible polynomial. Each data block is multiplied by a distinct field constant before summing, so P and Q form two linearly independent equations. Recovering two lost blocks is then just **solving a 2×2 linear system over the field**, the finite-field analogue of Gaussian elimination, which is always solvable because every nonzero field element is invertible.
+> **[Linear Algebra]** Plain XOR cannot tolerate **two** failures: with two unknowns you need two **independent** equations, and a second XOR equation would be linearly dependent on the first. RAID 6 therefore computes Q over a **Galois field** $GF(2^8)$, finite-field arithmetic in which bytes are treated as polynomials over $GF(2)$ reduced modulo an irreducible polynomial. Each data block is multiplied by a distinct field constant before summing, so P and Q form two linearly independent equations. Recovering two lost blocks is then just **solving a 2×2 linear system over the field**, the finite-field analogue of Gaussian elimination, which is always solvable because every nonzero field element is invertible.
 
 ### 9.9 RAID 0+1 vs RAID 1+0 (RAID 10)
 
@@ -1262,7 +1264,7 @@ Expected totals: **FCFS 640, SCAN 236, C-SCAN 382, LOOK 208, C-LOOK 322**.
 | RAID | Striping, mirroring, and parity improve performance and reliability. |
 | RAID levels | Levels 0, 1, 4, 5, 6, and 10 trade capacity for reliability or performance, and there is no best level, only the right level for the workload. |
 | Beyond RAID | Physical-media redundancy does not catch corruption above the device layer, and ZFS-style end-to-end checksums close this blind spot. |
-| OS storage stack | Swap, RAID, and storage attachment all pass through the same OS storage stack; user space sees only a block device, while the OS maintains underneath it the abstraction of a flat, infinite, reliable array of bytes. |
+| OS storage stack | Swap, RAID, and storage attachment all pass through the same OS storage stack, and the OS hides each device's physical details and presents the layers above with the abstraction of a flat, reliable array of logical blocks. |
 
 ---
 
@@ -1306,7 +1308,7 @@ Expected totals: **FCFS 640, SCAN 236, C-SCAN 382, LOOK 208, C-LOOK 322**.
 
    </details>
 
-5. **SCAN vs C-SCAN fairness:** Why does C-SCAN give more uniform waiting times than SCAN, even though SCAN visits every cylinder twice per round?
+5. **SCAN vs C-SCAN fairness:** Why does C-SCAN give more uniform waiting times than SCAN, even though SCAN visits most cylinders twice per round?
 
    <details>
    <summary>Answer</summary>

@@ -2,9 +2,9 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **Last Updated:** 2026-10-18
+> **Last Updated:** 2026-10-20
 >
-> Operating System Concepts, Silberschatz, Ch 3 (3.4-3.8)
+> Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 3 (3.4-3.8)
 
 > **Learning Objectives:**
 > 1. Compare the shared memory and message passing IPC models
@@ -154,7 +154,7 @@ The key characteristics are as follows.
 - The format and location of data are **determined by the processes** (the OS is not involved).
 - **Synchronization is the programmer's responsibility**.
 
-> **[Computer Architecture]** Shared memory is implemented by the OS manipulating virtual memory page tables so that virtual addresses in different processes point to the same physical memory frame. Subsequent access is identical to normal memory access, so there is no kernel involvement, making it fast.
+> **Note:** Shared memory is implemented by the OS manipulating virtual memory page tables so that virtual addresses in different processes point to the same physical memory frame. Subsequent access is identical to normal memory access, so there is no kernel involvement, making it fast.
 
 > **Note:** The points at which the kernel is and is not involved in shared memory are as follows.
 > - **Kernel involved:** `shm_open()` (creating a shared memory object), `mmap()` (setting up page table mapping), and `shm_unlink()` (deleting the object); these system calls execute in kernel mode.
@@ -228,7 +228,7 @@ int out = 0;   /* Next read position (consumer) */
 
 > **Note:** In practice, `item` would be whatever data the producer generates. For example, `typedef struct { int value; } item;` could represent a sensor reading or a message.
 
-> **[Data Structures]** This structure is identical to a circular queue. `in` corresponds to rear, `out` to front, and the reason for leaving one slot empty is to distinguish between the empty and full states.
+> **[Data Structures]** A **circular queue** is a FIFO queue that wraps its indices with the modulo operation so that the first slot of the array follows the last one, and this bounded buffer has the same structure. `in` corresponds to rear, `out` to front, and the reason for leaving one slot empty is to distinguish between the empty and full states.
 
 **Producer code (Figure 3.12):**
 
@@ -336,13 +336,13 @@ The solutions are (1) to allow a link to be associated with at most two processe
 **Rendezvous:** The combination of blocking send and blocking receive. The sender and receiver wait for each other, and the producer-consumer problem is solved simply.
 
 ```c
-/* Producer — blocking send */
+/* Producer: blocking send */
 while (true) {
     /* produce an item in next_produced */
     send(next_produced);    /* waits until received */
 }
 
-/* Consumer — blocking receive */
+/* Consumer: blocking receive */
 while (true) {
     receive(next_consumed); /* waits until a message arrives */
     /* consume the item in next_consumed */
@@ -417,7 +417,7 @@ int main()
     char *ptr;
 
     fd = shm_open(name, O_CREAT | O_RDWR, 0666);
-    ftruncate(fd, SIZE);  /* see note below */
+    ftruncate(fd, SIZE);  /* see note above */
     ptr = (char *)mmap(0, SIZE, PROT_READ | PROT_WRITE,
                         MAP_SHARED, fd, 0);
 
@@ -520,7 +520,7 @@ The core concept of Mach is that **everything is a message**.
 
 **Port creation:**
 
-> **Note:** The Mach code below uses Mach-specific types. `mach_port_t` is a handle to a port (like a file descriptor for messages), and `mach_task_self()` returns a reference to the calling task (analogous to `getpid()` in POSIX). You are not expected to memorize this API.
+> **Note:** The Mach code below uses Mach-specific types. `mach_port_t` is a handle to a port (like a file descriptor for messages), and `mach_task_self()` returns a reference to the calling task (analogous to `getpid()` in POSIX). The flow of allocating a port for a task and granting it a receive right matters more than the exact API names.
 
 ```c
 mach_port_t port;
@@ -650,7 +650,7 @@ int main(void)
 2. **Reason:** Only when all write ends are closed does the reading side receive EOF(0). If not closed, the reading side may enter a permanent blocking state.
 3. Ordinary pipes are **not accessible outside** the process that created them.
 
-> **Note:** **Exam tip.** The EOF mechanism of pipes is frequently tested on exams. After `fork()`, both parent and child have copies of `fd[0]` and `fd[1]`, so if unused write ends are not closed, the reference count of the write end never reaches 0 and EOF is never generated.
+> **Key Point:** The EOF mechanism of pipes follows from the reference count of the write end. After `fork()`, both parent and child have copies of `fd[0]` and `fd[1]`, so if unused write ends are not closed, the reference count of the write end never reaches 0 and EOF is never generated.
 
 **Usage in shells:**
 
@@ -706,7 +706,7 @@ Pipes are used far beyond simple shell commands.
 **DevOps / CI-CD Pipelines** (the name reflects the same idea)
 
 ```text
-  Build → Test → Lint → Deploy   (each stage = a process, data flows through "pipes")
+  Build → Test → Lint → Deploy   (each stage = a process, data flows through pipes between stages)
 ```
 
 *Figure 7. Stages of a CI/CD pipeline*
@@ -729,7 +729,7 @@ Pipes are used far beyond simple shell commands.
 find / -name "*.log" 2>/dev/null | xargs grep "ERROR" | sort -u
 ```
 
-> **Note:** Pipes act as the glue that connects programs in the UNIX philosophy. *"Do one thing well, and connect with pipes."*
+> **Note:** Pipes act as the glue that connects programs in the UNIX philosophy. The UNIX philosophy advises making each program do one thing well and connecting such programs with pipes to handle larger tasks.
 
 ---
 
@@ -879,7 +879,7 @@ Network packets can be lost, causing the sender to retransmit. This retransmissi
 
 *Table 11. RPC execution semantics*
 
-> **Note:** **Exam tip.** At-least-once semantics also exists, retransmitting until an ACK is received without duplicate checking. At least once is sufficient for idempotent operations such as balance inquiries, while exactly once is needed for non-idempotent operations such as money transfers.
+> **Key Point:** Besides the two semantics in Table 11, there is **at-least-once** semantics, which retransmits until an ACK is received without duplicate checking. At least once is sufficient for idempotent operations such as balance inquiries, while exactly once is needed for non-idempotent operations such as money transfers.
 
 **Binding methods:**
 - **Fixed port address:** A fixed port number is assigned to the RPC at compile time. This is simple but inflexible.
@@ -1120,7 +1120,7 @@ int main() {
 |:--------|:-----------|
 | IPC | A mechanism for cooperating processes to exchange data, with two models: shared memory and message passing. |
 | Shared memory | Minimal kernel involvement makes it fast, but synchronization is the programmer's responsibility, and it is used in the producer-consumer pattern. |
-| Bounded buffer | It is implemented as a circular array, where `in == out` means empty and `(in+1)%SIZE == out` means full. |
+| Bounded buffer | It is implemented as a circular array, where `in == out` means empty and `(in + 1) % BUFFER_SIZE == out` means full. |
 | Message passing | It uses send and receive operations and considers naming (direct/indirect), synchronization (blocking/non-blocking), and buffering (0/bounded/unbounded). |
 | Rendezvous | The combination of blocking send and blocking receive, which requires no shared buffer. |
 | POSIX shared memory | It is set up in the order `shm_open()` → `ftruncate()` → `mmap()` and deleted with `shm_unlink()` after use. |

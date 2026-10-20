@@ -2,25 +2,17 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **Last Updated:** 2026-10-18
+> **Last Updated:** 2026-10-20
 >
-> Operating System Concepts, Silberschatz, Ch 16, 17
+> Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 16, 17
 
 > **Learning Objectives:**
-> 1. Distinguish **Security** from **Protection** and explain the **CIA triad** (confidentiality, integrity, availability) plus extra violation types (theft of service, DoS)
-> 2. Distinguish **threat** from **attack** and list major attacks (masquerading, replay, MITM, session hijacking, privilege escalation)
-> 3. Explain the **four-layer security model**, the weakest link, the human factor (social engineering), and the **attack surface**
-> 4. Classify **malware** (Trojan, Spyware, Ransomware, Back door, Logic bomb) and explain how the **principle of least privilege** governs the blast radius
-> 5. Explain the principles and defenses of **code injection**, including buffer overflows (stack layout and return-address overwriting), shellcode and NOP sleds, and SQL injection
-> 6. Distinguish **viruses** (by type) from **worms** along host requirement, propagation, and damage
-> 7. Distinguish **network threats** (sniffing, spoofing, MITM, DoS/DDoS, SYN flood, port scanning) and explain the zombie and botnet concepts
-> 8. Explain **symmetric/asymmetric** crypto (AES, RSA), **hashing** (SHA, salt), **digital signatures/certificates**, the **TLS handshake**, and the **key-distribution problem**
-> 9. Explain the **three authentication factors**, password vulnerabilities, **OTP**, and **MFA**
-> 10. Explain the **goals of protection** and core principles (least privilege, compartmentalization, defense in depth), and distinguish **need-to-know** from **least-privilege**
-> 11. Explain **protection rings** (Intel rings, ARM Exception Levels, TrustZone) and **domains and domain switching** (setuid)
-> 12. Compare the **access matrix** and its implementations (global table, **ACL**, **capability**, lock-key) and explain **revocation**
-> 13. Distinguish **access-control models** (RBAC, DAC vs MAC, SELinux, Linux capabilities)
-> 14. Explain **sandboxing** (SECCOMP-BPF, Seatbelt) and **code signing** (SIP, Entitlements)
+> 1. Distinguish **Security** from **Protection** and explain the **CIA triad**, the types of threats and attacks, the **four-layer security model**, and the **attack surface**
+> 2. Explain the principles and defenses of **malware** and **code injection** (buffer overflows, shellcode and NOP-sleds, SQL injection), and the difference between **viruses** and **worms**
+> 3. Distinguish **network threats** (sniffing, spoofing, MITM, DoS/DDoS, SYN flood, port scanning) and explain the zombie and botnet concepts
+> 4. Explain **symmetric/asymmetric** crypto (AES, RSA), **hashing** (SHA, salt), **digital signatures and certificates**, the **TLS handshake**, and **user authentication** (three factors, OTP, MFA)
+> 5. Explain the **goals of protection** and core principles (least privilege, compartmentalization, defense in depth), **protection rings**, and **domains and domain switching** (setuid)
+> 6. Compare the **access matrix** implementations (global table, ACL, capability, lock-key), revocation methods, **access-control models** (RBAC, DAC vs MAC, SELinux), and the principles of **sandboxing** and **code signing**
 
 ---
 
@@ -248,6 +240,7 @@ void safe(char *input) {
 
 - `strcpy()`, `sprintf()`, `gets()` are **dangerous functions** because they do not check length.
 - Use *size-aware* functions like `strncpy()`, `snprintf()` instead.
+- Compilers and the OS make overflows harder to exploit with **stack canaries** (check values placed before the return address to detect overwrites), **ASLR (Address Space Layout Randomization)**, which changes the addresses of the stack and libraries on every run, and the **NX (No-eXecute) bit**, which forbids executing code in data regions such as the stack.
 
 **Consequences of a buffer overflow:** the stack layout is shown below, with high addresses at the top and low addresses at the bottom.
 
@@ -271,6 +264,8 @@ The consequences by overflow size are as follows.
 2. **Medium overflow:** overwrites adjacent variables and may crash the program.
 3. **Large overflow:** **corrupts the return address**, leading to arbitrary code (shellcode) execution.
 
+> **[Systems Programming]** Each function call pushes a **stack frame** that holds the **return address** to the caller, the previous frame pointer (the saved EBP on x86), and the local variables. On x86 the stack grows from high to low addresses while an array is filled toward higher addresses, so bytes written past the end of `buffer` overwrite, in order, the local variables, the saved EBP, and the return address that lie at higher addresses, as in Figure 2. When the function returns with the `ret` instruction, the CPU jumps to the return address stored on the stack, so an attacker who changes that value decides which code runs next.
+
 ### 2.5 Shellcode and NOP-sled
 
 **Shellcode:** code injected by the attacker, which typically spawns a shell.
@@ -293,7 +288,7 @@ The attack proceeds as follows.
    ←──── NOP-sled ────────→     ← payload
 ```
 
-*Figure 3. Layout of a NOP sled and shellcode*
+*Figure 3. Layout of a NOP-sled and shellcode*
 
 - **Script kiddie:** a novice attacker who uses exploits created by other hackers.
 
@@ -513,6 +508,8 @@ Encrypt with the public key, decrypt with the private key.
 ```
 
 > **Key Point:** RSA's security rests on the assumption that **factoring a large composite is hard**. $N$ is public, but without knowing $p, q$ one cannot compute $kd$.
+
+> **[Discrete Mathematics]** RSA relies on **modular arithmetic** from number theory. The condition $ke \times kd \bmod (p-1)(q-1) = 1$ means that $kd$ is the **multiplicative inverse** of $ke$ modulo $(p-1)(q-1)$; in the example above, $kd = 29$ satisfies $5 \times 29 = 145 = 2 \times 72 + 1$ (such an inverse is found with the extended Euclidean algorithm). By Euler's theorem, $m^{(p-1)(q-1)} \bmod N = 1$ for every $m$ coprime to $N$. Writing $ke \times kd = 1 + t(p-1)(q-1)$ therefore gives $c^{kd} \bmod N = m^{ke \times kd} \bmod N = m \cdot (m^{(p-1)(q-1)})^t \bmod N = m$, so decrypting with the private key returns the plaintext that was encrypted with the public key.
 
 ### 4.4 Symmetric vs Asymmetric and Hybrid
 
@@ -1160,8 +1157,8 @@ Access control through User → **Role** → Permission mapping.
 
 *Table 25. Comparison of DAC and MAC*
 
-**Limitations of DAC:** owners can arbitrarily set and change permissions, and there is no restriction on root.
-**Need for MAC:** even with root privileges, access can be blocked by policy, which is essential for military and government agencies.
+- **Limitations of DAC:** owners can arbitrarily set and change permissions, and there is no restriction on root.
+- **Need for MAC:** even with root privileges, access can be blocked by policy, which is essential for military and government agencies.
 
 ### 11.3 MAC: Security Labels and SELinux
 
@@ -1261,13 +1258,13 @@ Subdivide root privileges to grant processes only the **necessary permissions**.
 Verify code **integrity** and **origin** through **digital signatures**.
 
 ```text
-  Developer                          User System
-  ┌────────┐                        ┌──────────┐
-  │ Code   │──[Private Key]──→ Signature
-  └────────┘                        │
-  Code + Signature ──[Public Key]──→ Integrity/origin check
-                                    ├─ Success: allow execution
-                                    └─ Failure: block execution or warn
+  [Developer]
+    Code ──[sign with private key]──→ Signature
+    Distribute the code together with the signature
+  [User System]
+    Code + Signature ──[verify with public key]──→ Integrity and origin check
+      ├─ Success: allow execution
+      └─ Failure: block execution or warn
 ```
 
 *Figure 20. Creation and verification flow of code signing*
@@ -1316,7 +1313,7 @@ A **system-protection mechanism** introduced in macOS 10.11.
 
 ## 13. Lab: Implementing an Access-Control System
 
-The concepts of Sections 9-11 implemented in Python.
+This section implements the concepts of Sections 9-11 in Python.
 
 **Access Matrix:**
 
@@ -1348,7 +1345,7 @@ class AccessMatrix:
 
 ```python
 class ACL:
-    """Column (object) based — (domain, rights) list per object"""
+    """Column (object) based: (domain, rights) list per object"""
     def __init__(self):
         self.acl = {}  # {object: {domain: set(rights)}}
 
@@ -1364,7 +1361,7 @@ class ACL:
 
 
 class CapabilityList:
-    """Row (domain) based — (object, rights) list per domain"""
+    """Row (domain) based: (object, rights) list per domain"""
     def __init__(self):
         self.caps = {}  # {domain: {object: set(rights)}}
 
@@ -1451,13 +1448,13 @@ print(rbac.check_access("Bob", "File1", "write"))    # False
 | Security and protection | Security is an outward-facing measure of confidence in system integrity (Ch 16), while protection is the OS mechanism that realizes it (Ch 17). |
 | CIA | The three principles are confidentiality, integrity, and availability, and every attack ultimately breaks one or more of them. |
 | Malware | Malware is classified into Trojan, Spyware, Ransomware, Back Door, Logic Bomb, and other types. |
-| Code injection | Buffer overflow, SQL injection, and shellcode with NOP sleds are typical, and many program threats stem from code injection and least-privilege violations. |
+| Code injection | Buffer overflow, SQL injection, and shellcode with NOP-sleds are typical, and many program threats stem from code injection and least-privilege violations. |
 | Virus vs worm | The two differ in host requirement and propagation method. |
 | Network threats | Sniffing, spoofing, DoS/DDoS, MITM, and port scanning target network traffic and service resources. |
 | Cryptography | It uses symmetric (AES), asymmetric (RSA), hashing (SHA), and salt, and guarantees integrity, origin, and identity with hashing (+salt), digital signatures, and certificates. |
 | TLS | It uses hybrid encryption that combines symmetric (fast) and asymmetric (secure key exchange) encryption, starting with a certificate-based handshake. |
 | Authentication | It uses passwords, biometrics, OTP, and MFA, and the authentication factors are something you know, something you have, and something you are. |
-| Protection principles | The principles are least privilege, compartmentalization, defense in depth, and need-to-know, and following the two pillars of protection design (policy and mechanism separation, and least privilege), need-to-know (policy) is implemented by least privilege (mechanism). |
+| Protection principles | The principles are least privilege, compartmentalization, defense in depth, and need-to-know, and following the separation of policy and mechanism, need-to-know (policy) is implemented by least privilege (mechanism). |
 | Protection rings | Intel rings, ARM exception levels, and TrustZone are hardware-level privilege hierarchies. |
 | Access matrix | It is the abstract model of protection, and real implementations combine ACL (column-based) and capability (row-based), verifying with the ACL on open and handling later accesses quickly via the fd capability. Lock-key is a compromise between the two. |
 | RBAC/MAC/DAC | These are role-based, mandatory, and discretionary access control, and MAC, which binds even root by policy, is the strongest. |
@@ -1576,6 +1573,6 @@ print(rbac.check_access("Bob", "File1", "write"))    # False
     <details>
     <summary>Answer</summary>
 
-    The essence of **Defense in Depth** is that if one layer is breached, the next holds. The scenario is as follows. ① A **firewall and port policy** close unneeded ports, shrinking *port scanning* reconnaissance and mitigating *SYN floods* via rate limiting. ② Traffic that gets through is protected from *sniffing and MITM* by **TLS** (certificate-based server authentication, hybrid crypto). ③ Inputs are blocked from *SQL injection* by **prepared statements and validation** and from *buffer overflow* by size-aware functions, ASLR, and NX. ④ If code execution still succeeds, **sandboxing (SECCOMP, Seatbelt)** and **least privilege (Linux capabilities, non-root)** confine what resources the process can touch. ⑤ Even on a privilege-escalation attempt, **MAC (SELinux, SIP)** binds even root by policy and protects system files. ⑥ Finally, **data-at-rest encryption** and an **audit trail** reduce leakage damage and enable post-incident analysis. Each layer is independent, and the attacker must breach *every* layer in turn. This is the defensive application of the maxim "security is only as strong as its weakest link."
+    The essence of **Defense in Depth** is that if one layer is breached, the next holds. The scenario is as follows. ① A **firewall and port policy** close unneeded ports, shrinking *port scanning* reconnaissance and mitigating *SYN floods* via rate limiting. ② Traffic that gets through is protected from *sniffing and MITM* by **TLS** (certificate-based server authentication, hybrid crypto). ③ Inputs are blocked from *SQL injection* by **prepared statements and validation** and from *buffer overflow* by size-aware functions, ASLR, and NX. ④ If code execution still succeeds, **sandboxing (SECCOMP, Seatbelt)** and **least privilege (Linux capabilities, non-root)** confine what resources the process can touch. ⑤ Even on a privilege-escalation attempt, **MAC (SELinux, SIP)** binds even root by policy and protects system files. ⑥ Finally, **data-at-rest encryption** and an **audit trail** reduce leakage damage and enable post-incident analysis. Each layer is independent, and the attacker must breach *every* layer in turn. This is the defensive application of the principle from Section 1.4 that security is only as strong as its weakest link.
 
     </details>

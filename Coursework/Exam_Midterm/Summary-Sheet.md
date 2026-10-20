@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Summary-Sheet.md) | [한국어](Summary-Sheet.ko.md)
 
-> **Last Updated:** 2026-10-18
+> **Last Updated:** 2026-10-20
 
 ---
 
@@ -61,7 +61,7 @@
 | Mutex | 뮤텍스(Mutex) | Mutual exclusion lock |
 | TLB | 변환 참조 버퍼 | Cache for virtual→physical address translation |
 | COW | Copy-on-Write | fork optimization (copy on write) |
-| TLS | 스레드-로컬 저장소(Thread-Local Storage, TLS) | Per-thread independent global variables |
+| TLS | 스레드 로컬 저장소(Thread-Local Storage, TLS) | Per-thread independent global variables |
 | LWP | 경량 프로세스(Lightweight Process, LWP) | Intermediate layer between user and kernel threads |
 | PCS / SCS | 경쟁 범위 | Within a process / system-wide |
 | SMP | 대칭 다중 프로세싱(Symmetric Multiprocessing, SMP) | All CPUs equal, independent scheduling |
@@ -118,7 +118,7 @@
 ```text
 user code
   ↓ libc wrapper
-  ↓ a7 ← syscall#, args ← a0-a6
+  ↓ a7 ← syscall#, args ← a0-a5
   ↓ ecall (trap)
 kernel trap handler
   ↓ syscall table lookup
@@ -145,6 +145,9 @@ Memory↔device transfer without CPU involvement. The CPU only hands the work co
 ```text
 Register < L1/L2 Cache < RAM < SSD < HDD
 ```
+
+*Figure 2. Storage hierarchy*
+
 Locality = **temporal** (reaccess) + **spatial** (neighbors)
 
 ### OS Structure
@@ -174,7 +177,7 @@ Text    ─ executable code
 [↓ low address]
 ```
 
-*Figure 2. Memory layout of a process*
+*Figure 3. Memory layout of a process*
 
 ### Process States
 ```text
@@ -184,7 +187,7 @@ New ─admitted→ Ready ─dispatch→ Running ─exit→ Terminated
                └─Waiting ←─I/O req──┘
 ```
 
-*Figure 3. Process state transition diagram*
+*Figure 4. Process state transition diagram*
 
 | Transition | Cause |
 |---|---|
@@ -510,12 +513,12 @@ pool.shutdown();
 #pragma omp parallel for                // split the loop
 #pragma omp parallel for reduction(+:s) // safely combine the sum
 // clauses: shared(), private(), reduction(op:var)
-// operators: + - * / & | ^ && || max min
+// operators: + - * & | ^ && || max min
 // functions: omp_get_thread_num(), omp_get_num_threads(), omp_get_wtime()
 // compile: gcc -fopenmp
 ```
 
-> **Note:** The `/` in the operator list above is not an operator that the OpenMP `reduction` clause supports. The supported operators are `+`, `-`, `*`, `&`, `|`, `^`, `&&`, `||`, `max`, and `min`.
+> **Note:** The operators supported by the OpenMP `reduction` clause are `+`, `-`, `*`, `&`, `|`, `^`, `&&`, `||`, `max`, and `min`; division `/` is not supported.
 
 ### GCD QoS
 | Class | Purpose |
@@ -643,7 +646,7 @@ Turnaround = waiting + burst + I/O. What scheduling affects is **waiting**.
 0    3      9       16        24
 ```
 
-*Figure 4. Gantt chart of the SJF example*
+*Figure 5. Gantt chart of the SJF example*
 
 Waiting: P4=0, P1=3, P3=9, P2=16 → **average 7**
 
@@ -662,7 +665,7 @@ $$ \tau_{n+1} = \alpha t_n + (1-\alpha)\tau_n $$
 0    1       5       10       17        26
 ```
 
-*Figure 5. Gantt chart of the SRTF example*
+*Figure 6. Gantt chart of the SRTF example*
 
 Waiting: P1=9, P2=0, P3=15, P4=2 → **average 6.5**
 
@@ -678,7 +681,7 @@ Waiting: P1=9, P2=0, P3=15, P4=2 → **average 6.5**
 0    4    7   10   14   18   22   26   30
 ```
 
-*Figure 6. Gantt chart of the RR (q=4) example*
+*Figure 7. Gantt chart of the RR (q=4) example*
 
 Waiting: P1=6, P2=4, P3=7 → **average 5.67**
 
@@ -989,7 +992,7 @@ $$ U \le N(2^{1/N} - 1) $$
 2. **Code after a successful exec():** Not executed (memory is replaced)
 3. **A zombie cannot be killed:** It is already dead, so the parent must be handled
 4. **Pipe close rule:** Close **all** unused ends (including in the parent)
-5. **write(fd, msg, strlen(msg)) vs `sizeof(msg)`:** For a pointer, sizeof gives the pointer size
+5. **`write(fd, msg, strlen(msg))` vs `sizeof(msg)`:** For a pointer, sizeof gives the pointer size
 6. **`fd[WRITE_END]` and `+1`:** Send the null terminator so that `printf("%s")` works correctly
 7. **`pthread_create(&t, NULL, f, &i)` in a loop:** The address of `i` is shared → race. Fix it with an `ids[i]` array
 8. **Thread.start() vs run():** Calling run() directly runs it in the same thread (bug)
@@ -997,7 +1000,7 @@ $$ U \le N(2^{1/N} - 1) $$
 10. **FCFS convoy effect:** Even for the same set of processes, the average waiting time varies greatly with **arrival order**
 11. **RR time quantum:** Too small means overhead, and too large turns it into FCFS. Apply the 80% rule
 12. **SJF starvation:** A long process may wait forever → solved with aging
-13. **RMS 69.3% bound:** Above this, use EDF
+13. **RMS 69.3% bound:** Above this bound, RMS no longer guarantees schedulability, so consider EDF
 14. **Process vs thread context switch:** The key to the speed difference = **whether the TLB is flushed**
 15. **Amdahl's Law:** Even infinite cores are bounded by **1/S**. With S=50%, 2x is the limit
 16. **One-to-one vs many-to-many:** The modern standard is **one-to-one**, because of simplicity and stability
@@ -1018,7 +1021,7 @@ $$ U \le N(2^{1/N} - 1) $$
 + [2-3 sentences on mechanism/how it works]
 + [1 concrete example]
 + [1 sentence on a tradeoff or limitation]
-+ [1 sentence connecting to another concept — bonus!]
++ [1 sentence connecting to another concept]
 ```
 
 ### Example: Answer to a Question on Why System Calls Are Needed
@@ -1027,4 +1030,4 @@ A system call is the only interface through which a user program requests OS ser
 
 In the call sequence, the libc wrapper puts the system call number in register a7 (RISC-V) and executes the `ecall` instruction, and the hardware then changes the mode bit to 0 and jumps to the trap handler. For example, an `open()` call internally raises ecall, runs the kernel's `sys_open()`, and returns with the fd in a0.
 
-The limitation of this structure is **overhead**. Even a simple command like `cp` issues thousands of system calls, so buffering, DMA, and mmap become important. This connects directly to memory-mapped files in Week 12 on virtual memory.
+The limitation of this structure is **overhead**. Even a simple command like `cp` issues thousands of system calls, so buffering, DMA, and mmap become important. This connects directly to memory-mapped files (`mmap()`), which build on virtual memory.

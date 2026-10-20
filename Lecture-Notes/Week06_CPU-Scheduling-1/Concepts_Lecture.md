@@ -2,9 +2,9 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **Last Updated:** 2026-10-18
+> **Last Updated:** 2026-10-20
 >
-> Operating System Concepts, Silberschatz, Ch 5 (5.1-5.3)
+> Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 5 (5.1-5.3)
 
 > **Learning Objectives:**
 > 1. Explain the CPU-I/O burst cycle and the need for scheduling
@@ -63,7 +63,7 @@
   - [6.5 RR: Time Quantum and Turnaround Time](#65-rr-time-quantum-and-turnaround-time)
   - [6.6 RR: Detailed Example (4 Processes)](#66-rr-detailed-example-4-processes)
 - [7. Algorithm Comparison](#7-algorithm-comparison)
-  - [7.1 Four Algorithms on the Same Data](#71-four-algorithms-on-the-same-data)
+  - [7.1 Three Algorithms on the Same Data](#71-three-algorithms-on-the-same-data)
   - [7.2 Comprehensive Characteristics Comparison](#72-comprehensive-characteristics-comparison)
 - [8. Lab: Scheduling Algorithm Simulator](#8-lab-scheduling-algorithm-simulator)
   - [8.1 Lab: Data Structure](#81-lab-data-structure)
@@ -123,7 +123,7 @@ terminate();                  // Terminates after the last CPU burst
 
 ### 1.3 CPU Burst Distribution
 
-The distribution of CPU burst lengths follows an **exponential or hyperexponential** decay pattern (Figure 2, textbook Figure 5.2). A hyperexponential distribution has a heavier tail than a plain exponential, meaning that bursts cluster even more strongly at the short end.
+The distribution of CPU burst lengths follows an **exponential or hyperexponential** decay pattern (Figure 2, textbook Figure 5.2). A hyperexponential distribution varies more than an exponential distribution with the same mean: bursts cluster even more strongly at the short end, yet very long bursts still appear occasionally (a heavier tail).
 
 - **Short CPU bursts** are very frequent, so most bursts are short.
 - **Long CPU bursts** occur rarely.
@@ -150,7 +150,7 @@ Processes are classified as follows based on the CPU burst distribution.
 - **Scheduling algorithms** must handle both types efficiently.
 - This distribution characteristic forms the theoretical basis for algorithms like SJF and RR.
 
-> **Note:** **Exam Tip.** Being able to classify processes as I/O-bound or CPU-bound is essential for understanding why different scheduling algorithms favor different workloads. FCFS favors CPU-bound processes (they get long uninterrupted runs), while RR favors I/O-bound processes (they get quick, frequent access to the CPU).
+> **Key Point:** Classifying processes as I/O-bound or CPU-bound explains why different scheduling algorithms favor different workloads. FCFS favors CPU-bound processes (they get long uninterrupted runs), while RR favors I/O-bound processes (they get quick, frequent access to the CPU).
 
 ### 1.5 CPU Scheduler (Short-term Scheduler)
 
@@ -171,10 +171,10 @@ When the CPU becomes idle, the next process to run is selected from the **ready 
 - The ready queue does not have to be FIFO.
   - It can be implemented as a FIFO queue, **priority queue**, tree, linked list, and so on.
 - Records in the queue are typically **PCBs (Process Control Blocks)**.
-  - Recall: A PCB (Process Control Block) stores all state information for a process (registers, program counter, priority, etc.) so that it can be resumed exactly where it left off after a context switch.
+  - The PCB (Process Control Block) covered in Week 2 stores all state information for a process (registers, program counter, priority, etc.) so that it can be resumed exactly where it left off after a context switch.
 - The internal order of the queue is determined by the scheduling algorithm.
 
-> **Key Point:** The "ready queue" is not necessarily a queue in the data structure sense. It is a collection of processes that are ready to run, and the scheduling algorithm determines how that collection is ordered. FCFS uses a FIFO queue, and SJF uses a priority queue sorted by burst length. The name "ready queue" is a historical convention.
+> **Key Point:** Despite its name, the ready queue is not necessarily a queue in the data structure sense. It is a collection of processes that are ready to run, and the scheduling algorithm determines how that collection is ordered. FCFS uses a FIFO queue, and SJF uses a priority queue sorted by burst length. Calling it a queue is a historical convention.
 
 ### 1.6 When Scheduling Occurs: 4 Circumstances
 
@@ -209,7 +209,7 @@ The **4 circumstances** in which CPU scheduling decisions are needed are as foll
 - In **preemptive** scheduling, the OS can forcibly reclaim the CPU via a timer interrupt or similar mechanism.
 - Windows, macOS, Linux, and UNIX all use **preemptive** scheduling.
 
-> **Note:** **Exam Tip.** The distinction that nonpreemptive scheduling acts only in circumstances 1 and 4 while preemptive scheduling acts in all four is frequently tested. Nonpreemptive scheduling is also called cooperative scheduling because the process cooperates by voluntarily giving up the CPU.
+> **Key Point:** The criterion that separates the two schemes is that nonpreemptive scheduling acts only in circumstances 1 and 4, while preemptive scheduling acts in all four. Nonpreemptive scheduling is also called cooperative scheduling because the process cooperates by voluntarily giving up the CPU.
 
 ### 1.8 Issues with Preemptive Scheduling
 
@@ -267,7 +267,7 @@ cat /proc/<PID>/status | grep ctxt
 - A **voluntary context switch** occurs when a process gives up the CPU by itself because it needs a resource that is currently unavailable (such as waiting for I/O).
 - A **nonvoluntary context switch** occurs when the OS forces a switch, for example because the time slice expired.
 
-> **[Systems Programming]** On modern systems, a context switch typically takes about 1-10 microseconds. While this seems tiny, it adds up. A busy server performing thousands of context switches per second can lose significant CPU time to dispatch latency. This is why the time quantum in Round-Robin scheduling must be chosen carefully. Too small a quantum means too many context switches.
+> **Note:** On modern systems, a context switch typically takes about 1-10 microseconds. While this seems tiny, it adds up. A busy server performing thousands of context switches per second can lose significant CPU time to dispatch latency. This is why the time quantum in Round-Robin scheduling must be chosen carefully. Too small a quantum means too many context switches.
 
 ---
 
@@ -325,7 +325,7 @@ Waiting Time = Turnaround Time - Burst Time
              (for a single burst, with no I/O)
 ```
 
-> **Note:** **Exam Tip.** Waiting time is the most commonly used metric for comparing scheduling algorithms in textbook problems because it isolates the effect of the scheduling algorithm. Turnaround time includes CPU execution and I/O time, which are the same regardless of which algorithm is used. Waiting time captures *only* the delay introduced by the scheduling decision.
+> **Key Point:** Waiting time is the most commonly used metric for comparing scheduling algorithms because it isolates the effect of the scheduling algorithm. Turnaround time includes CPU execution and I/O time, which are the same regardless of which algorithm is used. Waiting time captures *only* the delay introduced by the scheduling decision.
 
 ### 2.4 Response Time
 
@@ -729,7 +729,7 @@ It works as follows.
 
 **Time 26**: P3 completes, and all processes have finished.
 
-> **Note:** **Exam Tip.** When solving SRTF problems, check at each new arrival whether preemption occurs. The comparison is always between the new process's *total* burst and the current process's *remaining* burst. At times when no new process arrives, no comparison is needed, and the current process continues.
+> **Key Point:** An SRTF schedule is built by checking at each new arrival whether preemption occurs. At an arrival, the comparison is between the new process's *total* burst and the current process's *remaining* burst. While no new process arrives, the current process runs until it completes, and at completion the scheduler picks the ready process with the shortest remaining burst.
 
 ### 5.3 SRTF: Gantt Chart and Calculation
 
@@ -833,9 +833,9 @@ All processes arrive at time 0, and the time quantum is 4ms.
 
 ```text
 Gantt Chart:
-+------+----+----+------+------+------+------+------+------+
-|  P1  | P2 | P3 |  P1  |  P1  |  P1  |  P1  |  P1  |  P1  |
-+------+----+----+------+------+------+------+------+------+
++------+----+----+------+------+------+------+------+
+|  P1  | P2 | P3 |  P1  |  P1  |  P1  |  P1  |  P1  |
++------+----+----+------+------+------+------+------+
 0      4    7    10     14     18     22     26     30
 ```
 
@@ -885,12 +885,12 @@ When q = 100 (all bursts < 100):
 *Figure 17. How a smaller time quantum increases context switches*
 
 - The context switch count **increases dramatically**, so the overhead grows.
-- If the context switch time exceeds 10% of the quantum, more than 10% of the CPU time is spent on context switches, which is **inefficient**.
+- If the context switch time is about 10% of the quantum, about 10% of the CPU time is spent on context switches, which is **inefficient**.
 - In real systems, a context switch takes under **10 μs**, and the quantum is **10-100 ms**.
 
 ### 6.5 RR: Time Quantum and Turnaround Time
 
-Figure 18 (textbook Figure 5.6) shows the effect of q on turnaround time. The graph plots the average turnaround time of four processes with bursts 6, 3, 1, and 7 for q from 1 to 7. The average turnaround time is 11.0 at q = 1 and 12.25 at q = 5, and once q is 6 or more, every burst finishes within one quantum and it becomes 10.5.
+Figure 18 (textbook Figure 5.6) shows the effect of q on turnaround time. The graph plots the average turnaround time of four processes with bursts 6, 3, 1, and 7 for q from 1 to 7. The average turnaround time is 11.0 at q = 1 and 12.25 at q = 5, and it becomes 10.5 once q is 6 or more. With q of 7 or more, every burst finishes within one quantum; with q = 6, only the process with burst 7 runs a second time, but it finishes last, so the average is the same.
 
 ![Figure 18. Average turnaround time as a function of the time quantum](../../images/Week06_p14.png)
 
@@ -902,7 +902,7 @@ The **rule of thumb** is as follows.
 - If q is too large, RR behaves like FCFS, worsening response time.
 - Choosing an appropriate q is therefore **critical**.
 
-> **Note:** **Exam Tip.** The 80% rule is a key heuristic to remember. The time quantum should be large enough that most processes complete their CPU burst within a single quantum (avoiding unnecessary preemption), but small enough that the few long-burst processes do not monopolize the CPU. Typical values in real systems are 10-100 ms.
+> **Key Point:** The 80% rule is the key heuristic for choosing the time quantum. The time quantum should be large enough that most processes complete their CPU burst within a single quantum (avoiding unnecessary preemption), but small enough that the few long-burst processes do not monopolize the CPU. Typical values in real systems are 10-100 ms.
 
 ### 6.6 RR: Detailed Example (4 Processes)
 
@@ -955,9 +955,9 @@ Average Turnaround Time = (22 + 17 + 9 + 20) / 4 = 68/4 = 17.0 ms
 
 ## 7. Algorithm Comparison
 
-### 7.1 Four Algorithms on the Same Data
+### 7.1 Three Algorithms on the Same Data
 
-The data are P1(0,24), P2(0,3), and P3(0,3), all arriving at time 0.
+The data are P1(0,24), P2(0,3), and P3(0,3), all arriving at time 0. When all processes arrive at the same time, no later arrival can trigger preemption, so SRTF gives the same result as SJF.
 
 | Algorithm | P1 wait | P2 wait | P3 wait | **Avg WT** | Note |
 |-----------|---------|---------|---------|-----------|------|
@@ -987,7 +987,7 @@ The data are P1(0,24), P2(0,3), and P3(0,3), all arriving at time 0.
 
 **Starvation** means a process waits indefinitely because higher-priority or shorter processes keep arriving and always get scheduled first.
 
-> **Note:** **Exam Tip.** This table is a high-value exam reference. Note the trade-offs. SJF and SRTF are optimal for waiting time but can cause starvation (long processes may wait indefinitely if short processes keep arriving). RR prevents starvation and has excellent response time but has a higher average waiting time. FCFS is simple but has the worst overall characteristics. These trade-offs motivate the more advanced algorithms in Week 7 (priority scheduling, multilevel queues).
+> **Key Point:** This table shows the trade-offs among the four algorithms. SJF and SRTF are optimal for waiting time but can cause starvation (long processes may wait indefinitely if short processes keep arriving). RR prevents starvation and has excellent response time but has a higher average waiting time. FCFS is simple but has the worst overall characteristics. These trade-offs motivate the more advanced algorithms in Week 7 (priority scheduling, multilevel queues).
 
 ---
 

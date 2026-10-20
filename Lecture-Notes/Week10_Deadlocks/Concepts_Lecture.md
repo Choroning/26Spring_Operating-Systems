@@ -2,9 +2,9 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **Last Updated:** 2026-10-18
+> **Last Updated:** 2026-10-20
 >
-> Operating System Concepts, Silberschatz, Ch 8
+> Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 8
 
 > **Learning Objectives:**
 > 1. Distinguish **deadlock** from **livelock** and recognize each in pthread code
@@ -98,7 +98,7 @@ A thread uses a resource in three steps:
 
 *Table 1. Request and release calls by resource*
 
-> **Note:** **Why this framing matters.** Every deadlock in this chapter fits the *request → hold → request more* pattern. Once you can name what is held and what is requested, the rest of the analysis is mechanical.
+> **Note:** **Why this framing matters.** Every deadlock in this unit fits the *request → hold → request more* pattern. Once you can name what is held and what is requested, the rest of the analysis is mechanical.
 
 ### 1.2 Definition of Deadlock
 
@@ -165,7 +165,7 @@ Result: both threads wait forever → Deadlock!
 Unlike deadlock, livelocked threads are not blocked. They are running, but stuck in a retry loop:
 
 ```c
-/* thread_one — using trylock */
+/* thread_one: using trylock */
 void *do_work_one(void *param) {
     int done = 0;
     while (!done) {
@@ -206,7 +206,7 @@ Deadlock requires **all four** of the following to hold *simultaneously*:
 4. **Circular Wait:** there is a chain T0 → T1 → ... → Tn → T0 where each Ti waits for a resource held by T(i+1) and Tn waits for a resource held by T0.
 
 ```text
-Circular Wait sketch — clean 3-thread cycle
+Circular Wait sketch: a cycle of three threads
 (T0 holds R0, T1 holds R1, T2 holds R2; each thread waits for the next one's resource):
 
         ┌──(waits for R1, held by T1)──┐
@@ -243,7 +243,9 @@ When a request is granted, the request edge `Ti → Rj` flips to an assignment e
 
 *Figure 3. Resource-allocation graph without deadlock*
 
-> **[Data Structures]** A RAG is a directed graph. Detecting whether a deadlock has formed reduces to **directed-cycle detection**, which is the standard DFS with three-color marking (white = unvisited, grey = on the current DFS stack, black = fully explored): a back edge to a grey node closes a cycle. Cycle detection runs in $O(V+E)$; for the RAG, that becomes $O(n^2)$ under the dense-graph assumption used in Sections 5.3 and 6.1.
+In Figure 3, R1 and R3 have one instance each, R2 has two, and R4 has three. T1 holds an instance of R2 and waits for R1, T2 holds one instance each of R1 and R2 and waits for R3, and T3 holds R3. The graph has no cycle, so there is no deadlock. When T3 finishes and releases R3, T2 can receive R3 and finish, and when T2 releases R1, T1 proceeds as well.
+
+> **[Algorithms]** A RAG is a directed graph. Detecting whether a deadlock has formed reduces to **directed-cycle detection**, which is the standard DFS with three-color marking (white = unvisited, grey = on the current DFS stack, black = fully explored): a back edge to a grey node closes a cycle. Cycle detection runs in $O(V+E)$; for the RAG, that becomes $O(n^2)$ under the dense-graph assumption used in Sections 5.3 and 6.1.
 
 ### 2.3 RAG: Cycles and Deadlock
 
@@ -304,7 +306,7 @@ In practice, large systems **mix** strategies, handling different resource types
 Linux and Windows largely **ignore** deadlock in the general-purpose kernel. The reasoning is a cost-benefit calculation:
 
 - Deadlocks are **rare** in well-written code (especially with good lock-ordering conventions).
-- The cost of *preventing* every possible deadlock at the OS level (declaring max claims, running Banker's at every request) would be prohibitive.
+- The cost of *ruling out* every possible deadlock at the OS level (declaring max claims, running Banker's at every request) would be prohibitive.
 - It is cheaper to push responsibility to **kernel and application developers** and to provide *debugging tools* like lockdep to find ordering violations.
 
 The name comes from the image of an ostrich burying its head in the sand (which real ostriches do not do): the OS pretends the problem does not exist.
@@ -334,7 +336,7 @@ Two protocols:
 - **Method 2:** A thread may only request new resources when it holds **none**; it must release everything before any new request.
 
 ```text
-Method 2 example — read-then-print job:
+Method 2 example: a read-then-print job
 
   Phase 1:  request(disk)    → read(file)  → release(disk)
   Phase 2:  request(printer) → print()     → release(printer)
@@ -384,7 +386,7 @@ F(R0) < F(R1) < ... < F(Rn) < F(R0)
 
 So F(R0) < F(R0), which is a **contradiction**. Therefore no cycle can form, and deadlock cannot occur. ∎
 
-> **[Discrete Mathematics]** Two properties of `<` on ℤ make this proof work. **Transitivity**: if a < b and b < c, then a < c, so chaining n separate inequalities yields F(R0) < F(R0). **Irreflexivity**: no integer is less than itself, so F(R0) < F(R0) is *impossible*; that is where the contradiction lives. These two properties alone make `<` a strict partial order, and adding the fact that any two distinct integers are comparable makes it a **strict total order**. The proof needs only the first two properties. The same algebraic structure is used in other topics, such as priority comparisons in CPU scheduling (Weeks 6-7) and sorting.
+> **[Discrete Mathematics]** Two properties of `<` on ℕ, the set that holds the values of F, make this proof work. **Transitivity**: if a < b and b < c, then a < c, so chaining n separate inequalities yields F(R0) < F(R0). **Irreflexivity**: no natural number is less than itself, so F(R0) < F(R0) is *impossible*; that is where the contradiction lives. These two properties alone make `<` a strict partial order, and adding the fact that any two distinct natural numbers are comparable makes it a **strict total order**. The proof needs only the first two properties. The same algebraic structure is used in other topics, such as priority comparisons in CPU scheduling (Weeks 6-7) and sorting.
 
 > **Caution:** Defining a lock order is necessary but not sufficient: **programmers must adhere to it**, and the compiler or runtime does not enforce it. Tools like lockdep (Section 4.6) catch violations at test time.
 
@@ -455,9 +457,9 @@ Characteristics:
 
 Prevention is heavy-handed: it removes deadlock by structurally restricting what the system can do, often hurting utilization. **Avoidance** instead asks: *Given each thread's maximum future demand, can I grant this request and still be sure every thread can finish?*
 
-> **Definition:** A **Safe State** is a state for which there exists a **safe sequence** ⟨T1, T2, ..., Tn⟩ such that for every Ti, its remaining resource needs can be satisfied by `Available + ∑ Allocation(Tj for j < i)`.
+> **Definition:** A **Safe State** is a state for which there exists a **safe sequence** ⟨T1, T2, ..., Tn⟩ such that for every Ti, its remaining resource needs can be satisfied by `Available + Σ Allocation(Tj for j < i)`.
 >
-> An **Unsafe State** is a state in which no safe sequence exists.
+> An **Unsafe State**, by contrast, is a state in which no safe sequence exists.
 
 > **[Discrete Mathematics]** For equal-length vectors X and Y, **`X ≤ Y` means component-wise comparison**: `X[j] ≤ Y[j]` at every index. Vector addition and subtraction are also component-wise. This relation is a **partial order**, so some vectors are incomparable; for example, neither `(1,3) ≤ (2,2)` nor `(2,2) ≤ (1,3)`. The Banker's Algorithm relies on this: if `Request ≤ Available` fails, the request is not necessarily larger than Available; at least one resource component is unavailable.
 
@@ -525,6 +527,8 @@ When every resource type has **exactly one instance**, augment the RAG with **cl
 ![Figure 8. Unsafe state with a cycle in a resource-allocation graph](../../images/Week10_RAG-Unsafe.png)
 
 *Figure 8. Unsafe state with a cycle in a resource-allocation graph*
+
+In Figure 7, R1 is assigned to T1 and T2 is requesting R1, and both T1 and T2 have claim edges to R2. If T2 now requests R2, R2 is free, but assigning it would create the cycle T1 ⇢ R2 → T2 → R1 → T1 together with the claim edge `T1 ⇢ R2`, as in Figure 8. If T1 then requested R2, deadlock would occur, so the algorithm denies T2's request and makes T2 wait.
 
 ### 5.4 Banker's Algorithm: Data Structures
 
@@ -605,7 +609,7 @@ When thread Ti makes a request vector `Request_i`, the OS does the following:
      Unsafe → roll back step 3; Ti must wait
 ```
 
-> **[Data Structures]** The pretend, check, and possible rollback sequence is rigorous rather than hand-wavy for the following reason. The entire system state for the purposes of Safety is captured in the three vectors `Available`, `Allocation_i`, `Need_i`, and step 3 modifies *only* these vectors. If the check fails, the inverse arithmetic (`+ Request_i` where we subtracted, `− Request_i` where we added) restores the exact pre-pretend state, so there are no external side effects. If the OS performs this sequence atomically with respect to other requests, there is no race condition either. The implementation updates the vectors in place, but conceptually it is a **purely functional transformation**: it builds a new state on a snapshot and then either commits or discards it. The same pattern shows up in transactional data structures (persistent trees, copy-on-write structures) and software transactional memory.
+> **Note:** The pretend, check, and possible rollback sequence is rigorous rather than hand-wavy for the following reason. The entire system state for the purposes of Safety is captured in the three vectors `Available`, `Allocation_i`, `Need_i`, and step 3 modifies *only* these vectors. If the check fails, the inverse arithmetic (`+ Request_i` where we subtracted, `− Request_i` where we added) restores the exact pre-pretend state, so there are no external side effects. If the OS performs this sequence atomically with respect to other requests, there is no race condition either. The implementation updates the vectors in place, but conceptually it is a **purely functional transformation**: it builds a new state on a snapshot and then either commits or discards it. The same pattern shows up in transactional data structures (persistent trees, copy-on-write structures) and software transactional memory.
 
 ### 5.7 Banker's Algorithm Worked Example
 
@@ -680,6 +684,8 @@ Ti → Rq → Tj  is replaced by  Ti → Tj
 
 *Figure 9. Resource-allocation graph and the corresponding wait-for graph*
 
+Contracting the resource nodes of Figure 9(a) yields Figure 9(b). For example, T1 waits for R1, which T2 holds, so the edge T1 → T2 appears, and T4 waits for R2, which T1 holds, so the edge T4 → T1 appears. Graph (b) contains the cycles T1 → T2 → T4 → T1 and T1 → T2 → T3 → T4 → T1, so T1, T2, T3, and T4 are deadlocked, while T5, which waits for nothing, is not part of the deadlock.
+
 A **cycle** in the wait-for graph means deadlock. Cycle detection runs in **$O(V+E)$** via DFS (the 3-color back-edge test from Section 2.2). For the wait-for graph V = n, and the graph can be near-dense with up to $n^2$ edges, so the worst-case bound becomes **$O(n^2)$** in the number of threads.
 
 > **Note:** **Why this works for single-instance only.** With multi-instance resources, even if Ti is waiting for a resource Tj holds, there may be a *third* thread holding another instance of the same resource that will release it.
@@ -693,7 +699,7 @@ The algorithm is similar to Banker's Safety Algorithm but with key differences:
 | Matrix used | **Max** (maximum potential demand) | **Request** (the *current* outstanding request) |
 | Finish initialization | All false | `true` if `Allocation_i == 0` (threads holding nothing cannot be part of a deadlock) |
 | Conclusion | Safe / Unsafe | Deadlocked / Not |
-| Purpose | Prevent *future* deadlock | Diagnose *current* state |
+| Purpose | Avoid *future* deadlock | Diagnose *current* state |
 
 *Table 7. Differences between the Banker's Algorithm and the Detection Algorithm*
 
@@ -733,7 +739,18 @@ Algorithm:
   Available = (0, 0, 0)
 ```
 
-Walking the algorithm, T0 (Request 0,0,0), T2, T3, T1, and T4 all finish in that order. There is **no deadlock**, and the sequence is ⟨T0, T2, T3, T1, T4⟩.
+Walking the algorithm, T0, T2, T3, T1, and T4 all finish in that order, as follows.
+
+```text
+Work = Available = (0,0,0)
+T0: Request (0,0,0) ≤ (0,0,0) → Work = (0,0,0) + (0,1,0) = (0,1,0)
+T2: Request (0,0,0) ≤ (0,1,0) → Work = (0,1,0) + (3,0,3) = (3,1,3)
+T3: Request (1,0,0) ≤ (3,1,3) → Work = (3,1,3) + (2,1,1) = (5,2,4)
+T1: Request (2,0,2) ≤ (5,2,4) → Work = (5,2,4) + (2,0,0) = (7,2,4)
+T4: Request (0,0,2) ≤ (7,2,4) → Work = (7,2,4) + (0,0,2) = (7,2,6)
+```
+
+Every Finish becomes true, so there is **no deadlock**, and the sequence is ⟨T0, T2, T3, T1, T4⟩.
 
 **Example B: deadlock.** From state A, T2 now requests one more C, so Request[T2]=(0,0,1):
 
@@ -992,7 +1009,7 @@ The program prints `Safe! Sequence: T1 T3 T4 T0 T2` and `T1 request (1,0,2): Gra
 
 ## Self-Check Questions
 
-1. Distinguish deadlock and livelock. Give one pthread example of each.
+1. **Deadlock and livelock:** Distinguish deadlock and livelock. Give one pthread example of each.
 
    <details>
    <summary>Answer</summary>
@@ -1001,7 +1018,7 @@ The program prints `Safe! Sequence: T1 T3 T4 T0 T2` and `T1 request (1,0,2): Gra
 
    </details>
 
-2. List the four necessary conditions for deadlock. Which of them is implied by another?
+2. **Four necessary conditions:** List the four necessary conditions for deadlock. Which of them is implied by another?
 
    <details>
    <summary>Answer</summary>
@@ -1010,7 +1027,7 @@ The program prints `Safe! Sequence: T1 T3 T4 T0 T2` and `T1 request (1,0,2): Gra
 
    </details>
 
-3. Why does a cycle in a Resource-Allocation Graph imply deadlock only when every resource has 1 instance?
+3. **Cycles in a RAG:** Why does a cycle in a Resource-Allocation Graph imply deadlock only when every resource has 1 instance?
 
    <details>
    <summary>Answer</summary>
@@ -1019,7 +1036,7 @@ The program prints `Safe! Sequence: T1 T3 T4 T0 T2` and `T1 request (1,0,2): Gra
 
    </details>
 
-4. State and prove the lock-ordering theorem.
+4. **Lock-ordering theorem:** State and prove the lock-ordering theorem.
 
    <details>
    <summary>Answer</summary>
@@ -1028,7 +1045,7 @@ The program prints `Safe! Sequence: T1 T3 T4 T0 T2` and `T1 request (1,0,2): Gra
 
    </details>
 
-5. Why is breaking Mutual Exclusion usually impractical?
+5. **Breaking mutual exclusion:** Why is breaking Mutual Exclusion usually impractical?
 
    <details>
    <summary>Answer</summary>
@@ -1037,7 +1054,7 @@ The program prints `Safe! Sequence: T1 T3 T4 T0 T2` and `T1 request (1,0,2): Gra
 
    </details>
 
-6. Why might Avoidance refuse a request even when the requested resource is currently available?
+6. **Denial under avoidance:** Why might Avoidance refuse a request even when the requested resource is currently available?
 
    <details>
    <summary>Answer</summary>
@@ -1046,7 +1063,7 @@ The program prints `Safe! Sequence: T1 T3 T4 T0 T2` and `T1 request (1,0,2): Gra
 
    </details>
 
-7. Walk through the Banker's Safety Algorithm. What is its time complexity?
+7. **Safety Algorithm:** Walk through the Banker's Safety Algorithm. What is its time complexity?
 
    <details>
    <summary>Answer</summary>
@@ -1055,7 +1072,7 @@ The program prints `Safe! Sequence: T1 T3 T4 T0 T2` and `T1 request (1,0,2): Gra
 
    </details>
 
-8. How does the Detection Algorithm differ from Banker's Safety, given they look almost identical?
+8. **Detection versus Safety:** How does the Detection Algorithm differ from Banker's Safety, given they look almost identical?
 
    <details>
    <summary>Answer</summary>
@@ -1064,7 +1081,7 @@ The program prints `Safe! Sequence: T1 T3 T4 T0 T2` and `T1 request (1,0,2): Gra
 
    </details>
 
-9. How does the OS decide *when* to run the detection algorithm? Give three strategies.
+9. **When to run detection:** How does the OS decide *when* to run the detection algorithm? Give three strategies.
 
    <details>
    <summary>Answer</summary>
@@ -1073,16 +1090,16 @@ The program prints `Safe! Sequence: T1 T3 T4 T0 T2` and `T1 request (1,0,2): Gra
 
    </details>
 
-10. Why do real OSes (Linux, Windows) ignore deadlock by default?
+10. **Ostrich algorithm:** Why do real OSes (Linux, Windows) ignore deadlock by default?
 
     <details>
     <summary>Answer</summary>
 
-    The reason is cost-benefit. Deadlock is rare with disciplined locking, and the cost of *preventing* every possible deadlock at the kernel level (declaring max claims, running Banker's on every allocation) is prohibitive. It is cheaper to push responsibility to kernel and application developers, provide debugging tools like **lockdep**, and accept that the rare deadlock costs a reboot or a `kill -9`.
+    The reason is cost-benefit. Deadlock is rare with disciplined locking, and the cost of *ruling out* every possible deadlock at the kernel level (declaring max claims, running Banker's on every allocation) is prohibitive. It is cheaper to push responsibility to kernel and application developers, provide debugging tools like **lockdep**, and accept that the rare deadlock costs a reboot or a `kill -9`.
 
     </details>
 
-11. What is the **Wait-for Graph** and when can you use it?
+11. **Wait-for Graph:** What is the Wait-for Graph, and when can it be used?
 
     <details>
     <summary>Answer</summary>
@@ -1091,7 +1108,7 @@ The program prints `Safe! Sequence: T1 T3 T4 T0 T2` and `T1 request (1,0,2): Gra
 
     </details>
 
-12. In recovery via resource preemption, how do you prevent the same thread from being the victim every time?
+12. **Preventing victim starvation:** In recovery via resource preemption, how can the same thread be prevented from being the victim every time?
 
     <details>
     <summary>Answer</summary>
@@ -1100,7 +1117,7 @@ The program prints `Safe! Sequence: T1 T3 T4 T0 T2` and `T1 request (1,0,2): Gra
 
     </details>
 
-13. Why does a *dynamic* lock ordering (locks chosen at runtime) need special handling, and what is the standard fix?
+13. **Dynamic lock ordering:** Why does a *dynamic* lock ordering (locks chosen at runtime) need special handling, and what is the standard fix?
 
     <details>
     <summary>Answer</summary>
@@ -1109,7 +1126,7 @@ The program prints `Safe! Sequence: T1 T3 T4 T0 T2` and `T1 request (1,0,2): Gra
 
     </details>
 
-14. Explain why allocating one more instance to T2 in the Safe-State example caused a transition to Unsafe.
+14. **Transition from safe to unsafe:** Explain why allocating one more instance to T2 in the Safe-State example caused a transition to Unsafe.
 
     <details>
     <summary>Answer</summary>
@@ -1118,7 +1135,7 @@ The program prints `Safe! Sequence: T1 T3 T4 T0 T2` and `T1 request (1,0,2): Gra
 
     </details>
 
-15. What is **lockdep** and what classes of bugs does it find?
+15. **lockdep:** What is lockdep, and what classes of bugs does it find?
 
     <details>
     <summary>Answer</summary>
