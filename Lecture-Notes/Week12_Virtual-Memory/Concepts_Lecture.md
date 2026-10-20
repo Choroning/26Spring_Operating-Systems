@@ -2,9 +2,9 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **Last Updated:** 2026-10-18
+> **Last Updated:** 2026-10-20
 >
-> Operating System Concepts, Silberschatz, Ch 10
+> Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 10
 
 > **Learning Objectives:**
 > 1. Define virtual memory and explain why separating the logical address space from the physical address space is useful
@@ -191,7 +191,7 @@ When the CPU touches a page whose PTE is invalid, a **page-fault trap** transfer
      (a) illegal address  →  deliver SIGSEGV, kill the process.
      (b) valid but on disk →  continue.
 4. OS picks a free frame from the free-frame list
-     (or runs page replacement if the list is empty — §3).
+     (or runs page replacement if the list is empty; see Section 3).
 5. OS schedules disk I/O to read the page into that frame.
 6. OS updates the PTE: frame number, set valid bit, set permissions.
 7. OS RESTARTS the faulting instruction.
@@ -306,7 +306,7 @@ A naive `fork()` duplicates the parent's entire address space into a fresh set o
       Mark every shared writable page READ-ONLY in both PTEs.
 
 2. Read access:
-      No fault. Both processes happily read from the shared frame.
+      No fault. Both processes simply read from the shared frame.
 
 3. Write access:
       The read-only mark triggers a protection fault.
@@ -356,7 +356,7 @@ Page replacement completes the illusion of virtual memory. Because the OS contin
    - If one exists in the free-frame list, take it.
    - Otherwise, run the page-replacement algorithm to pick a VICTIM frame.
        If the victim's dirty bit = 1, write it back to disk.
-       If the victim's dirty bit = 0, just drop it (it's still on disk).
+       If the victim's dirty bit = 0, just drop it (it is still on disk).
 3. Read the desired page into the now-free frame.
 4. Update the page tables (mark victim invalid, mark new page valid).
 5. Restart the faulting process.
@@ -674,7 +674,7 @@ Maintain pages in a FIFO order (a circular queue).
 On replacement need:
    Look at the head page of the FIFO.
    If reference bit = 0 → REPLACE this page.
-   If reference bit = 1 → clear the bit, treat the page as "newly arrived,"
+   If reference bit = 1 → clear the bit, treat the page as newly arrived,
                           advance to the next page in the FIFO, and repeat.
 ```
 
@@ -704,7 +704,7 @@ It is implemented as a **circular queue** with a hand pointer. The algorithm loo
 | P5: 0|                    | P5: 0|
 +------+                    +------+
 
-P1, P2 survive — given a "second chance" by clearing their bit.
+P1, P2 survive: their bits are cleared, giving them a second chance.
 P3 is replaced because its bit was already 0.
 ```
 
@@ -819,7 +819,7 @@ On **NUMA (Non-Uniform Memory Access)** machines, each CPU has its own local mem
 4. CPU utilization drops (everyone is waiting on I/O)
 5. The OS sees low CPU utilization and SCHEDULES MORE PROCESSES
 6. Now every process has even fewer frames
-7. Go to step 2 — faults explode further
+7. Go to step 2: faults explode further
 ```
 
 *Figure 15. Vicious cycle of thrashing*
@@ -893,7 +893,7 @@ On each timer tick:
 
 On a page-fault decision:
   Look at the current reference bit + most-recent 2 history bits
-  If any of the three is 1, the page was used in the last ~10,000-15,000 refs
+  If any of the three is 1, the page was used in the last 10,000-15,000 references
                             → counted as part of the working set
   If all are 0, the page is OUTSIDE the working set
 ```
@@ -984,7 +984,7 @@ Allocating 21 KB from a 256 KB segment:
    [           256 KB             ]
    [   128 KB AL  ][   128 KB AR  ]   ← split
    [ 64 BL ][ 64 BR ][   128 KB   ]   ← split AL
-   [32 CL][32 CR][ 64 BR ]...         ← split BL — 32 KB allocated for 21 KB request
+   [32 CL][32 CR][ 64 BR ]...         ← split BL, 32 KB allocated for the 21 KB request
 ```
 
 *Figure 23. Splitting a 256 KB segment to allocate a 32 KB block for a 21 KB request*
@@ -1064,7 +1064,7 @@ Linux's **`readahead()`** is a related mechanism: it explicitly tells the kernel
 Programmer-controlled locality can outweigh any OS optimization. Consider a 128 × 128 `int` array with a page size of 128 words (128 `int`s), so that one row exactly fills one page:
 
 ```c
-// BAD — column-major access on a row-major language: jumps to a new page on every access
+// BAD: column-major access in a row-major language jumps to a new page on every access
 int data[128][128];
 for (int j = 0; j < 128; j++)
     for (int i = 0; i < 128; i++)
@@ -1072,7 +1072,7 @@ for (int j = 0; j < 128; j++)
 ```
 
 ```c
-// GOOD — row-major access matches storage layout
+// GOOD: row-major access matches the storage layout
 int data[128][128];
 for (int i = 0; i < 128; i++)
     for (int j = 0; j < 128; j++)
@@ -1080,6 +1080,8 @@ for (int i = 0; i < 128; i++)
 ```
 
 Both fault counts assume that fewer than 128 frames are allocated to the whole program. Column-major access touches all 128 pages in every outer iteration, so every access faults and the total is 128 × 128 = 16,384 faults; row-major access fills one row (one page) before moving to the next, so it incurs only 128 faults.
+
+> **[Computer Programming]** C stores a two-dimensional array in **row-major** order. In `int data[128][128]`, `data[i][j]` is element number `(i × 128 + j)` from the start of the array, so the elements of one row lie contiguously in memory and each increment of `i` jumps by one row (128 elements). Because one row exactly fills one page in the example above, an inner loop that varies `j` stays within one page, while an inner loop that varies `i` moves to a different page on every iteration. In languages that store arrays in column-major order, such as Fortran, the two loop orders trade places.
 
 Data-structure locality matters too:
 - A **stack** has excellent locality, because it always touches the top.

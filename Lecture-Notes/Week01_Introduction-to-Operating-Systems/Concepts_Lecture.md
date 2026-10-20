@@ -2,9 +2,9 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **Last Updated:** 2026-10-18
+> **Last Updated:** 2026-10-20
 >
-> Operating System Concepts, Silberschatz, Ch 1, 2
+> Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 1, 2
 
 > **Learning Objectives:**
 > 1. Define what an operating system is and explain its core roles
@@ -28,12 +28,12 @@
   - [1.9 xv6](#19-xv6)
 - [2. Semester Preview](#2-semester-preview)
   - [2.1 Processes (Weeks 2-3)](#21-processes-weeks-2-3)
-  - [2.2 Threads & Concurrency (Weeks 4-5)](#22-threads--concurrency-weeks-4-5)
+  - [2.2 Threads and Concurrency (Weeks 4-5)](#22-threads-and-concurrency-weeks-4-5)
   - [2.3 CPU Scheduling (Weeks 6-7)](#23-cpu-scheduling-weeks-6-7)
   - [2.4 Synchronization (Week 9)](#24-synchronization-week-9)
   - [2.5 Deadlocks (Week 10)](#25-deadlocks-week-10)
   - [2.6 Memory Management (Weeks 11-12)](#26-memory-management-weeks-11-12)
-  - [2.7 File Systems & Security (Week 13)](#27-file-systems--security-week-13)
+  - [2.7 File Systems and Security (Weeks 13-14)](#27-file-systems-and-security-weeks-13-14)
 - [Summary](#summary)
 - [Self-Check Questions](#self-check-questions)
 
@@ -52,7 +52,7 @@ The kernel is the core program that starts when your computer boots and keeps ru
 
 > **Note:** **The OS is like a government.** The OS itself does not perform useful functions; rather, it provides an **environment** in which other programs can do useful work.
 
-> **Note:** **Exam tip.** If asked "What is an OS?", you must include the keyword **kernel**. Programs outside the kernel (shell, compiler, GUI, etc.) are system programs, while word processors, games, etc. are application programs.
+> **Key Point:** The central concept in defining an OS is the **kernel**, the program that is always running. Programs outside the kernel (shell, compiler, GUI, etc.) are system programs, while word processors, games, etc. are application programs.
 
 ### 1.2 Where the OS Sits
 
@@ -65,7 +65,7 @@ The kernel is the core program that starts when your computer boots and keeps ru
 
 > **Definition:** **Abstraction** means hiding complex internal details and providing a simplified interface to the layer above. For example, a driver lets you control a car without understanding the engine internals.
 
-> **[Computer Architecture]** A computer system is layered as hardware → OS → applications → users. Each layer hides the complex details of the layer below and provides a simplified interface upward, which is called **abstraction**. Representative abstractions provided by the OS are processes (CPU), virtual memory (memory), and files (disk).
+> **Note:** A computer system is layered as hardware → OS → applications → users, and each layer abstracts the complex details of the layer below and provides a simplified interface upward. Representative abstractions provided by the OS are processes (CPU), virtual memory (memory), and files (disk).
 
 ### 1.3 Two Roles of the OS
 
@@ -74,7 +74,7 @@ The kernel is the core program that starts when your computer boots and keeps ru
 Manages and distributes **limited resources** efficiently and fairly:
 - **CPU time**: decides which process runs when.
 - **Memory space**: allocates memory to each process.
-- **Storage & I/O**: manages disk access and device sharing.
+- **Storage and I/O**: manages disk access and device sharing.
 
 **Control Program:**
 
@@ -83,7 +83,7 @@ Controls the execution of user programs and prevents errors and misuse:
 - **Error prevention**: catches illegal operations.
 - **Isolation guarantee**: ensures mutual protection between processes.
 
-> **Note:** **Exam tip.** The resource allocator and the control program are two perspectives on the role of the OS. The resource allocator focuses on how to divide resources, while the control program focuses on how to execute programs safely. When asked to describe the roles of the OS on an exam, it is best to mention both.
+> **Key Point:** The resource allocator and the control program are two perspectives on the role of the OS. The resource allocator focuses on how to divide resources, while the control program focuses on how to execute programs safely. The role of the OS is fully described only when both perspectives are considered together.
 
 ### 1.4 Dual-Mode Operation
 
@@ -214,7 +214,7 @@ Most modern OSes are **hybrid**, taking a pragmatic approach rather than adherin
 - Written in **C** for the **RISC-V** architecture.
 - Its code is approximately 10,000 lines, small enough to read in its entirety.
 - It implements processes, virtual memory, a file system, and a shell.
-- We will **read, modify, and extend** xv6 throughout the semester.
+- xv6 serves as a codebase to **read, modify, and extend** when practicing OS concepts.
 
 ![Figure 7. RISC-V logo](../../images/Week01_RISC-V-Logo.png)
 
@@ -274,7 +274,7 @@ graph LR
 
 > **Note:** If processes only ran independently, it would be difficult to build useful systems. Most real systems have multiple processes that cooperate by exchanging data, which is called **Interprocess Communication (IPC)**. IPC mechanisms such as shared memory, message passing, pipes, and sockets are covered in detail in Week 3.
 
-### 2.2 Threads & Concurrency (Weeks 4-5)
+### 2.2 Threads and Concurrency (Weeks 4-5)
 
 A single-threaded program cannot take advantage of multi-core CPUs. Threads allow a single program to do multiple things in parallel, like downloading a file while updating the UI.
 
@@ -315,7 +315,7 @@ The OS decides **which process to run next** on the CPU.
 
 ```mermaid
 graph LR
-    RQ["Ready Queue<br/>P1 · P2 · P3 · P4"] -->|"schedule"| CPU["CPU<br/>(running P1)"]
+    RQ["Ready Queue<br/>P1, P2, P3, P4"] -->|"schedule"| CPU["CPU<br/>(running P1)"]
     CPU -->|"preempt /<br/>I/O wait"| RQ
     CPU -->|"finished"| DONE["Terminated"]
     style RQ fill:#e3f2fd
@@ -336,7 +336,7 @@ graph LR
 
 *Table 4. Idea and trade-off of representative CPU scheduling algorithms*
 
-> **[Algorithms]** SJF is theoretically the optimal algorithm for minimizing average wait time, but in practice, the next job's CPU burst time cannot be known exactly. Therefore, prediction is done using exponential averaging based on past data. In Round Robin, if the time slice is too large, it becomes equivalent to FCFS; if too small, context-switching overhead increases.
+> **Note:** SJF is theoretically the optimal algorithm for minimizing average wait time, but in practice, the next job's CPU burst time cannot be known exactly. Therefore, prediction is done using exponential averaging based on past data. In Round Robin, if the time slice is too large, it becomes equivalent to FCFS; if too small, context-switching overhead increases.
 
 ### 2.4 Synchronization (Week 9)
 
@@ -368,7 +368,7 @@ graph TD
 
 Locks solve race conditions, but careless locking introduces a new problem. This problem is deadlock, where the entire system freezes because everyone is waiting for everyone else.
 
-**Deadlock** is a state where two or more processes are waiting for each other to release resources.
+**Deadlock** is a state in which two or more threads or processes cannot proceed because each is waiting for another to release resources.
 
 ```mermaid
 graph LR
@@ -388,7 +388,7 @@ graph LR
 
 **Solutions:** lock ordering, `trylock` with back-off, and deadlock detection and recovery.
 
-> **[Discrete Mathematics]** Deadlocks can be modeled using a **Resource Allocation Graph**. If a **cycle** exists in this graph, deadlock may occur (when each resource type has a single instance, a cycle means deadlock). Breaking any one of the four conditions prevents deadlock; in practice, **preventing circular wait** (fixing the lock acquisition order) is most commonly used.
+> **[Discrete Mathematics]** In a directed graph, a **cycle** is a path that starts at a vertex and returns to it by following edge directions. Deadlocks can be modeled using a **Resource Allocation Graph**, whose vertices are threads and resources and whose edges are requests and assignments. If a cycle exists in this graph, deadlock may occur (when each resource type has a single instance, a cycle means deadlock). Breaking any one of the four conditions prevents deadlock; in practice, **preventing circular wait** (fixing the lock acquisition order) is most commonly used.
 
 ### 2.6 Memory Management (Weeks 11-12)
 
@@ -424,7 +424,7 @@ graph LR
 
 > **[Computer Architecture]** To translate virtual addresses to physical addresses, the page table in memory must be consulted each time, which can double (or more) memory access latency. To solve this, CPUs include a cache called the **TLB (Translation Lookaside Buffer)** that stores recent translation results. COW (Copy-On-Write) fork is an optimization where during `fork()`, physical pages are shared read-only instead of actually copying memory, and a page is copied only when a write to it occurs.
 
-### 2.7 File Systems & Security (Week 13)
+### 2.7 File Systems and Security (Weeks 13-14)
 
 Without a file system, data would be lost every time the computer powers off, and there would be no organized way to store, retrieve, or share information.
 
@@ -462,9 +462,9 @@ Without a file system, data would be lost every time the computer powers off, an
 | Interrupts and DMA | An interrupt is the mechanism by which devices notify the CPU of completion, and DMA transfers bulk data without CPU intervention. |
 | Storage Hierarchy | Storage forms the hierarchy registers → cache → memory → SSD → HDD, where higher levels are faster, more expensive, and smaller. |
 | OS Structure | OS structures include monolithic, microkernel, hybrid, and loadable modules, and most modern OSes are hybrid. |
-| xv6 | xv6 is an MIT educational OS of about 10,000 lines written in C for RISC-V and is used throughout the semester. |
+| xv6 | xv6 is an MIT educational OS of about 10,000 lines written in C for RISC-V and serves as the codebase for practicing OS concepts. |
 | Key Topics | The key topics of operating systems are processes, threads, scheduling, synchronization, memory, file systems, and security. |
-| Textbook | The textbook is Operating System Concepts by Silberschatz. |
+| Textbook | The textbook is Operating System Concepts by Silberschatz, Galvin, and Gagne. |
 
 ---
 

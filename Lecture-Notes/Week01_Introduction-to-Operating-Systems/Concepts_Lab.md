@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lab.md) | [한국어](Concepts_Lab.ko.md)
 
-> **Last Updated:** 2026-10-18
+> **Last Updated:** 2026-10-20
 
 > **Learning Objectives:**
 > 1. Install and authenticate a coding agent such as Gemini CLI or Claude Code
@@ -75,7 +75,7 @@ graph LR
 
 > **Note:** **Scaffolding** refers to automatically generating a project's initial skeleton (directory structure, configuration files, boilerplate code, etc.). The term originates from the construction industry, where scaffolds are erected before building. For example, if you say "Create a React project," the agent will create `package.json`, a `src/` directory, basic component files, and more all at once.
 
-**Example:** Given the request "Write a Makefile for a C project with debug and release targets.", the agent works in the order: checks directory → writes Makefile → verifies build success.
+**Example:** Given the request "Write a Makefile for a C project with debug and release targets", the agent works in the order: checks directory → writes Makefile → verifies build success.
 
 > **Key Point:** Unlike simple code autocompletion tools (such as Copilot), coding agents are autonomous tools that can understand the entire project context, read and modify multiple files simultaneously, and execute commands. The key difference from a ChatGPT web interface is that they directly access the local file system to perform tasks.
 
@@ -125,7 +125,7 @@ gemini --version    # or: claude --version
 
 > **Definition:** In Node.js, **LTS (Long-Term Support)** is the stable, long-term support version recommended for most users.
 
-> **[Computer Programming]** `npm` is the package manager for Node.js. If it is not installed, you must first install the LTS version from [the official Node.js website](https://nodejs.org). After installation, you can verify it by running `node --version` and `npm --version` in the terminal.
+> **Note:** `npm` is the package manager for Node.js. If it is not installed, you must first install the LTS version from [the official Node.js website](https://nodejs.org). After installation, you can verify it by running `node --version` and `npm --version` in the terminal.
 
 > **Note:** The `-g` in `npm install -g` stands for **global**, meaning the package is installed system-wide rather than in the current project. With a global installation, you can run commands like `gemini` or `claude` directly from any terminal location. Without `-g`, the package is installed only in the current directory's `node_modules/` and cannot be used as a global command.
 
@@ -219,13 +219,13 @@ You:   "Create a rubric for evaluating a high-quality open-source README."
 Agent: Returns 8 criteria (description, installation, usage, architecture, ...)
 
 You:   "Evaluate the README you wrote against this rubric. Score each criterion."
-Agent: 6/8 score — not met: architecture diagram, contribution guide.
+Agent: 6/8. Not met: architecture diagram, contribution guide.
 
 You:   "Fix all unmet criteria. Add an architecture diagram and a contribution guide."
 Agent: Updates README with both additions.
 
 You:   "Evaluate again. Are all criteria met?"
-Agent: 8/8 — all criteria met.
+Agent: 8/8. All criteria met.
 ```
 
 **Why this matters:**
@@ -319,7 +319,7 @@ You do **not** need to successfully boot the OS. The **process** is what matters
 
    </details>
 
-2. Why is it important to ask an agent to "show the plan first" before executing file system operations?
+2. Why is it important to ask an agent to "Show me the plan first" before executing file system operations?
 
    <details>
    <summary>Answer</summary>

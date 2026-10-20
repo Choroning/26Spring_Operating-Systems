@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lab.md) | [한국어](Concepts_Lab.ko.md)
 
-> **Last Updated:** 2026-10-18
+> **Last Updated:** 2026-10-20
 
 > **Learning Objectives:**
 > 1. Read `swtch.S` and explain which registers are saved/restored during a context switch
@@ -113,7 +113,7 @@ The `struct context` in `kernel/proc.h` stores only the **callee-saved** registe
 struct context {
   uint64 ra;  // return address
   uint64 sp;  // stack pointer
-  uint64 s0;  // s0 – s11
+  uint64 s0;  // s0-s11
   uint64 s1;
   /* ... s2 through s11 ... */
 };
@@ -129,7 +129,7 @@ swtch:
   sd sp, 8(a0)   # save sp to old->sp    (offset 8 = next field)
   sd s0, 16(a0)  # save s0 to old->s0
   ...
-  ld ra, 0(a1)   # load new->ra into ra  (ld = "load doubleword")
+  ld ra, 0(a1)   # load new->ra into ra  (ld = "load doubleword", 8 bytes)
   ld sp, 8(a1)   # load new->sp into sp
   ld s0, 16(a1)  # load new->s0 into s0
   ...
@@ -355,7 +355,7 @@ sequenceDiagram
     participant Cat as cat (pid=3)
     participant Sched as Scheduler
     participant Echo as echo (pid=4)
-    Cat->>Sched: sleep(pipe) — buffer empty
+    Cat->>Sched: sleep(pipe) (buffer empty)
     Sched->>Echo: switch to echo
     Echo->>Echo: write "hello" to pipe
     Echo->>Cat: wakeup(pipe)

@@ -2,9 +2,9 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **Last Updated:** 2026-10-18
+> **Last Updated:** 2026-10-20
 >
-> Operating System Concepts, Silberschatz, Ch 5 (5.3.4-5.8)
+> Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 5 (5.3.4-5.8)
 
 > **Learning Objectives:**
 > 1. Explain priority scheduling with its starvation and aging mechanisms, and compare Multilevel Queue with Multilevel Feedback Queue (MLFQ)
@@ -32,7 +32,7 @@
   - [3.1 Contention Scope: PCS vs SCS](#31-contention-scope-pcs-vs-scs)
   - [3.2 PCS vs SCS: Comparison](#32-pcs-vs-scs-comparison)
   - [3.3 Pthread Scheduling API](#33-pthread-scheduling-api)
-- [4. Multi-Processor Scheduling](#4-multi-processor-scheduling)
+- [4. Multiprocessor Scheduling](#4-multiprocessor-scheduling)
   - [4.1 Multiprocessor Architectures](#41-multiprocessor-architectures)
   - [4.2 SMP: Ready Queue Organization](#42-smp-ready-queue-organization)
   - [4.3 Multicore and Memory Stall](#43-multicore-and-memory-stall)
@@ -90,7 +90,7 @@
 
 Each process is assigned a **priority (integer)**, and the CPU is allocated to the process with the **highest priority** first.
 
-- Generally, a **smaller number means higher priority** (the Silberschatz textbook convention).
+- Generally, a **smaller number means higher priority** (the textbook convention).
   - Note: Linux sometimes reverses this convention when it shows real-time priority values to users (larger = higher). Section 6.2 follows the textbook convention. Always check which convention is being used.
 - Both **preemptive** and **nonpreemptive** variants exist.
   - **Preemptive**: If a higher-priority process arrives, the currently running process is **forcibly preempted**.
@@ -178,7 +178,7 @@ The execution flow is as follows.
 - Example: If priorities range from 0 (highest) to 127 (lowest) and the priority increases by 1 every second, a process starting at 127 reaches the highest priority in **127 seconds, about 2 minutes**.
 - It guarantees that every process will **eventually** be selected, no matter how low its initial priority.
 
-> **Note:** **Exam Tip.** Starvation and aging are a matched pair. Whenever a priority-based algorithm is described, starvation must be addressed, and aging should be given as the standard remedy. The same pattern reappears in MLFQ (lower-queue promotion) and CFS (vruntime naturally favors waiting tasks).
+> **Key Point:** Starvation and aging are a matched pair. Priority-based algorithms are prone to starvation, and aging is its standard remedy. The same pattern reappears in MLFQ (lower-queue promotion) and CFS (vruntime naturally favors waiting tasks).
 
 ---
 
@@ -316,7 +316,7 @@ Thread scheduling is categorized by **contention scope**, the set of threads com
 - It schedules **user-level threads**, and the scheduling is performed by the **thread library**, not the kernel.
 - Threads **within the same process** compete for the kernel-scheduled entities assigned to that process.
 - It is used in the **Many-to-One** and **Many-to-Many** threading models.
-  - *(Recall from Week 4: Many-to-One maps many user threads onto one kernel thread; Many-to-Many maps N user threads onto M ≤ N kernel threads.)*
+  - *(As covered in Week 4, Many-to-One maps many user threads onto one kernel thread; Many-to-Many maps N user threads onto M ≤ N kernel threads.)*
 
 **SCS (System-Contention Scope)**
 - It schedules **kernel-level threads**, and the scheduling is performed by the **OS kernel**.
@@ -349,6 +349,8 @@ POSIX threads let a program query and set the contention scope per thread throug
 #include <stdio.h>
 #define NUM_THREADS 5
 
+void *runner(void *param);
+
 int main(int argc, char *argv[]) {
     int i, scope;
     pthread_t tid[NUM_THREADS];
@@ -375,6 +377,12 @@ int main(int argc, char *argv[]) {
         pthread_join(tid[i], NULL);
     pthread_exit(0);
 }
+
+/* Each thread begins execution in this function */
+void *runner(void *param) {
+    /* do some work */
+    pthread_exit(0);
+}
 ```
 
 - `PTHREAD_SCOPE_PROCESS` requests PCS, and `PTHREAD_SCOPE_SYSTEM` requests SCS.
@@ -384,7 +392,7 @@ int main(int argc, char *argv[]) {
 
 <br>
 
-## 4. Multi-Processor Scheduling
+## 4. Multiprocessor Scheduling
 
 ### 4.1 Multiprocessor Architectures
 
@@ -467,7 +475,7 @@ The two strategies for when the hardware switches between hardware threads are a
 
 *Table 7. Comparison of coarse-grained and fine-grained multithreading*
 
-> **[Computer Architecture]** What is a pipeline? Modern CPUs process instructions in an assembly-line fashion. While instruction 1 is being executed, instruction 2 is being decoded and instruction 3 is being fetched, and so on, typically 5 to 20 stages deep. This pipeline is what lets a CPU complete roughly one instruction per cycle even though each instruction actually takes many cycles. A **pipeline flush** means throwing away all the partially processed instructions in the pipeline (e.g., when switching threads, the old thread's in-flight instructions cannot be kept). Every flush wastes the work already done in those stages, which is why coarse-grained switching is costly.
+> **[Computer Architecture]** A **pipeline** is a CPU organization that splits instruction processing into stages such as fetch, decode, and execute and overlaps them like an assembly line. While instruction 1 is being executed, instruction 2 is being decoded and instruction 3 is being fetched, and so on, typically 5 to 20 stages deep. This pipeline is what lets a CPU complete roughly one instruction per cycle even though each instruction actually takes many cycles. A **pipeline flush** means throwing away all the partially processed instructions in the pipeline (e.g., when switching threads, the old thread's in-flight instructions cannot be kept). Every flush wastes the work already done in those stages, which is why coarse-grained switching is costly.
 
 Modern Intel and SPARC designs use **fine-grained** multithreading (or a hybrid) to keep cores busy at instruction-cycle granularity.
 
@@ -587,7 +595,7 @@ For real-time systems, two components of latency matter.
    - The CPU completes the current instruction → determines the interrupt type → saves the context.
 
 2. **Dispatch Latency**: It is the time for the scheduler to switch from the currently running process to the target real-time process.
-   - **Conflict phase**: Preempt the process running in the kernel and release any resources the preempted process holds.
+   - **Conflict phase**: Preempt the process running in the kernel, and have low-priority processes release the resources that the high-priority process needs.
    - **Dispatch phase**: Load the high-priority process onto the CPU (context restore, jump to PC).
 
 For hard real-time, both latencies must be **bounded within a few microseconds**.
@@ -846,13 +854,13 @@ The initial vruntimes are A = 0, B = 0, C = 0.
 
 ```text
  Step 1: A runs (10 ms)  -> A.vruntime = 10
-         vruntimes: A=10, B=0, C=0  -> B has min (tied with C, pick B) -> B selected
+         vruntimes: A=10, B=0, C=0  -> B and C tie for min -> B selected
 
  Step 2: B runs (10 ms)  -> B.vruntime = 10
          vruntimes: A=10, B=10, C=0  -> C has min -> C selected
 
  Step 3: C runs (10 ms)  -> C.vruntime = 15  (increases faster due to nice=5)
-         vruntimes: A=10, B=10, C=15  -> A (tied with B, pick A) -> A selected
+         vruntimes: A=10, B=10, C=15  -> A and B tie for min -> A selected
 
  Step 4: A runs (10 ms)  -> A.vruntime = 20
          vruntimes: A=20, B=10, C=15  -> B has min -> B selected
@@ -995,7 +1003,7 @@ An **SMT set** is a group of hardware threads that live on the **same core**.
 - It is distributed across **different SMT sets**: 0, 2, 4, 6, 0, 2, ...
 - Different processes use different seeds, so threads are spread evenly across cores system-wide.
 
-> **Note:** **Why Not Pick Any Idle CPU.** On a multicore system with SMT, *which* idle CPU is chosen matters. Putting a new thread on a free SMT sibling shares the L1 cache, while putting it on a different socket incurs remote memory costs. Ideal Processor codifies a policy of preferring this CPU first, then its SMT sibling, then nearby CPUs, and finally distant ones.
+> **Note:** **Why Not Pick Any Idle CPU.** On a multicore system with SMT, *which* idle CPU is chosen matters. Putting a new thread on a free SMT sibling shares the L1 cache, while putting it on a different socket incurs remote memory costs. Ideal Processor codifies a policy of preferring the ideal CPU first, then its SMT sibling, then nearby CPUs, and finally distant ones.
 
 ---
 
@@ -1058,7 +1066,7 @@ The system is modeled as a **network of servers and queues**.
 **Example**: With λ = 7 processes per second and n = 14 processes, the result is as follows.
 - W = n / λ = 14 / 7 = **2 seconds**.
 
-**Limitations**: Little's formula is a general identity, but computing `n` and `λ` for realistic scheduling policies often requires distributions that are **mathematically intractable**. Independence assumptions (uncorrelated arrivals and services) also may not hold.
+**Limitations**: Little's formula is a general identity, but computing `n` and `λ` for realistic scheduling policies often requires distributions that are **mathematically intractable**. The independence assumptions (uncorrelated arrivals and services) that queueing analyses usually make also may not hold.
 
 > **Note:** **Why Little's Formula Is Beautiful.** In a steady state, the formula requires no assumptions about the distribution of arrival or service times; it simply expresses conservation of flow. Whenever two of the three quantities are known, the third can be derived.
 
@@ -1234,12 +1242,12 @@ The short jobs (P3, P5) finish entirely in Q0 with top priority and fast respons
 
 ## Self-Check Questions
 
-1. **Priority scheduling and SJF:** What is priority scheduling, and how does it relate to SJF? Which convention does Silberschatz use, a smaller or a larger number for higher priority?
+1. **Priority scheduling and SJF:** What is priority scheduling, and how does it relate to SJF? Which convention does the textbook use, a smaller or a larger number for higher priority?
 
    <details>
    <summary>Answer</summary>
 
-   Each process is assigned an integer priority, and the scheduler runs the highest-priority ready process. SJF is a special case in which the priority is the inverse of the predicted next CPU burst. **The Silberschatz convention is that a smaller number means higher priority** (some systems reverse it, as in the user-facing Linux real-time priority values).
+   Each process is assigned an integer priority, and the scheduler runs the highest-priority ready process. SJF is a special case in which the priority is the inverse of the predicted next CPU burst. **The textbook convention is that a smaller number means higher priority** (some systems reverse it, as in the user-facing Linux real-time priority values).
 
    </details>
 

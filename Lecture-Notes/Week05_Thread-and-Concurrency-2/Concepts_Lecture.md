@@ -2,9 +2,9 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **Last Updated:** 2026-10-18
+> **Last Updated:** 2026-10-20
 >
-> Operating System Concepts, Silberschatz, Ch 4 (4.5-4.7)
+> Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 4 (4.5-4.7)
 
 > **Learning Objectives:**
 > 1. Explain what implicit threading is and why it is needed
@@ -161,7 +161,7 @@ Request ──→ [ Task Queue ] ──→ │  Thread 3 (busy)   │
 
 ### 2.2 Thread Pool Benefits
 
-**Three textbook benefits** (Silberschatz, p.178):
+**Three textbook benefits** (p.178):
 
 1. **Speed**: Reusing existing threads → eliminates wait time for new thread creation
 2. **Resource bound**: **Bounds** the number of concurrent threads → prevents system overload
@@ -172,11 +172,11 @@ Request ──→ [ Task Queue ] ──→ │  Thread 3 (busy)   │
 - Set **heuristically** based on CPU count, physical memory, expected concurrent requests
 - Can be dynamically adjusted (e.g., GCD automatically adjusts based on system load)
 
-> **Note:** **Exam Tip.** The three benefits of thread pools (Speed, Resource bound, Separation of execution and creation) map closely to the four benefits of threads from Week 4 (Responsiveness, Resource Sharing, Economy, Scalability). Thread pools amplify the Economy benefit further by eliminating repeated creation/destruction overhead.
+> **Key Point:** The three benefits of thread pools (Speed, Resource bound, Separation of execution and creation) map closely to the four benefits of threads from Week 4 (Responsiveness, Resource Sharing, Economy, Scalability). Thread pools amplify the Economy benefit further by eliminating repeated creation/destruction overhead.
 
 ### 2.3 Thread Pool: Windows API
 
-Windows provides a thread pool API, used similarly to creating a thread with `CreateThread()`:
+Windows provides a thread pool API, used similarly to creating a thread with `CreateThread()`.
 
 Windows uses its own type names: `DWORD` = 32-bit unsigned integer, `PVOID` = `void *`, `ULONG` = unsigned long; all are defined in the Windows SDK.
 
@@ -307,7 +307,7 @@ Task(problem):
 
 *Figure 5. Fork-join in Java*
 
-> **[Algorithms]** This is the same pattern as merge sort and quicksort. The key insight is that divide-and-conquer naturally maps to fork-join: each recursive call becomes a forked task, and the merge step is the join. The difference is that fork-join **actually runs subtasks in parallel** across threads, whereas a regular recursive call executes sequentially on the stack.
+> **[Algorithms]** **Divide and conquer** is an algorithm design technique that splits a problem into smaller subproblems of the same form, solves them recursively, and combines their results; merge sort and quicksort are typical examples. Divide-and-conquer naturally maps to fork-join: each recursive call becomes a forked task, and the merge step is the join. The difference is that fork-join **actually runs subtasks in parallel** across threads, whereas a regular recursive call executes sequentially on the stack.
 
 ### 3.3 Fork-Join in Java: ForkJoinPool
 
@@ -380,8 +380,8 @@ public class SumTask extends RecursiveTask<Integer> {
 ```
 
 > **Note:** **Code walkthrough.**
-> 1. If the range is smaller than THRESHOLD (1000), compute directly; this is the **base case**
-> 2. Otherwise, split the range in half, fork both halves as subtasks.
+> 1. If the range is smaller than THRESHOLD (1000), compute directly; this is the **base case**.
+> 2. Otherwise, split the range in half and fork both halves as subtasks.
 > 3. `fork()` submits the subtask to the ForkJoinPool for parallel execution.
 > 4. `join()` blocks until the subtask completes and returns its result.
 > 5. Results are combined with `+`.
@@ -411,7 +411,7 @@ Thread 4:  (empty)  (empty)  (empty) ← steals Task F from Thread 3
 
 > **Key Point:** Work stealing is what makes fork-join efficient in practice. Without it, if tasks are unevenly distributed, some threads would sit idle while others are overloaded. Work stealing uses a **double-ended queue (deque)**: the owning thread pushes and pops tasks at one end of the deque (LIFO, almost no contention), while thieves steal from the other end (FIFO), minimizing contention. Since owner and thief rarely touch the same end, a simple compare-and-swap suffices and no heavy lock is needed.
 
-> **[Algorithms]** The work-stealing strategy achieves **load balancing** without a central scheduler. Each thread acts independently: do your own work first, then steal from others. This decentralized approach scales well because it avoids the bottleneck of a single task queue shared by all threads.
+> **[Parallel Computing]** The work-stealing strategy achieves **load balancing** without a central scheduler. Each thread acts independently: do your own work first, then steal from others. This decentralized approach scales well because it avoids the bottleneck of a single task queue shared by all threads.
 
 ---
 
@@ -623,7 +623,7 @@ dispatch_async(gq, ^{
 
 **Closure in Swift**: same concept as Block, used without `^`
 
-```text
+```swift
 let queue = dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0)
 dispatch_async(queue, { print("I am a closure.") })
 ```
@@ -712,7 +712,7 @@ parallel_for(size_t(0), n, [=](size_t i) {
 - First two parameters: iteration space (0 to n-1)
 - Third parameter: **C++ lambda function** `[=](size_t i)` → executed for each `i`
 
-A lambda is an anonymous function written inline. In C++, `[=](size_t i) { ... }` means a function that takes parameter `i` and captures by value every local variable used in its body. `size_t` is an unsigned integer type used for sizes and indices.
+  A lambda is an anonymous function written inline. In C++, `[=](size_t i) { ... }` means a function that takes parameter `i` and captures by value every local variable used in its body. `size_t` is an unsigned integer type used for sizes and indices.
 - TBB splits loop iterations into **chunks**
 - Creates multiple tasks and assigns them to available threads
 - Similar approach to Java's Fork-Join
@@ -773,7 +773,7 @@ int sum = parallel_reduce(
 - Thread creation/management/scheduling is **handled by the library/runtime**.
 - Improves program correctness and reduces development complexity.
 
-> **Note:** **Exam Tip.** You should be able to name all five techniques and their distinguishing feature. A helpful mnemonic: **T-F-O-G-I** (Thread pool, Fork-join, OpenMP, GCD, Intel TBB). Remember that all five share the core idea: **developers define tasks, the system manages threads**.
+> **Key Point:** Each of the five techniques has a distinguishing feature. A mnemonic for the five is **T-F-O-G-I** (Thread pool, Fork-join, OpenMP, GCD, Intel TBB). All five share the core idea: **developers define tasks, the system manages threads**.
 
 ---
 
@@ -855,11 +855,11 @@ Five key issues to consider in multithreaded programming:
 |----------|-------------------|-------------------|
 | **Cause** | Triggered by the process itself | Generated externally |
 | **Delivered to** | The process that performed the action | Delivered to another process |
-| **Examples** | Illegal memory access, div by 0 | `Ctrl+C`, timer expire |
+| **Examples** | Illegal memory access, division by zero | `Ctrl+C`, timer expiration |
 
 *Table 6. Synchronous versus asynchronous signals*
 
-("Synchronous" means the signal was caused by the running thread's own action, such as dividing by zero. An external event causes an asynchronous signal.)
+Here, **synchronous** means that the signal was caused by the running thread's own action, such as dividing by zero, and a signal caused by an external event is asynchronous.
 
 > **Note:** **Synchronous signals** are the result of a thread's own actions, like dividing by zero or accessing invalid memory. The thread caused the signal, so delivery is straightforward. **Asynchronous signals** come from outside the process (the user pressing Ctrl+C, a timer expiring, another process sending a signal), which is where the multithreading complication arises: *which* thread should receive it?
 
@@ -887,7 +887,7 @@ pthread_kill(pthread_t tid, int signal);
 - Asynchronous signal → delivered to the **first thread** that does not block it
 - **Windows**: Uses **APC (Asynchronous Procedure Call)** instead of signals; an APC is delivered directly to a specific thread
 
-> **Note:** **Exam Tip.** The four signal delivery options are frequently tested. Remember them with: (1) the causer, (2) everyone, (3) some (unblocked threads), (4) one dedicated thread. In practice, option 4 (dedicated signal handler thread) is a common pattern in server applications: all other threads block signals, and one designated thread handles them in a controlled loop.
+> **Key Point:** The four signal delivery options can be summarized as (1) the causer, (2) everyone, (3) some (unblocked threads), and (4) one dedicated thread. In practice, option 4 (dedicated signal handler thread) is a common pattern in server applications: all other threads block signals, and one designated thread handles them in a controlled loop.
 
 ### 8.5 Thread Cancellation: Concept
 
@@ -1182,7 +1182,7 @@ An LWP (Lightweight Process) is an OS-managed execution slot between user thread
 
 *Figure 16. Links among ETHREAD, KTHREAD, and TEB*
 
-> **Note:** **Exam Tip.** ETHREAD → KTHREAD → TEB is the key chain to remember. ETHREAD and KTHREAD are in kernel space (protected), while TEB is in user space (accessible to the application). The TLS array in the TEB is how Windows implements Thread-Local Storage at the OS level.
+> **Key Point:** ETHREAD → KTHREAD → TEB is the key chain of the Windows thread data structures. ETHREAD and KTHREAD are in kernel space (protected), while TEB is in user space (accessible to the application). The TLS array in the TEB is how Windows implements Thread-Local Storage at the OS level.
 
 ### 9.3 Linux Threads: Task Concept
 
@@ -1248,7 +1248,7 @@ Key clone flags:
 **When clone() is called (with sharing flags)**: New task + **shares** the parent's data structures via pointers
 
 ```text
-  fork() — No sharing                clone() — With sharing flags
+  fork(): No sharing                 clone(): With sharing flags
   ┌───────────┐  ┌───────────┐        ┌───────────┐  ┌───────────┐
   │ Parent    │  │ Child     │        │ Parent    │  │ Child     │
   │ task_     │  │ task_     │        │ task_     │  │ task_     │
@@ -1266,7 +1266,7 @@ Key clone flags:
 
 **Extension of clone() (containers)**: By using specific flags to isolate namespaces, containers (Docker, LXC) can be created (textbook Chapter 18)
 
-> **[Systems Programming]** Linux's `clone()` is the fundamental building block for:
+> **[Systems Programming]** In systems programming, processes are created with system calls such as `fork()`, and on Linux these calls are built on `clone()`. `clone()` is the fundamental building block for:
 > - **Threads**: sharing everything (`CLONE_VM | CLONE_FILES | ...`)
 > - **Processes**: sharing nothing (plain `fork()`)
 > - **Containers**: selective sharing + namespace isolation (`CLONE_NEWNS`, `CLONE_NEWPID`, etc.)
@@ -1340,9 +1340,9 @@ int main() {
 - Performance impact when creating more threads than the number of cores
 - Cache effects and memory bandwidth bottleneck
 
-> **[Computer Architecture]** Matrix multiplication is a classic benchmark for observing the gap between theoretical and actual speedup. Even with a purely parallel workload (S ≈ 0), you will not see linear speedup because of:
+> **[Computer Architecture]** Matrix multiplication is a classic benchmark for observing the gap between theoretical and actual speedup. Even with a purely parallel workload (serial fraction S ≈ 0 in Amdahl's law), you will not see linear speedup because of:
 > 1. **Memory bandwidth**: All threads compete for the same memory bus.
-> 2. **Cache effects**: The `B[k][j]` access pattern has poor spatial locality (column-major access in a row-major array)
+> 2. **Cache effects**: The `B[k][j]` access pattern has poor spatial locality (column-major access in a row-major array).
 > 3. **Thread overhead**: Creating and synchronizing threads has a cost.
 >
 > If more threads are created than physical cores, performance may actually **decrease** due to context switching overhead.
@@ -1409,7 +1409,7 @@ int main() {
 | Scheduler Activations | They provide LWPs as virtual processors and use upcalls for the kernel to notify the user thread library of events. |
 | Windows Threads | They use the One-to-One model with a data structure chain of ETHREAD → KTHREAD → TEB. |
 | Linux Threads | Linux does not distinguish processes from threads and treats all of them as tasks, and clone() flags control the level of sharing. |
-| Textbook Scope | This unit covers Sections 4.5-4.7 of Chapter 4 in Silberschatz. |
+| Textbook Scope | This unit covers Sections 4.5-4.7 of Chapter 4 of the textbook. |
 
 ---
 

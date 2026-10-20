@@ -2,9 +2,9 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **Last Updated:** 2026-10-18
+> **Last Updated:** 2026-10-20
 >
-> Operating System Concepts, Silberschatz, Ch 3 (3.1-3.3)
+> Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 3 (3.1-3.3)
 
 > **Learning Objectives:**
 > 1. Describe the structure of a process (memory layout, PCB, states)
@@ -74,7 +74,7 @@ A **process** is a program in execution.
 
 > **Definition:** Multiplexing means the CPU is shared among multiple processes by rapidly switching between them, giving the illusion of simultaneous execution.
 
-> **Note:** **Exam tip.** The definition "a program in execution" is the key. An executable file stored on disk is a program (a passive entity), and when it is loaded into memory and given CPU time to run, it becomes a process (an active entity). This distinction is frequently tested on exams.
+> **Key Point:** The heart of the definition of a process is "a program in execution." An executable file stored on disk is a program (a passive entity), and when it is loaded into memory and given CPU time to run, it becomes a process (an active entity).
 
 ### 1.2 Memory Layout
 
@@ -133,9 +133,10 @@ int main(int argc, char *argv[]) {   // argc, argv section
 
 The `size` command can be used to check the size of each section:
 
-| text | data | bss | dec | hex |
-|:-----|:-----|:----|:----|:----|
-| 1158 | 284 | 8 | 1450 | 5aa |
+```text
+   text    data     bss     dec     hex
+   1158     284       8    1450     5aa
+```
 
 The `dec` and `hex` columns show the total size of all sections combined, in decimal and hexadecimal respectively. Run `size ./your_program` after compiling to see these values for your own programs.
 
@@ -195,7 +196,7 @@ A process changes **state** during its execution:
 
 > **Definition:** A **time slice** (or quantum) is the fixed amount of CPU time the OS allocates to each process before preempting it.
 
-> **Note:** **Exam tip.** Clearly distinguish between Running → Ready (an **involuntary** transition due to time slice expiration) and Running → Waiting (a **voluntary** transition due to an I/O request).
+> **Key Point:** Running → Ready is an **involuntary** transition caused by time slice expiration, whereas Running → Waiting is a **voluntary** transition caused by an I/O request.
 
 ### 1.7 Process Control Block (PCB)
 
@@ -428,7 +429,7 @@ In UNIX, new processes are created using the **`fork()`** system call.
 2. **Both** parent and child continue execution from the instruction after fork().
 3. The child inherits the parent's privileges, scheduling attributes, open files, etc.
 
-> **Note:** **Why copy the entire address space?** So that the child can continue running the same program with the same data right after fork() and can communicate easily with the parent. Actual implementations optimize this copy with COW (Copy-On-Write). Pages are initially shared and copied only on write, which makes fork() very cheap when followed immediately by exec().
+> **Note:** **Why copy the entire address space?** So that the child can continue running the same program with the same data right after fork() and can communicate easily with the parent. Actual implementations optimize this copy with COW (Copy-On-Write, Week 12). Pages are initially shared and copied only on write, which makes fork() very cheap when followed immediately by exec().
 
 **Return values of fork():**
 
@@ -440,7 +441,7 @@ In UNIX, new processes are created using the **`fork()`** system call.
 
 *Table 7. Return values of fork() and their meanings*
 
-> **Note:** **Exam tip.** Distinguishing fork()'s return values is almost guaranteed to appear on exams. The key is that after fork(), both parent and child execute the same code, but the return value differs.
+> **Key Point:** After fork(), both parent and child execute the same code but receive different return values, and the program uses this return value to separate the parent's and child's execution paths.
 
 ### 3.3 exec() after fork()
 
@@ -604,9 +605,9 @@ pid = wait(&status);  // parent collects child's exit status
 
 *Table 9. Comparison of zombie and orphan processes*
 
-> **Note:** **Exam tip.** A **zombie** is when a child dies but the parent does not clean up (wait); an **orphan** is when the parent dies first and the child is left alone. Questions presenting a scenario and asking you to distinguish between zombie and orphan are frequently given.
+> **Key Point:** A **zombie** is a child process that has terminated but has not been reaped (wait) by its parent; an **orphan** is a child process left alone because its parent terminated first. Which of the two a situation produces is decided by who terminated first and whether the parent called wait().
 
-> **Note:** **Mnemonic.** A zombie is a process that is dead but still listed in the process table (like a zombie that will not lie down). An orphan is a process whose parent disappeared, so it is adopted by init/systemd (like an orphanage taking in a child).
+> **Note:** **Analogy.** A zombie is a process that is dead but still listed in the process table (like a zombie that will not lie down). An orphan is a process whose parent disappeared, so it is adopted by init/systemd (like an orphanage taking in a child).
 
 > **Note:** When viewing the process list with `ps aux`, processes with status `Z` are zombie processes. Zombies themselves do not consume CPU or memory, but they occupy process table entries, reducing the number of processes the system can create.
 

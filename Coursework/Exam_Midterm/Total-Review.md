@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Total-Review.md) | [한국어](Total-Review.ko.md)
 
-> **Last Updated:** 2026-10-18
+> **Last Updated:** 2026-10-20
 
 ---
 
@@ -32,7 +32,7 @@
 
 ### 0.2 A Six-Element Template for Writing Deep-Understanding Answers
 
-A **deep-understanding answer**, for which the instructor said bonus points are given, includes the following six elements.
+A **deep-understanding answer** includes the following six elements.
 
 | Element | Description | Example |
 |---|---|---|
@@ -146,7 +146,7 @@ Answer: **The hardware stops it physically.** This is the core of **dual-mode op
 
 *Table 3. Comparison of kernel mode and user mode*
 
-**Physical location of the mode bit**: It is stored in the CPU's **status register**. In RISC-V, the SPP (Supervisor Previous Privilege) bit of the `sstatus` register plays this role.
+**Physical location of the mode bit**: It is stored in the CPU's **status register**. In RISC-V, the current mode is not directly visible in a register; when a trap occurs, the mode before the trap is recorded in the SPP (Supervisor Previous Privilege) bit of the `sstatus` register and used by `sret` when returning.
 
 #### 1.4.2 Privileged Instructions
 
@@ -247,7 +247,7 @@ Each system call is identified by a unique number.
 
 | Architecture | Number register | Argument registers | Return value register |
 |---|---|---|---|
-| **RISC-V** | `a7` | `a0 ~ a6` (up to 7) | `a0` |
+| **RISC-V** | `a7` | `a0 ~ a5` (up to 6) | `a0` |
 | **x86-64** | `rax` | `rdi, rsi, rdx, r10, r8, r9` | `rax` |
 
 *Table 4. System call number, argument, and return value registers by architecture*
@@ -299,7 +299,7 @@ Chain of calls:
 
 If the file is 4MB, that is about **1000 reads + 1000 writes = 2000 system calls**. Each call incurs mode-switch overhead (hundreds of ns to µs).
 
-🔗 **Connection**: This is why optimizations such as **buffering**, **DMA**, **memory-mapped files (mmap)**, and **sendfile** matter. The mmap of virtual memory in Week 12 cuts this cost dramatically.
+🔗 **Connection**: This is why optimizations such as **buffering**, **DMA**, **memory-mapped files (mmap)**, and **sendfile** matter. mmap, which builds on virtual memory, cuts this cost dramatically.
 
 **One-Line Summary**: Because a user program cannot use privileged instructions directly, it raises a trap through a system call = ecall to have the kernel do the work on its behalf. Every kernel entry goes through this single passage.
 
@@ -580,8 +580,8 @@ A process is laid out in memory with the following structure.
 🎯 **Why the stack and heap grow toward each other**: Both regions use one block of free space from opposite ends as much as they need → better memory efficiency. The OS watches that the two regions do not collide.
 
 🎯 **Why BSS is separated from Data (important!)**:
-- Initialized variables must **store their initial values in the executable file** (`int x = 1000000` → 8 bytes written to the file)
-- Uninitialized variables only need to store **the size of the BSS region (8 bytes)**
+- Initialized variables must **store their initial values in the executable file** (`int x = 1000000` → `sizeof(int)` bytes, usually 4, written to the file)
+- Uninitialized variables only need to store **the size of the BSS region** (8 bytes in the example in Section 2.2.4)
 - The OS automatically initializes the BSS region to 0 when loading the program
 - **Result: the executable file becomes much smaller**
 
@@ -636,20 +636,17 @@ text   data   bss   dec   hex
 During execution, a process is in one of the following five states.
 
 ```text
-                      ┌──── admitted ────┐
-                      │                  ↓
-   ┌────┐         ┌──────┐         ┌────────┐         ┌──────────┐
-   │New │────────→│Ready │←────────│Running │────────→│Terminated│
-   └────┘         └──────┘         └────────┘         └──────────┘
-                      ↑     dispatch    ↓
-                      │                  │
-              interrupt │                │ I/O or event wait
-                      │     I/O done     │
-                      │   ┌──────────────┘
-                      │   ↓
-                   ┌──────────┐
-                   │ Waiting  │
-                   └──────────┘
+                      ┌───── dispatch ──────┐
+                      │                     ↓
+┌─────┐ admitted ┌─────────┐ interrupt ┌─────────┐   exit   ┌────────────┐
+│ New │─────────→│  Ready  │←──────────│ Running │─────────→│ Terminated │
+└─────┘          └─────────┘           └─────────┘          └────────────┘
+                      ↑                     │
+                      │ I/O or event        │ I/O or
+                      │ completion          │ event wait
+                      │   ┌─────────┐       │
+                      └───│ Waiting │←──────┘
+                          └─────────┘
 ```
 
 *Figure 6. Process state transition diagram*
@@ -1051,7 +1048,7 @@ ps aux | grep defunct
 |---|---|---|
 | Child state | Terminated (called exit) | Still running |
 | Cause | Parent did not call wait() | Parent terminated first |
-| Resources | Wastes only a PT slot | Running normally |
+| Resources | Wastes only a process table slot | Running normally |
 | Resolution | Parent calls wait() / adopted by init if the parent dies | Adopted automatically by init/systemd |
 | Accumulation | Yes (dangerous) | No (handled automatically) |
 
@@ -1062,11 +1059,11 @@ ps aux | grep defunct
 ⚠️ **Important**: A zombie cannot be killed with `kill`, because it is already dead!
 
 1. **Send SIGCHLD to the parent** → prompts the parent to call wait()
-2. **Forcibly terminate the parent process** → the zombie's parent changes to init → cleaned up automatically
+2. **Forcibly terminate the parent process** → the zombie's parent changes to init → init cleans it up automatically
 3. **Prevention**: set `signal(SIGCHLD, SIG_IGN)` in POSIX → the OS reaps zombies automatically
 
 Memory aids:
-- Zombie: dead, yet it will not lie down in the process table (like a zombie)
+- Zombie: already dead, yet it stays in the process table instead of lying in its grave (like a zombie)
 - Orphan: the parent is gone, so systemd adopts it (an orphanage)
 
 ### 2.10 Chrome's Multiprocess Architecture: A Real-World Case
@@ -3004,13 +3001,13 @@ swtch:
     sd ra, 0(a0)
     sd sp, 8(a0)
     sd s0, 16(a0)
-    # ... s1~s11 ...
+    # ... s1-s11 ...
 
     # restore registers from new.context (*a1)
     ld ra, 0(a1)
     ld sp, 8(a1)
     ld s0, 16(a1)
-    # ... s1~s11 ...
+    # ... s1-s11 ...
 
     ret  # jumps to the new process's PC held in ra
 ```
@@ -3522,14 +3519,14 @@ for (int i = 0; i < N; i++) sum += a[i];
 
 ### 9.4 Exam Tips
 
-#### Six-Element Answer Template (for Bonus Points)
+#### Six-Element Answer Template
 ```text
 [Definition in 1-2 sentences: Korean term (English term)]
 + [Why it is needed: alternatives/counterexamples]
 + [Mechanism in 2-4 sentences]
 + [One concrete example (code/calculation/practice)]
 + [Limitation/trade-off in 1 sentence]
-+ [Link to another concept in 1 sentence: bonus!]
++ [Link to another concept in 1 sentence]
 ```
 
 #### Avoiding Common Mistakes
