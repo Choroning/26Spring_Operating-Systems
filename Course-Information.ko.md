@@ -2,7 +2,7 @@
 
 [레포지토리 안내](README.ko.md) | [English](Course-Information.md) | [한국어](Course-Information.ko.md)
 
-> **최종 수정일:** 2026-10-18
+> **최종 수정일:** 2026-10-26
 
 ## 목차
 
@@ -70,22 +70,22 @@
 
 | 주차 | 수업일 (수, 목) | 계획된 주제 | 진행한 강의자료 |
 |:-----|:-----|:-----|:-----|
-| 1 | 3/4, 3/5 | 운영체제 소개 | W01_LEC_Introduction<br>W01_LAB_Coding-Agents |
-| 2 | 3/11, 3/12 | 프로세스 1 | W02_LEC_Process-1<br>W02_LAB_Process-System-Calls<br>HW1 |
-| 3 | 3/18, 3/19 | 프로세스 2 | W03_LEC_Process-2<br>W03_LAB_Exploring-XV6-Internals<br>HW2 |
-| 4 | 3/25, 3/26 | 스레드와 동시성 1 | W04_LEC_Thread-And-Concurrency-1<br>W04_LAB_Pthread-Basics<br>HW3 |
-| 5 | 4/1, 4/2 | 스레드와 동시성 2 | W05_LEC_Thread-And-Concurrency-2<br>W05_LAB_Implicit-Threading-And-Threading-Issues<br>HW4 |
-| 6 | 4/8, 4/9 | CPU 스케줄링 1 | W06_LEC_CPU-Scheduling-1<br>W06_LAB_Context-Switching<br>HW5 |
-| 7 | 4/15, 4/16 | CPU 스케줄링 2 | W07_LEC_CPU-Scheduling-2 |
-| 8 | 4/22, 4/23 | 중간고사 | 중간고사 |
-| 9 | 4/29, 4/30 | 동기화 도구와 사례 | W09_LEC_Synchronization<br>W09_LAB_Sleep-Wakeup-And-Pipes<br>텀 프로젝트 시작 |
-| 10 | 5/6, 5/7 | 교착 상태 | W10_LEC_Deadlocks<br>W10_LAB_Deadlocks |
-| 11 | 5/13, 5/14 | 주 메모리 | W11_LEC_Main-Memory<br>W11_LAB_Page-Tables |
-| 12 | 5/20, 5/21 | 가상 메모리 | W12_LEC_Virtual-Memory<br>W12_LAB_COW-Fork-And-Lazy-Allocation |
-| 13 | 5/27, 5/28 | 저장 장치 관리, 보안 및 보호 | W13_LEC_Storage-Management<br>W13_LAB_File-System-Internals |
-| 14 | 6/3, 6/4 | 기말고사 (텀 프로젝트) | W14_LEC_Security-And-Protection |
-| 15 | 6/10, 6/11 | 기말고사 (필기) | - |
-| 16 | 6/17, 6/18 | 자율학습 주간 | - |
+| 1주차 | 3/4, 3/5 | 운영체제 소개 | W01_LEC_Introduction<br>W01_LAB_Coding-Agents |
+| 2주차 | 3/11, 3/12 | 프로세스 1 | W02_LEC_Process-1<br>W02_LAB_Process-System-Calls<br>HW1 |
+| 3주차 | 3/18, 3/19 | 프로세스 2 | W03_LEC_Process-2<br>W03_LAB_Exploring-XV6-Internals<br>HW2 |
+| 4주차 | 3/25, 3/26 | 스레드와 동시성 1 | W04_LEC_Thread-And-Concurrency-1<br>W04_LAB_Pthread-Basics<br>HW3 |
+| 5주차 | 4/1, 4/2 | 스레드와 동시성 2 | W05_LEC_Thread-And-Concurrency-2<br>W05_LAB_Implicit-Threading-And-Threading-Issues<br>HW4 |
+| 6주차 | 4/8, 4/9 | CPU 스케줄링 1 | W06_LEC_CPU-Scheduling-1<br>W06_LAB_Context-Switching<br>HW5 |
+| 7주차 | 4/15, 4/16 | CPU 스케줄링 2 | W07_LEC_CPU-Scheduling-2 |
+| 8주차 | 4/22, 4/23 | 중간고사 | 중간고사 |
+| 9주차 | 4/29, 4/30 | 동기화 도구와 사례 | W09_LEC_Synchronization<br>W09_LAB_Sleep-Wakeup-And-Pipes<br>텀 프로젝트 시작 |
+| 10주차 | 5/6, 5/7 | 교착 상태 | W10_LEC_Deadlocks<br>W10_LAB_Deadlocks |
+| 11주차 | 5/13, 5/14 | 주 메모리 | W11_LEC_Main-Memory<br>W11_LAB_Page-Tables |
+| 12주차 | 5/20, 5/21 | 가상 메모리 | W12_LEC_Virtual-Memory<br>W12_LAB_COW-Fork-And-Lazy-Allocation |
+| 13주차 | 5/27, 5/28 | 저장 장치 관리, 보안 및 보호 | W13_LEC_Storage-Management<br>W13_LAB_File-System-Internals |
+| 14주차 | 6/3, 6/4 | 기말고사 (텀 프로젝트) | W14_LEC_Security-And-Protection |
+| 15주차 | 6/10, 6/11 | 기말고사 (필기) | - |
+| 16주차 | 6/17, 6/18 | 자율학습 주간 | - |
 
 - 강의자료는 주차마다 이론 자료(`W##_LEC_`)와 실습 자료(`W##_LAB_`)로 배포되었으며, 같은 번호의 `Week##` 단원에 각각 `Concepts_Lecture`와 `Concepts_Lab`으로 정리했다. 단원 목록은 [`Lecture-Notes` 색인](Lecture-Notes/README.ko.md)에 있다.
 - 7주차와 14주차에는 실습 자료가 없고, 9~13주차의 실습 자료(`W09_LAB_Sleep-Wakeup-And-Pipes`, `W10_LAB_Deadlocks`, `W11_LAB_Page-Tables`, `W12_LAB_COW-Fork-And-Lazy-Allocation`, `W13_LAB_File-System-Internals`)는 실습 노트를 만들지 않았다.

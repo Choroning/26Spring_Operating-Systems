@@ -2,7 +2,7 @@
 
 [Repository Guide](README.md) | [English](Course-Information.md) | [한국어](Course-Information.ko.md)
 
-> **Last Updated:** 2026-10-18
+> **Last Updated:** 2026-10-26
 
 ## Table of Contents
 
@@ -70,22 +70,22 @@
 
 | Week | Class Dates (Wed, Thu) | Planned Topic | Lecture Decks Covered |
 |:-----|:-----|:-----|:-----|
-| 1 | 3/4, 3/5 | Introduction | W01_LEC_Introduction<br>W01_LAB_Coding-Agents |
-| 2 | 3/11, 3/12 | Process 1 | W02_LEC_Process-1<br>W02_LAB_Process-System-Calls<br>HW1 |
-| 3 | 3/18, 3/19 | Process 2 | W03_LEC_Process-2<br>W03_LAB_Exploring-XV6-Internals<br>HW2 |
-| 4 | 3/25, 3/26 | Thread and Concurrency 1 | W04_LEC_Thread-And-Concurrency-1<br>W04_LAB_Pthread-Basics<br>HW3 |
-| 5 | 4/1, 4/2 | Thread and Concurrency 2 | W05_LEC_Thread-And-Concurrency-2<br>W05_LAB_Implicit-Threading-And-Threading-Issues<br>HW4 |
-| 6 | 4/8, 4/9 | CPU Scheduling 1 | W06_LEC_CPU-Scheduling-1<br>W06_LAB_Context-Switching<br>HW5 |
-| 7 | 4/15, 4/16 | CPU Scheduling 2 | W07_LEC_CPU-Scheduling-2 |
-| 8 | 4/22, 4/23 | Midterm Exam | Midterm exam |
-| 9 | 4/29, 4/30 | Synchronization Tools and Examples | W09_LEC_Synchronization<br>W09_LAB_Sleep-Wakeup-And-Pipes<br>Term project starts |
-| 10 | 5/6, 5/7 | Deadlocks | W10_LEC_Deadlocks<br>W10_LAB_Deadlocks |
-| 11 | 5/13, 5/14 | Main Memory | W11_LEC_Main-Memory<br>W11_LAB_Page-Tables |
-| 12 | 5/20, 5/21 | Virtual Memory | W12_LEC_Virtual-Memory<br>W12_LAB_COW-Fork-And-Lazy-Allocation |
-| 13 | 5/27, 5/28 | Storage Management, Security and Protection | W13_LEC_Storage-Management<br>W13_LAB_File-System-Internals |
-| 14 | 6/3, 6/4 | Final Exam (Term Project) | W14_LEC_Security-And-Protection |
-| 15 | 6/10, 6/11 | Final Exam (Written) | - |
-| 16 | 6/17, 6/18 | Study Week | - |
+| W01 | 3/4, 3/5 | Introduction | W01_LEC_Introduction<br>W01_LAB_Coding-Agents |
+| W02 | 3/11, 3/12 | Process 1 | W02_LEC_Process-1<br>W02_LAB_Process-System-Calls<br>HW1 |
+| W03 | 3/18, 3/19 | Process 2 | W03_LEC_Process-2<br>W03_LAB_Exploring-XV6-Internals<br>HW2 |
+| W04 | 3/25, 3/26 | Thread and Concurrency 1 | W04_LEC_Thread-And-Concurrency-1<br>W04_LAB_Pthread-Basics<br>HW3 |
+| W05 | 4/1, 4/2 | Thread and Concurrency 2 | W05_LEC_Thread-And-Concurrency-2<br>W05_LAB_Implicit-Threading-And-Threading-Issues<br>HW4 |
+| W06 | 4/8, 4/9 | CPU Scheduling 1 | W06_LEC_CPU-Scheduling-1<br>W06_LAB_Context-Switching<br>HW5 |
+| W07 | 4/15, 4/16 | CPU Scheduling 2 | W07_LEC_CPU-Scheduling-2 |
+| W08 | 4/22, 4/23 | Midterm Exam | Midterm exam |
+| W09 | 4/29, 4/30 | Synchronization Tools and Examples | W09_LEC_Synchronization<br>W09_LAB_Sleep-Wakeup-And-Pipes<br>Term project starts |
+| W10 | 5/6, 5/7 | Deadlocks | W10_LEC_Deadlocks<br>W10_LAB_Deadlocks |
+| W11 | 5/13, 5/14 | Main Memory | W11_LEC_Main-Memory<br>W11_LAB_Page-Tables |
+| W12 | 5/20, 5/21 | Virtual Memory | W12_LEC_Virtual-Memory<br>W12_LAB_COW-Fork-And-Lazy-Allocation |
+| W13 | 5/27, 5/28 | Storage Management, Security and Protection | W13_LEC_Storage-Management<br>W13_LAB_File-System-Internals |
+| W14 | 6/3, 6/4 | Final Exam (Term Project) | W14_LEC_Security-And-Protection |
+| W15 | 6/10, 6/11 | Final Exam (Written) | - |
+| W16 | 6/17, 6/18 | Study Week | - |
 
 - Each week's slides were distributed as a lecture deck (`W##_LEC_`) and a lab deck (`W##_LAB_`), and they are organized in the `Week##` unit of the same number as `Concepts_Lecture` and `Concepts_Lab`, respectively. The units are listed in the [`Lecture-Notes` index](Lecture-Notes/README.md).
 - Weeks 7 and 14 have no lab deck, and no lab notes were made for the lab decks of Weeks 9-13 (`W09_LAB_Sleep-Wakeup-And-Pipes`, `W10_LAB_Deadlocks`, `W11_LAB_Page-Tables`, `W12_LAB_COW-Fork-And-Lazy-Allocation`, `W13_LAB_File-System-Internals`).
