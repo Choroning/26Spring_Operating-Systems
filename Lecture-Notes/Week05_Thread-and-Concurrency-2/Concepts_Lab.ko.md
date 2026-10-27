@@ -2,7 +2,7 @@
 
 [레포지토리 안내](../../README.ko.md) | [English](Concepts_Lab.md) | [한국어](Concepts_Lab.ko.md)
 
-> **최종 수정일:** 2026-10-20
+> **최종 수정일:** 2026-10-27
 
 > **학습 목표:**
 > 1. 태스크 큐와 미리 생성된 워커 스레드를 사용하여 스레드 풀을 구현할 수 있다
@@ -29,7 +29,6 @@
 ## 1. 실습 개요
 
 - **목표**: 암묵적 스레딩 기법을 실습하고 일반적인 스레딩 이슈를 이해한다.
-- **소요 시간**: 약 50분, 실습 4개
 - **주제**: 스레드 풀(Thread Pool), OpenMP, 스레드와 `fork()`, 스레드 로컬 저장소(TLS)
 
 네 실습은 교재 4.5절의 암묵적 스레딩과 4.6절의 스레딩 이슈로 나뉜다.
@@ -68,7 +67,6 @@ graph LR
 **전체 빌드**:
 
 ```bash
-cd examples/
 gcc -Wall -pthread -o lab1_thread_pool   lab1_thread_pool.c
 gcc -Wall -fopenmp -o lab2_openmp_parallel lab2_openmp_parallel.c
 gcc -Wall -pthread -o lab3_fork_threads  lab3_fork_threads.c

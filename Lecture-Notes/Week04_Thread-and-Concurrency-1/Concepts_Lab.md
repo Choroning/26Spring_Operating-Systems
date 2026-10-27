@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lab.md) | [한국어](Concepts_Lab.ko.md)
 
-> **Last Updated:** 2026-10-20
+> **Last Updated:** 2026-10-27
 
 > **Learning Objectives:**
 > 1. Create and join threads using `pthread_create` and `pthread_join`
@@ -34,7 +34,6 @@
 ## 1. Lab Overview
 
 - **Objective:** Practice Pthreads fundamentals through thread creation, data parallelism, and speedup measurement.
-- **Duration:** The 4 labs take approximately 50 minutes.
 - **Topics:** The labs cover `pthread_create`, `pthread_join`, data parallelism, argument passing, and Amdahl's Law.
 
 ```mermaid
@@ -53,7 +52,6 @@ graph LR
 **Build all labs:**
 
 ```bash
-cd examples/
 gcc -Wall -pthread -o lab1_hello_threads lab1_hello_threads.c
 gcc -Wall -pthread -o lab2_parallel_sum  lab2_parallel_sum.c
 gcc -Wall -pthread -o lab3_arg_pitfall   lab3_arg_pitfall.c

@@ -2,11 +2,11 @@
 
 [레포지토리 안내](../README.ko.md) | [English](README.md) | [한국어](README.ko.md)
 
-> **최종 수정일:** 2026-10-18
+> **최종 수정일:** 2026-10-27
 
 | 단원 | 주제 | 문서 |
 |:-----|:-----|:-----|
-| [1주차 운영체제 소개](Week01_Introduction-to-Operating-Systems/) | 운영체제의 정의와 두 가지 역할, 이중 모드 동작, 시스템 콜, 저장 장치 계층, OS 구조, xv6, 학기 미리보기, 코딩 에이전트 실습 | [강의 노트](Week01_Introduction-to-Operating-Systems/Concepts_Lecture.ko.md), [실습 노트](Week01_Introduction-to-Operating-Systems/Concepts_Lab.ko.md) |
+| [1주차 운영체제 소개](Week01_Introduction-to-Operating-Systems/) | 운영체제의 정의와 두 가지 역할, 이중 모드 동작, 시스템 콜, 저장 장치 계층, OS 구조, xv6와 그 가상 메모리, 파일 시스템 계층, 코딩 에이전트 실습 | [강의 노트](Week01_Introduction-to-Operating-Systems/Concepts_Lecture.ko.md), [실습 노트](Week01_Introduction-to-Operating-Systems/Concepts_Lab.ko.md) |
 | [2주차 프로세스 (1)](Week02_Process-1/) | 프로세스 개념, 프로세스 스케줄링, 프로세스 연산, fork(), exec(), wait(), pipe(), dup2()와 입출력 리디렉션 | [강의 노트](Week02_Process-1/Concepts_Lecture.ko.md), [실습 노트](Week02_Process-1/Concepts_Lab.ko.md) |
 | [3주차 프로세스 (2)](Week03_Process-2/) | 프로세스 간 통신(IPC), 공유 메모리와 메시지 전달, 파이프, 클라이언트-서버 통신, xv6 소스 구조와 시스템 콜 추적, struct proc과 fork() 구현 분석 | [강의 노트](Week03_Process-2/Concepts_Lecture.ko.md), [실습 노트](Week03_Process-2/Concepts_Lab.ko.md) |
 | [4주차 스레드와 동시성 (1)](Week04_Thread-and-Concurrency-1/) | 스레드의 개념과 멀티스레딩의 이점, 멀티코어 프로그래밍, 사용자 스레드와 커널 스레드, 멀티스레딩 모델, Pthreads와 Java 스레드, 데이터 병렬성과 암달의 법칙 | [강의 노트](Week04_Thread-and-Concurrency-1/Concepts_Lecture.ko.md), [실습 노트](Week04_Thread-and-Concurrency-1/Concepts_Lab.ko.md) |

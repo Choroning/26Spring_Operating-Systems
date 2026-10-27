@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lab.md) | [한국어](Concepts_Lab.ko.md)
 
-> **Last Updated:** 2026-10-20
+> **Last Updated:** 2026-10-27
 
 > **Learning Objectives:**
 > 1. Implement a thread pool with a task queue and pre-created worker threads
@@ -29,7 +29,6 @@
 ## 1. Lab Overview
 
 - **Objective**: Practice implicit threading techniques and understand common threading issues.
-- **Duration**: Approximately 50 minutes, 4 labs
 - **Topics**: Thread Pool, OpenMP, `fork()` with threads, Thread-Local Storage (TLS)
 
 The four labs fall into implicit threading (Textbook Section 4.5) and threading issues (Textbook Section 4.6).
@@ -68,7 +67,6 @@ graph LR
 **Build all labs**:
 
 ```bash
-cd examples/
 gcc -Wall -pthread -o lab1_thread_pool   lab1_thread_pool.c
 gcc -Wall -fopenmp -o lab2_openmp_parallel lab2_openmp_parallel.c
 gcc -Wall -pthread -o lab3_fork_threads  lab3_fork_threads.c
