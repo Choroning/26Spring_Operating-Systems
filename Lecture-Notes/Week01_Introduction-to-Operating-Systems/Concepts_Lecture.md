@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **Last Updated:** 2026-10-20
+> **Last Updated:** 2026-10-27
 >
 > Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 1, 2
 
@@ -10,7 +10,7 @@
 > 1. Define what an operating system is and explain its core roles
 > 2. Explain dual-mode operation and why it exists
 > 3. Describe how system calls bridge user programs and the kernel
-> 4. Outline the major topics covered in an operating systems course
+> 4. Describe the features of the educational OS xv6 and how its virtual memory and file system are organized
 
 ---
 
@@ -26,14 +26,6 @@
   - [1.7 Storage-Device Hierarchy](#17-storage-device-hierarchy)
   - [1.8 OS Structure](#18-os-structure)
   - [1.9 xv6](#19-xv6)
-- [2. Semester Preview](#2-semester-preview)
-  - [2.1 Processes (Weeks 2-3)](#21-processes-weeks-2-3)
-  - [2.2 Threads and Concurrency (Weeks 4-5)](#22-threads-and-concurrency-weeks-4-5)
-  - [2.3 CPU Scheduling (Weeks 6-7)](#23-cpu-scheduling-weeks-6-7)
-  - [2.4 Synchronization (Week 9)](#24-synchronization-week-9)
-  - [2.5 Deadlocks (Week 10)](#25-deadlocks-week-10)
-  - [2.6 Memory Management (Weeks 11-12)](#26-memory-management-weeks-11-12)
-  - [2.7 File Systems and Security (Weeks 13-14)](#27-file-systems-and-security-weeks-13-14)
 - [Summary](#summary)
 - [Self-Check Questions](#self-check-questions)
 
@@ -236,199 +228,16 @@ make qemu    # Boot xv6 in the QEMU emulator
 
 > **Note:** xv6 was originally developed for x86, but the RISC-V version is now primarily used. While the actual Linux kernel comprises tens of millions of lines, xv6 covers all core OS concepts in only about 10,000 lines, making it highly suitable for learning. Using it alongside the MIT 6.1810 (formerly 6.S081) course can greatly enhance understanding.
 
----
+xv6 implements processes, virtual memory, and the file system as follows.
 
-<br>
-
-## 2. Semester Preview
-
-### 2.1 Processes (Weeks 2-3)
-
-Without processes, the computer could only run one program at a time. For example, you would have to close your browser to open a text editor.
-
-A **process** is a program in execution, with its own memory and state.
-
-```mermaid
-graph LR
-    NEW["New"] -->|"admitted"| READY["Ready"]
-    READY -->|"dispatch"| RUN["Running"]
-    RUN -->|"interrupt"| READY
-    RUN -->|"I/O wait"| WAIT["Waiting"]
-    WAIT -->|"I/O done"| READY
-    RUN -->|"exit"| TERM["Terminated"]
-    style NEW fill:#e3f2fd
-    style READY fill:#c8e6c9
-    style RUN fill:#fff3e0
-    style WAIT fill:#fce4ec
-    style TERM fill:#eeeeee
-```
-
-*Figure 8. The five process states and their transitions*
-
-- The key system calls are **`fork()`**, **`exec()`**, **`wait()`**, and **`exit()`**.
-- `fork()` creates a **copy** of the current process (parent → child).
-- `exec()` **replaces** the process image with a new program. A process image is the complete contents of a running process in memory, that is, its code, data, stack, and state. `exec()` discards all of this and loads an entirely new program in its place.
-- In xv6, `kernel/proc.c` implements the process table and state transitions.
-
-> **Note:** When `fork()` returns 0, it is the child process; when it returns a positive value (the child's PID), it is the parent process; when it returns a negative value (-1), process creation has failed. This return value is used to branch the execution flow between parent and child. The pattern of calling `exec()` after `fork()` is the fundamental way Unix/Linux shells execute commands.
-
-> **Note:** If processes only ran independently, it would be difficult to build useful systems. Most real systems have multiple processes that cooperate by exchanging data, which is called **Interprocess Communication (IPC)**. IPC mechanisms such as shared memory, message passing, pipes, and sockets are covered in detail in Week 3.
-
-### 2.2 Threads and Concurrency (Weeks 4-5)
-
-A single-threaded program cannot take advantage of multi-core CPUs. Threads allow a single program to do multiple things in parallel, like downloading a file while updating the UI.
-
-A **thread** is a lightweight execution unit that shares a process's address space.
-
-```mermaid
-graph TD
-    subgraph "Single-threaded Process"
-        P1["Process"] --> T1["Thread"]
-        T1 --> CS1["Code + Data + Files"]
-    end
-    subgraph "Multi-threaded Process"
-        P2["Process"] --> T2["Thread 1"]
-        P2 --> T3["Thread 2"]
-        P2 --> T4["Thread 3"]
-        T2 --> CS2["Shared:<br/>Code + Data + Files"]
-        T3 --> CS2
-        T4 --> CS2
-    end
-    style P1 fill:#e3f2fd
-    style P2 fill:#e3f2fd
-    style CS1 fill:#c8e6c9
-    style CS2 fill:#c8e6c9
-```
-
-*Figure 9. Single-threaded and multi-threaded processes*
-
-- Multiple threads within a single process achieve **parallelism** on multi-core CPUs.
-- The challenge is **race conditions** that arise when threads access shared data concurrently.
-
-> **Note:** The key difference between processes and threads is as follows. Processes have independent address spaces, but threads within the same process **share** code, data, and files. Each thread has only its own stack and register set. While shared memory makes inter-thread communication fast, synchronization issues can arise.
-
-### 2.3 CPU Scheduling (Weeks 6-7)
-
-With dozens of processes competing for a limited number of CPU cores, the OS needs a strategy to decide who runs when. A poor strategy means some programs starve while others hog the CPU.
-
-The OS decides **which process to run next** on the CPU.
-
-```mermaid
-graph LR
-    RQ["Ready Queue<br/>P1, P2, P3, P4"] -->|"schedule"| CPU["CPU<br/>(running P1)"]
-    CPU -->|"preempt /<br/>I/O wait"| RQ
-    CPU -->|"finished"| DONE["Terminated"]
-    style RQ fill:#e3f2fd
-    style CPU fill:#fff3e0
-    style DONE fill:#c8e6c9
-```
-
-*Figure 10. Scheduling flow between the ready queue and the CPU*
-
-**Scheduling algorithms** balance competing goals:
-
-| Algorithm | Idea | Trade-off |
-|:----------|:-----|:----------|
-| **FCFS** | First Come, First Served | Simple but suffers from the convoy effect |
-| **SJF** | Shortest Job First | Optimal average wait time but hard to predict |
-| **Round Robin** | Fixed time slice, cyclic | Fair with good response time |
-| **Priority** | Highest priority first | Risk of starvation |
-
-*Table 4. Idea and trade-off of representative CPU scheduling algorithms*
-
-> **Note:** SJF is theoretically the optimal algorithm for minimizing average wait time, but in practice, the next job's CPU burst time cannot be known exactly. Therefore, prediction is done using exponential averaging based on past data. In Round Robin, if the time slice is too large, it becomes equivalent to FCFS; if too small, context-switching overhead increases.
-
-### 2.4 Synchronization (Week 9)
-
-Without synchronization, concurrent threads can corrupt shared data in subtle ways, causing bugs that appear only once in a million runs and are extremely difficult to debug.
-
-When multiple threads share data, **coordination** is needed.
-
-```mermaid
-graph TD
-    T1["Thread A:<br/>balance = balance + 100"] --> CS["Shared Variable<br/>balance = 1000"]
-    T2["Thread B:<br/>balance = balance - 50"] --> CS
-    CS --> R1["Expected: 1050"]
-    CS --> R2["Race condition: 950 ❌"]
-    style CS fill:#fff3e0
-    style R1 fill:#c8e6c9
-    style R2 fill:#ffcdd2
-```
-
-*Figure 11. Race condition between two threads on the shared variable balance*
-
-- A **critical section** is a code region that accesses shared resources.
-- A **lock (mutex)** ensures that only one thread can enter at a time.
-- **Semaphores** and **condition variables** are more flexible coordination tools.
-- Classic problems include producer-consumer, readers-writers, and dining philosophers.
-
-> **Note:** The reason balance can become 950 in Figure 11 is as follows. Thread A reads balance (1000), then Thread B also reads the same value (1000). If Thread B stores 950 first and then Thread A stores 1100, the result is 1100; if stored in the opposite order, the result is 950. This nondeterministic outcome is a race condition. To resolve this, **mutual exclusion** over the critical section is needed.
-
-### 2.5 Deadlocks (Week 10)
-
-Locks solve race conditions, but careless locking introduces a new problem. This problem is deadlock, where the entire system freezes because everyone is waiting for everyone else.
-
-**Deadlock** is a state in which two or more threads or processes cannot proceed because each is waiting for another to release resources.
-
-```mermaid
-graph LR
-    T1["Thread 1"] -->|"holds"| LA["Lock A"]
-    T1 -->|"wants"| LB["Lock B"]
-    T2["Thread 2"] -->|"holds"| LB
-    T2 -->|"wants"| LA
-    style T1 fill:#ffcdd2
-    style T2 fill:#ffcdd2
-    style LA fill:#fff3e0
-    style LB fill:#fff3e0
-```
-
-*Figure 12. Deadlock in which two threads wait for each other's lock*
-
-**Four conditions** must all hold for deadlock: Mutual Exclusion, Hold and Wait, No Preemption, and **Circular Wait**.
-
-**Solutions:** lock ordering, `trylock` with back-off, and deadlock detection and recovery.
-
-> **[Discrete Mathematics]** In a directed graph, a **cycle** is a path that starts at a vertex and returns to it by following edge directions. Deadlocks can be modeled using a **Resource Allocation Graph**, whose vertices are threads and resources and whose edges are requests and assignments. If a cycle exists in this graph, deadlock may occur (when each resource type has a single instance, a cycle means deadlock). Breaking any one of the four conditions prevents deadlock; in practice, **preventing circular wait** (fixing the lock acquisition order) is most commonly used.
-
-### 2.6 Memory Management (Weeks 11-12)
-
-Without virtual memory, one program could overwrite another's memory, making the entire system unstable. Virtual memory also lets you run programs larger than physical RAM.
-
-**Virtual Memory** gives each process its own independent address space.
-
-```mermaid
-graph LR
-    subgraph "Process A"
-        VA_A["Virtual Addr<br/>0x1000"]
-    end
-    subgraph "Process B"
-        VA_B["Virtual Addr<br/>0x1000"]
-    end
-    VA_A -->|"Page Table A"| PA1["Physical<br/>0x5A000"]
-    VA_B -->|"Page Table B"| PA2["Physical<br/>0x8B000"]
-    style VA_A fill:#e3f2fd
-    style VA_B fill:#e3f2fd
-    style PA1 fill:#c8e6c9
-    style PA2 fill:#fff3e0
-```
-
-*Figure 13. Per-process page tables mapping the same virtual address to different physical addresses*
-
-- The same virtual address maps to **different** physical locations in different processes, so the processes are isolated from each other.
-- A **page table** maps virtual pages to physical frames for each process.
+- `kernel/proc.c` implements the process table and state transitions.
+- Virtual memory is implemented with the RISC-V **Sv39** scheme, which uses a 3-level page table and 39-bit virtual addresses.
+- A **page table** maps virtual pages to physical frames for each process. The same virtual address maps to **different** physical locations in different processes, so the processes are isolated from each other.
+- Page tables enable **COW fork**, **lazy allocation**, **memory-mapped files**, and more.
 
 > **Definition:** **Lazy allocation** means the OS does not actually allocate physical memory when requested, but waits until the memory is first accessed.
 
-- Page tables enable **COW fork**, **lazy allocation**, **memory-mapped files**, and more.
-- xv6 implements virtual memory with the RISC-V **Sv39** scheme. The details are covered in Weeks 11-12; here it suffices to note that Sv39 uses a 3-level page table and 39-bit virtual addresses.
-
-> **[Computer Architecture]** To translate virtual addresses to physical addresses, the page table in memory must be consulted each time, which can double (or more) memory access latency. To solve this, CPUs include a cache called the **TLB (Translation Lookaside Buffer)** that stores recent translation results. COW (Copy-On-Write) fork is an optimization where during `fork()`, physical pages are shared read-only instead of actually copying memory, and a page is copied only when a write to it occurs.
-
-### 2.7 File Systems and Security (Weeks 13-14)
-
-Without a file system, data would be lost every time the computer powers off, and there would be no organized way to store, retrieve, or share information.
-
-**File Systems** organize persistent data hierarchically.
+The xv6 file system organizes persistent data into the following layers.
 
 | Layer | Component | Key Functions |
 |:------|:----------|:-------------|
@@ -440,10 +249,9 @@ Without a file system, data would be lost every time the computer powers off, an
 | 1 | **Buffer Cache** | `bread()`, `bwrite()`: disk block caching |
 | 0 | **Disk** | Physical block device |
 
-*Table 5. Layers and key functions of the xv6 file system*
+*Table 4. Layers and key functions of the xv6 file system*
 
-- Each layer depends **only on the layer below**, which makes the design clean and modular.
-- **Security** is covered in Week 14 and includes protection rings, access control, and encryption.
+Each layer depends **only on the layer below**, which makes the design clean and modular.
 
 > **[Data Structures]** The directory structure of a file system is a **tree** starting from the root `/`. An inode is a data structure that stores file metadata (size, permissions, data block locations, etc.), while file names are stored in directory entries. The reason a single file can have multiple names (hard links) is precisely because of this separated structure; with hard links, the directory structure is strictly an acyclic graph rather than a tree.
 
@@ -462,8 +270,7 @@ Without a file system, data would be lost every time the computer powers off, an
 | Interrupts and DMA | An interrupt is the mechanism by which devices notify the CPU of completion, and DMA transfers bulk data without CPU intervention. |
 | Storage Hierarchy | Storage forms the hierarchy registers → cache → memory → SSD → HDD, where higher levels are faster, more expensive, and smaller. |
 | OS Structure | OS structures include monolithic, microkernel, hybrid, and loadable modules, and most modern OSes are hybrid. |
-| xv6 | xv6 is an MIT educational OS of about 10,000 lines written in C for RISC-V and serves as the codebase for practicing OS concepts. |
-| Key Topics | The key topics of operating systems are processes, threads, scheduling, synchronization, memory, file systems, and security. |
+| xv6 | xv6 is an MIT educational OS of about 10,000 lines written in C for RISC-V that implements Sv39 virtual memory and a layered file system, and serves as the codebase for practicing OS concepts. |
 | Textbook | The textbook is Operating System Concepts by Silberschatz, Galvin, and Gagne. |
 
 ---

@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lab.md) | [한국어](Concepts_Lab.ko.md)
 
-> **Last Updated:** 2026-10-20
+> **Last Updated:** 2026-10-27
 
 > **Learning Objectives:**
 > 1. Navigate the xv6 source code structure
@@ -36,7 +36,6 @@
 ## 1. Lab Overview
 
 - **Objective**: Explore the xv6 kernel source and trace how system calls work from start to finish.
-- **Duration**: Approximately 50 minutes, 5 labs (Lab 0-4)
 
 ```mermaid
 graph LR

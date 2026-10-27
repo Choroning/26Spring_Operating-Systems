@@ -2,11 +2,11 @@
 
 [Repository Guide](../README.md) | [English](README.md) | [한국어](README.ko.md)
 
-> **Last Updated:** 2026-10-20
+> **Last Updated:** 2026-10-27
 
 | Unit | Topics | Documents |
 |:-----|:-----|:-----|
-| [Week 1 Introduction to Operating Systems](Week01_Introduction-to-Operating-Systems/) | Definition and two roles of the operating system, dual-mode operation, system calls, storage-device hierarchy, OS structure, xv6, semester preview, coding agents lab | [Lecture notes](Week01_Introduction-to-Operating-Systems/Concepts_Lecture.md), [Lab notes](Week01_Introduction-to-Operating-Systems/Concepts_Lab.md) |
+| [Week 1 Introduction to Operating Systems](Week01_Introduction-to-Operating-Systems/) | Definition and two roles of the operating system, dual-mode operation, system calls, storage-device hierarchy, OS structure, xv6 and its virtual memory and file system layers, coding agents lab | [Lecture notes](Week01_Introduction-to-Operating-Systems/Concepts_Lecture.md), [Lab notes](Week01_Introduction-to-Operating-Systems/Concepts_Lab.md) |
 | [Week 2 Process (1)](Week02_Process-1/) | Process concepts, process scheduling, process operations, fork(), exec(), wait(), pipe(), dup2() and I/O redirection | [Lecture notes](Week02_Process-1/Concepts_Lecture.md), [Lab notes](Week02_Process-1/Concepts_Lab.md) |
 | [Week 3 Process (2)](Week03_Process-2/) | Interprocess communication (IPC), shared memory and message passing, pipes, client-server communication, xv6 source structure and system call tracing, analysis of struct proc and the fork() implementation | [Lecture notes](Week03_Process-2/Concepts_Lecture.md), [Lab notes](Week03_Process-2/Concepts_Lab.md) |
 | [Week 4 Threads and Concurrency (1)](Week04_Thread-and-Concurrency-1/) | Thread concepts and benefits of multithreading, multicore programming, user and kernel threads, multithreading models, Pthreads and Java threads, data parallelism and Amdahl's law | [Lecture notes](Week04_Thread-and-Concurrency-1/Concepts_Lecture.md), [Lab notes](Week04_Thread-and-Concurrency-1/Concepts_Lab.md) |

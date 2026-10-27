@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lab.md) | [한국어](Concepts_Lab.ko.md)
 
-> **Last Updated:** 2026-10-20
+> **Last Updated:** 2026-10-27
 
 > **Learning Objectives:**
 > 1. Read `swtch.S` and explain which registers are saved/restored during a context switch
@@ -48,7 +48,6 @@
 ## 1. Lab Overview
 
 - **Objective**: Understand the xv6 context switch mechanism by reading assembly, tracing the scheduler, and observing process state transitions.
-- **Duration**: Approximately 50 minutes, 4 exercises
 - **Topics**: `swtch.S`, Scheduler tracing, Round-robin scheduling, `sleep`/`wakeup`
 
 ### 1.1 What Is a Context Switch?

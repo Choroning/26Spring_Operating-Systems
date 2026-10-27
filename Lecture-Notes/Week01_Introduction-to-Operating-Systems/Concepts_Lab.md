@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lab.md) | [한국어](Concepts_Lab.ko.md)
 
-> **Last Updated:** 2026-10-20
+> **Last Updated:** 2026-10-27
 
 > **Learning Objectives:**
 > 1. Install and authenticate a coding agent such as Gemini CLI or Claude Code
@@ -34,7 +34,6 @@
 ## 1. Lab Overview
 
 - **Objective**: Install AI-based coding agents and use them in real development tasks.
-- **Duration**: Approximately 50 minutes
 - **Deliverables**: None (exploratory lab)
 - These tools will be used for labs and assignments **throughout the semester**.
 

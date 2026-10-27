@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lab.md) | [한국어](Concepts_Lab.ko.md)
 
-> **Last Updated:** 2026-10-20
+> **Last Updated:** 2026-10-27
 
 > **Learning Objectives:**
 > 1. Use fork()/wait() to create and manage child processes
@@ -29,7 +29,6 @@
 ## 1. Lab Overview
 
 - **Objective**: Practice core UNIX process system calls through C programs.
-- **Duration**: Approximately 50 minutes, 4 labs
 - **Topics**: `fork()`, `exec()`, `wait()`, `pipe()`, `dup2()`
 
 ```mermaid

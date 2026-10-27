@@ -2,7 +2,7 @@
 
 [레포지토리 안내](../../README.ko.md) | [English](Concepts_Lab.md) | [한국어](Concepts_Lab.ko.md)
 
-> **최종 수정일:** 2026-10-20
+> **최종 수정일:** 2026-10-27
 
 > **학습 목표:**
 > 1. `pthread_create`와 `pthread_join`을 사용하여 스레드를 생성하고 합류(join)시킬 수 있다
@@ -34,7 +34,6 @@
 ## 1. 실습 개요
 
 - **목표:** 스레드 생성, 데이터 병렬성, 속도 향상 측정을 통해 Pthreads의 기초를 실습한다.
-- **소요 시간:** 실습 4개에 약 50분이 걸린다.
 - **주제:** `pthread_create`, `pthread_join`, 데이터 병렬성(Data Parallelism), 인자 전달, 암달의 법칙(Amdahl's Law)을 다룬다.
 
 ```mermaid
