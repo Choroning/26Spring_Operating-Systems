@@ -203,9 +203,6 @@ make TOOLPREFIX=riscv64-elf- qemu
 
 **Exercise**: Add a `printf` to `sys_fork()`, rebuild, and verify that you found the correct location.
 
-- **Resources**: `examples/skeletons/lab2_syscall_trace.patch` (TODO template), `examples/solutions/lab2_syscall_trace.patch` (solution)
-- **Test program**: `examples/skeletons/lab2_trace.c` (skeleton), `examples/solutions/lab2_trace.c` (solution)
-
 > **Note:** When the `ecall` instruction is executed, the hardware automatically performs the following: (1) saves the current PC to the `sepc` register, (2) switches the privilege mode to S-mode, (3) jumps to the trap handler address set in the `stvec` register. Understanding this flow makes the `usertrap()` → `syscall()` path clear.
 
 > **[Computer Architecture]** The RISC-V assembly instructions in Figure 2 are as follows:
@@ -216,25 +213,13 @@ make TOOLPREFIX=riscv64-elf- qemu
 
 ### 4.2 How to Run the Tracing Exercise
 
-#### Step 1: Apply the kernel patch
+#### Step 1: Modify the kernel
 
-```bash
-# From the repository root:
-cd xv6-riscv
-
-# Apply the solution (or skeleton) patch
-git apply ../lectures/week03/2_lab/\
-examples/solutions/lab2_syscall_trace.patch
-```
+Add a `printf` to `sys_fork()` in `kernel/sysproc.c` that prints a trace message each time it is called.
 
 #### Step 2: Add the test program
 
-```bash
-# Copy the test program to the xv6 user/ directory
-cp ../lectures/week03/2_lab/\
-examples/solutions/lab2_trace.c \
-user/lab2_trace.c
-```
+Add a test program `lab2_trace.c` that calls `fork()` to the xv6 `user/` directory.
 
 #### Step 3: Modify the Makefile
 

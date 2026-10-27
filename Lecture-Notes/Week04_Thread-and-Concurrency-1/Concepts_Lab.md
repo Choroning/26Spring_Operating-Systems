@@ -52,7 +52,6 @@ graph LR
 **Build all labs:**
 
 ```bash
-cd examples/
 gcc -Wall -pthread -o lab1_hello_threads lab1_hello_threads.c
 gcc -Wall -pthread -o lab2_parallel_sum  lab2_parallel_sum.c
 gcc -Wall -pthread -o lab3_arg_pitfall   lab3_arg_pitfall.c

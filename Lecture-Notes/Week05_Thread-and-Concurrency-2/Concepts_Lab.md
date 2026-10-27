@@ -67,7 +67,6 @@ graph LR
 **Build all labs**:
 
 ```bash
-cd examples/
 gcc -Wall -pthread -o lab1_thread_pool   lab1_thread_pool.c
 gcc -Wall -fopenmp -o lab2_openmp_parallel lab2_openmp_parallel.c
 gcc -Wall -pthread -o lab3_fork_threads  lab3_fork_threads.c

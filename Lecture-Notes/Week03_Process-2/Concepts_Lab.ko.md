@@ -203,9 +203,6 @@ make TOOLPREFIX=riscv64-elf- qemu
 
 **연습**: `sys_fork()`에 `printf`를 추가한 뒤 다시 빌드하여, 올바른 위치를 찾았는지 확인하라.
 
-- **자료**: `examples/skeletons/lab2_syscall_trace.patch` (TODO 템플릿), `examples/solutions/lab2_syscall_trace.patch` (정답)
-- **테스트 프로그램**: `examples/skeletons/lab2_trace.c` (스켈레톤), `examples/solutions/lab2_trace.c` (정답)
-
 > **참고:** `ecall` 명령어가 실행되면 하드웨어가 자동으로 다음을 수행한다: (1) 현재 PC를 `sepc` 레지스터에 저장, (2) 특권 모드를 S-mode로 전환, (3) `stvec` 레지스터에 설정된 트랩 핸들러 주소로 점프. 이 흐름을 이해하면 `usertrap()` → `syscall()` 경로가 명확해진다.
 
 > **[컴퓨터구조]** 그림 2에 나오는 RISC-V 어셈블리 명령어는 다음과 같다:
@@ -216,25 +213,13 @@ make TOOLPREFIX=riscv64-elf- qemu
 
 ### 4.2 추적 연습 실행 방법
 
-#### Step 1: 커널 패치 적용
+#### Step 1: 커널 수정
 
-```bash
-# 레포지토리 루트에서:
-cd xv6-riscv
-
-# 정답(또는 스켈레톤) 패치 적용
-git apply ../lectures/week03/2_lab/\
-examples/solutions/lab2_syscall_trace.patch
-```
+`kernel/sysproc.c`의 `sys_fork()`에 호출될 때마다 추적 메시지를 출력하는 `printf`를 추가한다.
 
 #### Step 2: 테스트 프로그램 추가
 
-```bash
-# 테스트 프로그램을 xv6 user/ 디렉토리에 복사
-cp ../lectures/week03/2_lab/\
-examples/solutions/lab2_trace.c \
-user/lab2_trace.c
-```
+`fork()`를 호출하는 테스트 프로그램 `lab2_trace.c`를 xv6의 `user/` 디렉토리에 추가한다.
 
 #### Step 3: Makefile 수정
 
