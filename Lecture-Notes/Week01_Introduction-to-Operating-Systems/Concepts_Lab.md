@@ -34,8 +34,6 @@
 ## 1. Lab Overview
 
 - **Objective**: Install AI-based coding agents and use them in real development tasks.
-- **Deliverables**: None (exploratory lab)
-- These tools will be used for labs and assignments **throughout the semester**.
 
 ```mermaid
 graph LR
@@ -238,7 +236,7 @@ Agent: 8/8. All criteria met.
 
 ## 8. Task 5: Build a Mini OS
 
-Use an agent to create a **minimal operating system**. This task is a preview of the term project.
+Use an agent to create a **minimal operating system**.
 
 **Example prompt:**
 
