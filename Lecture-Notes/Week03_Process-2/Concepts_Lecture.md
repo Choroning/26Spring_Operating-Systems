@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **Last Updated:** 2026-10-20
+> **Last Updated:** 2026-11-04
 >
 > Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 3 (3.4-3.8)
 
@@ -703,10 +703,13 @@ read(fd, buf, 6);
 
 Pipes are used far beyond simple shell commands.
 
-**DevOps / CI-CD Pipelines** (the name reflects the same idea)
+**DevOps / CI-CD Pipelines** (the name reflects the same idea): each stage is a process, and data flows through pipes between stages.
 
-```text
-  Build → Test → Lint → Deploy   (each stage = a process, data flows through pipes between stages)
+```mermaid
+flowchart LR
+    b["Build"] -->|"pipe"| t["Test"]
+    t -->|"pipe"| l["Lint"]
+    l -->|"pipe"| d["Deploy"]
 ```
 
 *Figure 7. Stages of a CI/CD pipeline*
@@ -715,9 +718,11 @@ Pipes are used far beyond simple shell commands.
 - **Log processing:** `journalctl | grep error | wc -l` chains 3 processes.
 - **CGI web servers:** Early web servers communicated with CGI scripts via pipes.
 
-```text
-  HTTP request → Web server ──pipe──▷ CGI script (Python/Perl)
-                   ◁──pipe── HTML response
+```mermaid
+flowchart LR
+    req["HTTP request"] --> ws["Web server"]
+    ws -->|"pipe"| cgi["CGI script (Python/Perl)"]
+    cgi -->|"pipe: HTML response"| ws
 ```
 
 *Figure 8. Pipe communication between a web server and a CGI script*

@@ -2,7 +2,7 @@
 
 [레포지토리 안내](../../README.ko.md) | [English](Total-Review.md) | [한국어](Total-Review.ko.md)
 
-> **최종 수정일:** 2026-10-20
+> **최종 수정일:** 2026-11-04
 
 ---
 
@@ -202,32 +202,17 @@ OS의 역할은 두 가지 상호 보완적인 관점에서 볼 수 있다.
 
 `open("file.txt", O_RDONLY)` 호출의 **단계별 상세 경로**:
 
-```text
-[1] 사용자 프로그램
-       ↓ printf()와 비슷하게 보이지만 다름
-[2] C 라이브러리의 open() 래퍼 함수
-       ↓ 시스템 콜 번호를 a7 레지스터에 설정
-       ↓ 인자를 a0, a1, ... 레지스터에 설정
-[3] ecall 명령어 실행 (RISC-V 트랩 명령)
-       ↓ 하드웨어가 자동으로:
-       ↓   - 현재 PC 를 sepc 에 저장
-       ↓   - 모드 비트를 커널 모드로 전환
-       ↓   - stvec 에 설정된 트랩 핸들러 주소로 점프
-[4] 커널의 usertrap() 트랩 핸들러 진입
-       ↓
-[5] syscall(): a7 값을 읽어 시스템 콜 테이블 조회
-       ↓ 예: a7 = 15 (SYS_open)
-[6] sys_open() 핸들러 실행
-       ↓ 파일 디스크립터 할당, inode 탐색 등
-[7] 결과를 a0 에 담음 (예: fd = 3)
-       ↓
-[8] sret 명령 실행 (RISC-V 반환)
-       ↓ 하드웨어가 자동으로:
-       ↓   - 모드 비트를 사용자 모드로 복원
-       ↓   - PC 를 sepc 값으로 복원
-[9] C 라이브러리 래퍼가 a0 을 반환 값으로 전달
-       ↓
-[10] 사용자 프로그램이 fd 를 받음
+```mermaid
+flowchart TD
+    s1["[1] 사용자 프로그램"] -->|"printf()와 비슷하게 보이지만 다름"| s2["[2] C 라이브러리의 open() 래퍼 함수"]
+    s2 -->|"시스템 콜 번호를 a7 레지스터에 설정<br/>인자를 a0, a1, ... 레지스터에 설정"| s3["[3] ecall 명령어 실행 (RISC-V 트랩 명령)"]
+    s3 -->|"하드웨어가 자동으로:<br/>현재 PC를 sepc에 저장<br/>모드 비트를 커널 모드로 전환<br/>stvec에 설정된 트랩 핸들러 주소로 점프"| s4["[4] 커널의 usertrap() 트랩 핸들러 진입"]
+    s4 --> s5["[5] syscall(): a7 값을 읽어 시스템 콜 테이블 조회"]
+    s5 -->|"예: a7 = 15 (SYS_open)"| s6["[6] sys_open() 핸들러 실행"]
+    s6 -->|"파일 디스크립터 할당, inode 탐색 등"| s7["[7] 결과를 a0에 담음 (예: fd = 3)"]
+    s7 --> s8["[8] sret 명령 실행 (RISC-V 반환)"]
+    s8 -->|"하드웨어가 자동으로:<br/>모드 비트를 사용자 모드로 복원<br/>PC를 sepc 값으로 복원"| s9["[9] C 라이브러리 래퍼가 a0을 반환 값으로 전달"]
+    s9 --> s10["[10] 사용자 프로그램이 fd를 받음"]
 ```
 
 *그림 2. RISC-V에서 open() 시스템 콜이 처리되는 전체 경로*
@@ -307,14 +292,12 @@ void syscall(void) {
 
 #### 1.6.1 버스 기반 아키텍처
 
-```text
-┌─────┐      버스(Bus)       ┌──────┐
-│ CPU │ ←───────────────→  │ 메모리 │
-└─────┘                     └──────┘
-   ↑
-   ├─── 디스크 컨트롤러
-   ├─── USB 컨트롤러
-   └─── 네트워크 컨트롤러
+```mermaid
+graph TD
+    CPU["CPU"] <-->|"버스(Bus)"| MEM["메모리"]
+    DC["디스크 컨트롤러"] --> CPU
+    UC["USB 컨트롤러"] --> CPU
+    NC["네트워크 컨트롤러"] --> CPU
 ```
 
 *그림 3. 버스 기반 컴퓨터 시스템의 구성*
@@ -444,16 +427,12 @@ OS 커널(Kernel)을 어떻게 구성할지에 대한 네 가지 대표 패러�
 
 #### 1.9.2 절차
 
-```text
-현재 프로세스 P1
-  │
-  ├─ [1] P1 의 레지스터, PC, SP 등을 메모리에 저장 (P1 의 PCB)
-  │
-  ├─ [2] 메모리에서 P2 의 상태를 읽어 CPU 레지스터에 복원 (P2 의 PCB)
-  │
-  └─ [3] PC 를 P2 가 마지막 중단 지점으로 설정
-       ↓
-     P2 실행 재개
+```mermaid
+flowchart TD
+    p1["현재 프로세스 P1"] --> c1["[1] P1의 레지스터, PC, SP 등을 메모리에 저장 (P1의 PCB)"]
+    c1 --> c2["[2] 메모리에서 P2의 상태를 읽어 CPU 레지스터에 복원 (P2의 PCB)"]
+    c2 --> c3["[3] PC를 P2가 마지막 중단 지점으로 설정"]
+    c3 --> p2["P2 실행 재개"]
 ```
 
 *그림 4. 문맥 교환의 절차*
@@ -635,18 +614,14 @@ text   data   bss   dec   hex
 
 프로세스(Process)는 실행 중에 다음 5가지 상태 중 하나를 가진다.
 
-```text
-                      ┌───── dispatch ──────┐
-                      │                     ↓
-┌─────┐ admitted ┌─────────┐ interrupt ┌─────────┐   exit   ┌────────────┐
-│ New │─────────→│  Ready  │←──────────│ Running │─────────→│ Terminated │
-└─────┘          └─────────┘           └─────────┘          └────────────┘
-                      ↑                     │
-                      │ I/O or event        │ I/O or
-                      │ completion          │ event wait
-                      │   ┌─────────┐       │
-                      └───│ Waiting │←──────┘
-                          └─────────┘
+```mermaid
+stateDiagram-v2
+    New --> Ready : admitted
+    Ready --> Running : dispatch
+    Running --> Ready : interrupt
+    Running --> Waiting : I/O or event wait
+    Waiting --> Ready : I/O or event completion
+    Running --> Terminated : exit
 ```
 
 *그림 6. 프로세스 상태 전이도*
@@ -778,16 +753,14 @@ struct task_struct {
 
 **대기 큐(Wait/Device Queue)**: 특정 이벤트 대기 프로세스의 큐. 장치별로 여러 개 존재.
 
-```text
-신규 프로세스
-     ↓ 메모리 할당
- [Ready Queue] ────→ [CPU 스케줄러] ────→ Running
-     ↑                                    ↓
-     │                              타임 슬라이스 만료
-     │                                    │
-     │                              I/O 요청
-     └─ I/O 완료 ←── [Device Queue] ←────┘
-                     (디스크, 터미널 등)
+```mermaid
+flowchart LR
+    np["신규 프로세스"] -->|"메모리 할당"| rq["Ready Queue"]
+    rq --> sch["CPU 스케줄러"]
+    sch --> run["Running"]
+    run -->|"타임 슬라이스 만료"| rq
+    run -->|"I/O 요청"| dq["Device Queue<br/>(디스크, 터미널 등)"]
+    dq -->|"I/O 완료"| rq
 ```
 
 *그림 7. 레디 큐와 장치 큐 사이의 프로세스 이동*
@@ -1589,24 +1562,18 @@ printf("Redirected!\n");  // output.txt 에 기록됨
 
 #### 3.8.4 실행 흐름
 
-```text
-클라이언트                                서버
-──────                                ──────
-1. foo(x, y) 호출
-      ↓
-2. 클라이언트 스텁: 매개변수 마샬링
-      ↓
-3. 네트워크 전송
-      ↓
-4. 서버 스켈레톤: 언마샬링
-      ↓
-5. 실제 foo() 실행
-      ↓
-6. 결과 마샬링 & 반송
-      ↓
-7. 클라이언트 스텁: 언마샬링
-      ↓
-8. 반환값 제공
+```mermaid
+sequenceDiagram
+    participant C as 클라이언트
+    participant S as 서버
+    Note over C: 1. foo(x, y) 호출
+    Note over C: 2. 클라이언트 스텁: 매개변수 마샬링
+    C->>S: 3. 네트워크 전송
+    Note over S: 4. 서버 스켈레톤: 언마샬링
+    Note over S: 5. 실제 foo() 실행
+    S->>C: 6. 결과 마샬링 후 반송
+    Note over C: 7. 클라이언트 스텁: 언마샬링
+    Note over C: 8. 반환값 제공
 ```
 
 *그림 11. RPC 호출의 실행 흐름*
@@ -2226,14 +2193,15 @@ pool.shutdown();
 
 재귀적 **분할 정복(Divide and Conquer)** 에 이상적.
 
-```text
-fork ─┬→ Task 1
-      ├→ Task 2
-      └→ Task 3
-         ↓
-       join
-         ↓
-      결합
+```mermaid
+flowchart TD
+    f["fork"] --> t1["Task 1"]
+    f --> t2["Task 2"]
+    f --> t3["Task 3"]
+    t1 --> j["join"]
+    t2 --> j
+    t3 --> j
+    j --> c["결합"]
 ```
 
 *그림 17. Fork-Join 패턴의 분기와 결합*
@@ -2591,14 +2559,11 @@ void *worker(void *arg) {
 
 사용자 스레드(User Thread)와 커널 스레드(Kernel Thread) 사이의 **중간 계층**. 라이브러리에 **가상 CPU**로 보임.
 
-```text
-User Thread
-     ↓
-    LWP (가상 프로세서)
-     ↓
- Kernel Thread
-     ↓
- 물리 CPU
+```mermaid
+flowchart TD
+    ut["User Thread"] --> lwp["LWP (가상 프로세서)"]
+    lwp --> kt["Kernel Thread"]
+    kt --> cpu["물리 CPU"]
 ```
 
 *그림 18. 사용자 스레드, LWP, 커널 스레드, 물리 CPU의 계층*
@@ -2683,9 +2648,13 @@ clone(container_init, stack,
 
 프로세스(Process) 실행은 **CPU 버스트(CPU Burst) ↔ I/O 버스트(I/O Burst)의 반복**이다.
 
-```text
-CPU burst → I/O burst → CPU burst → I/O burst → ... → exit
- (계산)    (디스크, 네트워크)  (계산)   (I/O)
+```mermaid
+flowchart LR
+    c1["CPU burst<br/>(계산)"] --> i1["I/O burst<br/>(디스크, 네트워크)"]
+    i1 --> c2["CPU burst<br/>(계산)"]
+    c2 --> i2["I/O burst<br/>(I/O)"]
+    i2 --> more["..."]
+    more --> ex["exit"]
 ```
 
 *그림 19. CPU 버스트와 I/O 버스트의 반복*
@@ -3303,20 +3272,14 @@ $$ n = \lambda \cdot W $$
 
 1주차에서 7주차까지의 **설계된 학습 곡선**:
 
-```text
-W01: OS 정의, 이중 모드 (보호)
-         ↓ 왜 보호가 필요? 여러 프로그램을 실행하려고
-W02: 프로세스 (실행의 추상화)
-         ↓ 프로세스는 격리된다. 그런데 협력이 필요
-W03: IPC (협력의 방법)
-         ↓ IPC 는 무겁다. 같은 주소 공간 공유하는 경량 단위는?
-W04: 스레드 (경량 동시 실행)
-         ↓ 명시적 스레딩은 복잡. 더 나은 추상화는?
-W05: 암묵적 스레딩, 스레딩 이슈
-         ↓ 결국 CPU 는 하나 (혹은 몇 개). 어떻게 나눌까?
-W06: 기본 스케줄링 알고리즘
-         ↓ 현실은 멀티코어, 실시간, 다양한 요구
-W07: 고급 스케줄링
+```mermaid
+flowchart TD
+    w1["W01: OS 정의, 이중 모드 (보호)"] -->|"왜 보호가 필요? 여러 프로그램을 실행하려고"| w2["W02: 프로세스 (실행의 추상화)"]
+    w2 -->|"프로세스는 격리된다. 그런데 협력이 필요"| w3["W03: IPC (협력의 방법)"]
+    w3 -->|"IPC는 무겁다. 같은 주소 공간 공유하는 경량 단위는?"| w4["W04: 스레드 (경량 동시 실행)"]
+    w4 -->|"명시적 스레딩은 복잡. 더 나은 추상화는?"| w5["W05: 암묵적 스레딩, 스레딩 이슈"]
+    w5 -->|"결국 CPU는 하나 (혹은 몇 개). 어떻게 나눌까?"| w6["W06: 기본 스케줄링 알고리즘"]
+    w6 -->|"현실은 멀티코어, 실시간, 다양한 요구"| w7["W07: 고급 스케줄링"]
 ```
 
 *그림 27. 1주차에서 7주차까지 주제가 이어지는 흐름*

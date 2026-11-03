@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **Last Updated:** 2026-10-20
+> **Last Updated:** 2026-11-04
 >
 > Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 16, 17
 
@@ -399,11 +399,13 @@ Figure 4, which corresponds to textbook Figure 16.6, compares standard security 
 
 **SYN Flood attack:**
 
-```text
-  Attacker → [SYN] → Server     (connection request)
-  Server   → [SYN-ACK] → ???    (waiting for response)
-  ※ ACK never arrives, half-open connections accumulate
-  → Server's connection table is exhausted → legitimate connections denied
+```mermaid
+sequenceDiagram
+    participant A as Attacker
+    participant S as Server
+    A->>S: SYN (connection request)
+    S->>A: SYN-ACK (waiting for response)
+    Note over S: ACK never arrives, half-open connections accumulate<br/>Server's connection table is exhausted → legitimate connections denied
 ```
 
 *Figure 5. Message flow of a SYN flood attack*
@@ -485,9 +487,10 @@ In Figure 7, which corresponds to textbook Figure 16.7, the sender writes a mess
 
 Encrypt with the public key, decrypt with the private key.
 
-```text
-  Plaintext m ──[Public Key ke]──→ Ciphertext c ──[Private Key kd]──→ Plaintext m
-                  Encryption                         Decryption
+```mermaid
+flowchart LR
+    m1["Plaintext m"] -->|"Encryption: Public Key ke"| c["Ciphertext c"]
+    c -->|"Decryption: Private Key kd"| m2["Plaintext m"]
 ```
 
 *Figure 8. Encryption and decryption flow of asymmetric encryption*
@@ -618,12 +621,10 @@ An electronic document in which a **Certificate Authority (CA)** vouches for the
 
 **Certificate chain (Chain of Trust):**
 
-```text
-  Root CA (built into the browser)
-    ↓ signs
-  Intermediate CA
-    ↓ signs
-  Server certificate (www.example.com)
+```mermaid
+flowchart TD
+    root["Root CA (built into the browser)"] -->|"signs"| inter["Intermediate CA"]
+    inter -->|"signs"| srv["Server certificate (www.example.com)"]
 ```
 
 *Figure 12. Certificate chain from the root CA to the server certificate*
@@ -638,23 +639,18 @@ The encryption protocol underlying HTTPS and the successor to SSL.
 
 **TLS handshake process:**
 
-```text
-  Client                              Server
-    │                                    │
-    │──── ClientHello (nc) ────────→     │ (1) send random value
-    │                                    │
-    │←──── ServerHello (ns) ────────     │ (2) server random value +
-    │←──── Certificate (certs) ────      │     send certificate
-    │                                    │
-    │   [Verify certificate]             │ (3) verify CA signature
-    │                                    │
-    │──── Eke(pms) ────────────→         │ (4) encrypt premaster secret
-    │                                    │     with public key and send
-    │                                    │
-    │   ms = H(nc, ns, pms)              │ (5) both sides compute the
-    │   (generate symmetric session key) │     same master secret
-    │                                    │
-    │←──── [AES encrypted comm] ────→    │ (6) communicate with symmetric key
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant S as Server
+    C->>S: ClientHello (nc): (1) send random value
+    S->>C: ServerHello (ns): (2) send server random value
+    S->>C: Certificate (certs): (2) send certificate
+    Note over C: Verify certificate: (3) verify CA signature
+    C->>S: Eke(pms): (4) encrypt premaster secret with public key and send
+    Note over C,S: ms = H(nc, ns, pms): (5) both sides compute the same master secret (generate symmetric session key)
+    C->>S: AES encrypted comm: (6) communicate with symmetric key
+    S->>C: AES encrypted comm
 ```
 
 *Figure 13. TLS handshake process*
@@ -811,8 +807,12 @@ Protection is needed for the following reasons.
 **Defense in Depth (layered defense):**
 - Deploy multiple security layers so that if one is breached, the next defends.
 
-```text
-  [Firewall] → [IDS/IPS] → [OS Access Control] → [Application Auth] → [Data Encryption]
+```mermaid
+flowchart LR
+    fw["Firewall"] --> ids["IDS/IPS"]
+    ids --> os["OS Access Control"]
+    os --> app["Application Auth"]
+    app --> enc["Data Encryption"]
 ```
 
 *Figure 15. Layers of defense in depth*
@@ -912,16 +912,10 @@ In Figure 17, which corresponds to textbook Figure 17.3, apps at EL0 (user) ente
 
 A process moving from one domain to another is called domain switching.
 
-```text
-  User Process (Ring 3, User Domain)
-       │
-       │ system call (syscall instruction)
-       ↓
-  Kernel (Ring 0, Kernel Domain)    ← domain switch
-       │
-       │ return
-       ↓
-  User Process (Ring 3, User Domain)
+```mermaid
+flowchart TD
+    u1["User Process (Ring 3, User Domain)"] -->|"system call (syscall instruction): domain switch"| k["Kernel (Ring 0, Kernel Domain)"]
+    k -->|"return"| u2["User Process (Ring 3, User Domain)"]
 ```
 
 *Figure 18. Domain switching through a system call*
@@ -1126,13 +1120,29 @@ The considerations when revoking rights are as follows.
 
 Access control through User → **Role** → Permission mapping.
 
-```text
-  Users          Roles            Permissions
-  ┌──────┐      ┌──────────┐      ┌──────────────────┐
-  │ Alice │──→  │  Admin   │──→   │ File: read/write │
-  │  Bob  │──→  │  Editor  │──→   │ File: read/write │
-  │ Carol │──→  │  Viewer  │──→   │ File: read       │
-  └──────┘      └──────────┘      └──────────────────┘
+```mermaid
+graph LR
+    subgraph users["Users"]
+        alice["Alice"]
+        bob["Bob"]
+        carol["Carol"]
+    end
+    subgraph roles["Roles"]
+        admin["Admin"]
+        editor["Editor"]
+        viewer["Viewer"]
+    end
+    subgraph perms["Permissions"]
+        rw1["File: read/write"]
+        rw2["File: read/write"]
+        r["File: read"]
+    end
+    alice --> admin
+    bob --> editor
+    carol --> viewer
+    admin --> rw1
+    editor --> rw2
+    viewer --> r
 ```
 
 *Figure 19. User, role, and permission mapping in RBAC*
@@ -1257,14 +1267,18 @@ Subdivide root privileges to grant processes only the **necessary permissions**.
 
 Verify code **integrity** and **origin** through **digital signatures**.
 
-```text
-  [Developer]
-    Code ──[sign with private key]──→ Signature
-    Distribute the code together with the signature
-  [User System]
-    Code + Signature ──[verify with public key]──→ Integrity and origin check
-      ├─ Success: allow execution
-      └─ Failure: block execution or warn
+```mermaid
+flowchart TD
+    subgraph dev["Developer"]
+        code["Code"] -->|"sign with private key"| sig["Signature"]
+        sig --> dist["Distribute the code together with the signature"]
+    end
+    subgraph usr["User System"]
+        cs["Code + Signature"] -->|"verify with public key"| chk["Integrity and origin check"]
+        chk -->|"Success"| run["allow execution"]
+        chk -->|"Failure"| block["block execution or warn"]
+    end
+    dist --> cs
 ```
 
 *Figure 20. Creation and verification flow of code signing*

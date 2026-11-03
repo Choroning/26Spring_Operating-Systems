@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **Last Updated:** 2026-10-20
+> **Last Updated:** 2026-11-04
 >
 > Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 5 (5.1-5.3)
 
@@ -156,13 +156,12 @@ Processes are classified as follows based on the CPU burst distribution.
 
 When the CPU becomes idle, the next process to run is selected from the **ready queue**.
 
-```text
-                    +-------------+
-  new process --->  | Ready Queue | ---> CPU Scheduler ---> CPU
-                    +-------------+   selection algorithm
-                          ^
-                          |
-                  I/O completion, etc.
+```mermaid
+flowchart LR
+    np["new process"] --> rq["Ready Queue"]
+    io["I/O completion, etc."] --> rq
+    rq --> sch["CPU Scheduler<br/>selection algorithm"]
+    sch --> cpu["CPU"]
 ```
 
 *Figure 3. Flow of processes from the ready queue through the CPU scheduler to the CPU*
@@ -389,13 +388,13 @@ FCFS (First-Come, First-Served) is the **simplest** CPU scheduling algorithm and
 - When the CPU is free, it is allocated to the process at the **head**.
 - It is a **nonpreemptive** scheduling algorithm.
 
-```text
-Ready Queue (FIFO):
-
-  head ---> [ P1 ] ---> [ P2 ] ---> [ P3 ] <--- tail
-              |
-              v
-            CPU allocation
+```mermaid
+graph LR
+    head["head"] --> p1["P1"]
+    p1 --> p2["P2"]
+    p2 --> p3["P3"]
+    tail["tail"] --> p3
+    p1 --> cpu["CPU allocation"]
 ```
 
 *Figure 6. FIFO ready queue that allocates the CPU to the process at the head*

@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **Last Updated:** 2026-10-20
+> **Last Updated:** 2026-11-04
 >
 > Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 4 (4.5-4.7)
 
@@ -147,12 +147,19 @@
 - If no idle threads are available → task **waits in a queue**.
 - After task completion, the thread is **returned** to the pool for reuse.
 
-```text
-Request ──→ [ Task Queue ] ──→ ┌─ Thread 1 (busy) ──┐
-Request ──→ [ Task Queue ] ──→ │  Thread 2 (idle)   │ ──→ Execute
-Request ──→ [ Task Queue ] ──→ │  Thread 3 (busy)   │
-                               │  Thread 4 (idle)   │
-                               └─ Thread Pool ──────┘
+```mermaid
+flowchart LR
+    r1["Request"] --> q["Task Queue"]
+    r2["Request"] --> q
+    r3["Request"] --> q
+    subgraph pool["Thread Pool"]
+        t1["Thread 1 (busy)"]
+        t2["Thread 2 (idle)"]
+        t3["Thread 3 (busy)"]
+        t4["Thread 4 (idle)"]
+    end
+    q --> pool
+    pool --> ex["Execute"]
 ```
 
 *Figure 2. Request handling flow of a thread pool*
@@ -237,16 +244,12 @@ The code above creates a thread pool in Java (textbook Figure 4.15, p.180).
 
 **ExecutorService interface structure**:
 
-```text
-       Executor (interface)
-           │
-           ▼
-    ExecutorService (interface)
-           │
-    ┌──────┴──────┐
-    │             │
-execute()      submit()    shutdown()
-(Runnable)    (Callable)  (shutdown request)
+```mermaid
+graph TD
+    ex["Executor (interface)"] --> es["ExecutorService (interface)"]
+    es --> m1["execute()<br/>(Runnable)"]
+    es --> m2["submit()<br/>(Callable)"]
+    es --> m3["shutdown()<br/>(shutdown request)"]
 ```
 
 *Figure 3. Structure of the ExecutorService interface*
@@ -325,13 +328,10 @@ int sum = pool.invoke(task);
 
 **Class hierarchy** (Figure 4.19):
 
-```text
-      ForkJoinTask<V> (abstract)
-               │
-      ┌────────┴────────┐
-      │                 │
-RecursiveTask<V>   RecursiveAction
-  (returns V)      (returns void)
+```mermaid
+graph TD
+    fjt["ForkJoinTask#lt;V#gt; (abstract)"] --> rt["RecursiveTask#lt;V#gt;<br/>(returns V)"]
+    fjt --> ra["RecursiveAction<br/>(returns void)"]
 ```
 
 *Figure 6. Class hierarchy of ForkJoinTask*
@@ -468,13 +468,16 @@ for (i = 0; i < N; i++) {
 
 **Execution model**:
 
-```text
-Sequential     #pragma omp parallel for      Sequential
-   code    ─→  ┌─ Thread 0: i=0..249   ─┐ ─→    code
-               │  Thread 1: i=250..499  │
-               │  Thread 2: i=500..749  │
-               └─ Thread 3: i=750..999 ─┘
-                    (implicit barrier)
+```mermaid
+flowchart LR
+    s1["Sequential code"] --> p
+    subgraph p["#pragma omp parallel for"]
+        t0["Thread 0: i=0..249"]
+        t1["Thread 1: i=250..499"]
+        t2["Thread 2: i=500..749"]
+        t3["Thread 3: i=750..999"]
+    end
+    p -->|"implicit barrier"| s2["Sequential code"]
 ```
 
 *Figure 9. Execution model of parallel for*
@@ -921,10 +924,16 @@ The thread to be canceled is called the **target thread**.
 - Actual termination occurs only when the target thread reaches a **cancellation point**
 - Enables safe resource cleanup.
 
-```text
-Asynchronous:  cancel ──→ [Immediate termination!] (no resource cleanup)
-
-Deferred:      cancel ──→ [continues running] ──→ [cancellation point] ──→ [cleanup then terminate]
+```mermaid
+flowchart LR
+    subgraph async["Asynchronous"]
+        a1["cancel"] --> a2["Immediate termination!<br/>(no resource cleanup)"]
+    end
+    subgraph deferred["Deferred"]
+        d1["cancel"] --> d2["continues running"]
+        d2 --> d3["cancellation point"]
+        d3 --> d4["cleanup then terminate"]
+    end
 ```
 
 *Figure 12. Flow of asynchronous versus deferred cancellation*
@@ -1168,16 +1177,15 @@ An LWP (Lightweight Process) is an OS-managed execution slot between user thread
 - TEB → **accessible in user mode** (user space)
 - Connection: ETHREAD → KTHREAD → TEB
 
-```text
-  Kernel Space                            User Space
-  ┌──────────────┐                        ┌──────────────┐
-  │  ETHREAD     │                        │  TEB         │
-  │ - start addr │    ┌──────────────┐    │ - thread ID  │
-  │ - process    │──→ │  KTHREAD     │──→ │ - user stack │
-  │   pointer    │    │ - scheduling │    │ - TLS array  │
-  └──────────────┘    │ - kernel     │    └──────────────┘
-                      │   stack      │
-                      └──────────────┘
+```mermaid
+flowchart LR
+    subgraph ks["Kernel Space"]
+        et["ETHREAD<br/>start addr<br/>process pointer"] --> kt["KTHREAD<br/>scheduling<br/>kernel stack"]
+    end
+    subgraph us["User Space"]
+        teb["TEB<br/>thread ID<br/>user stack<br/>TLS array"]
+    end
+    kt --> teb
 ```
 
 *Figure 16. Links among ETHREAD, KTHREAD, and TEB*
@@ -1193,16 +1201,12 @@ An LWP (Lightweight Process) is an OS-managed execution slot between user thread
 
 **Key point**: `task_struct` does not store data directly but contains **pointers to other data structures**
 
-```text
-  ┌─ task_struct ──────────────────────────┐
-  │                                        │
-  │  *files  ──→ [open file table]         │
-  │  *signal ──→ [signal handling info]    │
-  │  *mm     ──→ [memory descriptors]      │
-  │  *fs     ──→ [filesystem info]         │
-  │  pid, state, priority, ...             │
-  │                                        │
-  └────────────────────────────────────────┘
+```mermaid
+graph LR
+    ts["task_struct<br/>pid, state, priority, ..."] -->|"*files"| f["open file table"]
+    ts -->|"*signal"| sg["signal handling info"]
+    ts -->|"*mm"| mm["memory descriptors"]
+    ts -->|"*fs"| fs["filesystem info"]
 ```
 
 *Figure 17. Data structures referenced by pointers in task_struct*
@@ -1247,19 +1251,18 @@ Key clone flags:
 
 **When clone() is called (with sharing flags)**: New task + **shares** the parent's data structures via pointers
 
-```text
-  fork(): No sharing                 clone(): With sharing flags
-  ┌───────────┐  ┌───────────┐        ┌───────────┐  ┌───────────┐
-  │ Parent    │  │ Child     │        │ Parent    │  │ Child     │
-  │ task_     │  │ task_     │        │ task_     │  │ task_     │
-  │ struct    │  │ struct    │        │ struct    │  │ struct    │
-  │           │  │           │        │           │  │           │
-  │ *mm ─→[A] │  │ *mm ─→[A']│        │ *mm ───┐  │  │ *mm ───┐  │
-  │ *files→[B]│  │*files→[B']│        │ *files─┤  │  │ *files─┤  │
-  └───────────┘  └───────────┘        └────────┼──┘  └────────┼──┘
-       Different copies                        └─→ [SHARED] ←─┘
-                                             Same data structures
-                                                    shared
+```mermaid
+graph TD
+    subgraph fk["fork(): No sharing (different copies)"]
+        p1["Parent task_struct"] -->|"*mm"| a1["A"]
+        p1 -->|"*files"| b1["B"]
+        c1["Child task_struct"] -->|"*mm"| a2["A'"]
+        c1 -->|"*files"| b2["B'"]
+    end
+    subgraph cl["clone(): With sharing flags (same data structures shared)"]
+        p2["Parent task_struct"] -->|"*mm, *files"| sh["SHARED"]
+        c2["Child task_struct"] -->|"*mm, *files"| sh
+    end
 ```
 
 *Figure 19. Data structure sharing in fork() versus clone()*

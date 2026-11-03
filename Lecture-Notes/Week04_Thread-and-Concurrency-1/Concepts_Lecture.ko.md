@@ -2,7 +2,7 @@
 
 [레포지토리 안내](../../README.ko.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **최종 수정일:** 2026-10-20
+> **최종 수정일:** 2026-11-04
 >
 > Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 4 (4.1-4.4)
 
@@ -1043,13 +1043,16 @@ public class ThreadPoolExample {
 - 스레드 2: [500] ~ [749] 합산
 - 스레드 3: [750] ~ [999] 합산
 
-```text
- Array: [  0 ~ 249  |  250 ~ 499  |  500 ~ 749  |  750 ~ 999  ]
-              ↓             ↓              ↓              ↓
-           Thread 0      Thread 1       Thread 2       Thread 3
-          partial[0]    partial[1]     partial[2]     partial[3]
-              ↘             ↓              ↓            ↙
-                                Total Sum
+```mermaid
+graph TD
+    A["Array"] -->|"0 ~ 249"| T0["Thread 0<br/>partial[0]"]
+    A -->|"250 ~ 499"| T1["Thread 1<br/>partial[1]"]
+    A -->|"500 ~ 749"| T2["Thread 2<br/>partial[2]"]
+    A -->|"750 ~ 999"| T3["Thread 3<br/>partial[3]"]
+    T0 --> S["Total Sum"]
+    T1 --> S
+    T2 --> S
+    T3 --> S
 ```
 
 *그림 14. 1000개 원소 배열의 합산을 네 스레드에 나누는 데이터 병렬 분할*

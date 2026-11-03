@@ -2,7 +2,7 @@
 
 [레포지토리 안내](../../README.ko.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **최종 수정일:** 2026-10-20
+> **최종 수정일:** 2026-11-04
 >
 > Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 3 (3.4-3.8)
 
@@ -703,10 +703,13 @@ read(fd, buf, 6);
 
 파이프는 단순한 셸 명령어를 넘어 다양한 곳에서 활용된다.
 
-**DevOps / CI-CD 파이프라인** (이름도 같은 발상에서 왔다)
+**DevOps / CI-CD 파이프라인** (이름도 같은 발상에서 왔다): 각 단계가 프로세스이고, 데이터가 단계 사이의 파이프를 통해 흐른다.
 
-```text
-  Build → Test → Lint → Deploy   (각 단계 = 프로세스, 데이터가 단계 사이의 파이프를 통해 흐른다)
+```mermaid
+flowchart LR
+    b["Build"] -->|"파이프"| t["Test"]
+    t -->|"파이프"| l["Lint"]
+    l -->|"파이프"| d["Deploy"]
 ```
 
 *그림 7. CI/CD 파이프라인의 단계*
@@ -715,9 +718,11 @@ read(fd, buf, 6);
 - **로그 처리:** `journalctl | grep error | wc -l`로 3개의 프로세스를 체인으로 연결한다.
 - **CGI 웹 서버:** 초기 웹 서버는 파이프를 통해 CGI 스크립트와 통신했다.
 
-```text
-  HTTP 요청 → 웹 서버 ──pipe──▷ CGI 스크립트 (Python/Perl)
-                   ◁──pipe── HTML 응답
+```mermaid
+flowchart LR
+    req["HTTP 요청"] --> ws["웹 서버"]
+    ws -->|"pipe"| cgi["CGI 스크립트 (Python/Perl)"]
+    cgi -->|"pipe: HTML 응답"| ws
 ```
 
 *그림 8. 웹 서버와 CGI 스크립트 사이의 파이프 통신*

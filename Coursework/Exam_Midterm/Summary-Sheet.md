@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Summary-Sheet.md) | [한국어](Summary-Sheet.ko.md)
 
-> **Last Updated:** 2026-10-20
+> **Last Updated:** 2026-11-04
 
 ---
 
@@ -115,17 +115,11 @@
 - Mode switches happen **only through traps/interrupts/returns** → enforced by hardware
 
 ### System Call Path (RISC-V)
-```text
-user code
-  ↓ libc wrapper
-  ↓ a7 ← syscall#, args ← a0-a5
-  ↓ ecall (trap)
-kernel trap handler
-  ↓ syscall table lookup
-sys_xxx() handler
-  ↓ do the work, result → a0
-  ↓ sret
-user code
+```mermaid
+flowchart TD
+    u1["user code"] -->|"libc wrapper<br/>a7 ← syscall number, args ← a0-a5<br/>ecall (trap)"| k["kernel trap handler"]
+    k -->|"syscall table lookup"| h["sys_xxx() handler"]
+    h -->|"do the work, result → a0<br/>sret"| u2["user code"]
 ```
 
 *Figure 1. System call path on RISC-V*
@@ -180,11 +174,14 @@ Text    ─ executable code
 *Figure 3. Memory layout of a process*
 
 ### Process States
-```text
-New ─admitted→ Ready ─dispatch→ Running ─exit→ Terminated
-                ↑      ↑              │
-           I/O done interrupt      ↓
-               └─Waiting ←─I/O req──┘
+```mermaid
+stateDiagram-v2
+    New --> Ready : admitted
+    Ready --> Running : dispatch
+    Running --> Ready : interrupt
+    Running --> Waiting : I/O req
+    Waiting --> Ready : I/O done
+    Running --> Terminated : exit
 ```
 
 *Figure 4. Process state transition diagram*

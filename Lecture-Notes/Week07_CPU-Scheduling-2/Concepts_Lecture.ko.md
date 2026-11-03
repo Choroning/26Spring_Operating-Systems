@@ -2,7 +2,7 @@
 
 [레포지토리 안내](../../README.ko.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **최종 수정일:** 2026-10-20
+> **최종 수정일:** 2026-11-04
 >
 > Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 5 (5.3.4-5.8)
 
@@ -228,23 +228,13 @@
 
 단순 Multilevel Queue와의 **핵심 차이**는 **프로세스가 관찰된 동작에 따라 큐 사이를 이동**할 수 있다는 점이다. 그림 5는 이 구조를 단순하게 나타낸 것이고, 그림 6은 교재 Figure 5.9이다.
 
-```text
-                      quantum = 8
-     +--------+
- --> |   Q0   | -------> CPU
-     +--------+   (소진)
-         |  강등
-         v
-                      quantum = 16
-     +--------+
- --> |   Q1   | -------> CPU
-     +--------+   (소진)
-         |  강등
-         v
-                      FCFS
-     +--------+
- --> |   Q2   | -------> CPU
-     +--------+
+```mermaid
+flowchart TD
+    q0["Q0<br/>quantum = 8"] --> cpu["CPU"]
+    q0 -->|"소진, 강등"| q1["Q1<br/>quantum = 16"]
+    q1 --> cpu
+    q1 -->|"소진, 강등"| q2["Q2<br/>FCFS"]
+    q2 --> cpu
 ```
 
 *그림 5. 퀀텀을 소진한 프로세스가 아래 큐로 강등되는 3단계 MLFQ*

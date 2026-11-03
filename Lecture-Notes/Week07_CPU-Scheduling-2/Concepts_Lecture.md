@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **Last Updated:** 2026-10-20
+> **Last Updated:** 2026-11-04
 >
 > Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 5 (5.3.4-5.8)
 
@@ -228,23 +228,13 @@ There are two common policies for **scheduling between queues**.
 
 The **key difference** from a plain multilevel queue is that **processes can move between queues** based on observed behavior. Figure 5 shows this structure in simplified form, and Figure 6 is textbook Figure 5.9.
 
-```text
-                      quantum = 8
-     +--------+
- --> |   Q0   | -------> CPU
-     +--------+   (exhausted)
-         |  demote
-         v
-                      quantum = 16
-     +--------+
- --> |   Q1   | -------> CPU
-     +--------+   (exhausted)
-         |  demote
-         v
-                      FCFS
-     +--------+
- --> |   Q2   | -------> CPU
-     +--------+
+```mermaid
+flowchart TD
+    q0["Q0<br/>quantum = 8"] --> cpu["CPU"]
+    q0 -->|"exhausted, demote"| q1["Q1<br/>quantum = 16"]
+    q1 --> cpu
+    q1 -->|"exhausted, demote"| q2["Q2<br/>FCFS"]
+    q2 --> cpu
 ```
 
 *Figure 5. Three-level MLFQ that demotes a process exhausting its quantum to a lower queue*

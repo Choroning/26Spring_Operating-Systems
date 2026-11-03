@@ -2,7 +2,7 @@
 
 [레포지토리 안내](../../README.ko.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **최종 수정일:** 2026-10-20
+> **최종 수정일:** 2026-11-04
 >
 > Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 4 (4.5-4.7)
 
@@ -147,12 +147,19 @@
 - 유휴 스레드가 없으면 → 태스크는 **큐에서 대기** 한다.
 - 태스크 완료 후 스레드는 재사용을 위해 풀로 **반환** 된다.
 
-```text
-요청 ──→ [ 태스크 큐 ] ──→ ┌─ Thread 1 (작업중) ─┐
-요청 ──→ [ 태스크 큐 ] ──→ │  Thread 2 (유휴)    │ ──→ 실행
-요청 ──→ [ 태스크 큐 ] ──→ │  Thread 3 (작업중)   │
-                        │  Thread 4 (유휴)    │
-                        └─ 스레드 풀 ──────────┘
+```mermaid
+flowchart LR
+    r1["요청"] --> q["태스크 큐"]
+    r2["요청"] --> q
+    r3["요청"] --> q
+    subgraph pool["스레드 풀"]
+        t1["Thread 1 (작업중)"]
+        t2["Thread 2 (유휴)"]
+        t3["Thread 3 (작업중)"]
+        t4["Thread 4 (유휴)"]
+    end
+    q --> pool
+    pool --> ex["실행"]
 ```
 
 *그림 2. 스레드 풀의 요청 처리 흐름*
@@ -237,16 +244,12 @@ public class ThreadPoolExample {
 
 **ExecutorService 인터페이스 구조**:
 
-```text
-        Executor (인터페이스)
-           │
-           ▼
-    ExecutorService (인터페이스)
-           │
-    ┌──────┴──────┐
-    │             │
-execute()      submit()   shutdown()
-(Runnable)    (Callable)  (종료 요청)
+```mermaid
+graph TD
+    ex["Executor (인터페이스)"] --> es["ExecutorService (인터페이스)"]
+    es --> m1["execute()<br/>(Runnable)"]
+    es --> m2["submit()<br/>(Callable)"]
+    es --> m3["shutdown()<br/>(종료 요청)"]
 ```
 
 *그림 3. ExecutorService 인터페이스 구조*
@@ -325,13 +328,10 @@ int sum = pool.invoke(task);
 
 **클래스 계층** (Figure 4.19):
 
-```text
-         ForkJoinTask<V> (추상)
-                │
-      ┌─────────┴─────────┐
-      │                   │
-RecursiveTask<V>   RecursiveAction
-  (V를 반환)           (반환값 없음)
+```mermaid
+graph TD
+    fjt["ForkJoinTask#lt;V#gt; (추상)"] --> rt["RecursiveTask#lt;V#gt;<br/>(V를 반환)"]
+    fjt --> ra["RecursiveAction<br/>(반환값 없음)"]
 ```
 
 *그림 6. ForkJoinTask의 클래스 계층*
@@ -468,13 +468,16 @@ for (i = 0; i < N; i++) {
 
 **실행 모델**:
 
-```text
-순차 코드       #pragma omp parallel for        순차 코드
-          ─→  ┌─ Thread 0: i=0..249   ─┐ ─→
-              │  Thread 1: i=250..499  │
-              │  Thread 2: i=500..749  │
-              └─ Thread 3: i=750..999 ─┘
-                   (암묵적 배리어)
+```mermaid
+flowchart LR
+    s1["순차 코드"] --> p
+    subgraph p["#pragma omp parallel for"]
+        t0["Thread 0: i=0..249"]
+        t1["Thread 1: i=250..499"]
+        t2["Thread 2: i=500..749"]
+        t3["Thread 3: i=750..999"]
+    end
+    p -->|"암묵적 배리어"| s2["순차 코드"]
 ```
 
 *그림 9. parallel for의 실행 모델*
@@ -921,10 +924,16 @@ pthread_kill(pthread_t tid, int signal);
 - 대상 스레드가 **취소 지점(cancellation point)** 에 도달할 때만 실제 종료
 - 안전한 자원 정리가 가능하다.
 
-```text
-비동기:  취소 ──→ [즉시 종료!] (자원 정리 없음)
-
-지연:    취소 ──→ [계속 실행] ──→ [취소 지점] ──→ [정리 후 종료]
+```mermaid
+flowchart LR
+    subgraph async["비동기"]
+        a1["취소"] --> a2["즉시 종료!<br/>(자원 정리 없음)"]
+    end
+    subgraph deferred["지연"]
+        d1["취소"] --> d2["계속 실행"]
+        d2 --> d3["취소 지점"]
+        d3 --> d4["정리 후 종료"]
+    end
 ```
 
 *그림 12. 비동기 취소와 지연 취소의 진행 흐름*
@@ -1168,16 +1177,15 @@ LWP(경량 프로세스)는 사용자 스레드와 커널 스레드 사이에 �
 - TEB → **사용자 모드에서 접근 가능** (사용자 공간)
 - 연결: ETHREAD → KTHREAD → TEB
 
-```text
-   커널 공간                              사용자 공간
-  ┌─────────────┐                      ┌─────────────┐
-  │  ETHREAD    │                      │    TEB      │
-  │ - 시작 주소   │    ┌─────────────┐   │ - 스레드 ID   │
-  │ - 프로세스    │──→ │  KTHREAD    │──→│ - 사용자      │
-  │   포인터      │    │ - 스케줄링    │   │   스택       │
-  └─────────────┘    │ - 커널       │   │ - TLS 배열   │
-                     │   스택       │   └─────────────┘
-                     └─────────────┘
+```mermaid
+flowchart LR
+    subgraph ks["커널 공간"]
+        et["ETHREAD<br/>시작 주소<br/>프로세스 포인터"] --> kt["KTHREAD<br/>스케줄링<br/>커널 스택"]
+    end
+    subgraph us["사용자 공간"]
+        teb["TEB<br/>스레드 ID<br/>사용자 스택<br/>TLS 배열"]
+    end
+    kt --> teb
 ```
 
 *그림 16. ETHREAD, KTHREAD, TEB의 연결 구조*
@@ -1193,16 +1201,12 @@ LWP(경량 프로세스)는 사용자 스레드와 커널 스레드 사이에 �
 
 **핵심**: `task_struct`는 데이터를 직접 저장하지 않고 다른 자료 구조에 대한 **포인터**를 포함한다
 
-```text
-  ┌─ task_struct ────────────────────────┐
-  │                                      │
-  │  *files  ──→ [열린 파일 테이블]          │
-  │  *signal ──→ [시그널 처리 정보]          │
-  │  *mm     ──→ [메모리 디스크립터]         │
-  │  *fs     ──→ [파일시스템 정보]           │
-  │  pid, state, priority, ...           │
-  │                                      │
-  └──────────────────────────────────────┘
+```mermaid
+graph LR
+    ts["task_struct<br/>pid, state, priority, ..."] -->|"*files"| f["열린 파일 테이블"]
+    ts -->|"*signal"| sg["시그널 처리 정보"]
+    ts -->|"*mm"| mm["메모리 디스크립터"]
+    ts -->|"*fs"| fs["파일시스템 정보"]
 ```
 
 *그림 17. task_struct가 포인터로 가리키는 자료 구조*
@@ -1247,19 +1251,18 @@ thread = clone(CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND)
 
 **clone() 호출 시 (공유 플래그 포함)**: 새 태스크 + 포인터를 통해 부모의 자료 구조를 **공유**
 
-```text
-  fork(): 공유 없음                 clone(): 공유 플래그 있음
-  ┌───────────┐  ┌───────────┐    ┌───────────┐  ┌───────────┐
-  │ 부모       │  │ 자식       │    │ 부모       │  │ 자식       │
-  │ task_     │  │ task_     │    │ task_     │  │ task_     │
-  │ struct    │  │ struct    │    │ struct    │  │ struct    │
-  │           │  │           │    │           │  │           │
-  │ *mm ─→[A] │  │ *mm ─→[A']│    │ *mm ──┐   │  │ *mm ──┐   │
-  │ *files→[B]│  │*files→[B']│    │ *files─┤  │  │*files─┤   │
-  └───────────┘  └───────────┘    └───────┼───┘  └───────┼───┘
-   서로 다른 복사본                           └──→ [공유됨] ←──┘
-                                            같은 자료 구조를
-                                                 공유
+```mermaid
+graph TD
+    subgraph fk["fork(): 공유 없음 (서로 다른 복사본)"]
+        p1["부모 task_struct"] -->|"*mm"| a1["A"]
+        p1 -->|"*files"| b1["B"]
+        c1["자식 task_struct"] -->|"*mm"| a2["A'"]
+        c1 -->|"*files"| b2["B'"]
+    end
+    subgraph cl["clone(): 공유 플래그 있음 (같은 자료 구조를 공유)"]
+        p2["부모 task_struct"] -->|"*mm, *files"| sh["공유됨"]
+        c2["자식 task_struct"] -->|"*mm, *files"| sh
+    end
 ```
 
 *그림 19. fork()와 clone()의 자료 구조 공유 비교*

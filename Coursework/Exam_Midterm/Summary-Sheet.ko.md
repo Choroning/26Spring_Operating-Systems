@@ -2,7 +2,7 @@
 
 [레포지토리 안내](../../README.ko.md) | [English](Summary-Sheet.md) | [한국어](Summary-Sheet.ko.md)
 
-> **최종 수정일:** 2026-10-20
+> **최종 수정일:** 2026-11-04
 
 ---
 
@@ -115,17 +115,11 @@
 - 모드 전환은 **트랩(Trap)/인터럽트/리턴**으로만 가능 → 하드웨어 강제
 
 ### 시스템 콜(System Call) 경로 (RISC-V)
-```text
-user code
-  ↓ libc wrapper
-  ↓ a7 ← syscall#, 인자 ← a0~a5
-  ↓ ecall (트랩)
-kernel trap handler
-  ↓ syscall table lookup
-sys_xxx() handler
-  ↓ 작업 수행, 결과 → a0
-  ↓ sret
-user code
+```mermaid
+flowchart TD
+    u1["user code"] -->|"libc wrapper<br/>a7 ← syscall 번호, 인자 ← a0~a5<br/>ecall (트랩)"| k["kernel trap handler"]
+    k -->|"syscall table lookup"| h["sys_xxx() handler"]
+    h -->|"작업 수행, 결과 → a0<br/>sret"| u2["user code"]
 ```
 
 *그림 1. RISC-V에서 시스템 콜의 처리 경로*
@@ -180,11 +174,14 @@ Text    ─ 실행 코드
 *그림 3. 프로세스의 메모리 레이아웃*
 
 ### 프로세스 상태
-```text
-New ─admitted→ Ready ─dispatch→ Running ─exit→ Terminated
-                ↑      ↑              │
-           I/O완료 interrupt       ↓
-               └─Waiting ←─I/O요청──┘
+```mermaid
+stateDiagram-v2
+    New --> Ready : admitted
+    Ready --> Running : dispatch
+    Running --> Ready : interrupt
+    Running --> Waiting : I/O 요청
+    Waiting --> Ready : I/O 완료
+    Running --> Terminated : exit
 ```
 
 *그림 4. 프로세스 상태 전이도*

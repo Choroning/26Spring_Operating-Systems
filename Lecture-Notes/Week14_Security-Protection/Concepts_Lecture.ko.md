@@ -2,7 +2,7 @@
 
 [레포지토리 안내](../../README.ko.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **최종 수정일:** 2026-10-20
+> **최종 수정일:** 2026-11-04
 >
 > Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 16, 17
 
@@ -399,11 +399,13 @@ stmt.setString(1, username);  // 자동 이스케이프
 
 **SYN Flood 공격:**
 
-```text
-  공격자 → [SYN] → 서버       (연결 요청)
-  서버   → [SYN-ACK] → ???    (응답 대기)
-  ※ ACK가 끝내 오지 않아 half-open 연결이 누적
-  → 서버의 연결 테이블 고갈 → 정당한 연결 거부
+```mermaid
+sequenceDiagram
+    participant A as 공격자
+    participant S as 서버
+    A->>S: SYN (연결 요청)
+    S->>A: SYN-ACK (응답 대기)
+    Note over S: ACK가 끝내 오지 않아 half-open 연결이 누적<br/>서버의 연결 테이블 고갈 → 정당한 연결 거부
 ```
 
 *그림 5. SYN flood 공격의 메시지 흐름*
@@ -485,9 +487,10 @@ stmt.setString(1, username);  // 자동 이스케이프
 
 공개키로 암호화하고 개인키로 복호화한다.
 
-```text
-  평문 m ──[공개키 ke]──→ 암호문 c ──[개인키 kd]──→ 평문 m
-              암호화                      복호화
+```mermaid
+flowchart LR
+    m1["평문 m"] -->|"암호화: 공개키 ke"| c["암호문 c"]
+    c -->|"복호화: 개인키 kd"| m2["평문 m"]
 ```
 
 *그림 8. 비대칭 암호의 암호화와 복호화 흐름*
@@ -618,12 +621,10 @@ stmt.setString(1, username);  // 자동 이스케이프
 
 **인증서 체인(Chain of Trust):**
 
-```text
-  Root CA (브라우저에 내장)
-    ↓ 서명
-  Intermediate CA
-    ↓ 서명
-  서버 인증서 (www.example.com)
+```mermaid
+flowchart TD
+    root["Root CA (브라우저에 내장)"] -->|"서명"| inter["Intermediate CA"]
+    inter -->|"서명"| srv["서버 인증서 (www.example.com)"]
 ```
 
 *그림 12. 루트 CA에서 서버 인증서까지의 인증서 체인*
@@ -638,23 +639,18 @@ HTTPS의 기반이 되는 암호화 프로토콜이며, SSL의 후속이다.
 
 **TLS 핸드셰이크 과정:**
 
-```text
-  Client                              Server
-    │                                    │
-    │──── ClientHello (nc) ────────→     │ (1) 무작위 값 전송
-    │                                    │
-    │←──── ServerHello (ns) ────────     │ (2) 서버 무작위 값 +
-    │←──── Certificate (certs) ────      │     인증서 전송
-    │                                    │
-    │   [인증서 검증]                     │ (3) CA 서명 검증
-    │                                    │
-    │──── Eke(pms) ────────────→         │ (4) premaster secret을
-    │                                    │     공개키로 암호화해 전송
-    │                                    │
-    │   ms = H(nc, ns, pms)              │ (5) 양쪽이 동일한
-    │   (대칭 세션 키 생성)               │     master secret 계산
-    │                                    │
-    │←──── [AES 암호화 통신] ────→        │ (6) 대칭 키로 통신
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant S as Server
+    C->>S: ClientHello (nc): (1) 무작위 값 전송
+    S->>C: ServerHello (ns): (2) 서버 무작위 값 전송
+    S->>C: Certificate (certs): (2) 인증서 전송
+    Note over C: 인증서 검증: (3) CA 서명 검증
+    C->>S: Eke(pms): (4) premaster secret을 공개키로 암호화해 전송
+    Note over C,S: ms = H(nc, ns, pms): (5) 양쪽이 동일한 master secret 계산 (대칭 세션 키 생성)
+    C->>S: AES 암호화 통신: (6) 대칭 키로 통신
+    S->>C: AES 암호화 통신
 ```
 
 *그림 13. TLS 핸드셰이크 과정*
@@ -811,8 +807,12 @@ HTTPS의 기반이 되는 암호화 프로토콜이며, SSL의 후속이다.
 **심층 방어(Defense in Depth, 계층 방어):**
 - 여러 층의 보안을 배치하여, 한 층이 뚫려도 다음 층이 방어하게 한다.
 
-```text
-  [방화벽] → [IDS/IPS] → [OS 접근 제어] → [애플리케이션 인증] → [데이터 암호화]
+```mermaid
+flowchart LR
+    fw["방화벽"] --> ids["IDS/IPS"]
+    ids --> os["OS 접근 제어"]
+    os --> app["애플리케이션 인증"]
+    app --> enc["데이터 암호화"]
 ```
 
 *그림 15. 심층 방어의 계층*
@@ -912,16 +912,10 @@ HTTPS의 기반이 되는 암호화 프로토콜이며, SSL의 후속이다.
 
 프로세스가 한 도메인에서 다른 도메인으로 옮겨 가는 것을 도메인 전환이라 한다.
 
-```text
-  사용자 프로세스 (Ring 3, User Domain)
-       │
-       │ 시스템 콜 (syscall 명령)
-       ↓
-  커널 (Ring 0, Kernel Domain)    ← 도메인 전환
-       │
-       │ 반환
-       ↓
-  사용자 프로세스 (Ring 3, User Domain)
+```mermaid
+flowchart TD
+    u1["사용자 프로세스 (Ring 3, User Domain)"] -->|"시스템 콜 (syscall 명령): 도메인 전환"| k["커널 (Ring 0, Kernel Domain)"]
+    k -->|"반환"| u2["사용자 프로세스 (Ring 3, User Domain)"]
 ```
 
 *그림 18. 시스템 콜에 의한 도메인 전환*
@@ -1126,13 +1120,29 @@ ACL과 Capability List의 **절충안**이다.
 
 사용자 → **역할(Role)** → 권한(Permission) 매핑을 통해 접근을 제어한다.
 
-```text
-  Users          Roles            Permissions
-  ┌──────┐      ┌──────────┐      ┌──────────────────┐
-  │ Alice │──→  │  Admin   │──→   │ File: read/write │
-  │  Bob  │──→  │  Editor  │──→   │ File: read/write │
-  │ Carol │──→  │  Viewer  │──→   │ File: read       │
-  └──────┘      └──────────┘      └──────────────────┘
+```mermaid
+graph LR
+    subgraph users["Users"]
+        alice["Alice"]
+        bob["Bob"]
+        carol["Carol"]
+    end
+    subgraph roles["Roles"]
+        admin["Admin"]
+        editor["Editor"]
+        viewer["Viewer"]
+    end
+    subgraph perms["Permissions"]
+        rw1["File: read/write"]
+        rw2["File: read/write"]
+        r["File: read"]
+    end
+    alice --> admin
+    bob --> editor
+    carol --> viewer
+    admin --> rw1
+    editor --> rw2
+    viewer --> r
 ```
 
 *그림 19. RBAC의 사용자, 역할, 권한 매핑*
@@ -1257,14 +1267,18 @@ root 권한을 세분화하여 프로세스에 **필요한 권한**만 부여한
 
 **디지털 서명**으로 코드의 **무결성**과 **출처**를 검증한다.
 
-```text
-  [개발자]
-    코드 ──[개인키로 서명]──→ 서명
-    코드와 서명을 함께 배포
-  [사용자 시스템]
-    코드 + 서명 ──[공개키로 검증]──→ 무결성과 출처 확인
-      ├─ 성공: 실행 허용
-      └─ 실패: 실행 차단 또는 경고
+```mermaid
+flowchart TD
+    subgraph dev["개발자"]
+        code["코드"] -->|"개인키로 서명"| sig["서명"]
+        sig --> dist["코드와 서명을 함께 배포"]
+    end
+    subgraph usr["사용자 시스템"]
+        cs["코드 + 서명"] -->|"공개키로 검증"| chk["무결성과 출처 확인"]
+        chk -->|"성공"| run["실행 허용"]
+        chk -->|"실패"| block["실행 차단 또는 경고"]
+    end
+    dist --> cs
 ```
 
 *그림 20. 코드 서명의 생성과 검증 흐름*

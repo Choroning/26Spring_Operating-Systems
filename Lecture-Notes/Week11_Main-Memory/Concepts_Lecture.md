@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **Last Updated:** 2026-10-20
+> **Last Updated:** 2026-11-04
 >
 > Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 9
 
@@ -154,11 +154,12 @@ A program's memory addresses are not fixed by themselves from the start; they ar
 
 Source code passes through several stages, each performing a partial binding:
 
-```text
-  source.c   --(compile)-->  object module   (relocatable, with symbolic names)
-             --(link)----->  load module
-             --(load)----->  in-memory binary
-             --(run)------>  physical reference (MMU)
+```mermaid
+flowchart LR
+    src["source.c"] -->|"compile"| obj["object module<br/>(relocatable, with symbolic names)"]
+    obj -->|"link"| lm["load module"]
+    lm -->|"load"| mem["in-memory binary"]
+    mem -->|"run"| phys["physical reference (MMU)"]
 ```
 
 *Figure 4. Stages from source code through compile, link, load, and run to a physical reference*
@@ -188,10 +189,11 @@ The **MMU** is the hardware that performs logical-to-physical translation. In th
 
 > **Note:** In this simplest design the relocation register is the same physical register as the **base register** introduced in Section 1.3; the two names emphasize different roles. Viewed as the base register, it sets the lower bound for the limit check; viewed as the relocation register, it is the addend that shifts the user's view of 0…max up to the actual physical range.
 
-```text
-  logical addr  -->  +-----+
-                     | MMU |  + relocation_register  -->  physical addr  -->  DRAM
-                     +-----+
+```mermaid
+flowchart LR
+    la["logical addr"] --> mmu["MMU<br/>+ relocation_register"]
+    mmu --> pa["physical addr"]
+    pa --> dram["DRAM"]
 ```
 
 *Figure 6. MMU adding the relocation register to a logical address to form a physical address*
@@ -528,21 +530,14 @@ The **TLB** is a small, very fast **associative memory** that caches recent tran
 - Lookup compares the input page # against **all keys in parallel**, so it takes a single cycle.
 - The TLB lookup is part of the CPU pipeline, so a TLB hit adds almost no observable latency.
 
-```text
-TLB Hit / Miss process:
-
-CPU --p,d--> Search for p in TLB
-              |
-          +---+---+
-          |       |
-       hit       miss
-          |       |
-       got f    walk page table in memory,
-          |    insert (p,f) into TLB
-          |       |
-          +---+---+
-              |
-          f + d --> physical addr --> DRAM
+```mermaid
+flowchart TD
+    cpu["CPU"] -->|"p, d"| tlb["Search for p in TLB"]
+    tlb -->|"hit"| hit["got f"]
+    tlb -->|"miss"| miss["walk page table in memory,<br/>insert (p, f) into TLB"]
+    hit --> pa["f + d → physical addr"]
+    miss --> pa
+    pa --> dram["DRAM"]
 ```
 
 *Figure 20. Address translation on a TLB hit and a TLB miss*

@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Assignment-Explanation.md) | [한국어](Assignment-Explanation.ko.md)
 
-> **Last Updated:** 2026-10-20
+> **Last Updated:** 2026-11-04
 >
 > Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 3 (3.1-3.3)
 
@@ -132,15 +132,17 @@ gcc -Wall -o minishell minishell.c
 
 **Goal:** The parent process and child process exchange 1 byte in a **round-trip** fashion through pipes, and measure the round-trip time (RTT).
 
-```text
-Parent Process                              Child Process
-     │                                           │
-     ├── Send 'p' (ping) ──────────────────────→ │
-     │                                           ├── Print "received ping"
-     │ ←──────────────────────── Send 'p' ────── │
-     ├── Print "received pong"                   │
-     ├── Print round-trip time                   │
-     └── Reap child with wait()                  └── exit(0)
+```mermaid
+sequenceDiagram
+    participant P as Parent Process
+    participant C as Child Process
+    P->>C: Send 'p' (ping)
+    Note over C: Print "received ping"
+    C->>P: Send 'p'
+    Note over P: Print "received pong"
+    Note over P: Print round-trip time
+    Note over C: exit(0)
+    Note over P: Reap child with wait()
 ```
 
 *Figure 2. Ping and pong exchange in pingpong*
@@ -495,25 +497,19 @@ Here there is only 1 child, but `waitpid()` is used to receive the termination s
 
 ### 3.8 execute_command Complete Flow Summary
 
-```text
-execute_command(cmd) called (e.g., "ls -l > out.txt")
-    │
-    ├── fork()
-    │     │
-    │     ├── [Child Process]
-    │     │     ├── If infile exists: open() → dup2(fd, STDIN) → close(fd)
-    │     │     ├── If outfile exists: open() → dup2(fd, STDOUT) → close(fd)
-    │     │     ├── execvp("ls", {"ls", "-l", NULL})
-    │     │     │     → Success: process image replaced with ls
-    │     │     │     → ls outputs to stdout (= out.txt)
-    │     │     │     → ls terminates with exit()
-    │     │     └── On exec failure: perror + exit(127)
-    │     │
-    │     └── [Parent Process]
-    │           ├── waitpid(pid, &status, 0)  ← blocks until child terminates
-    │           └── Returns WEXITSTATUS(status)
-    │
-    └── Returns to shell's main() → prints next command prompt
+```mermaid
+flowchart TD
+    call["execute_command(cmd) called (e.g., #quot;ls -l > out.txt#quot;)"] --> fk["fork()"]
+    fk --> child["Child Process"]
+    fk --> parent["Parent Process"]
+    child --> inf["If infile exists: open() → dup2(fd, STDIN) → close(fd)"]
+    inf --> outf["If outfile exists: open() → dup2(fd, STDOUT) → close(fd)"]
+    outf --> ex["execvp(#quot;ls#quot;, {#quot;ls#quot;, #quot;-l#quot;, NULL})"]
+    ex -->|"Success"| ok["process image replaced with ls<br/>ls outputs to stdout (= out.txt)<br/>ls terminates with exit()"]
+    ex -->|"On exec failure"| fail["perror + exit(127)"]
+    parent --> wp["waitpid(pid, &status, 0): blocks until child terminates"]
+    wp --> ws["Returns WEXITSTATUS(status)"]
+    ws --> ret["Returns to shell's main() → prints next command prompt"]
 ```
 
 *Figure 5. Execution flow of execute_command()*
@@ -531,13 +527,10 @@ This is the concrete implementation of the **fork() + exec() + wait() = shell's 
 When you type `cmd1 | cmd2` in a shell, the commands are connected as follows.
 - `cmd1`'s **standard output (stdout)** is connected to `cmd2`'s **standard input (stdin)** through a pipe.
 
-```text
-Example: ls | wc -l
-
-   ls process                  Pipe (kernel buffer)           wc -l process
-━━━━━━━━━━━━━━━            ━━━━━━━━━━━━━━━━━━━            ━━━━━━━━━━━━━━━
-    stdout ──────────────→ [   kernel buffer   ] ──────────────→ stdin
- (outputs file list)                                          (counts lines)
+```mermaid
+flowchart LR
+    ls["ls process<br/>(outputs file list)"] -->|"stdout"| buf["Pipe (kernel buffer)"]
+    buf -->|"stdin"| wc["wc -l process<br/>(counts lines)"]
 ```
 
 *Figure 6. Two processes connected by a pipe in `ls | wc -l`*
@@ -669,28 +662,18 @@ return -1;
 
 ### 4.6 execute_pipe Complete Flow Summary
 
-```text
-execute_pipe(cmd1, cmd2) called (e.g., "ls | wc -l")
-    │
-    ├── pipe(fd)  → fd[0]=read, fd[1]=write
-    │
-    ├── fork() → Child 1 (cmd1 = "ls")
-    │     ├── close(fd[0])                 /* Read end not used */
-    │     ├── dup2(fd[1], STDOUT_FILENO)   /* stdout → pipe */
-    │     ├── close(fd[1])
-    │     └── execvp("ls", {"ls", NULL})
-    │           → ls output goes into the pipe
-    │
-    ├── fork() → Child 2 (cmd2 = "wc -l")
-    │     ├── close(fd[1])                 /* Write end not used */
-    │     ├── dup2(fd[0], STDIN_FILENO)    /* stdin ← pipe */
-    │     ├── close(fd[0])
-    │     └── execvp("wc", {"wc", "-l", NULL})
-    │           → wc reads from pipe and counts lines
-    │
-    ├── [Parent] close(fd[0]), close(fd[1])  /* Critical! Ensures EOF delivery */
-    ├── waitpid(pid1, ...)
-    └── waitpid(pid2, &status, ...)
+```mermaid
+flowchart TD
+    call["execute_pipe(cmd1, cmd2) called (e.g., #quot;ls | wc -l#quot;)"] --> pp["pipe(fd) → fd[0]=read, fd[1]=write"]
+    pp --> f1["fork() → Child 1 (cmd1 = #quot;ls#quot;)"]
+    f1 --> c1["close(fd[0]): read end not used<br/>dup2(fd[1], STDOUT_FILENO): stdout → pipe<br/>close(fd[1])<br/>execvp(#quot;ls#quot;, {#quot;ls#quot;, NULL})"]
+    c1 --> r1["ls output goes into the pipe"]
+    f1 --> f2["fork() → Child 2 (cmd2 = #quot;wc -l#quot;)"]
+    f2 --> c2["close(fd[1]): write end not used<br/>dup2(fd[0], STDIN_FILENO): stdin ← pipe<br/>close(fd[0])<br/>execvp(#quot;wc#quot;, {#quot;wc#quot;, #quot;-l#quot;, NULL})"]
+    c2 --> r2["wc reads from pipe and counts lines"]
+    f2 --> pc["[Parent] close(fd[0]), close(fd[1]): critical! Ensures EOF delivery"]
+    pc --> w1["waitpid(pid1, ...)"]
+    w1 --> w2["waitpid(pid2, &status, ...)"]
 ```
 
 *Figure 8. Execution flow of execute_pipe()*
@@ -707,11 +690,11 @@ This case works as follows.
 - **cmd1** = `echo hello`, and its stdout is connected to the **pipe**.
 - **cmd2** = `cat > /tmp/pipe_test.txt`, and its stdin comes from the **pipe** while its stdout goes to the **file**.
 
-```text
-echo hello                  Pipe                       cat
-━━━━━━━━━━                ━━━━━━                    ━━━━
-stdout → [pipe] → stdin
-                                                  stdout → /tmp/pipe_test.txt
+```mermaid
+flowchart LR
+    e["echo hello"] -->|"stdout"| p["Pipe"]
+    p -->|"stdin"| c["cat"]
+    c -->|"stdout"| f["/tmp/pipe_test.txt"]
 ```
 
 *Figure 9. Combination of a pipe and output redirection*

@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **Last Updated:** 2026-10-20
+> **Last Updated:** 2026-11-04
 >
 > Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 3 (3.1-3.3)
 
@@ -447,13 +447,10 @@ In UNIX, new processes are created using the **`fork()`** system call.
 
 The **exec()** system call **replaces** the process's memory space with a new program.
 
-```text
-fork() → Child process created (copy of parent)
-         │
-    Child: calls exec()
-         │
-    Child's memory image is replaced with the new program
-    (original program is destroyed)
+```mermaid
+flowchart TD
+    f["fork() → Child process created (copy of parent)"] --> e["Child: calls exec()"]
+    e --> r["Child's memory image is replaced with the new program<br/>(original program is destroyed)"]
 ```
 
 *Figure 8. The child loading a new program with exec() after fork()*
@@ -496,26 +493,16 @@ int main() {
 
 **fork() + exec() + wait() flow:**
 
-```text
-Parent Process
-    │
-    ├── fork() called
-    │       │
-    │       ├── [Child process created]
-    │       │       │
-    │       │       ├── pid == 0 (child)
-    │       │       │       │
-    │       │       │       └── execlp("/bin/ls", "ls", NULL)
-    │       │       │               → ls command runs
-    │       │       │               → terminates via exit()
-    │       │
-    │       ├── pid > 0 (parent)
-    │       │       │
-    │       │       └── wait(NULL)  ← waits for child to finish
-    │       │               │
-    │       │               └── prints "Child Complete"
-    │
-    └── return 0
+```mermaid
+flowchart TD
+    p["Parent Process"] --> f["fork() called"]
+    f --> c["Child process created"]
+    c -->|"pid == 0 (child)"| ex["execlp(#quot;/bin/ls#quot;, #quot;ls#quot;, NULL)"]
+    ex --> ls["ls command runs"]
+    ls --> xt["terminates via exit()"]
+    c -->|"pid > 0 (parent)"| w["wait(NULL): waits for child to finish"]
+    w --> pr["prints #quot;Child Complete#quot;"]
+    pr --> ret["return 0"]
 ```
 
 *Figure 9. Execution flow of fork(), exec(), and wait()*
@@ -839,16 +826,15 @@ int main() {
 
 **The shell = repeated fork() + exec() + wait()**
 
-```text
-Shell (parent process)
-    │
-    ├── Display prompt "myshell> "
-    ├── Read user input (e.g., "ls")
-    ├── fork() → create child process
-    │       └── [Child] execlp("ls", "ls", NULL) → run ls → exit()
-    ├── [Parent] wait() → wait for child to finish
-    ├── Confirm child termination
-    └── Loop back to the beginning for the next command
+```mermaid
+flowchart TD
+    sh["Shell (parent process)"] --> pr["Display prompt #quot;myshell> #quot;"]
+    pr --> rd["Read user input (e.g., #quot;ls#quot;)"]
+    rd --> fk["fork() → create child process"]
+    fk -->|"Child"| ex["execlp(#quot;ls#quot;, #quot;ls#quot;, NULL) → run ls → exit()"]
+    fk -->|"Parent"| w["wait() → wait for child to finish"]
+    w --> done["Confirm child termination"]
+    done -->|"Loop back to the beginning for the next command"| pr
 ```
 
 *Figure 10. The loop in which a simple shell processes one command*

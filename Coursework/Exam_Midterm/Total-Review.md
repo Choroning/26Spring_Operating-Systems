@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Total-Review.md) | [한국어](Total-Review.ko.md)
 
-> **Last Updated:** 2026-10-20
+> **Last Updated:** 2026-11-04
 
 ---
 
@@ -202,32 +202,17 @@ If dual mode is the wall, a **system call** is the **only passage** that legitim
 
 The **detailed step-by-step path** of the call `open("file.txt", O_RDONLY)`:
 
-```text
-[1] User program
-       ↓ looks similar to printf() but is different
-[2] open() wrapper function in the C library
-       ↓ sets the system call number in register a7
-       ↓ sets the arguments in registers a0, a1, ...
-[3] executes the ecall instruction (RISC-V trap instruction)
-       ↓ the hardware automatically:
-       ↓   - saves the current PC in sepc
-       ↓   - switches the mode bit to kernel mode
-       ↓   - jumps to the trap handler address set in stvec
-[4] enters the kernel trap handler usertrap()
-       ↓
-[5] syscall(): reads a7 and looks up the system call table
-       ↓ e.g., a7 = 15 (SYS_open)
-[6] runs the sys_open() handler
-       ↓ allocates a file descriptor, looks up the inode, etc.
-[7] puts the result in a0 (e.g., fd = 3)
-       ↓
-[8] executes the sret instruction (RISC-V return)
-       ↓ the hardware automatically:
-       ↓   - restores the mode bit to user mode
-       ↓   - restores the PC from sepc
-[9] the C library wrapper passes a0 as the return value
-       ↓
-[10] the user program receives fd
+```mermaid
+flowchart TD
+    s1["[1] User program"] -->|"looks similar to printf() but is different"| s2["[2] open() wrapper function in the C library"]
+    s2 -->|"sets the system call number in register a7<br/>sets the arguments in registers a0, a1, ..."| s3["[3] executes the ecall instruction (RISC-V trap instruction)"]
+    s3 -->|"the hardware automatically:<br/>saves the current PC in sepc<br/>switches the mode bit to kernel mode<br/>jumps to the trap handler address set in stvec"| s4["[4] enters the kernel trap handler usertrap()"]
+    s4 --> s5["[5] syscall(): reads a7 and looks up the system call table"]
+    s5 -->|"e.g., a7 = 15 (SYS_open)"| s6["[6] runs the sys_open() handler"]
+    s6 -->|"allocates a file descriptor, looks up the inode, etc."| s7["[7] puts the result in a0 (e.g., fd = 3)"]
+    s7 --> s8["[8] executes the sret instruction (RISC-V return)"]
+    s8 -->|"the hardware automatically:<br/>restores the mode bit to user mode<br/>restores the PC from sepc"| s9["[9] the C library wrapper passes a0 as the return value"]
+    s9 --> s10["[10] the user program receives fd"]
 ```
 
 *Figure 2. Full path of an open() system call on RISC-V*
@@ -307,14 +292,12 @@ If the file is 4MB, that is about **1000 reads + 1000 writes = 2000 system calls
 
 #### 1.6.1 Bus-Based Architecture
 
-```text
-┌─────┐      Bus             ┌──────┐
-│ CPU │ ←───────────────→  │Memory│
-└─────┘                     └──────┘
-   ↑
-   ├─── Disk controller
-   ├─── USB controller
-   └─── Network controller
+```mermaid
+graph TD
+    CPU["CPU"] <-->|"Bus"| MEM["Memory"]
+    DC["Disk controller"] --> CPU
+    UC["USB controller"] --> CPU
+    NC["Network controller"] --> CPU
 ```
 
 *Figure 3. Organization of a bus-based computer system*
@@ -444,16 +427,12 @@ Only **the core** of the kernel is compiled statically, and the rest is loaded/u
 
 #### 1.9.2 Procedure
 
-```text
-Current process P1
-  │
-  ├─ [1] Save P1's registers, PC, SP, etc. to memory (P1's PCB)
-  │
-  ├─ [2] Read P2's state from memory and restore it to CPU registers (P2's PCB)
-  │
-  └─ [3] Set the PC to the point where P2 last stopped
-       ↓
-     P2 resumes execution
+```mermaid
+flowchart TD
+    p1["Current process P1"] --> c1["[1] Save P1's registers, PC, SP, etc. to memory (P1's PCB)"]
+    c1 --> c2["[2] Read P2's state from memory and restore it to CPU registers (P2's PCB)"]
+    c2 --> c3["[3] Set the PC to the point where P2 last stopped"]
+    c3 --> p2["P2 resumes execution"]
 ```
 
 *Figure 4. Procedure of a context switch*
@@ -635,18 +614,14 @@ text   data   bss   dec   hex
 
 During execution, a process is in one of the following five states.
 
-```text
-                      ┌───── dispatch ──────┐
-                      │                     ↓
-┌─────┐ admitted ┌─────────┐ interrupt ┌─────────┐   exit   ┌────────────┐
-│ New │─────────→│  Ready  │←──────────│ Running │─────────→│ Terminated │
-└─────┘          └─────────┘           └─────────┘          └────────────┘
-                      ↑                     │
-                      │ I/O or event        │ I/O or
-                      │ completion          │ event wait
-                      │   ┌─────────┐       │
-                      └───│ Waiting │←──────┘
-                          └─────────┘
+```mermaid
+stateDiagram-v2
+    New --> Ready : admitted
+    Ready --> Running : dispatch
+    Running --> Ready : interrupt
+    Running --> Waiting : I/O or event wait
+    Waiting --> Ready : I/O or event completion
+    Running --> Terminated : exit
 ```
 
 *Figure 6. Process state transition diagram*
@@ -778,16 +753,14 @@ struct task_struct {
 
 **Wait queue (device queue)**: A queue of processes waiting for a specific event. There are several, one per device.
 
-```text
-New process
-     ↓ memory allocated
- [Ready Queue] ────→ [CPU scheduler] ────→ Running
-     ↑                                    ↓
-     │                              time slice expired
-     │                                    │
-     │                              I/O request
-     └─ I/O done  ←── [Device Queue] ←────┘
-                     (disk, terminal, etc.)
+```mermaid
+flowchart LR
+    np["New process"] -->|"memory allocated"| rq["Ready Queue"]
+    rq --> sch["CPU scheduler"]
+    sch --> run["Running"]
+    run -->|"time slice expired"| rq
+    run -->|"I/O request"| dq["Device Queue<br/>(disk, terminal, etc.)"]
+    dq -->|"I/O done"| rq
 ```
 
 *Figure 7. Movement of processes between the ready queue and device queues*
@@ -1589,24 +1562,18 @@ Example: `0x12345678`
 
 #### 3.8.4 Execution Flow
 
-```text
-Client                                    Server
-──────                                ──────
-1. Call foo(x, y)
-      ↓
-2. Client stub: marshal the parameters
-      ↓
-3. Send over the network
-      ↓
-4. Server skeleton: unmarshal
-      ↓
-5. Run the real foo()
-      ↓
-6. Marshal the result & send it back
-      ↓
-7. Client stub: unmarshal
-      ↓
-8. Provide the return value
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant S as Server
+    Note over C: 1. Call foo(x, y)
+    Note over C: 2. Client stub: marshal the parameters
+    C->>S: 3. Send over the network
+    Note over S: 4. Server skeleton: unmarshal
+    Note over S: 5. Run the real foo()
+    S->>C: 6. Marshal the result and send it back
+    Note over C: 7. Client stub: unmarshal
+    Note over C: 8. Provide the return value
 ```
 
 *Figure 11. Execution flow of an RPC call*
@@ -2226,14 +2193,15 @@ pool.shutdown();
 
 Ideal for recursive **divide and conquer**.
 
-```text
-fork ─┬→ Task 1
-      ├→ Task 2
-      └→ Task 3
-         ↓
-       join
-         ↓
-      combine
+```mermaid
+flowchart TD
+    f["fork"] --> t1["Task 1"]
+    f --> t2["Task 2"]
+    f --> t3["Task 3"]
+    t1 --> j["join"]
+    t2 --> j
+    t3 --> j
+    j --> c["combine"]
 ```
 
 *Figure 17. Fork and join in the Fork-Join pattern*
@@ -2591,14 +2559,11 @@ void *worker(void *arg) {
 
 An **intermediate layer** between user threads and kernel threads. It appears to the library as a **virtual CPU**.
 
-```text
-User Thread
-     ↓
-    LWP (virtual processor)
-     ↓
- Kernel Thread
-     ↓
- Physical CPU
+```mermaid
+flowchart TD
+    ut["User Thread"] --> lwp["LWP (virtual processor)"]
+    lwp --> kt["Kernel Thread"]
+    kt --> cpu["Physical CPU"]
 ```
 
 *Figure 18. Layers of user threads, LWPs, kernel threads, and physical CPUs*
@@ -2683,9 +2648,13 @@ clone(container_init, stack,
 
 Process execution is **an alternation of CPU bursts ↔ I/O bursts**.
 
-```text
-CPU burst → I/O burst → CPU burst → I/O burst → ... → exit
- (compute)  (disk, network)  (compute)  (I/O)
+```mermaid
+flowchart LR
+    c1["CPU burst<br/>(compute)"] --> i1["I/O burst<br/>(disk, network)"]
+    i1 --> c2["CPU burst<br/>(compute)"]
+    c2 --> i2["I/O burst<br/>(I/O)"]
+    i2 --> more["..."]
+    more --> ex["exit"]
 ```
 
 *Figure 19. Alternation of CPU bursts and I/O bursts*
@@ -3303,20 +3272,14 @@ Implement the scheduler in a real OS and deploy it to users.
 
 The **designed learning curve** from Week 1 to Week 7:
 
-```text
-W01: OS definition, dual mode (protection)
-         ↓ why is protection needed? to run several programs
-W02: Processes (the abstraction of execution)
-         ↓ processes are isolated, yet they need to cooperate
-W03: IPC (how to cooperate)
-         ↓ IPC is heavy. A lightweight unit sharing one address space?
-W04: Threads (lightweight concurrent execution)
-         ↓ explicit threading is complex. A better abstraction?
-W05: Implicit threading, threading issues
-         ↓ in the end there is one CPU (or a few). How to divide it?
-W06: Basic scheduling algorithms
-         ↓ reality: multicore, real-time, diverse requirements
-W07: Advanced scheduling
+```mermaid
+flowchart TD
+    w1["W01: OS definition, dual mode (protection)"] -->|"why is protection needed? to run several programs"| w2["W02: Processes (the abstraction of execution)"]
+    w2 -->|"processes are isolated, yet they need to cooperate"| w3["W03: IPC (how to cooperate)"]
+    w3 -->|"IPC is heavy. A lightweight unit sharing one address space?"| w4["W04: Threads (lightweight concurrent execution)"]
+    w4 -->|"explicit threading is complex. A better abstraction?"| w5["W05: Implicit threading, threading issues"]
+    w5 -->|"in the end there is one CPU (or a few). How to divide it?"| w6["W06: Basic scheduling algorithms"]
+    w6 -->|"reality: multicore, real-time, diverse requirements"| w7["W07: Advanced scheduling"]
 ```
 
 *Figure 27. How the topics flow from Week 1 to Week 7*

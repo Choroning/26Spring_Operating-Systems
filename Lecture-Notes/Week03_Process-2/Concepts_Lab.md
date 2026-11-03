@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lab.md) | [한국어](Concepts_Lab.ko.md)
 
-> **Last Updated:** 2026-10-27
+> **Last Updated:** 2026-11-04
 
 > **Learning Objectives:**
 > 1. Navigate the xv6 source code structure
@@ -178,23 +178,13 @@ make TOOLPREFIX=riscv64-elf- qemu
 
 **The full path of `fork()` from user space to the kernel:**
 
-```text
-  User program: fork()
-         │
-         ▼
-  usys.S:  li a7, SYS_fork  →  ecall
-         │
-         ▼
-  trap.c:  usertrap()        ← Handles all user traps
-         │
-         ▼
-  syscall.c:  syscall()      ← Reads a7, looks up dispatch table
-         │
-         ▼
-  sysproc.c:  sys_fork()     ← Thin wrapper
-         │
-         ▼
-  proc.c:  kfork()           ← Performs the actual work
+```mermaid
+flowchart TD
+    u["User program: fork()"] --> us["usys.S: li a7, SYS_fork → ecall"]
+    us --> tr["trap.c: usertrap()<br/>Handles all user traps"]
+    tr --> sc["syscall.c: syscall()<br/>Reads a7, looks up dispatch table"]
+    sc --> sp["sysproc.c: sys_fork()<br/>Thin wrapper"]
+    sp --> pc["proc.c: kfork()<br/>Performs the actual work"]
 ```
 
 *Figure 2. Path of the fork() system call from user space to the kernel implementation*
@@ -256,21 +246,16 @@ You should see `[TRACE] sys_fork() called by ...` output from the kernel.
 
 The **Process State Machine** is defined in `kernel/proc.h`:
 
-```text
-                  allocproc()        fork()/userinit()        scheduler
-  UNUSED ──────────▶ USED ──────────────▶ RUNNABLE ──────────▶ RUNNING
-    ▲                                        ▲                  │  │
-    │                                        │   yield()/       │  │
-    │                                        │   interrupt      │  │
-    │                                        ◀──────────────────┘  │
-    │                                        ▲                     │
-    │                              wakeup()  │       sleep()       │
-    │                                        │         │           │
-    │                                     SLEEPING ◀───┘           │
-    │                                                              │
-    │                                                      exit()  │
-    │                       wait() reaps                           │
-    └──────────────────────── ZOMBIE ◀─────────────────────────────┘
+```mermaid
+stateDiagram-v2
+    UNUSED --> USED : allocproc()
+    USED --> RUNNABLE : fork()/userinit()
+    RUNNABLE --> RUNNING : scheduler
+    RUNNING --> RUNNABLE : yield()/interrupt
+    RUNNING --> SLEEPING : sleep()
+    SLEEPING --> RUNNABLE : wakeup()
+    RUNNING --> ZOMBIE : exit()
+    ZOMBIE --> UNUSED : wait() reaps
 ```
 
 *Figure 3. The xv6 process state machine*

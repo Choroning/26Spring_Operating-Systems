@@ -2,7 +2,7 @@
 
 [레포지토리 안내](../../README.ko.md) | [English](Concepts_Lab.md) | [한국어](Concepts_Lab.ko.md)
 
-> **최종 수정일:** 2026-10-27
+> **최종 수정일:** 2026-11-04
 
 > **학습 목표:**
 > 1. xv6 소스 코드 구조를 탐색할 수 있다
@@ -178,23 +178,13 @@ make TOOLPREFIX=riscv64-elf- qemu
 
 **`fork()`가 유저 공간에서 커널까지 도달하는 전체 경로:**
 
-```text
-  유저 프로그램: fork()
-         │
-         ▼
-  usys.S:  li a7, SYS_fork  →  ecall
-         │
-         ▼
-  trap.c:  usertrap()        ← 모든 유저 트랩 처리
-         │
-         ▼
-  syscall.c:  syscall()      ← a7 읽기, 디스패치 테이블 조회
-         │
-         ▼
-  sysproc.c:  sys_fork()     ← 얇은 래퍼(Wrapper)
-         │
-         ▼
-  proc.c:  kfork()           ← 실제 작업 수행
+```mermaid
+flowchart TD
+    u["유저 프로그램: fork()"] --> us["usys.S: li a7, SYS_fork → ecall"]
+    us --> tr["trap.c: usertrap()<br/>모든 유저 트랩 처리"]
+    tr --> sc["syscall.c: syscall()<br/>a7 읽기, 디스패치 테이블 조회"]
+    sc --> sp["sysproc.c: sys_fork()<br/>얇은 래퍼(Wrapper)"]
+    sp --> pc["proc.c: kfork()<br/>실제 작업 수행"]
 ```
 
 *그림 2. fork() 시스템 콜이 유저 공간에서 커널 구현까지 가는 경로*
@@ -256,21 +246,16 @@ $ lab2_trace
 
 **프로세스 상태 머신(State Machine)** 은 `kernel/proc.h`에 정의되어 있다:
 
-```text
-                  allocproc()        fork()/userinit()        scheduler
-  UNUSED ──────────▶ USED ──────────────▶ RUNNABLE ──────────▶ RUNNING
-    ▲                                        ▲                  │  │
-    │                                        │   yield()/       │  │
-    │                                        │   interrupt      │  │
-    │                                        ◀──────────────────┘  │
-    │                                        ▲                     │
-    │                              wakeup()  │       sleep()       │
-    │                                        │         │           │
-    │                                     SLEEPING ◀───┘           │
-    │                                                              │
-    │                                                      exit()  │
-    │                       wait() reaps                           │
-    └──────────────────────── ZOMBIE ◀─────────────────────────────┘
+```mermaid
+stateDiagram-v2
+    UNUSED --> USED : allocproc()
+    USED --> RUNNABLE : fork()/userinit()
+    RUNNABLE --> RUNNING : scheduler
+    RUNNING --> RUNNABLE : yield()/interrupt
+    RUNNING --> SLEEPING : sleep()
+    SLEEPING --> RUNNABLE : wakeup()
+    RUNNING --> ZOMBIE : exit()
+    ZOMBIE --> UNUSED : wait() reaps
 ```
 
 *그림 3. xv6 프로세스 상태 머신*

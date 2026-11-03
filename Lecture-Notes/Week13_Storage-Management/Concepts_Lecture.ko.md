@@ -2,7 +2,7 @@
 
 [레포지토리 안내](../../README.ko.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **최종 수정일:** 2026-10-20
+> **최종 수정일:** 2026-11-04
 >
 > Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 11
 
@@ -162,10 +162,10 @@ $$
 
 *표 4. 접근 시간의 세 구성 요소*
 
-```text
-  Seek time           Rotational latency       Transfer time
-  ──────────→         ──────────────────→      ─────→
-  암 이동              sector 회전 대기          데이터 전송
+```mermaid
+flowchart LR
+    s["Seek time<br/>암 이동"] --> r["Rotational latency<br/>sector 회전 대기"]
+    r --> t["Transfer time<br/>데이터 전송"]
 ```
 
 *그림 3. 디스크 접근 시간을 이루는 세 단계*
@@ -345,10 +345,13 @@ Linux의 **initrd**는 부팅 초기에 실제 root 장치를 쓸 수 있게 되
 - **Host Bus Adapter(HBA)** 는 **컴퓨터** 쪽의 버스 컨트롤러이다.
 - **Device Controller**는 각 **저장 장치**에 내장된 컨트롤러이다.
 
-```text
-  CPU → HBA → 버스 (SATA / NVMe / SAS) → Device Controller → Media
-                                                  ↑
-                                        DRAM 캐시 (컨트롤러-local)
+```mermaid
+flowchart LR
+    cpu["CPU"] --> hba["HBA"]
+    hba --> bus["버스 (SATA / NVMe / SAS)"]
+    bus --> dc["Device Controller"]
+    dc --> media["Media"]
+    cache["DRAM 캐시 (컨트롤러-local)"] --> dc
 ```
 
 *그림 7. CPU에서 저장 매체까지의 I/O 경로*
@@ -361,12 +364,10 @@ Linux의 **initrd**는 부팅 초기에 실제 root 장치를 쓸 수 있게 되
 
 OS는 cylinder나 page를 신경 쓰지 않는다. 장치를 0, 1, 2, ...로 번호가 매겨진 **1차원 논리 블록 배열**로 보고 주소를 지정한다.
 
-```text
-  Application       OS              저장 장치
-  ──────────→  ──────────→       ──────────────────
-  파일 이름     LBA 번호           물리적 위치
-               (0, 1, 2, …)        HDD: Cylinder-Head-Sector (CHS)
-                                  NVM: Chip-Block-Page
+```mermaid
+flowchart LR
+    app["Application<br/>파일 이름"] --> os["OS<br/>LBA 번호 (0, 1, 2, …)"]
+    os --> dev["저장 장치<br/>물리적 위치<br/>HDD: Cylinder-Head-Sector (CHS)<br/>NVM: Chip-Block-Page"]
 ```
 
 *그림 8. 파일 이름에서 LBA를 거쳐 물리적 위치로 가는 주소 매핑*
@@ -416,9 +417,16 @@ OS는 cylinder나 page를 신경 쓰지 않는다. 장치를 0, 1, 2, ...로 번
 
 *그림 9. FCFS 디스크 스케줄링*
 
-```text
-  head
-   53 → 98 → 183 → 37 → 122 → 14 → 124 → 65 → 67
+```mermaid
+graph LR
+    n53["53 (head)"] --> n98["98"]
+    n98 --> n183["183"]
+    n183 --> n37["37"]
+    n37 --> n122["122"]
+    n122 --> n14["14"]
+    n14 --> n124["124"]
+    n124 --> n65["65"]
+    n65 --> n67["67"]
 ```
 
 *그림 10. FCFS의 head 이동 순서*
@@ -447,11 +455,17 @@ $= 45 + 85 + 146 + 85 + 108 + 110 + 59 + 2 = \mathbf{640\ cylinder}$.
 
 같은 큐에서 head는 53, 초기 방향은 **감소**이다.
 
-```text
-  head
-   53 → 37 → 14 → [0] → 65 → 67 → 98 → 122 → 124 → 183
-                    ↑
-                끝 도달 후 방향 반전
+```mermaid
+graph LR
+    n53["53 (head)"] --> n37["37"]
+    n37 --> n14["14"]
+    n14 --> n0["[0]"]
+    n0 -->|"끝 도달 후 방향 반전"| n65["65"]
+    n65 --> n67["67"]
+    n67 --> n98["98"]
+    n98 --> n122["122"]
+    n122 --> n124["124"]
+    n124 --> n183["183"]
 ```
 
 *그림 12. 감소 방향 SCAN의 head 이동 순서*
@@ -476,10 +490,18 @@ SCAN의 단점은 가운데 근처 위치가 한 바퀴에 **두 번**(방향마
 
 같은 큐에서 방향은 **증가**이다.
 
-```text
-  53 → 65 → 67 → 98 → 122 → 124 → 183 → [199]
-                                            ↓ (점프, 서비스 없음)
-  [0] → 14 → 37
+```mermaid
+graph LR
+    n53["53"] --> n65["65"]
+    n65 --> n67["67"]
+    n67 --> n98["98"]
+    n98 --> n122["122"]
+    n122 --> n124["124"]
+    n124 --> n183["183"]
+    n183 --> n199["[199]"]
+    n199 -->|"점프, 서비스 없음"| n0["[0]"]
+    n0 --> n14["14"]
+    n14 --> n37["37"]
 ```
 
 *그림 14. 증가 방향 C-SCAN의 head 이동 순서*
@@ -604,13 +626,22 @@ C-SCAN과 C-LOOK의 총 이동에는 끝에서 처음으로 돌아가는 귀환 
 - 페이지마다 ECC를 저장한다.
 - 어떤 페이지에서 정정 가능한 오류가 **자주** 나면 컨트롤러가 그 페이지를 **bad**로 표시하고 더 이상 쓰지 않는다.
 
-```text
-  Write:  Data → [ECC 계산] → [Data + ECC] → 저장
-  Read:   저장 → [Data + ECC] → [ECC 재계산]
-                                       │
-                       일치? ──→ Yes: 정상 반환
-                              └→ No:  정정 가능? ──→ Yes: Soft Error (정정, 반환)
-                                                  └→ No:  Hard Error (I/O 오류 보고)
+```mermaid
+flowchart LR
+    subgraph w["Write"]
+        wd["Data"] --> wc["ECC 계산"]
+        wc --> we["Data + ECC"]
+        we --> ws["저장"]
+    end
+    subgraph r["Read"]
+        rs["저장"] --> re["Data + ECC"]
+        re --> rc["ECC 재계산"]
+        rc --> m{"일치?"}
+        m -->|"Yes"| ok["정상 반환"]
+        m -->|"No"| c{"정정 가능?"}
+        c -->|"Yes"| soft["Soft Error (정정, 반환)"]
+        c -->|"No"| hard["Hard Error (I/O 오류 보고)"]
+    end
 ```
 
 *그림 16. ECC를 이용한 쓰기와 읽기 처리 흐름*
@@ -627,10 +658,10 @@ C-SCAN과 C-LOOK의 총 이동에는 끝에서 처음으로 돌아가는 귀환 
 
 새 디스크를 쓸 수 있게 만드는 과정은 세 단계이다.
 
-```text
-  Low-level Formatting  →  Partitioning  →  Logical Formatting
-  (물리 sector           (디스크             (파일 시스템 생성)
-   구조 생성)             논리 분할)
+```mermaid
+flowchart LR
+    l["Low-level Formatting<br/>(물리 sector 구조 생성)"] --> p["Partitioning<br/>(디스크 논리 분할)"]
+    p --> f["Logical Formatting<br/>(파일 시스템 생성)"]
 ```
 
 *그림 17. 드라이브 포매팅의 세 단계*
@@ -740,13 +771,9 @@ C-SCAN과 C-LOOK의 총 이동에는 끝에서 처음으로 돌아가는 귀환 
 - 예전 Linux의 경험칙은 물리 메모리의 2배였다.
 - 현대 시스템은 RAM이 넉넉하므로 훨씬 적게 잡는다.
 
-```text
-  물리 메모리                Swap 공간 (디스크)
-  ┌────────────────┐       ┌────────────────┐
-  │  활성 페이지   │       │  swap된 페이지 │
-  │                │ ←──→  │                │
-  │                │       │                │
-  └────────────────┘       └────────────────┘
+```mermaid
+graph LR
+    pm["물리 메모리<br/>활성 페이지"] <--> sw["Swap 공간 (디스크)<br/>swap된 페이지"]
 ```
 
 *그림 22. 물리 메모리와 swap 공간 사이의 페이지 이동*
@@ -814,11 +841,24 @@ swapon /swapfile
 
 **AHCI(Advanced Host Controller Interface)** 는 **SATA** 장치와 통신하기 위한 표준 호스트 컨트롤러 레지스터 인터페이스이다. OS 드라이버가 명령을 내리는 방식, 명령 큐(NCQ) 관리, 핫플러그 처리를 정의한다. NVMe는 PCIe에 연결되는 SSD를 위한 AHCI의 후계자이며, AHCI는 SATA 시대의 인터페이스로 남아 있다.
 
-```text
-  Host-Attached: 서버 ──[SATA / SAS / NVMe]──→ 디스크
-  NAS:           서버 ──[LAN (TCP/IP)]──→ NAS 장치 (파일 수준)
-  SAN:           서버 ──[전용 네트워크]──→ 저장 어레이 (블록 수준)
-  Cloud:         서버 ──[인터넷]──→ 클라우드 제공자 (API)
+```mermaid
+flowchart TD
+    subgraph ha["Host-Attached"]
+        direction LR
+        s1["서버"] -->|"SATA / SAS / NVMe"| d1["디스크"]
+    end
+    subgraph nas["NAS"]
+        direction LR
+        s2["서버"] -->|"LAN (TCP/IP)"| d2["NAS 장치 (파일 수준)"]
+    end
+    subgraph san["SAN"]
+        direction LR
+        s3["서버"] -->|"전용 네트워크"| d3["저장 어레이 (블록 수준)"]
+    end
+    subgraph cloud["Cloud"]
+        direction LR
+        s4["서버"] -->|"인터넷"| d4["클라우드 제공자 (API)"]
+    end
 ```
 
 *그림 24. 네 가지 저장 장치 부착 방식의 연결 경로*

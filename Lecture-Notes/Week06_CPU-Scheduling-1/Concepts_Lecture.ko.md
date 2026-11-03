@@ -2,7 +2,7 @@
 
 [레포지토리 안내](../../README.ko.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **최종 수정일:** 2026-10-20
+> **최종 수정일:** 2026-11-04
 >
 > Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 5 (5.1-5.3)
 
@@ -156,13 +156,12 @@ CPU 버스트 분포에 따라 프로세스를 다음과 같이 분류한다.
 
 CPU가 유휴 상태가 되면 **준비 큐(ready queue)** 에서 다음에 실행할 프로세스를 선택한다.
 
-```text
-                  +------------+
-  새 프로세스 --->   | 준비 큐     |  ---> CPU 스케줄러 ---> CPU
-                  +------------+       선택 알고리즘
-                         ^
-                         |
-                     I/O 완료 등
+```mermaid
+flowchart LR
+    np["새 프로세스"] --> rq["준비 큐"]
+    io["I/O 완료 등"] --> rq
+    rq --> sch["CPU 스케줄러<br/>선택 알고리즘"]
+    sch --> cpu["CPU"]
 ```
 
 *그림 3. 준비 큐에서 CPU 스케줄러를 거쳐 CPU로 가는 프로세스 흐름*
@@ -389,13 +388,13 @@ FCFS(First-Come, First-Served)는 **가장 간단한** CPU 스케줄링 알고�
 - CPU가 비면 **머리(head)** 의 프로세스에 CPU를 할당한다.
 - **비선점형** 스케줄링이다.
 
-```text
-준비 큐 (FIFO):
-
-  head ---> [ P1 ] ---> [ P2 ] ---> [ P3 ] <--- tail
-              |
-              v
-           CPU 할당
+```mermaid
+graph LR
+    head["head"] --> p1["P1"]
+    p1 --> p2["P2"]
+    p2 --> p3["P3"]
+    tail["tail"] --> p3
+    p1 --> cpu["CPU 할당"]
 ```
 
 *그림 6. FIFO 준비 큐에서 머리의 프로세스에 CPU를 할당하는 구조*

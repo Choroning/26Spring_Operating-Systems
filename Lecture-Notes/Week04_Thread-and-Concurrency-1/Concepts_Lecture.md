@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **Last Updated:** 2026-10-20
+> **Last Updated:** 2026-11-04
 >
 > Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 4 (4.1-4.4)
 
@@ -1043,13 +1043,16 @@ public class ThreadPoolExample {
 - Thread 2: Sum [500] to [749]
 - Thread 3: Sum [750] to [999]
 
-```text
- Array: [  0 ~ 249  |  250 ~ 499  |  500 ~ 749  |  750 ~ 999  ]
-             ↓             ↓             ↓              ↓
-          Thread 0     Thread 1       Thread 2       Thread 3
-          partial[0]   partial[1]     partial[2]     partial[3]
-              ↘            ↓              ↓            ↙
-                               Total Sum
+```mermaid
+graph TD
+    A["Array"] -->|"0 ~ 249"| T0["Thread 0<br/>partial[0]"]
+    A -->|"250 ~ 499"| T1["Thread 1<br/>partial[1]"]
+    A -->|"500 ~ 749"| T2["Thread 2<br/>partial[2]"]
+    A -->|"750 ~ 999"| T3["Thread 3<br/>partial[3]"]
+    T0 --> S["Total Sum"]
+    T1 --> S
+    T2 --> S
+    T3 --> S
 ```
 
 *Figure 14. Data-parallel split of a 1000-element array summation across four threads*

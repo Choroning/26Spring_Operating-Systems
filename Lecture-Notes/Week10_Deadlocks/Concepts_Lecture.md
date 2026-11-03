@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **Last Updated:** 2026-10-20
+> **Last Updated:** 2026-11-04
 >
 > Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 8
 
@@ -205,19 +205,13 @@ Deadlock requires **all four** of the following to hold *simultaneously*:
 3. **No Preemption:** a resource can only be released voluntarily by the thread that holds it; it cannot be forcibly taken away.
 4. **Circular Wait:** there is a chain T0 → T1 → ... → Tn → T0 where each Ti waits for a resource held by T(i+1) and Tn waits for a resource held by T0.
 
-```text
-Circular Wait sketch: a cycle of three threads
-(T0 holds R0, T1 holds R1, T2 holds R2; each thread waits for the next one's resource):
+Figure 2 shows a cycle of three threads. T0 holds R0, T1 holds R1, and T2 holds R2, and each thread waits for the next one's resource, so the cycle T0 → T1 → T2 → T0 has length 3 and dissolves when any one wait is broken.
 
-        ┌──(waits for R1, held by T1)──┐
-        │                              ↓
-       T0                             T1
-        ↑                              │
-        │                              │ (waits for R2, held by T2)
-        │                              ↓
-        └──(waits for R0, held by T0)─ T2
-
-  Cycle:  T0 → T1 → T2 → T0   (length 3; break any one wait and it dissolves)
+```mermaid
+graph LR
+    T0["T0"] -->|"waits for R1, held by T1"| T1["T1"]
+    T1 -->|"waits for R2, held by T2"| T2["T2"]
+    T2 -->|"waits for R0, held by T0"| T0
 ```
 
 *Figure 2. Circular wait among three threads*

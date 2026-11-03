@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **Last Updated:** 2026-10-20
+> **Last Updated:** 2026-11-04
 >
 > Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 11
 
@@ -162,10 +162,10 @@ $$
 
 *Table 4. Three components of access time*
 
-```text
-  Seek time           Rotational latency       Transfer time
-  ──────────→         ──────────────────→      ─────→
-  arm movement         sector rotation wait     data transfer
+```mermaid
+flowchart LR
+    s["Seek time<br/>arm movement"] --> r["Rotational latency<br/>sector rotation wait"]
+    r --> t["Transfer time<br/>data transfer"]
 ```
 
 *Figure 3. Three phases of a disk access*
@@ -345,10 +345,13 @@ Linux's **initrd** uses a RAM drive as a temporary root file system during early
 - The **Host Bus Adapter (HBA)** is the bus controller on the **computer** side.
 - The **Device Controller** is the built-in controller in each **storage device**.
 
-```text
-  CPU → HBA → bus (SATA / NVMe / SAS) → Device Controller → Media
-                                                ↑
-                                      DRAM cache (controller-local)
+```mermaid
+flowchart LR
+    cpu["CPU"] --> hba["HBA"]
+    hba --> bus["bus (SATA / NVMe / SAS)"]
+    bus --> dc["Device Controller"]
+    dc --> media["Media"]
+    cache["DRAM cache (controller-local)"] --> dc
 ```
 
 *Figure 7. I/O path from the CPU to the storage medium*
@@ -361,12 +364,10 @@ Linux's **initrd** uses a RAM drive as a temporary root file system during early
 
 The OS does not care about cylinders or pages. It addresses the device as a **one-dimensional array of logical blocks** numbered 0, 1, 2, ...
 
-```text
-  Application       OS              Storage device
-  ──────────→  ──────────→       ──────────────────
-  File name     LBA number         Physical location
-               (0, 1, 2, …)       HDD: Cylinder-Head-Sector (CHS)
-                                  NVM: Chip-Block-Page
+```mermaid
+flowchart LR
+    app["Application<br/>File name"] --> os["OS<br/>LBA number (0, 1, 2, …)"]
+    os --> dev["Storage device<br/>Physical location<br/>HDD: Cylinder-Head-Sector (CHS)<br/>NVM: Chip-Block-Page"]
 ```
 
 *Figure 8. Address mapping from file name through LBA to physical location*
@@ -416,9 +417,16 @@ When the disk is busy, new requests accumulate in a **pending queue**. The OS is
 
 *Figure 9. FCFS disk scheduling*
 
-```text
-  head
-   53 → 98 → 183 → 37 → 122 → 14 → 124 → 65 → 67
+```mermaid
+graph LR
+    n53["53 (head)"] --> n98["98"]
+    n98 --> n183["183"]
+    n183 --> n37["37"]
+    n37 --> n122["122"]
+    n122 --> n14["14"]
+    n14 --> n124["124"]
+    n124 --> n65["65"]
+    n65 --> n67["67"]
 ```
 
 *Figure 10. Head movement order under FCFS*
@@ -447,11 +455,17 @@ The head moves in one direction to the end of the disk, servicing requests in or
 
 Same queue, head 53, initial direction **decreasing**:
 
-```text
-  head
-   53 → 37 → 14 → [0] → 65 → 67 → 98 → 122 → 124 → 183
-                    ↑
-                reverse direction after reaching end
+```mermaid
+graph LR
+    n53["53 (head)"] --> n37["37"]
+    n37 --> n14["14"]
+    n14 --> n0["[0]"]
+    n0 -->|"reverse direction after reaching end"| n65["65"]
+    n65 --> n67["67"]
+    n67 --> n98["98"]
+    n98 --> n122["122"]
+    n122 --> n124["124"]
+    n124 --> n183["183"]
 ```
 
 *Figure 12. Head movement order under SCAN in the decreasing direction*
@@ -476,10 +490,18 @@ SCAN's downside is that positions near the middle get serviced **twice** per rou
 
 Same queue, direction **increasing**:
 
-```text
-  53 → 65 → 67 → 98 → 122 → 124 → 183 → [199]
-                                            ↓ (jump back, no service)
-  [0] → 14 → 37
+```mermaid
+graph LR
+    n53["53"] --> n65["65"]
+    n65 --> n67["67"]
+    n67 --> n98["98"]
+    n98 --> n122["122"]
+    n122 --> n124["124"]
+    n124 --> n183["183"]
+    n183 --> n199["[199]"]
+    n199 -->|"jump back, no service"| n0["[0]"]
+    n0 --> n14["14"]
+    n14 --> n37["37"]
 ```
 
 *Figure 14. Head movement order under C-SCAN in the increasing direction*
@@ -604,13 +626,22 @@ Modern storage devices have **built-in ECC** for automatic error detection and c
 - ECC is stored per page.
 - If a page produces correctable errors **frequently**, the controller marks it **bad** and stops writing to it.
 
-```text
-  Write:  Data → [ECC calc] → [Data + ECC] → Storage
-  Read:   Storage → [Data + ECC] → [ECC recalc]
-                                       │
-                       Match? ──→ Yes: return normally
-                                └→ No:  correctable? ──→ Yes: Soft Error (correct, return)
-                                                     └→ No:  Hard Error (I/O error reported)
+```mermaid
+flowchart LR
+    subgraph w["Write"]
+        wd["Data"] --> wc["ECC calc"]
+        wc --> we["Data + ECC"]
+        we --> ws["Storage"]
+    end
+    subgraph r["Read"]
+        rs["Storage"] --> re["Data + ECC"]
+        re --> rc["ECC recalc"]
+        rc --> m{"Match?"}
+        m -->|"Yes"| ok["return normally"]
+        m -->|"No"| c{"correctable?"}
+        c -->|"Yes"| soft["Soft Error (correct, return)"]
+        c -->|"No"| hard["Hard Error (I/O error reported)"]
+    end
 ```
 
 *Figure 16. Write and read processing with ECC*
@@ -627,10 +658,10 @@ Modern storage devices have **built-in ECC** for automatic error detection and c
 
 Making a fresh disk usable takes three steps:
 
-```text
-  Low-level Formatting  →  Partitioning  →  Logical Formatting
-  (create physical       (logically divide   (create file system)
-   sector structure)      the disk)
+```mermaid
+flowchart LR
+    l["Low-level Formatting<br/>(create physical sector structure)"] --> p["Partitioning<br/>(logically divide the disk)"]
+    p --> f["Logical Formatting<br/>(create file system)"]
 ```
 
 *Figure 17. Three steps of drive formatting*
@@ -740,13 +771,9 @@ Security and protection (the CIA triad, threats, cryptography, access control, a
 - The old Linux rule of thumb was 2× physical memory.
 - Modern systems use much less, because RAM is plentiful.
 
-```text
-  Physical memory          Swap space (disk)
-  ┌────────────────┐       ┌────────────────┐
-  │  Active pages  │       │  Swapped-out   │
-  │                │ ←──→  │  pages         │
-  │                │       │                │
-  └────────────────┘       └────────────────┘
+```mermaid
+graph LR
+    pm["Physical memory<br/>Active pages"] <--> sw["Swap space (disk)<br/>Swapped-out pages"]
 ```
 
 *Figure 22. Page movement between physical memory and swap space*
@@ -814,11 +841,24 @@ When the counter drops to 0, the slot is reclaimable. This is a tiny reference c
 
 **AHCI (Advanced Host Controller Interface)** is the standard host-controller register interface for talking to **SATA** devices. It defines how the OS driver issues commands, manages the command queue (NCQ), and handles hot-plug. NVMe is its successor for PCIe-attached SSDs, and AHCI remains the interface of the SATA era.
 
-```text
-  Host-Attached: Server ──[SATA / SAS / NVMe]──→ Disk
-  NAS:           Server ──[LAN (TCP/IP)]──→ NAS device (file-level)
-  SAN:           Server ──[Dedicated network]──→ Storage array (block-level)
-  Cloud:         Server ──[Internet]──→ Cloud provider (API)
+```mermaid
+flowchart TD
+    subgraph ha["Host-Attached"]
+        direction LR
+        s1["Server"] -->|"SATA / SAS / NVMe"| d1["Disk"]
+    end
+    subgraph nas["NAS"]
+        direction LR
+        s2["Server"] -->|"LAN (TCP/IP)"| d2["NAS device (file-level)"]
+    end
+    subgraph san["SAN"]
+        direction LR
+        s3["Server"] -->|"Dedicated network"| d3["Storage array (block-level)"]
+    end
+    subgraph cloud["Cloud"]
+        direction LR
+        s4["Server"] -->|"Internet"| d4["Cloud provider (API)"]
+    end
 ```
 
 *Figure 24. Connection paths of the four storage attachment methods*

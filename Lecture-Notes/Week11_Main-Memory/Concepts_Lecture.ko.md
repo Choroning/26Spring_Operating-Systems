@@ -2,7 +2,7 @@
 
 [레포지토리 안내](../../README.ko.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **최종 수정일:** 2026-10-20
+> **최종 수정일:** 2026-11-04
 >
 > Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 9
 
@@ -154,11 +154,12 @@ CPU가 직접 접근할 수 있는 저장소는 레지스터와 주 메모리 �
 
 소스 코드는 여러 단계를 거치며, 단계마다 바인딩의 일부를 수행한다.
 
-```text
-  source.c   --(compile)-->  object module   (재배치 가능, 심볼명 보유)
-             --(link)----->  load module
-             --(load)----->  in-memory binary
-             --(run)------>  physical reference (MMU)
+```mermaid
+flowchart LR
+    src["source.c"] -->|"compile"| obj["object module<br/>(재배치 가능, 심볼명 보유)"]
+    obj -->|"link"| lm["load module"]
+    lm -->|"load"| mem["in-memory binary"]
+    mem -->|"run"| phys["physical reference (MMU)"]
 ```
 
 *그림 4. 소스 코드가 컴파일, 링크, 적재, 실행을 거쳐 물리 참조가 되는 과정*
@@ -188,10 +189,11 @@ CPU가 직접 접근할 수 있는 저장소는 레지스터와 주 메모리 �
 
 > **참고:** 이 가장 단순한 설계에서 재배치 레지스터는 1.3절에서 소개한 **base 레지스터**와 같은 물리 레지스터이며, 두 이름은 서로 다른 역할을 강조할 뿐이다. base라는 이름은 limit 검사의 하한을, relocation이라는 이름은 사용자가 보는 0…max를 실제 물리 범위로 옮기는 가산값을 뜻한다.
 
-```text
-  logical addr  -->  +-----+
-                     | MMU |  + relocation_register  -->  physical addr  -->  DRAM
-                     +-----+
+```mermaid
+flowchart LR
+    la["logical addr"] --> mmu["MMU<br/>+ relocation_register"]
+    mmu --> pa["physical addr"]
+    pa --> dram["DRAM"]
 ```
 
 *그림 6. MMU가 논리 주소에 재배치 레지스터 값을 더해 물리 주소를 만드는 과정*
@@ -528,21 +530,14 @@ OS는 **프리 프레임 리스트**를 유지한다. 프로세스가 생성되�
 - 조회는 입력 페이지 번호를 **모든 키와 병렬로 비교**하므로 한 사이클에 끝난다.
 - TLB 조회는 CPU 파이프라인의 일부로 이루어지므로 TLB 히트에는 관측할 수 있는 추가 지연이 거의 없다.
 
-```text
-TLB Hit / Miss 과정:
-
-CPU --p,d--> TLB에서 p 검색
-              |
-          +---+---+
-          |       |
-       hit       miss
-          |       |
-        f 획득  메모리의 페이지 테이블 워크,
-          |    (p,f)를 TLB에 삽입
-          |       |
-          +---+---+
-              |
-          f + d --> 물리 주소 --> DRAM
+```mermaid
+flowchart TD
+    cpu["CPU"] -->|"p, d"| tlb["TLB에서 p 검색"]
+    tlb -->|"hit"| hit["f 획득"]
+    tlb -->|"miss"| miss["메모리의 페이지 테이블 워크,<br/>(p, f)를 TLB에 삽입"]
+    hit --> pa["f + d → 물리 주소"]
+    miss --> pa
+    pa --> dram["DRAM"]
 ```
 
 *그림 20. TLB 히트와 미스 시의 주소 변환 과정*

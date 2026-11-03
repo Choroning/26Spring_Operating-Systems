@@ -2,7 +2,7 @@
 
 [레포지토리 안내](../../README.ko.md) | [English](Assignment-Explanation.md) | [한국어](Assignment-Explanation.ko.md)
 
-> **최종 수정일:** 2026-10-20
+> **최종 수정일:** 2026-11-04
 >
 > Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 3 (3.1-3.3)
 
@@ -132,15 +132,17 @@ gcc -Wall -o minishell minishell.c
 
 **목표:** 부모 프로세스와 자식 프로세스가 파이프(Pipe)를 통해 1바이트를 **왕복**으로 주고받고, 왕복 시간(Round-trip Time)을 측정한다.
 
-```text
-부모 프로세스 (Parent)                   자식 프로세스 (Child)
-     │                                       │
-     ├── 'p' 전송 (ping) ───────────────────→ │
-     │                                       ├── "received ping" 출력
-     │ ←─────────────────────── 'p' 전송 ──── │
-     ├── "received pong" 출력                 │
-     ├── 왕복 시간 출력                         │
-     └── wait()으로 자식 회수                   └── exit(0)
+```mermaid
+sequenceDiagram
+    participant P as 부모 프로세스 (Parent)
+    participant C as 자식 프로세스 (Child)
+    P->>C: 'p' 전송 (ping)
+    Note over C: "received ping" 출력
+    C->>P: 'p' 전송
+    Note over P: "received pong" 출력
+    Note over P: 왕복 시간 출력
+    Note over C: exit(0)
+    Note over P: wait()으로 자식 회수
 ```
 
 *그림 2. pingpong의 ping과 pong 교환*
@@ -495,25 +497,19 @@ if (pid == 0) {
 
 ### 3.8 execute_command 전체 흐름 요약
 
-```text
-execute_command(cmd) 호출 (예: "ls -l > out.txt")
-    │
-    ├── fork()
-    │     │
-    │     ├── [자식 프로세스]
-    │     │     ├── infile이 있으면: open() → dup2(fd, STDIN) → close(fd)
-    │     │     ├── outfile이 있으면: open() → dup2(fd, STDOUT) → close(fd)
-    │     │     ├── execvp("ls", {"ls", "-l", NULL})
-    │     │     │     → 성공: 프로세스 이미지가 ls로 교체됨
-    │     │     │     → ls가 stdout(= out.txt)에 출력
-    │     │     │     → ls 종료 시 exit()
-    │     │     └── exec 실패 시: perror + exit(127)
-    │     │
-    │     └── [부모 프로세스]
-    │           ├── waitpid(pid, &status, 0)  ← 자식 종료까지 블록
-    │           └── WEXITSTATUS(status) 반환
-    │
-    └── 셸의 main()으로 복귀 → 다음 명령어 프롬프트 출력
+```mermaid
+flowchart TD
+    call["execute_command(cmd) 호출 (예: #quot;ls -l > out.txt#quot;)"] --> fk["fork()"]
+    fk --> child["자식 프로세스"]
+    fk --> parent["부모 프로세스"]
+    child --> inf["infile이 있으면: open() → dup2(fd, STDIN) → close(fd)"]
+    inf --> outf["outfile이 있으면: open() → dup2(fd, STDOUT) → close(fd)"]
+    outf --> ex["execvp(#quot;ls#quot;, {#quot;ls#quot;, #quot;-l#quot;, NULL})"]
+    ex -->|"성공"| ok["프로세스 이미지가 ls로 교체됨<br/>ls가 stdout(= out.txt)에 출력<br/>ls 종료 시 exit()"]
+    ex -->|"exec 실패 시"| fail["perror + exit(127)"]
+    parent --> wp["waitpid(pid, &status, 0): 자식 종료까지 블록"]
+    wp --> ws["WEXITSTATUS(status) 반환"]
+    ws --> ret["셸의 main()으로 복귀 → 다음 명령어 프롬프트 출력"]
 ```
 
 *그림 5. execute_command()의 실행 흐름*
@@ -531,13 +527,10 @@ execute_command(cmd) 호출 (예: "ls -l > out.txt")
 셸에서 `cmd1 | cmd2`를 입력하면 다음과 같이 연결된다.
 - `cmd1`의 **표준 출력(stdout)** 이 파이프를 통해 `cmd2`의 **표준 입력(stdin)** 으로 연결된다.
 
-```text
-예: ls | wc -l
-
-     ls 프로세스                파이프(커널 버퍼)               wc -l 프로세스
-  ━━━━━━━━━━━━━━━            ━━━━━━━━━━━━━━━            ━━━━━━━━━━━━━━━
-      stdout ──────────────→ [   커널 버퍼   ] ──────────────→ stdin
-   (파일 목록 출력)                                           (줄 수 세기)
+```mermaid
+flowchart LR
+    ls["ls 프로세스<br/>(파일 목록 출력)"] -->|"stdout"| buf["파이프(커널 버퍼)"]
+    buf -->|"stdin"| wc["wc -l 프로세스<br/>(줄 수 세기)"]
 ```
 
 *그림 6. `ls | wc -l`에서 파이프로 연결된 두 프로세스*
@@ -669,28 +662,18 @@ return -1;
 
 ### 4.6 execute_pipe 전체 흐름 요약
 
-```text
-execute_pipe(cmd1, cmd2) 호출 (예: "ls | wc -l")
-    │
-    ├── pipe(fd)  → fd[0]=읽기, fd[1]=쓰기
-    │
-    ├── fork() → 자식1 (cmd1 = "ls")
-    │     ├── close(fd[0])                 /* 읽기 끝 안 씀 */
-    │     ├── dup2(fd[1], STDOUT_FILENO)   /* stdout → 파이프 */
-    │     ├── close(fd[1])
-    │     └── execvp("ls", {"ls", NULL})
-    │           → ls의 출력이 파이프로 들어감
-    │
-    ├── fork() → 자식2 (cmd2 = "wc -l")
-    │     ├── close(fd[1])                 /* 쓰기 끝 안 씀 */
-    │     ├── dup2(fd[0], STDIN_FILENO)    /* stdin ← 파이프 */
-    │     ├── close(fd[0])
-    │     └── execvp("wc", {"wc", "-l", NULL})
-    │           → wc가 파이프에서 읽어 줄 수를 셈
-    │
-    ├── [부모] close(fd[0]), close(fd[1])  /* 핵심! EOF 전달 보장 */
-    ├── waitpid(pid1, ...)
-    └── waitpid(pid2, &status, ...)
+```mermaid
+flowchart TD
+    call["execute_pipe(cmd1, cmd2) 호출 (예: #quot;ls | wc -l#quot;)"] --> pp["pipe(fd) → fd[0]=읽기, fd[1]=쓰기"]
+    pp --> f1["fork() → 자식1 (cmd1 = #quot;ls#quot;)"]
+    f1 --> c1["close(fd[0]): 읽기 끝 안 씀<br/>dup2(fd[1], STDOUT_FILENO): stdout → 파이프<br/>close(fd[1])<br/>execvp(#quot;ls#quot;, {#quot;ls#quot;, NULL})"]
+    c1 --> r1["ls의 출력이 파이프로 들어감"]
+    f1 --> f2["fork() → 자식2 (cmd2 = #quot;wc -l#quot;)"]
+    f2 --> c2["close(fd[1]): 쓰기 끝 안 씀<br/>dup2(fd[0], STDIN_FILENO): stdin ← 파이프<br/>close(fd[0])<br/>execvp(#quot;wc#quot;, {#quot;wc#quot;, #quot;-l#quot;, NULL})"]
+    c2 --> r2["wc가 파이프에서 읽어 줄 수를 셈"]
+    f2 --> pc["[부모] close(fd[0]), close(fd[1]): 핵심! EOF 전달 보장"]
+    pc --> w1["waitpid(pid1, ...)"]
+    w1 --> w2["waitpid(pid2, &status, ...)"]
 ```
 
 *그림 8. execute_pipe()의 실행 흐름*
@@ -707,11 +690,11 @@ minishell> echo hello | cat > /tmp/pipe_test.txt
 - **cmd1** = `echo hello`이며, stdout이 **파이프**로 연결된다.
 - **cmd2** = `cat > /tmp/pipe_test.txt`이며, stdin은 **파이프**에서, stdout은 **파일**로 연결된다.
 
-```text
-echo hello                  파이프                    cat
-━━━━━━━━                  ━━━━━━                  ━━━
-stdout → [파이프] → stdin
-                                                stdout → /tmp/pipe_test.txt
+```mermaid
+flowchart LR
+    e["echo hello"] -->|"stdout"| p["파이프"]
+    p -->|"stdin"| c["cat"]
+    c -->|"stdout"| f["/tmp/pipe_test.txt"]
 ```
 
 *그림 9. 파이프와 출력 리디렉션의 조합*

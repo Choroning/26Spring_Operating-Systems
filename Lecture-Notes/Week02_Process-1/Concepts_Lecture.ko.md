@@ -2,7 +2,7 @@
 
 [레포지토리 안내](../../README.ko.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **최종 수정일:** 2026-10-20
+> **최종 수정일:** 2026-11-04
 >
 > Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 3 (3.1-3.3)
 
@@ -447,13 +447,10 @@ UNIX에서는 **`fork()`** 시스템 콜로 새 프로세스를 생성한다.
 
 **exec()** 시스템 콜은 프로세스의 메모리 공간을 새 프로그램으로 **대체(replace)** 한다.
 
-```text
-fork() → 자식 프로세스 생성 (부모의 복사본)
-         │
-    자식: exec() 호출
-         │
-    자식의 메모리 이미지가 새 프로그램으로 대체됨
-    (원래 프로그램은 파괴됨)
+```mermaid
+flowchart TD
+    f["fork() → 자식 프로세스 생성 (부모의 복사본)"] --> e["자식: exec() 호출"]
+    e --> r["자식의 메모리 이미지가 새 프로그램으로 대체됨<br/>(원래 프로그램은 파괴됨)"]
 ```
 
 *그림 8. fork() 이후 자식이 exec()로 새 프로그램을 적재하는 과정*
@@ -496,26 +493,16 @@ int main() {
 
 **fork() + exec() + wait() 흐름도:**
 
-```text
-부모 프로세스 (Parent Process)
-    │
-    ├── fork() 호출
-    │       │
-    │       ├── [자식 프로세스 생성]
-    │       │       │
-    │       │       ├── pid == 0 (자식)
-    │       │       │       │
-    │       │       │       └── execlp("/bin/ls", "ls", NULL)
-    │       │       │               → ls 명령어 실행
-    │       │       │               → exit()으로 종료
-    │       │
-    │       ├── pid > 0 (부모)
-    │       │       │
-    │       │       └── wait(NULL)  ← 자식 종료를 기다림
-    │       │               │
-    │       │               └── "Child Complete" 출력
-    │
-    └── return 0
+```mermaid
+flowchart TD
+    p["부모 프로세스 (Parent Process)"] --> f["fork() 호출"]
+    f --> c["자식 프로세스 생성"]
+    c -->|"pid == 0 (자식)"| ex["execlp(#quot;/bin/ls#quot;, #quot;ls#quot;, NULL)"]
+    ex --> ls["ls 명령어 실행"]
+    ls --> xt["exit()으로 종료"]
+    c -->|"pid > 0 (부모)"| w["wait(NULL): 자식 종료를 기다림"]
+    w --> pr["#quot;Child Complete#quot; 출력"]
+    pr --> ret["return 0"]
 ```
 
 *그림 9. fork(), exec(), wait()의 실행 흐름*
@@ -839,16 +826,15 @@ int main() {
 
 **셸의 동작 = fork() + exec() + wait()의 반복**
 
-```text
-셸 (부모 프로세스)
-    │
-    ├── 프롬프트 "myshell> " 표시
-    ├── 사용자 입력 읽기 (예: "ls")
-    ├── fork() → 자식 프로세스 생성
-    │       └── [자식] execlp("ls", "ls", NULL) → ls 실행 → exit()
-    ├── [부모] wait() → 자식 종료 대기
-    ├── 자식 종료 확인
-    └── 처음으로 돌아가 다음 명령어를 위해 반복
+```mermaid
+flowchart TD
+    sh["셸 (부모 프로세스)"] --> pr["프롬프트 #quot;myshell> #quot; 표시"]
+    pr --> rd["사용자 입력 읽기 (예: #quot;ls#quot;)"]
+    rd --> fk["fork() → 자식 프로세스 생성"]
+    fk -->|"자식"| ex["execlp(#quot;ls#quot;, #quot;ls#quot;, NULL) → ls 실행 → exit()"]
+    fk -->|"부모"| w["wait() → 자식 종료 대기"]
+    w --> done["자식 종료 확인"]
+    done -->|"처음으로 돌아가 다음 명령어를 위해 반복"| pr
 ```
 
 *그림 10. 간단한 셸이 명령어 하나를 처리하는 반복 과정*
