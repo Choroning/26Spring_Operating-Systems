@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lab.md) | [한국어](Concepts_Lab.ko.md)
 
-> **Last Updated:** 2026-10-27
+> **Last Updated:** 2026-11-04
 
 > **Learning Objectives:**
 > 1. Install and authenticate a coding agent such as Gemini CLI or Claude Code
@@ -260,7 +260,11 @@ graph LR
 
 *Figure 4. Expected output files of the mini OS build and the role of each file*
 
-> **Definition:** **Bootloader, real mode, and protected mode.** When an x86 CPU first starts, it runs in real mode, which can only access 1 MB of memory. The bootloader is responsible for loading the kernel into memory and switching the CPU to protected mode, which enables full memory access and hardware protection features (like memory segmentation and privilege levels). A 32-bit kernel can run only after this switch is complete.
+> **Definition:** **Real mode.** The mode an x86 CPU runs in when it first starts; in this mode, the CPU can access only 1 MB of memory.
+
+> **Definition:** **Protected mode.** The x86 CPU operating mode that enables full memory access and hardware protection features (like memory segmentation and privilege levels).
+
+> **Definition:** **Bootloader.** The program that loads the kernel into memory and switches the CPU from real mode to protected mode. A 32-bit kernel can run only after this switch is complete.
 
 > **[Computer Architecture]** With legacy BIOS booting, when a computer is powered on, the BIOS loads the boot sector (512 bytes) into memory and executes it (UEFI loads an EFI executable instead of a boot sector). `boot.asm` is this boot sector code, which starts in Real Mode, transitions to Protected Mode, and then loads the kernel (`kernel.c`). `linker.ld` is a linker script that specifies where the kernel code and data are placed in memory.
 
