@@ -3,7 +3,7 @@
 ![Last Commit](https://img.shields.io/github/last-commit/Choroning/26Spring_Operating-Systems)
 ![Languages](https://img.shields.io/github/languages/top/Choroning/26Spring_Operating-Systems)
 
-이 레포지토리는 운영체제 과목의 이중 언어 강의 노트와 수업 결과물을 정리한 아카이브입니다.
+이 레포지토리는 운영체제 과목의 강의 노트와 수업 결과물을 정리한 아카이브입니다.
 
 *작성자: 박철원 (고려대학교(세종), 컴퓨터소프트웨어학과) - 2026년 기준 3학년*
 <br><br>
@@ -26,9 +26,8 @@
 - `Coursework/`에는 과제 풀이(C 구현, xv6 커널 패치, 보고서)와 중간고사 대비 자료가 있으며, 텀 프로젝트와 xv6-riscv는 git submodule로 연결되어 있습니다.
 - 모든 노트는 영어(`.md`)와 한국어(`.ko.md`) 파일이 짝을 이룹니다.
 
-> **🤖 AI 에이전트 활용**
-> 이 과목은 AI 에이전트 사용을 권장합니다.
-> 수업 전반에 걸쳐 [Claude Code](https://claude.ai/download)와 [Gemini CLI](https://github.com/google-gemini/gemini-cli)를 코딩 어시스턴트로 활용했습니다.
+> **🤖 생성형 AI 도구 사용**
+> 이 과목은 생성형 AI 도구 사용을 권장하며, 이 레포지토리는 코드 구현에 [Claude Code](https://claude.ai/download)와 [Gemini CLI](https://github.com/google-gemini/gemini-cli)를 사용합니다.
 
 <br><a name="course-information"></a>
 ## 📚 강의 정보
