@@ -2,7 +2,7 @@
 
 [Repository Guide](../README.md) | [English](README.md) | [한국어](README.ko.md)
 
-> **Last Updated:** 2026-10-20
+> **Last Updated:** 2026-11-10
 
 | Item | Description | Documents |
 |:-----|:-----|:-----|

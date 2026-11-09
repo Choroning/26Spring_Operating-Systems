@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **Last Updated:** 2026-11-04
+> **Last Updated:** 2026-11-10
 >
 > Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 3 (3.1-3.3)
 
@@ -72,7 +72,7 @@ A **process** is a program in execution.
 - From the OS's perspective, there exist both processes executing user code and processes executing OS code.
 - The CPU(s) are **multiplexed** among these processes.
 
-> **Definition:** Multiplexing means the CPU is shared among multiple processes by rapidly switching between them, giving the illusion of simultaneous execution.
+> **Definition:** **Multiplexing** means the CPU is shared among multiple processes by rapidly switching between them, giving the illusion of simultaneous execution.
 
 > **Key Point:** The heart of the definition of a process is "a program in execution." An executable file stored on disk is a program (a passive entity), and when it is loaded into memory and given CPU time to run, it becomes a process (an active entity).
 
@@ -335,7 +335,7 @@ A process repeats the cycle in Figure 5 until it terminates. Upon termination, i
 - Reduces the degree of multiprogramming to relieve memory pressure.
 - Only needed when memory is **overcommitted** (i.e., the total memory demanded by all running processes exceeds the available physical RAM). The details are covered in Week 11.
 
-> **Definition:** Swapping moves an entire process out of main memory to disk (swap out) and back (swap in) to free memory for other processes.
+> **Definition:** **Swapping** moves an entire process out of main memory to disk (swap out) and back (swap in) to free memory for other processes.
 
 ### 2.5 Context Switch
 
@@ -400,7 +400,7 @@ A process can create several new processes during its execution.
 - **systemd** (pid = 1) is the **root parent** of all user processes and the first user process created during system boot. It creates processes for additional services such as web servers, SSH servers, etc.
 - In traditional UNIX, **init** (pid = 1) performed this role.
 
-> **Definition:** `systemd` (or `init` in older systems) is the first user-space program the Linux kernel launches at boot; it then starts all other services, so every user process is ultimately a descendant of PID 1.
+> **Definition:** **`systemd`** (or `init` in older systems) is the first user-space program the Linux kernel launches at boot; it then starts all other services, so every user process is ultimately a descendant of PID 1.
 
 > **[Data Structures]** The process tree is literally a tree structure. The root node is the first process (systemd, pid=1 on Linux), and each node can have child nodes (child processes). The clear parent-child relationship enables systematic process management (termination, resource reclamation, etc.).
 

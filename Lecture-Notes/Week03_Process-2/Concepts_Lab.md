@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lab.md) | [한국어](Concepts_Lab.ko.md)
 
-> **Last Updated:** 2026-11-04
+> **Last Updated:** 2026-11-10
 
 > **Learning Objectives:**
 > 1. Navigate the xv6 source code structure
@@ -292,7 +292,7 @@ struct proc {
 
 > **Note:** `context` saves callee-saved kernel registers used when the scheduler switches between processes inside the kernel (via `swtch.S`), while `trapframe` saves the full user-mode register state when entering the kernel from user space. They serve different switches: kernel↔kernel vs. user↔kernel.
 
-> **Definition:** An `inode` is the kernel's internal descriptor for a file or directory, storing metadata like size, permissions, and disk location.
+> **Definition:** An **`inode`** is the kernel's internal descriptor for a file or directory, storing metadata like size, permissions, and disk location.
 
 > **Note:** `ofile[]` holds kernel-side file objects. The file descriptor number that user programs use (e.g., `fd = 3`) is simply the index into this array.
 
