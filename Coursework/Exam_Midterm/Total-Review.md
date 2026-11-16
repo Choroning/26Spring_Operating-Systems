@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Total-Review.md) | [한국어](Total-Review.ko.md)
 
-> **Last Updated:** 2026-11-04
+> **Last Updated:** 2026-11-16
 
 ---
 
@@ -3144,6 +3144,7 @@ Each CPU makes scheduling decisions **independently**.
 RMS: T1 has priority (shorter period). T1 runs for 20ms every 50ms, and T2 completes its 35ms in the gaps.
 
 **Utilization bound**:
+
 $$ U \le N(2^{1/N} - 1) $$
 
 | N | Bound |
@@ -3402,40 +3403,86 @@ SJF is theoretically optimal but needs to know the future (Week 6). MLFQ approxi
 
 ### 9.2 Calculation Practice
 
+Solve each problem first, then expand the solution to check it.
+
 #### SJF Calculation 🧪
 Processes: P1(6), P2(8), P3(7), P4(3), all arriving at t=0.
+
+Find the execution order, the waiting time of each process, and the average waiting time under non-preemptive SJF.
+
+<details>
+<summary>Show solution</summary>
 
 - Execution order: P4 → P1 → P3 → P2
 - Waiting: P4=0, P1=3, P3=9, P2=16
 - Average: 7
 
+</details>
+
 #### RR Calculation 🧪
 Processes: P1(24), P2(3), P3(3), q=4, all arriving at t=0.
+
+Find the Gantt chart, the waiting time of each process, and the average waiting time under RR with a time quantum of 4.
+
+<details>
+<summary>Show solution</summary>
 
 - Gantt: P1(0-4) P2(4-7) P3(7-10) P1(10-14) P1(14-18) P1(18-22) P1(22-26) P1(26-30)
 - P1 waiting: 30-24=6, P2 waiting: 4, P3 waiting: 7
 - Average: 5.67
 
+</details>
+
 #### Exponential Averaging 🧪
-α=0.5, τ0=10. Actual burst t0=6.
+α=0.5, τ0=10. The actual burst is t0=6, and the next actual burst is t1=4.
 
-$$ \tau_1 = 0.5 \cdot 6 + 0.5 \cdot 10 = 8 $$
+Compute the predicted next bursts τ1 and τ2 by exponential averaging.
 
-Next actual burst t1 = 4:
+<details>
+<summary>Show solution</summary>
 
-$$ \tau_2 = 0.5 \cdot 4 + 0.5 \cdot 8 = 6 $$
+```math
+\tau_1 = 0.5 \cdot 6 + 0.5 \cdot 10 = 8
+```
+
+Taking the next actual burst t1 = 4 into account gives the following.
+
+```math
+\tau_2 = 0.5 \cdot 4 + 0.5 \cdot 8 = 6
+```
+
+</details>
 
 #### Amdahl's Law 🧪
 S = 20% (80% parallel), N = 8 cores.
 
-$$ \text{speedup} = \frac{1}{0.2 + 0.8/8} = \frac{1}{0.3} \approx 3.33 $$
+Compute the speedup and the maximum speedup as the number of cores grows without bound.
+
+<details>
+<summary>Show solution</summary>
+
+```math
+\text{speedup} = \frac{1}{0.2 + 0.8/8} = \frac{1}{0.3} \approx 3.33
+```
 
 N→∞: 1/0.2 = **at most 5x**.
+
+</details>
 
 #### Little's Formula 🧪
 In an interactive system, an average queue length of n=20 and a waiting time of W=0.5 seconds are observed.
 
-$$ \lambda = n/W = 20/0.5 = 40 \text{ processes/s} $$
+Compute the average arrival rate λ with Little's formula.
+
+<details>
+<summary>Show solution</summary>
+
+```math
+\lambda = n/W = 20/0.5 = 40 \text{ processes/s}
+```
+
+</details>
+
 
 ### 9.3 Code Pattern Practice
 

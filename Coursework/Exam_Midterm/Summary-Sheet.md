@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Summary-Sheet.md) | [한국어](Summary-Sheet.ko.md)
 
-> **Last Updated:** 2026-11-04
+> **Last Updated:** 2026-11-16
 
 ---
 
@@ -648,6 +648,7 @@ Turnaround = waiting + burst + I/O. What scheduling affects is **waiting**.
 Waiting: P4=0, P1=3, P3=9, P2=16 → **average 7**
 
 **Exponential averaging:**
+
 $$ \tau_{n+1} = \alpha t_n + (1-\alpha)\tau_n $$
 - α=0 → fixed on the past / α=1 → only the latest / usually α=0.5
 
@@ -892,6 +893,7 @@ $$ n = \lambda W $$
 
 ### Rate-Monotonic Utilization Bound
 $$ U \le N(2^{1/N} - 1) $$
+
 ≈ **0.693** (69.3%) as N→∞
 
 ### Procedure for Computing Average Waiting Time
@@ -1023,8 +1025,15 @@ $$ U \le N(2^{1/N} - 1) $$
 
 ### Example: Answer to a Question on Why System Calls Are Needed
 
+Explain why system calls are needed, following the template above.
+
+<details>
+<summary>Answer</summary>
+
 A system call is the only interface through which a user program requests OS services. On a single-mode CPU, a program could manipulate I/O or memory mappings directly and destroy the OS, so dual mode was introduced and entry into kernel mode was restricted to happen **only through a trap**.
 
 In the call sequence, the libc wrapper puts the system call number in register a7 (RISC-V) and executes the `ecall` instruction, and the hardware then changes the mode bit to 0 and jumps to the trap handler. For example, an `open()` call internally raises ecall, runs the kernel's `sys_open()`, and returns with the fd in a0.
 
 The limitation of this structure is **overhead**. Even a simple command like `cp` issues thousands of system calls, so buffering, DMA, and mmap become important. This connects directly to memory-mapped files (`mmap()`), which build on virtual memory.
+
+</details>

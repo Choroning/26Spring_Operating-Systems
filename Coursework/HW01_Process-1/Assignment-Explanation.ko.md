@@ -2,9 +2,9 @@
 
 [레포지토리 안내](../../README.ko.md) | [English](Assignment-Explanation.md) | [한국어](Assignment-Explanation.ko.md)
 
-> **최종 수정일:** 2026-11-04
+> **최종 수정일:** 2026-11-16
 >
-> Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 3 (3.1-3.3)
+> Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 3 (3.1-3.3); xv6: a simple, Unix-like teaching operating system, Cox, Kaashoek, and Morris, Ch 1
 
 > **학습 목표:**
 > 1. 파이프 두 개로 부모와 자식 프로세스 사이의 양방향 통신을 구현하고 왕복 시간을 측정할 수 있다
@@ -18,41 +18,44 @@
 ## 목차
 
 - [1. 과제 개요](#1-과제-개요)
-  - [1.1 이번 과제에서 다루는 시스템 콜](#11-이번-과제에서-다루는-시스템-콜)
-  - [1.2 파일 구조 및 사용법](#12-파일-구조-및-사용법)
-  - [1.3 빌드 및 실행](#13-빌드-및-실행)
-  - [1.4 테스트](#14-테스트)
-- [2. 과제 1: pingpong.c 해설](#2-과제-1-pingpongc-해설)
-  - [2.1 무엇을 구현하는가?](#21-무엇을-구현하는가)
-  - [2.2 왜 파이프가 2개 필요한가?](#22-왜-파이프가-2개-필요한가)
-  - [2.3 TODO 1: 파이프 2개 생성](#23-todo-1-파이프-2개-생성)
-  - [2.4 TODO 2, 6: 사용하지 않는 fd 닫기](#24-todo-2-6-사용하지-않는-fd-닫기)
-  - [2.5 TODO 3, 4, 5: 자식 프로세스의 동작](#25-todo-3-4-5-자식-프로세스의-동작)
-  - [2.6 TODO 7, 8, 9: 부모 프로세스의 동작](#26-todo-7-8-9-부모-프로세스의-동작)
-  - [2.7 전체 데이터 흐름 정리](#27-전체-데이터-흐름-정리)
-  - [2.8 핵심 학습 포인트](#28-핵심-학습-포인트)
-- [3. 과제 2: minishell.c 해설 (execute_command)](#3-과제-2-minishellc-해설-execute_command)
-  - [3.1 무엇을 구현하는가?](#31-무엇을-구현하는가)
-  - [3.2 주어진 자료구조 이해](#32-주어진-자료구조-이해)
-  - [3.3 TODO 1: fork()로 자식 생성](#33-todo-1-fork로-자식-생성)
-  - [3.4 TODO 2a: 입력 리디렉션](#34-todo-2a-입력-리디렉션)
-  - [3.5 TODO 2b: 출력 리디렉션](#35-todo-2b-출력-리디렉션)
-  - [3.6 TODO 2c, 2d: 명령어 실행](#36-todo-2c-2d-명령어-실행)
-  - [3.7 TODO 3: 부모의 대기](#37-todo-3-부모의-대기)
-  - [3.8 execute_command 전체 흐름 요약](#38-execute_command-전체-흐름-요약)
-- [4. 과제 2: minishell.c 해설 (execute_pipe)](#4-과제-2-minishellc-해설-execute_pipe)
-  - [4.1 파이프가 무엇을 하는가?](#41-파이프가-무엇을-하는가)
-  - [4.2 TODO 4: 파이프 생성](#42-todo-4-파이프-생성)
-  - [4.3 TODO 5: 자식1 (cmd1 실행)](#43-todo-5-자식1-cmd1-실행)
-  - [4.4 TODO 6: 자식2 (cmd2 실행)](#44-todo-6-자식2-cmd2-실행)
-  - [4.5 TODO 7: 부모에서 정리](#45-todo-7-부모에서-정리)
-  - [4.6 execute_pipe 전체 흐름 요약](#46-execute_pipe-전체-흐름-요약)
-  - [4.7 파이프 + 리디렉션 조합](#47-파이프--리디렉션-조합)
-- [5. 핵심 개념 정리](#5-핵심-개념-정리)
-  - [5.1 시스템 콜 조합 패턴 총정리](#51-시스템-콜-조합-패턴-총정리)
-  - [5.2 fd 관리 규칙](#52-fd-관리-규칙)
-  - [5.3 이 과제와 강의 내용의 연결](#53-이-과제와-강의-내용의-연결)
-  - [5.4 시스템 콜별 핵심 포인트](#54-시스템-콜별-핵심-포인트)
+  - [1.1 과제에서 다루는 시스템 콜](#11-과제에서-다루는-시스템-콜)
+  - [1.2 파일 구성](#12-파일-구성)
+- [2. 요구사항](#2-요구사항)
+  - [2.1 과제 1: pingpong](#21-과제-1-pingpong)
+  - [2.2 과제 2: minishell](#22-과제-2-minishell)
+  - [2.3 주어진 자료구조 이해](#23-주어진-자료구조-이해)
+  - [2.4 채점 기준과 유의 사항](#24-채점-기준과-유의-사항)
+- [3. 과제 1: pingpong.c 해설](#3-과제-1-pingpongc-해설)
+  - [3.1 왜 파이프가 2개 필요한가?](#31-왜-파이프가-2개-필요한가)
+  - [3.2 TODO 1: 파이프 2개 생성](#32-todo-1-파이프-2개-생성)
+  - [3.3 TODO 2, 6: 사용하지 않는 fd 닫기](#33-todo-2-6-사용하지-않는-fd-닫기)
+  - [3.4 TODO 3, 4, 5: 자식 프로세스의 동작](#34-todo-3-4-5-자식-프로세스의-동작)
+  - [3.5 TODO 7, 8, 9: 부모 프로세스의 동작](#35-todo-7-8-9-부모-프로세스의-동작)
+  - [3.6 전체 데이터 흐름 정리](#36-전체-데이터-흐름-정리)
+  - [3.7 핵심 학습 포인트](#37-핵심-학습-포인트)
+- [4. 과제 2: minishell.c 해설 (execute_command)](#4-과제-2-minishellc-해설-execute_command)
+  - [4.1 TODO 1: fork()로 자식 생성](#41-todo-1-fork로-자식-생성)
+  - [4.2 TODO 2a: 입력 리디렉션](#42-todo-2a-입력-리디렉션)
+  - [4.3 TODO 2b: 출력 리디렉션](#43-todo-2b-출력-리디렉션)
+  - [4.4 TODO 2c, 2d: 명령어 실행](#44-todo-2c-2d-명령어-실행)
+  - [4.5 TODO 3: 부모의 대기](#45-todo-3-부모의-대기)
+  - [4.6 execute_command 전체 흐름 요약](#46-execute_command-전체-흐름-요약)
+- [5. 과제 2: minishell.c 해설 (execute_pipe)](#5-과제-2-minishellc-해설-execute_pipe)
+  - [5.1 파이프가 무엇을 하는가?](#51-파이프가-무엇을-하는가)
+  - [5.2 TODO 4: 파이프 생성](#52-todo-4-파이프-생성)
+  - [5.3 TODO 5: 자식1 (cmd1 실행)](#53-todo-5-자식1-cmd1-실행)
+  - [5.4 TODO 6: 자식2 (cmd2 실행)](#54-todo-6-자식2-cmd2-실행)
+  - [5.5 TODO 7: 부모에서 정리](#55-todo-7-부모에서-정리)
+  - [5.6 execute_pipe 전체 흐름 요약](#56-execute_pipe-전체-흐름-요약)
+  - [5.7 파이프 + 리디렉션 조합](#57-파이프--리디렉션-조합)
+- [6. 빌드와 테스트](#6-빌드와-테스트)
+  - [6.1 빌드와 실행](#61-빌드와-실행)
+  - [6.2 자동 테스트](#62-자동-테스트)
+- [7. 핵심 개념 정리](#7-핵심-개념-정리)
+  - [7.1 시스템 콜 조합 패턴 총정리](#71-시스템-콜-조합-패턴-총정리)
+  - [7.2 fd 관리 규칙](#72-fd-관리-규칙)
+  - [7.3 이 과제와 강의 내용의 연결](#73-이-과제와-강의-내용의-연결)
+  - [7.4 시스템 콜별 핵심 포인트](#74-시스템-콜별-핵심-포인트)
 - [요약](#요약)
 - [점검 문제](#점검-문제)
 
@@ -62,7 +65,14 @@
 
 ## 1. 과제 개요
 
-### 1.1 이번 과제에서 다루는 시스템 콜
+> **풀어 보기:** 이 문서는 정답과 풀이를 담고 있다. 먼저 [과제 안내문](Original/Assignment.ko.md)의 문제를 직접 풀어 본 뒤 읽는다.
+
+과제는 2주차(프로세스 1)에서 배운 프로세스 생성, 파이프, 입출력 리디렉션을 C 프로그램 두 개로 구현하는 문제이다. 문제의 원문은 [과제 안내문](Original/Assignment.ko.md)에 있고, 배포된 시작 코드와 자동 테스트 스크립트는 `Original/skeleton/`과 `Original/tests/`에 원본 그대로 있다.
+
+- **pingpong**(기본): 두 프로세스가 파이프로 1바이트를 주고받는 프로그램이다.
+- **minishell**(중급): 파이프와 I/O 리디렉션을 지원하는 간단한 셸이다.
+
+### 1.1 과제에서 다루는 시스템 콜
 
 | 시스템 콜 | 역할 | 강의 연계 |
 |:----------|:-----|:----------|
@@ -76,59 +86,41 @@
 
 *표 1. 과제에서 다루는 시스템 콜과 강의 연계*
 
-**과제 구성:**
-- **pingpong**(기본): 두 프로세스가 파이프로 1바이트를 주고받는 프로그램이다.
-- **minishell**(중급): 파이프와 I/O 리디렉션을 지원하는 간단한 셸이다.
+### 1.2 파일 구성
 
-### 1.2 파일 구조 및 사용법
-
-```plaintext
+```text
 Coursework/HW01_Process-1/
-├── Assignment-Explanation.md       # 과제 해설 문서 (영어)
-├── Assignment-Explanation.ko.md    # 과제 해설 문서 (한국어, 이 파일)
+├── Assignment-Explanation.ko.md    # 과제 해설 (한국어, 이 문서)
+├── Assignment-Explanation.md       # 과제 해설 (영어)
+├── Code-Walkthrough.ko.md          # 코드 총정리 (한국어)
+├── Code-Walkthrough.md             # 코드 총정리 (영어)
+├── Original/
+│   ├── Assignment.ko.md            # 과제 안내문 (한국어)
+│   ├── Assignment.md               # 과제 안내문 (영어)
+│   ├── skeleton/
+│   │   ├── minishell.c             # 배포된 시작 코드 (과제 2)
+│   │   └── pingpong.c              # 배포된 시작 코드 (과제 1)
+│   └── tests/
+│       ├── test_minishell.sh       # 배포된 자동 테스트 스크립트 (과제 2)
+│       └── test_pingpong.sh        # 배포된 자동 테스트 스크립트 (과제 1)
 └── Solution/
-    ├── pingpong.c                  # 과제 1: 두 프로세스가 pipe로 1바이트를 주고받는 프로그램
-    ├── minishell.c                 # 과제 2: 파이프 및 I/O 리디렉션을 지원하는 간단한 셸
-    ├── test_pingpong.sh            # pingpong.c 자동 채점 스크립트
-    └── test_minishell.sh           # minishell.c 자동 채점 스크립트
+    ├── minishell.c                 # 과제 2의 풀이
+    ├── pingpong.c                  # 과제 1의 풀이
+    ├── test_minishell.sh           # 메시지를 영어로 옮긴 테스트 스크립트 (과제 2)
+    └── test_pingpong.sh            # 메시지를 영어로 옮긴 테스트 스크립트 (과제 1)
 ```
 
 *그림 1. HW1 과제의 디렉토리 구성*
-
-### 1.3 빌드 및 실행
-
-```bash
-# 레포지토리 루트에서 풀이 디렉토리로 이동
-cd Coursework/HW01_Process-1/Solution
-
-# pingpong
-gcc -Wall -o pingpong pingpong.c
-./pingpong
-
-# minishell
-gcc -Wall -o minishell minishell.c
-./minishell
-```
-
-### 1.4 테스트
-
-```bash
-# Solution 디렉토리에서 실행 (기본값: 같은 경로의 .c 파일 컴파일)
-./test_pingpong.sh
-./test_minishell.sh
-
-# 다른 경로의 소스 파일을 지정할 수도 있음
-./test_pingpong.sh /path/to/pingpong.c
-./test_minishell.sh /path/to/minishell.c
-```
 
 ---
 
 <br>
 
-## 2. 과제 1: pingpong.c 해설
+## 2. 요구사항
 
-### 2.1 무엇을 구현하는가?
+### 2.1 과제 1: pingpong
+
+과제 1은 xv6 교재 Ch 1의 Exercise 1을 바탕으로 한 문제이다. 시작 코드 `skeleton/pingpong.c`의 TODO 1\~9를 채워 다음 동작을 완성해야 한다. 왕복 시간을 재는 함수 `get_time_us()`와 시간 측정, 출력 코드는 시작 코드에 이미 있다.
 
 **목표:** 부모 프로세스와 자식 프로세스가 파이프(Pipe)를 통해 1바이트를 **왕복**으로 주고받고, 왕복 시간(Round-trip Time)을 측정한다.
 
@@ -156,7 +148,68 @@ Round-trip time: 156.000 us
 
 > **[컴퓨터네트워크]** 왕복 시간(Round-trip Time, RTT)은 네트워크에서 패킷이 목적지까지 갔다가 돌아오는 데 걸리는 시간을 의미한다. 이 과제에서는 프로세스 간 파이프 통신의 RTT를 측정하는데, 이는 IPC(프로세스 간 통신)의 오버헤드를 파악하는 데 유용하다. 같은 호스트 안의 파이프 RTT는 하드웨어, 운영체제, 스케줄링 상태에 따라 수 마이크로초에서 수백 마이크로초까지 달라진다.
 
-### 2.2 왜 파이프가 2개 필요한가?
+사용해야 하는 시스템 콜은 `pipe()`, `fork()`, `read()`, `write()`, `close()`, `wait()`, `getpid()`이다. 과제는 세 가지를 강조한다. 양방향 통신에는 파이프가 두 개 필요하고, 각 프로세스는 사용하지 않는 파이프 fd를 `close()`해야 하며, ping은 자식이 받고 pong은 부모가 받는다. 출력은 위의 세 줄 형식을 정확히 따라야 한다.
+
+### 2.2 과제 2: minishell
+
+과제 2는 파이프와 입출력 리디렉션을 지원하는 간단한 셸이다.
+
+**목표:** `fork()`, `exec()`, `wait()`, `pipe()`, `dup2()`를 활용하여 **실제 셸(Shell)** 의 핵심 동작을 구현한다.
+
+| 기능 | 예시 | 사용 시스템 콜 |
+|:-----|:-----|:-------------|
+| 단일 명령어 실행 | `ls -l` | fork + execvp + wait |
+| 출력 리디렉션 | `echo hello > file.txt` | open + dup2 + execvp |
+| 입력 리디렉션 | `sort < data.txt` | open + dup2 + execvp |
+| 파이프 | `ls \| wc -l` | pipe + fork×2 + dup2 + execvp |
+| 종료 | `exit` | 루프 탈출 |
+
+*표 2. minishell의 기능과 사용 시스템 콜*
+
+**이미 구현된 부분:** `main()`(입력 읽기, 파이프 분할, exit 처리), `parse_command()`(명령어 파싱, 리디렉션 파싱), `struct command`
+
+**학생이 구현할 부분:** `execute_command()`, `execute_pipe()`
+
+> **참고:** **2주차 이론: 셸의 동작 원리.** UNIX 셸의 기본 동작 원리는 fork(), exec(), wait()의 반복이다. 이 과제는 그 원리를 직접 코드로 구현한다.
+
+`execute_command()`는 `fork()`로 자식을 만들어야 한다. 자식은 `cmd->infile`이 있으면 `open()`, `dup2(fd, STDIN_FILENO)`, `close(fd)`로, `cmd->outfile`이 있으면 `open()`, `dup2(fd, STDOUT_FILENO)`, `close(fd)`로 리디렉션을 설정한 뒤 `execvp(cmd->argv[0], cmd->argv)`를 실행하고, exec가 실패하면 오류를 출력하고 `exit(127)`로 끝난다. 부모는 `waitpid()`로 자식의 종료를 기다리고, 자식의 종료 상태(`WEXITSTATUS`)를 반환하거나 오류이면 -1을 반환한다.
+
+`execute_pipe()`는 파이프 하나와 자식 두 개로 `cmd1 | cmd2`를 실행해야 한다. 자식1은 stdout을 파이프의 쓰기 끝에, 자식2는 stdin을 파이프의 읽기 끝에 연결하며, `cmd1`의 입력 리디렉션과 `cmd2`의 출력 리디렉션도 적용한다. 부모는 파이프의 양쪽 끝을 닫고 두 자식을 모두 기다린 뒤 `cmd2`의 종료 상태를 반환한다. 과제는 `execute_pipe()`가 `execute_command()`의 확장이므로 `execute_command()`를 먼저 완성하고 테스트하도록 권한다.
+
+### 2.3 주어진 자료구조 이해
+
+```c
+struct command {
+    char *argv[MAX_ARGS];   /* 인자 목록 (NULL로 종료) */
+    char *infile;           /* 입력 리디렉션 파일명, 없으면 NULL */
+    char *outfile;          /* 출력 리디렉션 파일명, 없으면 NULL */
+};
+```
+
+**파싱 예시:**
+
+| 입력 | `argv[]` | `infile` | `outfile` |
+|:-----|:---------|:---------|:----------|
+| `ls -l` | `{"ls", "-l", NULL}` | `NULL` | `NULL` |
+| `echo hello > out.txt` | `{"echo", "hello", NULL}` | `NULL` | `"out.txt"` |
+| `sort < data.txt` | `{"sort", NULL}` | `"data.txt"` | `NULL` |
+| `cat < in.txt > out.txt` | `{"cat", NULL}` | `"in.txt"` | `"out.txt"` |
+
+*표 3. parse_command()의 파싱 예시*
+
+`parse_command()` 함수가 `<`와 `>`를 토큰으로 인식하여 `infile`과 `outfile`에 저장하고, 나머지를 `argv[]`에 넣는 부분은 이미 구현되어 있다.
+
+### 2.4 채점 기준과 유의 사항
+
+배점은 pingpong이 30%(컴파일과 정상 실행 10%, 출력 형식 15%, 왕복 시간 측정 5%), minishell이 70%(단일 명령어 실행 20%, 출력 리디렉션 15%, 입력 리디렉션 15%, 파이프 20%)이다. 모든 코드는 `gcc -Wall`로 경고 없이 컴파일되어야 하고 macOS와 Linux에서 모두 동작해야 하며, `fork()`, `exec()`, `open()`의 실패를 처리해야 한다. 사용하지 않는 파이프 fd를 닫지 않으면 프로그램이 멈출 수 있으므로 닫아야 하고, 메모리 누수는 감점하지 않는다. 배포된 자동 테스트 스크립트가 검사하는 항목은 6.2절에 정리한다.
+
+---
+
+<br>
+
+## 3. 과제 1: pingpong.c 해설
+
+### 3.1 왜 파이프가 2개 필요한가?
 
 파이프(Pipe)는 **단방향(unidirectional)** 통신 채널이다. 한쪽 끝(`fd[1]`)으로 쓰고, 다른 쪽 끝(`fd[0]`)으로 읽는다.
 
@@ -179,11 +232,13 @@ int child_to_parent[2];   /* 자식 → 부모 방향 */
 | `parent_to_child` | 부모가 사용 | 자식이 사용 |
 | `child_to_parent` | 자식이 사용 | 부모가 사용 |
 
-*표 2. 파이프 양 끝의 사용 주체*
+*표 4. 파이프 양 끝의 사용 주체*
 
 > **참고:** **2주차 실습 3.** `pipe()` 함수는 `int fd[2]` 배열에 `fd[0]`(읽기 끝)과 `fd[1]`(쓰기 끝)을 채운다. 이 과제에서는 이 원리를 확장하여 **2개의 파이프**로 양방향 통신을 구현한다.
 
-### 2.3 TODO 1: 파이프 2개 생성
+### 3.2 TODO 1: 파이프 2개 생성
+
+TODO 1은 `fork()` 전에 파이프 두 개를 만들고, `pipe()`가 실패하면 `perror` 후 종료하라고 요구한다. `Solution/pingpong.c`의 53~60번 줄이 이 부분이다.
 
 ```c
 /* TODO 1: pipe 2개를 생성하세요. */
@@ -205,9 +260,9 @@ if (pipe(child_to_parent) < 0) {
 
 > **참고:** **2주차 이론.** `fork()`는 부모 프로세스의 **주소 공간의 복사본**을 만든다. 파일 디스크립터 테이블도 복사되므로, `fork()` 이전에 생성한 파이프의 fd를 부모와 자식이 모두 갖게 된다. 이것이 파이프를 통한 부모와 자식 간 통신이 가능한 이유이다.
 
-### 2.4 TODO 2, 6: 사용하지 않는 fd 닫기
+### 3.3 TODO 2, 6: 사용하지 않는 fd 닫기
 
-`fork()` 후 부모와 자식은 모두 파이프 fd 4개를 갖고 있다. 각 프로세스에서 **사용하지 않는 끝**을 닫아야 한다.
+TODO 2와 TODO 6은 각 프로세스에서 사용하지 않는 파이프 fd를 닫으라고 요구한다. `fork()` 후 부모와 자식은 모두 파이프 fd 4개를 갖고 있으므로, 각 프로세스에서 **사용하지 않는 끝**을 닫아야 한다. 자식은 72\~73번 줄, 부모는 91\~92번 줄에서 닫는다.
 
 **자식 프로세스 (TODO 2):**
 ```c
@@ -225,7 +280,9 @@ close(child_to_parent[1]);   /* 자식→부모 파이프의 쓰기 끝 (부모�
 
 > **참고:** **2주차 실습 3.** 실습에서는 사용하지 않는 쪽을 항상 닫는다는 규칙을 다룬다. 그 이유는 두 가지이다. (1) 쓰기 끝이 열려 있으면 읽는 쪽이 **EOF를 수신할 수 없어** 프로그램이 영원히 블록된다. (2) 파일 디스크립터는 유한한 자원이므로 불필요한 fd는 즉시 해제해야 한다.
 
-### 2.5 TODO 3, 4, 5: 자식 프로세스의 동작
+### 3.4 TODO 3, 4, 5: 자식 프로세스의 동작
+
+TODO 3\~5는 자식이 부모가 보낸 1바이트를 읽어 `<pid>: received ping`을 출력하고, 1바이트를 부모에게 돌려보낸 뒤, 사용한 fd를 닫고 `exit(0)`으로 끝나도록 요구한다. 자식의 코드는 75\~86번 줄이다.
 
 ```c
 /* TODO 3: 부모로부터 1바이트를 읽으세요. */
@@ -250,7 +307,9 @@ exit(0);
 
 > **참고:** **2주차 이론.** 자식 프로세스가 `exit(0)`으로 종료하면, 부모가 `wait()`를 호출할 때까지 **좀비 프로세스(Zombie Process)** 상태가 된다. 이 과제에서는 부모가 마지막에 `wait(NULL)`을 호출하여 좀비를 회수한다.
 
-### 2.6 TODO 7, 8, 9: 부모 프로세스의 동작
+### 3.5 TODO 7, 8, 9: 부모 프로세스의 동작
+
+TODO 7\~9는 부모가 자식에게 `'p'` 1바이트를 보내고(ping), 자식이 돌려보낸 1바이트를 읽어 `<pid>: received pong`을 출력한 뒤, 사용한 fd를 닫고 `wait()`로 자식을 기다리도록 요구한다. 왕복 시간 측정(`get_time_us()`의 두 호출과 출력)은 시작 코드에 이미 있다. 부모의 코드는 90\~111번 줄이다.
 
 ```c
 long start_time = get_time_us();      /* 시간 측정 시작 */
@@ -275,7 +334,7 @@ wait(NULL);   /* 자식 프로세스 회수: 좀비 방지 */
 
 > **참고:** **2주차 이론: 문맥 교환.** 왕복 시간에는 **문맥 교환(Context Switch)** 오버헤드가 포함된다. CPU 코어가 하나라면 부모가 `write()`한 뒤 자식이 `read()`에서 깨어나려면 CPU가 부모에서 자식으로 전환되어야 하고, 자식이 `write()`한 뒤 부모가 `read()`에서 깨어나려면 또 한 번 전환이 필요하다. 즉 단일 코어에서 측정된 RTT는 대략 데이터 복사 시간 + 문맥 교환 시간 × 2이다. 멀티코어에서는 부모와 자식이 서로 다른 코어에서 실행될 수 있으므로, 문맥 교환 대신 다른 코어에서 잠든 프로세스를 깨우는 비용이 든다.
 
-### 2.7 전체 데이터 흐름 정리
+### 3.6 전체 데이터 흐름 정리
 
 ```text
 시간 →
@@ -302,7 +361,7 @@ wait(NULL) ───────────────────────
 
 *그림 4. pingpong의 전체 데이터 흐름*
 
-### 2.8 핵심 학습 포인트
+### 3.7 핵심 학습 포인트
 
 | 학습 포인트 | 강의 연계 | 이 과제에서의 적용 |
 |:-----------|:----------|:-----------------|
@@ -313,58 +372,17 @@ wait(NULL) ───────────────────────
 | **wait()으로 좀비 방지** | 2주차 이론: 좀비 프로세스 | 부모가 마지막에 wait(NULL) 호출 |
 | **문맥 교환 오버헤드** | 2주차 이론: 문맥 교환 | RTT에 문맥 교환 비용이 포함됨 |
 
-*표 3. pingpong의 핵심 학습 포인트*
+*표 5. pingpong의 핵심 학습 포인트*
 
 ---
 
 <br>
 
-## 3. 과제 2: minishell.c 해설 (execute_command)
+## 4. 과제 2: minishell.c 해설 (execute_command)
 
-### 3.1 무엇을 구현하는가?
+### 4.1 TODO 1: fork()로 자식 생성
 
-**목표:** `fork()`, `exec()`, `wait()`, `pipe()`, `dup2()`를 활용하여 **실제 셸(Shell)** 의 핵심 동작을 구현한다.
-
-| 기능 | 예시 | 사용 시스템 콜 |
-|:-----|:-----|:-------------|
-| 단일 명령어 실행 | `ls -l` | fork + execvp + wait |
-| 출력 리디렉션 | `echo hello > file.txt` | open + dup2 + execvp |
-| 입력 리디렉션 | `sort < data.txt` | open + dup2 + execvp |
-| 파이프 | `ls \| wc -l` | pipe + fork×2 + dup2 + execvp |
-| 종료 | `exit` | 루프 탈출 |
-
-*표 4. minishell의 기능과 사용 시스템 콜*
-
-**이미 구현된 부분:** `main()`(입력 읽기, 파이프 분할, exit 처리), `parse_command()`(명령어 파싱, 리디렉션 파싱), `struct command`
-
-**학생이 구현할 부분:** `execute_command()`, `execute_pipe()`
-
-> **참고:** **2주차 이론: 셸의 동작 원리.** UNIX 셸의 기본 동작 원리는 fork(), exec(), wait()의 반복이다. 이 과제는 그 원리를 직접 코드로 구현한다.
-
-### 3.2 주어진 자료구조 이해
-
-```c
-struct command {
-    char *argv[MAX_ARGS];   /* 인자 목록 (NULL로 종료) */
-    char *infile;           /* 입력 리디렉션 파일명, 없으면 NULL */
-    char *outfile;          /* 출력 리디렉션 파일명, 없으면 NULL */
-};
-```
-
-**파싱 예시:**
-
-| 입력 | `argv[]` | `infile` | `outfile` |
-|:-----|:---------|:---------|:----------|
-| `ls -l` | `{"ls", "-l", NULL}` | `NULL` | `NULL` |
-| `echo hello > out.txt` | `{"echo", "hello", NULL}` | `NULL` | `"out.txt"` |
-| `sort < data.txt` | `{"sort", NULL}` | `"data.txt"` | `NULL` |
-| `cat < in.txt > out.txt` | `{"cat", NULL}` | `"in.txt"` | `"out.txt"` |
-
-*표 5. parse_command()의 파싱 예시*
-
-`parse_command()` 함수가 `<`와 `>`를 토큰으로 인식하여 `infile`과 `outfile`에 저장하고, 나머지를 `argv[]`에 넣는 부분은 이미 구현되어 있다.
-
-### 3.3 TODO 1: fork()로 자식 생성
+`execute_command()`의 TODO 1은 `fork()`로 자식 프로세스를 만들고, `fork()`가 실패하면 `perror` 후 -1을 반환하라고 요구한다. `Solution/minishell.c`의 138~142번 줄이 이 부분이다.
 
 ```c
 static int execute_command(struct command *cmd)
@@ -386,7 +404,9 @@ static int execute_command(struct command *cmd)
 
 > **참고:** **2주차 이론: fork() 반환 값.** fork()의 반환 값 규칙이 여기서 그대로 적용된다. 부모는 양수(자식 pid)를 받아 `waitpid()`에 사용하고, 자식은 0을 받아 `exec()` 경로로 분기한다. `-1`은 fork 실패(프로세스 테이블 가득 참 등)를 의미하며, 이를 적절히 처리해야 한다.
 
-### 3.4 TODO 2a: 입력 리디렉션
+### 4.2 TODO 2a: 입력 리디렉션
+
+TODO 2의 a는 자식에서 `cmd->infile`이 `NULL`이 아니면 그 파일을 `O_RDONLY`로 열고, 실패하면 `perror` 후 `exit(1)`로 끝나며, 성공하면 `dup2(fd, STDIN_FILENO)`로 stdin을 바꾼 뒤 원래 fd를 닫으라고 요구한다. 148~156번 줄이 이 부분이다.
 
 ```c
 if (pid == 0) {
@@ -413,7 +433,9 @@ if (pid == 0) {
 
 > **참고:** **2주차 실습 4.** `sort < data.txt`를 실행하면 `sort` 프로그램은 평소처럼 `stdin`에서 읽지만, 실제로는 `data.txt`의 내용이 읽힌다. 프로그램을 수정하지 않고도 입출력 대상을 바꿀 수 있다는 점이 UNIX I/O 리디렉션의 강점이다.
 
-### 3.5 TODO 2b: 출력 리디렉션
+### 4.3 TODO 2b: 출력 리디렉션
+
+TODO 2의 b는 `cmd->outfile`이 `NULL`이 아니면 그 파일을 `O_WRONLY|O_CREAT|O_TRUNC` 플래그와 권한 0644로 열고, 실패하면 `perror` 후 `exit(1)`로 끝나며, 성공하면 `dup2(fd, STDOUT_FILENO)`로 stdout을 바꾼 뒤 원래 fd를 닫으라고 요구한다. 159~167번 줄이 이 부분이다.
 
 ```c
     /* b. 출력 리디렉션 */
@@ -442,7 +464,9 @@ if (pid == 0) {
 
 **권한 `0644`:** 소유자는 읽기와 쓰기, 그룹과 기타 사용자는 읽기만 할 수 있다.
 
-### 3.6 TODO 2c, 2d: 명령어 실행
+### 4.4 TODO 2c, 2d: 명령어 실행
+
+TODO 2의 c와 d는 `execvp(cmd->argv[0], cmd->argv)`로 명령어를 실행하고, `execvp()`가 반환하면 실패한 것이므로 `perror("minishell")`을 출력한 뒤 `exit(127)`로 끝나라고 요구한다. 170~174번 줄이 이 부분이다.
 
 ```c
     /* c. 명령어 실행 */
@@ -468,7 +492,9 @@ if (pid == 0) {
 
 > **참고:** **2주차 이론: exec() 계열.** exec() 계열 함수(execl, execlp, execle, execv, execvp, execve) 중 `execvp`를 선택한 이유는 인자가 배열 형태(`argv`)이고 PATH 검색이 필요하기 때문이다. l/v는 인자 전달 방식, p는 PATH 검색 여부, e는 환경 변수 지정 여부를 결정한다.
 
-### 3.7 TODO 3: 부모의 대기
+### 4.5 TODO 3: 부모의 대기
+
+TODO 3은 부모가 `waitpid(pid, &status, 0)`로 자식의 종료를 기다리고, `WIFEXITED(status)`이면 `WEXITSTATUS(status)`를, 그렇지 않으면 -1을 반환하라고 요구한다. 178~182번 줄이 이 부분이다.
 
 ```c
     /* TODO 3 (부모 프로세스): */
@@ -495,7 +521,7 @@ if (pid == 0) {
 - `WIFEXITED(status)`는 자식이 `exit()`으로 정상 종료했는지 확인한다.
 - `WEXITSTATUS(status)`는 종료 코드(0~255)를 추출한다.
 
-### 3.8 execute_command 전체 흐름 요약
+### 4.6 execute_command 전체 흐름 요약
 
 ```mermaid
 flowchart TD
@@ -520,9 +546,9 @@ flowchart TD
 
 <br>
 
-## 4. 과제 2: minishell.c 해설 (execute_pipe)
+## 5. 과제 2: minishell.c 해설 (execute_pipe)
 
-### 4.1 파이프가 무엇을 하는가?
+### 5.1 파이프가 무엇을 하는가?
 
 셸에서 `cmd1 | cmd2`를 입력하면 다음과 같이 연결된다.
 - `cmd1`의 **표준 출력(stdout)** 이 파이프를 통해 `cmd2`의 **표준 입력(stdin)** 으로 연결된다.
@@ -543,7 +569,9 @@ flowchart LR
 
 > **참고:** **2주차 실습 4.** 실습에는 `ls | wc -l`을 구현하는 연습 문제가 있다. 이 과제의 `execute_pipe()`는 그 구현을 일반화한 것으로, 어떤 두 명령어든 파이프로 연결할 수 있게 한다.
 
-### 4.2 TODO 4: 파이프 생성
+### 5.2 TODO 4: 파이프 생성
+
+`execute_pipe()`의 TODO 4는 `int fd[2]`에 `pipe(fd)`로 파이프를 만들고, 실패하면 `perror` 후 -1을 반환하라고 요구한다. 213~217번 줄이 이 부분이다.
 
 ```c
 static int execute_pipe(struct command *cmd1, struct command *cmd2)
@@ -569,7 +597,9 @@ fd[1] = 쓰기 끝 → cmd1의 stdout에 연결할 것
 
 *그림 7. 파이프 양 끝과 두 명령어의 연결*
 
-### 4.3 TODO 5: 자식1 (cmd1 실행)
+### 5.3 TODO 5: 자식1 (cmd1 실행)
+
+TODO 5는 `fork()`로 자식1을 만들고, 자식1에서 파이프의 읽기 끝 `fd[0]`을 닫고 `dup2(fd[1], STDOUT_FILENO)`로 stdout을 파이프의 쓰기 끝에 연결한 뒤 `fd[1]`을 닫으며, `cmd1->infile`이 있으면 입력 리디렉션을 설정한 다음 `cmd1`을 실행하라고 요구한다. exec가 실패하면 `perror` 후 `exit(127)`로 끝난다. 220~246번 줄이 이 부분이다.
 
 ```c
 /* TODO 5: fork()로 자식1을 생성하세요 (cmd1 실행). */
@@ -602,7 +632,9 @@ if (pid1 == 0) {
 
 **핵심:** `dup2(fd[1], STDOUT_FILENO)`를 호출하면 cmd1이 `printf()`나 `write(1,...)`로 출력할 때 데이터가 **파이프의 커널 버퍼**로 들어간다.
 
-### 4.4 TODO 6: 자식2 (cmd2 실행)
+### 5.4 TODO 6: 자식2 (cmd2 실행)
+
+TODO 6은 `fork()`로 자식2를 만들고, 자식2에서 파이프의 쓰기 끝 `fd[1]`을 닫고 `dup2(fd[0], STDIN_FILENO)`로 stdin을 파이프의 읽기 끝에 연결한 뒤 `fd[0]`을 닫으며, `cmd2->outfile`이 있으면 출력 리디렉션을 설정한 다음 `cmd2`를 실행하라고 요구한다. exec가 실패하면 `perror` 후 `exit(127)`로 끝난다. 249~275번 줄이 이 부분이다.
 
 ```c
 /* TODO 6: fork()로 자식2를 생성하세요 (cmd2 실행). */
@@ -635,7 +667,9 @@ if (pid2 == 0) {
 
 **핵심:** `dup2(fd[0], STDIN_FILENO)`를 호출하면 cmd2가 `scanf()`나 `read(0,...)`로 읽을 때 데이터가 **파이프의 커널 버퍼**에서 읽힌다. 즉 cmd1의 출력이 cmd2의 입력이 된다.
 
-### 4.5 TODO 7: 부모에서 정리
+### 5.5 TODO 7: 부모에서 정리
+
+TODO 7은 부모가 파이프의 양쪽 끝(`fd[0]`, `fd[1]`)을 모두 닫고, `waitpid`로 자식1과 자식2의 종료를 기다린 뒤 `cmd2`의 종료 상태를 반환하라고 요구한다. 278~287번 줄이 이 부분이다.
 
 ```c
 /* TODO 7: 부모에서 정리하세요. */
@@ -660,7 +694,7 @@ return -1;
 
 > **참고:** **2주차 실습 3.** 쓰기 끝을 닫아야 읽는 쪽에서 EOF를 수신한다는 실습의 규칙을 실제로 적용하는 부분이다. 부모, 자식1, 자식2의 총 3개 프로세스가 파이프 fd를 갖고 있으므로, **각 프로세스에서 사용하지 않는 fd를 모두 닫아야** 정상 동작한다.
 
-### 4.6 execute_pipe 전체 흐름 요약
+### 5.6 execute_pipe 전체 흐름 요약
 
 ```mermaid
 flowchart TD
@@ -678,7 +712,7 @@ flowchart TD
 
 *그림 8. execute_pipe()의 실행 흐름*
 
-### 4.7 파이프 + 리디렉션 조합
+### 5.7 파이프 + 리디렉션 조합
 
 이 구현은 **파이프와 리디렉션의 조합**도 지원한다.
 
@@ -705,9 +739,76 @@ flowchart LR
 
 <br>
 
-## 5. 핵심 개념 정리
+## 6. 빌드와 테스트
 
-### 5.1 시스템 콜 조합 패턴 총정리
+### 6.1 빌드와 실행
+
+두 프로그램은 표준 C 라이브러리와 POSIX 시스템 콜만 쓰므로 `gcc -Wall`로 바로 빌드한다.
+
+```bash
+# 레포지토리 루트에서 풀이 디렉토리로 이동
+cd Coursework/HW01_Process-1/Solution
+
+# pingpong
+gcc -Wall -o pingpong pingpong.c
+./pingpong
+
+# minishell
+gcc -Wall -o minishell minishell.c
+./minishell
+```
+
+### 6.2 자동 테스트
+
+과제는 프로그램마다 자동 테스트 스크립트를 배포했다. `Original/tests/`의 원본은 메시지가 한국어이고 기본 소스 경로가 `../skeleton/`의 파일이다. `Solution/`의 두 스크립트는 원본의 메시지와 주석을 영어로 옮기고 기본 경로를 같은 폴더의 `.c` 파일로 바꾼 것이며, 검사 내용은 원본과 같다.
+
+```bash
+# Solution 디렉토리에서 실행 (기본값: 같은 경로의 .c 파일 컴파일)
+./test_pingpong.sh
+./test_minishell.sh
+
+# 다른 경로의 소스 파일을 지정할 수도 있음
+./test_pingpong.sh /path/to/pingpong.c
+./test_minishell.sh /path/to/minishell.c
+
+# 배포된 원본 스크립트로 검사 (Solution 디렉토리 기준)
+cd ../Original/tests
+./test_pingpong.sh ../../Solution/pingpong.c
+./test_minishell.sh ../../Solution/minishell.c
+```
+
+| 스크립트 | 검사 항목 |
+|:-----|:-----|
+| `test_pingpong.sh` | `gcc -Wall` 컴파일과 경고 확인, 5초 안의 정상 종료(exit code 0), `<pid>: received ping`과 `<pid>: received pong` 행의 존재와 형식, 두 PID가 서로 다른지, 왕복 시간 출력, ping 행이 pong 행보다 먼저 나오는지, 5회 반복 실행 (검사 10개) |
+| `test_minishell.sh` | 컴파일, `echo`, 인자 처리, 출력 리디렉션, 입력 리디렉션(`wc -l < file`), 파이프(`wc -w`와 `grep`), 파이프와 출력 리디렉션, 입력 리디렉션과 파이프(`sort < file \| head -1`), `exit`, EOF, 존재하지 않는 명령어 뒤의 계속 실행, 빈 입력, 명령어 세 개의 연속 실행 (검사 14개) |
+
+*표 8. 자동 테스트 스크립트의 검사 항목*
+
+풀이는 두 스크립트의 검사를 모두 통과한다. 다음은 `Solution/`의 스크립트를 실행한 출력의 끝부분이며, `Original/tests/`의 원본 스크립트로 검사해도 같은 개수가 통과한다. 왕복 시간은 하드웨어와 시스템 부하에 따라 실행할 때마다 달라진다.
+
+```text
+$ ./test_pingpong.sh
+...
+ Passed: 10 / 10
+ Failed: 0 / 10
+
+ All tests passed!
+
+$ ./test_minishell.sh
+...
+ Passed: 14 / 14
+ Failed: 0 / 14
+
+ All tests passed!
+```
+
+---
+
+<br>
+
+## 7. 핵심 개념 정리
+
+### 7.1 시스템 콜 조합 패턴 총정리
 
 | 패턴 | 용도 | 이 과제에서의 적용 |
 |:-----|:-----|:-----------------|
@@ -717,9 +818,9 @@ flowchart LR
 | **pipe() + fork()×2 + dup2() + exec()** | 셸 파이프라인 구현 | minishell: execute_pipe() |
 | **open() + dup2() + close()** | I/O 리디렉션 | minishell: 입출력 리디렉션 |
 
-*표 8. 시스템 콜 조합 패턴*
+*표 9. 시스템 콜 조합 패턴*
 
-### 5.2 fd 관리 규칙
+### 7.2 fd 관리 규칙
 
 **규칙 1: 사용하지 않는 파이프 fd는 반드시 닫는다.**
 - 닫지 않으면 EOF가 전달되지 않아 프로그램이 영원히 블록된다.
@@ -741,7 +842,7 @@ fd 소유 상황 (fork() 후):
 
 *그림 10. fork() 후 프로세스별 파이프 fd 처리*
 
-### 5.3 이 과제와 강의 내용의 연결
+### 7.3 이 과제와 강의 내용의 연결
 
 **이론(Lecture) 연계:**
 
@@ -755,7 +856,7 @@ fd 소유 상황 (fork() 후):
 | 문맥 교환(Context Switch) | pingpong의 RTT에 문맥 교환 오버헤드가 포함됨 |
 | fork() + exec() + wait() = 셸 | minishell의 execute_command()가 바로 이 패턴 |
 
-*표 9. 2주차 이론과 과제의 연결*
+*표 10. 2주차 이론과 과제의 연결*
 
 **실습(Lab) 연계:**
 
@@ -766,9 +867,9 @@ fd 소유 상황 (fork() 후):
 | dup2()로 I/O 리디렉션 | minishell에서 파일이나 파이프를 stdin/stdout에 연결 |
 | 생산자-소비자 패턴 | 파이프를 통한 cmd1→cmd2 데이터 흐름 |
 
-*표 10. 2주차 실습과 과제의 연결*
+*표 11. 2주차 실습과 과제의 연결*
 
-### 5.4 시스템 콜별 핵심 포인트
+### 7.4 시스템 콜별 핵심 포인트
 
 **1. fork() 관련:**
 - fork()의 반환 값은 부모에서 자식 pid, 자식에서 0, 실패 시 -1이다.
@@ -811,6 +912,7 @@ fd 소유 상황 (fork() 후):
 | 시스템 콜 조합 패턴 | 주요 패턴은 fork+wait, fork+exec+wait, pipe+fork+read/write, pipe+fork×2+dup2+exec, open+dup2+close이다. |
 | 시스템 콜 동작의 핵심 | fork 반환 값 구분, exec 성공 시 미반환, wait 미호출 시 좀비, 파이프 단방향 원칙, dup2 동작 원리가 핵심이다. |
 | 강의 연계 | 2주차 이론의 프로세스 생성, 종료, 좀비, 문맥 교환(Ch 3.1\~3.3)과 2주차 실습의 pipe, dup2, fd 관리(실습 3\~4)를 적용한다. |
+| 자동 테스트 | 배포된 테스트 스크립트는 pingpong에서 10개, minishell에서 14개 항목을 검사하며, 풀이는 모든 항목을 통과한다. |
 
 ---
 
