@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **Last Updated:** 2026-11-17
+> **Last Updated:** 2026-11-18
 >
 > Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 1, 2
 
@@ -95,6 +95,8 @@ graph LR
 
 *Figure 2. System call transitions between user mode and kernel mode*
 
+> **Definition:** A **trap** is a software-generated interrupt caused either by an error (e.g., division by zero or an invalid memory access) or by a program intentionally requesting help from the kernel (e.g., via a system call).
+
 | Mode | Mode Bit | Executing Entity |
 |:-----|:---------|:-----------------|
 | **Kernel mode** | 0 | OS kernel (full hardware access) |
@@ -102,9 +104,9 @@ graph LR
 
 *Table 1. Mode bit and executing entity of kernel mode and user mode*
 
-> **Definition:** A **trap** is a software-generated interrupt caused either by an error (e.g., division by zero or an invalid memory access) or by a program intentionally requesting help from the kernel (e.g., via a system call).
-
 > **Note:** **Analogy.** Consider a bank. Employees (kernel mode) have vault access and can handle any operation. Customers (user mode) can only interact through the counter window (system calls). A customer who tries to jump over the counter is stopped immediately. This is the same principle as the hardware trapping a user-mode program that attempts a privileged instruction.
+
+The mode bit in Table 1 is stored inside the CPU, not in memory.
 
 > **Definition:** A **register** is a tiny, ultra-fast memory slot built directly into the CPU, used to hold values the CPU is currently working with.
 

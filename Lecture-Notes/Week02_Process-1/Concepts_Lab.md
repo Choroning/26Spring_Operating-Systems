@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lab.md) | [한국어](Concepts_Lab.ko.md)
 
-> **Last Updated:** 2026-11-10
+> **Last Updated:** 2026-11-18
 
 > **Learning Objectives:**
 > 1. Use fork()/wait() to create and manage child processes
@@ -141,6 +141,10 @@ graph TD
 
 `pipe()` creates a **unidirectional** communication channel between two file descriptors.
 
+> **[Systems Programming]** A file descriptor is a non-negative integer assigned by the kernel to a process to identify an open file. 0=standard input (stdin), 1=standard output (stdout), and 2=standard error (stderr) are assigned by default. The fd[0] and fd[1] created by `pipe()` are also registered in this file descriptor table.
+
+> **Key Point:** The fact that pipes are manipulated using file I/O functions like `read()`/`write()` is based on the core UNIX design philosophy **"Everything is a file"**. In UNIX, regular files, directories, pipes, sockets, and devices (keyboard, disk, etc.) are all accessed through **file descriptors**, mostly with the same interface (`open/read/write/close`). This means that knowing just one API lets you work with many different resources, keeping programming concise.
+
 ```c
 int fd[2];
 pipe(fd);  // fd[0]=read, fd[1]=write
@@ -178,18 +182,14 @@ graph LR
 
 *Figure 5. Pipe data flow from the child through the kernel buffer to the parent*
 
+> **[Data Structures]** A pipe is a classic implementation of the producer-consumer pattern. One side (the child) writes data and the other side (the parent) reads it, synchronized through a bounded buffer inside the kernel. This buffer is a fixed-size **FIFO queue** in which the bytes written first are read first. When the buffer is full, `write()` blocks; when it is empty, `read()` blocks.
+
 **Rules**:
 - Always close the **unused** end.
 - Pipes follow the **producer-consumer** pattern.
 - When all write ends are closed, the read side receives EOF.
 
 > **Definition:** **EOF (End of File)** signals that there is no more data to read. For pipes, this occurs when **all** write-end file descriptors are closed. This is why every process that holds a copy of the write-end fd must close it.
-
-> **[Systems Programming]** A file descriptor is a non-negative integer assigned by the kernel to a process to identify an open file. 0=standard input (stdin), 1=standard output (stdout), and 2=standard error (stderr) are assigned by default. The fd[0] and fd[1] created by `pipe()` are also registered in this file descriptor table.
-
-> **Key Point:** The fact that pipes are manipulated using file I/O functions like `read()`/`write()` is based on the core UNIX design philosophy **"Everything is a file"**. In UNIX, regular files, directories, pipes, sockets, and devices (keyboard, disk, etc.) are all accessed through **file descriptors**, mostly with the same interface (`open/read/write/close`). This means that knowing just one API lets you work with many different resources, keeping programming concise.
-
-> **[Data Structures]** A pipe is a classic implementation of the producer-consumer pattern. One side (the child) writes data and the other side (the parent) reads it, synchronized through a bounded buffer inside the kernel. This buffer is a fixed-size **FIFO queue** in which the bytes written first are read first. When the buffer is full, `write()` blocks; when it is empty, `read()` blocks.
 
 > **Note:** A specific scenario when `close()` is omitted is as follows. If the parent does not close `fd[1]` (the write end) and calls `read(fd[0])`, even after the child finishes writing and closes `fd[1]`, the parent itself still holds `fd[1]`, so the kernel considers the write end still open. As a result, `read()` never receives EOF and **blocks forever**, causing the program to hang. This is the most common bug in pipe programming.
 

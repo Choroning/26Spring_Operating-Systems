@@ -2,7 +2,7 @@
 
 [레포지토리 안내](../../README.ko.md) | [English](Assignment-Explanation.md) | [한국어](Assignment-Explanation.ko.md)
 
-> **최종 수정일:** 2026-11-16
+> **최종 수정일:** 2026-11-18
 >
 > Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 3 (3.1-3.3); xv6: a simple, Unix-like teaching operating system, Cox, Kaashoek, and Morris, Ch 1
 
@@ -252,11 +252,11 @@ if (pipe(child_to_parent) < 0) {
 }
 ```
 
-**핵심:**
-- `pipe()`를 호출한 뒤 반환 값을 확인하여 **오류 처리**를 해야 한다.
-- `pipe()`는 실패하면 `-1`을 반환하고 `errno`를 설정한다.
-- `perror()`는 `errno`에 해당하는 오류 메시지를 자동으로 출력해 준다.
-- 파이프 생성은 `fork()` **이전에** 해야 한다. 자식 프로세스가 부모의 파일 디스크립터 테이블을 상속받기 때문이다.
+> **핵심:**
+> - `pipe()`를 호출한 뒤 반환 값을 확인하여 **오류 처리**를 해야 한다.
+> - `pipe()`는 실패하면 `-1`을 반환하고 `errno`를 설정한다.
+> - `perror()`는 `errno`에 해당하는 오류 메시지를 자동으로 출력해 준다.
+> - 파이프 생성은 `fork()` **이전에** 해야 한다. 자식 프로세스가 부모의 파일 디스크립터 테이블을 상속받기 때문이다.
 
 > **참고:** **2주차 이론.** `fork()`는 부모 프로세스의 **주소 공간의 복사본**을 만든다. 파일 디스크립터 테이블도 복사되므로, `fork()` 이전에 생성한 파이프의 fd를 부모와 자식이 모두 갖게 된다. 이것이 파이프를 통한 부모와 자식 간 통신이 가능한 이유이다.
 
@@ -630,7 +630,7 @@ if (pid1 == 0) {
 }
 ```
 
-**핵심:** `dup2(fd[1], STDOUT_FILENO)`를 호출하면 cmd1이 `printf()`나 `write(1,...)`로 출력할 때 데이터가 **파이프의 커널 버퍼**로 들어간다.
+> **핵심:** `dup2(fd[1], STDOUT_FILENO)`를 호출하면 cmd1이 `printf()`나 `write(1,...)`로 출력할 때 데이터가 **파이프의 커널 버퍼**로 들어간다.
 
 ### 5.4 TODO 6: 자식2 (cmd2 실행)
 
@@ -665,7 +665,7 @@ if (pid2 == 0) {
 }
 ```
 
-**핵심:** `dup2(fd[0], STDIN_FILENO)`를 호출하면 cmd2가 `scanf()`나 `read(0,...)`로 읽을 때 데이터가 **파이프의 커널 버퍼**에서 읽힌다. 즉 cmd1의 출력이 cmd2의 입력이 된다.
+> **핵심:** `dup2(fd[0], STDIN_FILENO)`를 호출하면 cmd2가 `scanf()`나 `read(0,...)`로 읽을 때 데이터가 **파이프의 커널 버퍼**에서 읽힌다. 즉 cmd1의 출력이 cmd2의 입력이 된다.
 
 ### 5.5 TODO 7: 부모에서 정리
 

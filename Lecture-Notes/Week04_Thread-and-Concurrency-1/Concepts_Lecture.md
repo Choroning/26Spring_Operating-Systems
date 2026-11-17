@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **Last Updated:** 2026-11-04
+> **Last Updated:** 2026-11-18
 >
 > Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 4 (4.1-4.4)
 
@@ -133,11 +133,13 @@ while a modern process can have **multiple threads** of control.
 
 > **Note:** **IPC (Inter-Process Communication)** was covered in detail in Week 3. Since threads share the same address space, they can communicate directly through shared memory without IPC.
 
-> **Note:** Threads are called **Lightweight Processes** because, as the table shows, their creation and switching costs are lower than those of processes.
+Threads have the advantage in creation cost and context switching because the threads of one process share an address space. A new thread needs only its own stack and registers, and a switch between threads of the same process does not change the address space.
 
 > **[Computer Architecture]** The **TLB (Translation Lookaside Buffer)** is a hardware cache that stores recent virtual-to-physical address translations to speed up translation, and a **page table** is the OS's mapping from a program's logical addresses to physical RAM locations. Each process has its own page table, so switching processes forces the CPU to load a different one.
 >
 > Thread context switching is faster than process switching because threads of the same process share the address space, so **no TLB flush is needed**. When switching processes, the page table changes, so unless TLB entries are tagged with an address-space identifier such as an ASID, the TLB must be invalidated, which causes frequent TLB misses and degrades performance.
+
+> **Note:** Threads are called **Lightweight Processes** because, as the table shows, their creation and switching costs are lower than those of processes.
 
 > **Key Point:** The difference between threads and processes, and the reason threads are called lightweight processes, come down to distinguishing what is **shared** (code, data, files) from what is **independent** (PC, registers, stack).
 
@@ -605,10 +607,10 @@ void *runner(void *param)
    - Terminates with `pthread_exit(0)`
 5. Parent: `printf("sum = %d\n", sum)` → prints **"sum = 15"**
 
-**Key points:**
-- `sum` is a **global variable** → shared by all threads
-- Without `pthread_join()`, the parent might terminate first
-- `runner()` takes a `void *` parameter and returns `void *`
+> **Key Point:**
+> - `sum` is a **global variable** → shared by all threads
+> - Without `pthread_join()`, the parent might terminate first
+> - `runner()` takes a `void *` parameter and returns `void *`
 
 ### 6.5 Pthreads: Creating and Joining Multiple Threads
 

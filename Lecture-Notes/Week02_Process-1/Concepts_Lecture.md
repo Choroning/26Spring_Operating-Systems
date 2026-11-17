@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **Last Updated:** 2026-11-10
+> **Last Updated:** 2026-11-18
 >
 > Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 3 (3.1-3.3)
 
@@ -577,6 +577,8 @@ pid = wait(&status);  // parent collects child's exit status
 - All processes briefly pass through the zombie state upon termination.
 - If the parent never calls `wait()`, zombies accumulate and waste system resources.
 
+> **Note:** When viewing the process list with `ps aux`, processes with status `Z` are zombie processes. Zombies themselves do not consume CPU or memory, but they occupy process table entries, reducing the number of processes the system can create.
+
 **Orphan Process:**
 - An orphan is a child process left behind because its parent **terminated first** without calling `wait()`.
 - In UNIX/Linux, init/systemd becomes the new parent of orphan processes and cleans them up.
@@ -596,7 +598,7 @@ pid = wait(&status);  // parent collects child's exit status
 
 > **Note:** **Analogy.** A zombie is a process that is dead but still listed in the process table (like a zombie that will not lie down). An orphan is a process whose parent disappeared, so it is adopted by init/systemd (like an orphanage taking in a child).
 
-> **Note:** When viewing the process list with `ps aux`, processes with status `Z` are zombie processes. Zombies themselves do not consume CPU or memory, but they occupy process table entries, reducing the number of processes the system can create.
+Because zombies accumulate when the parent does not call `wait()` in time, the parent needs a way to learn when a child has terminated. For this purpose, the operating system notifies the parent when a child terminates.
 
 > **Definition:** A **signal** is a software notification the OS sends to a process to trigger a specific action. `SIGCHLD` is automatically sent to a parent whenever one of its children terminates.
 

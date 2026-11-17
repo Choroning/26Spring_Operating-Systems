@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lab.md) | [한국어](Concepts_Lab.ko.md)
 
-> **Last Updated:** 2026-11-04
+> **Last Updated:** 2026-11-18
 
 > **Learning Objectives:**
 > 1. Install and authenticate a coding agent such as Gemini CLI or Claude Code
@@ -263,6 +263,8 @@ graph LR
 > **Definition:** **Real mode.** The mode an x86 CPU runs in when it first starts; in this mode, the CPU can access only 1 MB of memory.
 
 > **Definition:** **Protected mode.** The x86 CPU operating mode that enables full memory access and hardware protection features (like memory segmentation and privilege levels).
+
+Because a powered-on x86 CPU starts in real mode, a step that switches the CPU to protected mode is needed before the kernel runs. In Figure 4, `boot.asm` performs this step.
 
 > **Definition:** **Bootloader.** The program that loads the kernel into memory and switches the CPU from real mode to protected mode. A 32-bit kernel can run only after this switch is complete.
 

@@ -2,7 +2,7 @@
 
 [레포지토리 안내](../../README.ko.md) | [English](Code-Walkthrough.md) | [한국어](Code-Walkthrough.ko.md)
 
-> **최종 수정일:** 2026-11-16
+> **최종 수정일:** 2026-11-18
 
 > **학습 목표:**
 > 1. `pingpong.c`와 `minishell.c`의 함수 구성을 설명하고, 시작 코드에서 주어진 부분과 작성한 부분을 구분할 수 있다
@@ -89,7 +89,6 @@ graph TD
 #include <sys/wait.h>
 #include <sys/time.h>
 ```
-|||
 | 헤더 | 이 파일에서 쓰는 선언 |
 |:-----|:-----|
 | `<stdio.h>` | `printf()`, `perror()` |

@@ -2,7 +2,7 @@
 
 [레포지토리 안내](../../README.ko.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **최종 수정일:** 2026-11-17
+> **최종 수정일:** 2026-11-18
 >
 > Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 8
 
@@ -456,6 +456,8 @@ lockdep의 기능은 다음과 같다.
 > **용어 정의:** **안전 상태(Safe State)** 는 안전 순서가 존재하는 상태이다.
 
 > **용어 정의:** **불안전 상태(Unsafe State)** 는 안전 순서가 존재하지 않는 상태이다.
+
+안전 순서의 정의에 나오는 Available, Allocation, 남은 요구는 자원 타입마다 값을 하나씩 갖는 벡터이므로, 이들의 비교와 덧셈은 벡터 연산으로 읽는다.
 
 > **[이산수학]** 이 절 전반에서 쓰는 벡터 표기는 다음과 같다. X, Y가 같은 길이의 벡터일 때 **`X ≤ Y`는 성분별(component-wise) 비교**로, 모든 인덱스 j에 대해 `X[j] ≤ Y[j]`라는 뜻이다. `+`와 `−`도 성분별로 계산한다. 한편 벡터의 `≤`는 전순서가 아니라 **부분 순서(partial order)** 이므로 두 벡터가 **비교 불가능(incomparable)** 할 수 있다(예: `(1,3) ≰ (2,2)`이면서 `(2,2) ≰ (1,3)`). 은행원 알고리즘은 이 구분에 의존한다. `Request ≤ Available` 검사에 실패한 요청은 Available보다 크다는 뜻이 아니라 *어떤 성분에서* 충족할 수 없다는 뜻일 뿐이다.
 

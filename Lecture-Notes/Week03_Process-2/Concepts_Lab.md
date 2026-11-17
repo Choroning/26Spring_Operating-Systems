@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lab.md) | [한국어](Concepts_Lab.ko.md)
 
-> **Last Updated:** 2026-11-10
+> **Last Updated:** 2026-11-18
 
 > **Learning Objectives:**
 > 1. Navigate the xv6 source code structure
@@ -290,21 +290,27 @@ struct proc {
 };
 ```
 
-> **Note:** `context` saves callee-saved kernel registers used when the scheduler switches between processes inside the kernel (via `swtch.S`), while `trapframe` saves the full user-mode register state when entering the kernel from user space. They serve different switches: kernel↔kernel vs. user↔kernel.
+> **[Computer Programming]** A C **structure (struct)** is a user-defined type that groups fields of different types, and `struct proc` is the structure representing a single process. Each field covers a different aspect of the process (scheduling state, memory layout, open files, etc.). In the Linux kernel, the corresponding `task_struct` has hundreds of fields, highlighting the simplicity of xv6 for learning purposes.
 
-> **Definition:** An **`inode`** is the kernel's internal descriptor for a file or directory, storing metadata like size, permissions, and disk location.
-
-> **Note:** `ofile[]` holds kernel-side file objects. The file descriptor number that user programs use (e.g., `fd = 3`) is simply the index into this array.
-
-> **Note:** `pagetable_t` in xv6 is a typedef for a pointer to the root of a process's page table; it maps virtual addresses to physical memory. Its definition is `typedef uint64 *pagetable_t;` in `kernel/riscv.h`.
+The fields of `struct proc` fall into three broad groups by what they do. The first group, from `lock` to `parent`, holds management information that the scheduler and `wait()` consult, such as the state, the identifier, and the parent relationship.
 
 > **Note:** `struct spinlock lock` is the **spinlock** for this process structure. A spinlock is the simplest synchronization tool that prevents other CPU cores from simultaneously modifying the same `struct proc`. It is called a spinlock because a core trying to acquire it spins in a `while (lock == held)` loop. Since xv6 supports multi-core, this lock must be acquired before changing the process state. Details on spinlocks and synchronization are covered in Week 9.
 
 > **Note:** A **sleep channel** is an **arbitrary address value** that identifies what a process is waiting for while sleeping. For example, if a process sleeps while waiting for data on a pipe, the address of that pipe structure is stored in `chan`. Later, when data arrives, `wakeup(chan)` is called to wake all processes sleeping on that address. This mechanism avoids busy waiting and uses the CPU efficiently. The behavior of `sleep()`/`wakeup()` is traced in the Week 6 lab.
 
-> **[Computer Programming]** A C **structure (struct)** is a user-defined type that groups fields of different types, and `struct proc` is the structure representing a single process. Each field covers a different aspect of the process (scheduling state, memory layout, open files, etc.). In the Linux kernel, the corresponding `task_struct` has hundreds of fields, highlighting the simplicity of xv6 for learning purposes.
+The second group, from `kstack` to `context`, holds the memory and register state of the process. Two fields save registers: `trapframe` and `context`.
+
+> **Note:** `context` saves callee-saved kernel registers used when the scheduler switches between processes inside the kernel (via `swtch.S`), while `trapframe` saves the full user-mode register state when entering the kernel from user space. They serve different switches: kernel↔kernel vs. user↔kernel.
 
 > **Key Point:** `trapframe` is a structure for preserving user register values when transitioning from user mode to kernel mode. It is the core mechanism that allows a user program to resume exactly where it left off after a system call completes. The representative registers saved in the trapframe are listed in Section 6.
+
+> **Note:** `pagetable_t` in xv6 is a typedef for a pointer to the root of a process's page table; it maps virtual addresses to physical memory. Its definition is `typedef uint64 *pagetable_t;` in `kernel/riscv.h`.
+
+The third group, `ofile[]` and `cwd`, points to file system resources such as the files the process has opened and its current working directory. The last field, `name`, is used only for debugging.
+
+> **Note:** `ofile[]` holds kernel-side file objects. The file descriptor number that user programs use (e.g., `fd = 3`) is simply the index into this array.
+
+> **Definition:** An **`inode`** is the kernel's internal descriptor for a file or directory, storing metadata like size, permissions, and disk location.
 
 ---
 
@@ -369,9 +375,9 @@ struct proc {
 >
 > This process becomes more expensive as the process memory grows. In the function name, `u` stands for user, `vm` for virtual memory, and `copy` for copy; as the name suggests, it is a function that copies user virtual memory.
 
-> **[Computer Architecture]** The `a0` register in RISC-V is used to convey function return values. The mechanism by which `fork()` returns the child PID to the parent and 0 to the child is implemented through manipulation of `trapframe->a0`. This mechanism is what lets identical code return different values in two processes.
-
 > **Note:** Having `uvmcopy()` copy all pages is highly inefficient. In real Linux, the COW (Copy-On-Write) technique is used: at fork time, only page table entries are copied, and actual physical pages are copied only when a write is attempted. This optimization is covered in Week 12.
+
+Steps 3 and 4 deal with the trapframe. The child receives an exact copy of the parent's trapframe, so it resumes execution at the point where the parent called `fork()`, and only the register that holds the return value is changed to 0.
 
 > **Note:** Representative registers saved in the trapframe are as follows:
 > - `epc`: program counter at the time of the trap (the address to return to)
@@ -380,6 +386,8 @@ struct proc {
 > - `s0`-`s11`: callee-saved registers (values that must be preserved per calling convention)
 >
 > Setting `trapframe->a0 = 0` in fork() ensures that when the child returns from kernel to user mode, it reads 0 from `a0` (the return value register), allowing it to recognize that it is the child.
+
+> **[Computer Architecture]** The `a0` register in RISC-V is used to convey function return values. The mechanism by which `fork()` returns the child PID to the parent and 0 to the child is implemented through manipulation of `trapframe->a0`. This mechanism is what lets identical code return different values in two processes.
 
 ```text
   What this lab explored:

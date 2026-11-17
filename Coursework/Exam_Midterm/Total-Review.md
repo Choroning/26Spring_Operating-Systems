@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Total-Review.md) | [한국어](Total-Review.ko.md)
 
-> **Last Updated:** 2026-11-17
+> **Last Updated:** 2026-11-18
 
 ---
 
@@ -189,7 +189,7 @@ If dual mode is the wall, a **system call** is the **only passage** that legitim
 
 #### 1.5.1 What a System Call Is
 
-**Definition**: The only mechanism by which a user program requests an OS service.
+> **Definition:** A **system call** is the only mechanism by which a user program requests an OS service.
 
 **Why it is needed**:
 - A user program cannot execute privileged instructions directly
@@ -306,7 +306,7 @@ graph TD
 
 #### 1.6.2 Interrupt
 
-**Definition**: An asynchronous signal by which an external device notifies the CPU of **work completion or a service request**.
+> **Definition:** An **interrupt** is an asynchronous signal by which an external device notifies the CPU of work completion or a service request.
 
 **Why it is needed**:
 - The alternative, **polling**, is inefficient: the CPU must check device status periodically
@@ -325,7 +325,7 @@ graph TD
 
 #### 1.6.3 DMA (Direct Memory Access)
 
-**Definition**: A mechanism that transfers data directly between memory ↔ I/O devices without CPU involvement.
+> **Definition:** **DMA (Direct Memory Access)** is a mechanism that transfers data directly between memory and I/O devices without CPU involvement.
 
 **Why it is needed**:
 - Without DMA, the CPU must move data **byte by byte** → reading a 1GB file requires billions of CPU instructions
@@ -414,7 +414,7 @@ Only **the core** of the kernel is compiled statically, and the rest is loaded/u
 
 ### 1.9 Context Switching
 
-**Definition**: Saving the state of the currently running process and restoring the state of another process to resume its execution.
+> **Definition:** **Context switching** is saving the state of the currently running process and restoring the state of another process to resume its execution.
 
 #### 1.9.1 What the Context Includes
 
@@ -791,7 +791,7 @@ In Linux, **systemd** (PID=1) is the **root parent** of all user processes. The 
 
 #### 2.6.2 How fork() Works
 
-**Definition**: `fork()` is a system call that creates a child process by **completely duplicating** the address space of the calling process.
+> **Definition:** **`fork()`** is a system call that creates a child process by completely duplicating the address space of the calling process.
 
 ```text
 ┌──────────────────┐       ┌──────────────────┐       ┌──────────────────┐
@@ -838,7 +838,7 @@ pid_t pid = fork();
 
 ### 2.7 exec(): Replacing the Process Image 🎯
 
-**Definition**: **Completely replaces** the memory image of the current process **with a new program**.
+> **Definition:** **`exec()`** is a system call that completely replaces the memory image of the current process with a new program.
 
 #### 2.7.1 Properties of exec()
 
@@ -1315,7 +1315,7 @@ gcc producer.c -o producer -lrt  # -lrt: POSIX real-time library
 
 #### 3.6.1 Ordinary Pipe
 
-**Definition**: A unidirectional data channel between two processes. It is a special file accessed with `read()/write()`.
+> **Definition:** An **ordinary pipe** is a unidirectional data channel between two processes. It is a special file accessed with `read()/write()`.
 
 ```c
 int fd[2];
@@ -1492,7 +1492,7 @@ printf("Redirected!\n");  // written to output.txt
 
 #### 3.7.1 Socket = Endpoint of Communication
 
-**Definition**: An endpoint of network communication. Identified by **IP address + port number**.
+> **Definition:** A **socket** is an endpoint of network communication, identified by the combination of an IP address and a port number.
 
 **Well-known ports**:
 | Port | Service |
@@ -1543,7 +1543,7 @@ Sockets exchange only **unstructured byte streams**. Structuring the data is the
 
 #### 3.8.1 Concept
 
-**Definition**: A mechanism for **calling a procedure on a networked remote system as if it were a local function**.
+> **Definition:** **RPC (Remote Procedure Call)** is a mechanism for calling a procedure on a networked remote system as if it were a local function.
 
 #### 3.8.2 Components
 
@@ -2688,7 +2688,7 @@ With a mix, both the CPU and the devices are used efficiently.
 
 ### 6.3 Dispatcher
 
-**Definition**: The module that **actually transfers control** to the process chosen by the scheduler.
+> **Definition:** The **dispatcher** is the module that actually transfers control to the process chosen by the scheduler.
 
 **Three roles**:
 1. **Context switching**: saving/restoring registers

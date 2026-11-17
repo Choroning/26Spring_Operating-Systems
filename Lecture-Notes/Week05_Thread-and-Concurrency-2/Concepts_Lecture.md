@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **Last Updated:** 2026-11-17
+> **Last Updated:** 2026-11-18
 >
 > Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 4 (4.5-4.7)
 
@@ -1199,7 +1199,7 @@ flowchart LR
 - All execution flows are called **tasks**
 - Each task has its own unique **struct task_struct**.
 
-**Key point**: `task_struct` does not store data directly but contains **pointers to other data structures**
+> **Key Point:** `task_struct` does not store data directly but contains **pointers to other data structures**.
 
 ```mermaid
 graph LR

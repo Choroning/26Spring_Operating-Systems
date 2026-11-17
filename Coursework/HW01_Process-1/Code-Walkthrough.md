@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Code-Walkthrough.md) | [한국어](Code-Walkthrough.ko.md)
 
-> **Last Updated:** 2026-11-16
+> **Last Updated:** 2026-11-18
 
 > **Learning Objectives:**
 > 1. Describe the functions of `pingpong.c` and `minishell.c` and distinguish the parts given in the starter code from the parts written for the assignment
@@ -89,7 +89,6 @@ Lines 1-6 are a comment with the file name, a summary, the author, and the date,
 #include <sys/wait.h>
 #include <sys/time.h>
 ```
-|||
 | Header | Declarations used in this file |
 |:-----|:-----|
 | `<stdio.h>` | `printf()`, `perror()` |

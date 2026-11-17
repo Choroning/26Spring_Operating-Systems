@@ -2,7 +2,7 @@
 
 [레포지토리 안내](../../README.ko.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **최종 수정일:** 2026-11-17
+> **최종 수정일:** 2026-11-18
 >
 > Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 4 (4.5-4.7)
 
@@ -1199,7 +1199,7 @@ flowchart LR
 - 모든 실행 흐름을 **태스크(task)** 라 부른다.
 - 각 태스크는 자신만의 고유한 **struct task_struct**를 갖는다.
 
-**핵심**: `task_struct`는 데이터를 직접 저장하지 않고 다른 자료 구조에 대한 **포인터**를 포함한다
+> **핵심:** `task_struct`는 데이터를 직접 저장하지 않고 다른 자료 구조에 대한 **포인터**를 포함한다.
 
 ```mermaid
 graph LR

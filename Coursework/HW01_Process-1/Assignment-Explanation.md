@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Assignment-Explanation.md) | [한국어](Assignment-Explanation.ko.md)
 
-> **Last Updated:** 2026-11-16
+> **Last Updated:** 2026-11-18
 >
 > Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 3 (3.1-3.3); xv6: a simple, Unix-like teaching operating system, Cox, Kaashoek, and Morris, Ch 1
 
@@ -252,11 +252,11 @@ if (pipe(child_to_parent) < 0) {
 }
 ```
 
-**Key Points:**
-- After calling `pipe()`, the return value must be checked for **error handling**.
-- `pipe()` returns `-1` on failure and sets `errno`.
-- `perror()` automatically prints the error message corresponding to `errno`.
-- Pipes must be created **before** `fork()`, because the child process inherits the parent's file descriptor table.
+> **Key Point:**
+> - After calling `pipe()`, the return value must be checked for **error handling**.
+> - `pipe()` returns `-1` on failure and sets `errno`.
+> - `perror()` automatically prints the error message corresponding to `errno`.
+> - Pipes must be created **before** `fork()`, because the child process inherits the parent's file descriptor table.
 
 > **Note:** **Week 2 Lecture.** `fork()` creates a **copy of the parent process's address space**. The file descriptor table is also copied, so both parent and child will have the pipe fds created before `fork()`. This is why communication between parent and child through pipes is possible.
 
@@ -630,7 +630,7 @@ if (pid1 == 0) {
 }
 ```
 
-**Key Point:** after `dup2(fd[1], STDOUT_FILENO)`, when cmd1 outputs via `printf()` or `write(1,...)`, the data goes into the **pipe's kernel buffer**.
+> **Key Point:** After `dup2(fd[1], STDOUT_FILENO)`, when cmd1 outputs via `printf()` or `write(1,...)`, the data goes into the **pipe's kernel buffer**.
 
 ### 5.4 TODO 6: Child 2 (Execute cmd2)
 
@@ -665,7 +665,7 @@ if (pid2 == 0) {
 }
 ```
 
-**Key Point:** after `dup2(fd[0], STDIN_FILENO)`, when cmd2 reads via `scanf()` or `read(0,...)`, the data is read from the **pipe's kernel buffer**. In other words, cmd1's output becomes cmd2's input.
+> **Key Point:** After `dup2(fd[0], STDIN_FILENO)`, when cmd2 reads via `scanf()` or `read(0,...)`, the data is read from the **pipe's kernel buffer**. In other words, cmd1's output becomes cmd2's input.
 
 ### 5.5 TODO 7: Cleanup in the Parent
 

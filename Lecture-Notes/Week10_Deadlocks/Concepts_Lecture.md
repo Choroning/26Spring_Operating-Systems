@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **Last Updated:** 2026-11-17
+> **Last Updated:** 2026-11-18
 >
 > Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 8
 
@@ -456,6 +456,8 @@ Prevention is heavy-handed: it removes deadlock by structurally restricting what
 > **Definition:** A **Safe State** is a state for which a safe sequence exists.
 
 > **Definition:** An **Unsafe State** is a state in which no safe sequence exists.
+
+Available, Allocation, and the remaining need in the definition of a safe sequence are vectors with one value per resource type, so their comparison and addition are read as vector operations.
 
 > **[Discrete Mathematics]** For equal-length vectors X and Y, **`X ≤ Y` means component-wise comparison**: `X[j] ≤ Y[j]` at every index. Vector addition and subtraction are also component-wise. This relation is a **partial order**, so some vectors are incomparable; for example, neither `(1,3) ≤ (2,2)` nor `(2,2) ≤ (1,3)`. The Banker's Algorithm relies on this: if `Request ≤ Available` fails, the request is not necessarily larger than Available; at least one resource component is unavailable.
 
