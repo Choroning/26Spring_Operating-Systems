@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lab.md) | [한국어](Concepts_Lab.ko.md)
 
-> **Last Updated:** 2026-10-27
+> **Last Updated:** 2026-11-18
 
 > **Learning Objectives:**
 > 1. Implement a thread pool with a task queue and pre-created worker threads
@@ -87,7 +87,7 @@ gcc -Wall -pthread -o lab4_tls           lab4_tls.c
 ./lab1_thread_pool    # 4 workers process 12 tasks
 ```
 
-### Why Thread Pools?
+### Reasons for Thread Pools
 
 Creating a new thread for every request is expensive. A thread pool pre-creates a fixed number of worker threads that wait for tasks:
 
@@ -191,7 +191,7 @@ void *worker_thread(void *arg)
 }
 ```
 
-> **Note:** **Why `while` instead of `if` for the wait loop?** Condition variables can have **spurious wakeups**: the thread may wake up even though no signal was sent. Using `while` re-checks the condition, ensuring the thread only proceeds when the queue truly has a task.
+> **Note:** **Reason for `while` instead of `if` in the wait loop.** Condition variables can have **spurious wakeups**: the thread may wake up even though no signal was sent. Using `while` re-checks the condition, ensuring the thread only proceeds when the queue truly has a task.
 
 ### Task Submission (Producer)
 

@@ -26,7 +26,7 @@
   - [2.3 Understanding the Given Data Structure](#23-understanding-the-given-data-structure)
   - [2.4 Grading Criteria and Notes](#24-grading-criteria-and-notes)
 - [3. Assignment 1: pingpong.c Explanation](#3-assignment-1-pingpongc-explanation)
-  - [3.1 Why Are Two Pipes Needed?](#31-why-are-two-pipes-needed)
+  - [3.1 The Need for Two Pipes](#31-the-need-for-two-pipes)
   - [3.2 TODO 1: Create Two Pipes](#32-todo-1-create-two-pipes)
   - [3.3 TODO 2, 6: Close Unused fds](#33-todo-2-6-close-unused-fds)
   - [3.4 TODO 3, 4, 5: Child Process Operations](#34-todo-3-4-5-child-process-operations)
@@ -41,7 +41,7 @@
   - [4.5 TODO 3: Parent Waiting](#45-todo-3-parent-waiting)
   - [4.6 execute_command Complete Flow Summary](#46-execute_command-complete-flow-summary)
 - [5. Assignment 2: minishell.c Explanation (execute_pipe)](#5-assignment-2-minishellc-explanation-execute_pipe)
-  - [5.1 What Does a Pipe Do?](#51-what-does-a-pipe-do)
+  - [5.1 The Role of a Pipe](#51-the-role-of-a-pipe)
   - [5.2 TODO 4: Create a Pipe](#52-todo-4-create-a-pipe)
   - [5.3 TODO 5: Child 1 (Execute cmd1)](#53-todo-5-child-1-execute-cmd1)
   - [5.4 TODO 6: Child 2 (Execute cmd2)](#54-todo-6-child-2-execute-cmd2)
@@ -209,7 +209,7 @@ Assignment 1 (pingpong) is worth 30% (compilation and normal execution 10%, outp
 
 ## 3. Assignment 1: pingpong.c Explanation
 
-### 3.1 Why Are Two Pipes Needed?
+### 3.1 The Need for Two Pipes
 
 A pipe is a **unidirectional** communication channel. Data is written to one end (`fd[1]`) and read from the other end (`fd[0]`).
 
@@ -397,7 +397,7 @@ static int execute_command(struct command *cmd)
 }
 ```
 
-**Why is fork() necessary?**
+**The need for fork()**
 - The shell itself must continue running to accept the next command.
 - `exec()` **overwrites** the current process image, so it must run in a child to keep the shell alive.
 - This is the core reason for the **fork() + exec()** pattern.
@@ -548,7 +548,7 @@ This is the concrete implementation of the **fork() + exec() + wait() = shell's 
 
 ## 5. Assignment 2: minishell.c Explanation (execute_pipe)
 
-### 5.1 What Does a Pipe Do?
+### 5.1 The Role of a Pipe
 
 When you type `cmd1 | cmd2` in a shell, the commands are connected as follows.
 - `cmd1`'s **standard output (stdout)** is connected to `cmd2`'s **standard input (stdin)** through a pipe.
@@ -685,7 +685,7 @@ if (WIFEXITED(status))
 return -1;
 ```
 
-**Why is it important for the parent to close both ends of the pipe?**
+**Importance of the parent closing both ends of the pipe**
 
 - The parent also holds `fd[0]` and `fd[1]` created before `fork()`.
 - If the parent does not close `fd[1]` (write end), the following happens.

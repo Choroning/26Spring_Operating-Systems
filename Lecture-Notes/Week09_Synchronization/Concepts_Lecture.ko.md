@@ -2,7 +2,7 @@
 
 [레포지토리 안내](../../README.ko.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **최종 수정일:** 2026-10-20
+> **최종 수정일:** 2026-11-18
 >
 > Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 6, 7
 
@@ -618,7 +618,7 @@ x.signal();    /* x에서 대기 중인 스레드 하나를 깨움 */
 - `x.signal()`은 `x`에서 대기 중인 스레드가 없으면 **아무 일도 하지 않는다**. 세마포어의 `signal`은 항상 값을 바꾼다.
 - `x.wait()`를 호출한 스레드는 다른 스레드가 들어올 수 있도록 **모니터를 놓는다**. 그렇지 않으면 모니터가 데드락에 빠진다.
 
-**`x.signal()` 이후 신호를 보낸 P와 깨어난 Q가 모두 모니터 안에 있으려 하면 어떻게 하는가?** 세 가지 정책이 있다.
+**`x.signal()` 이후 신호를 보낸 P와 깨어난 Q가 모두 모니터 안에 있으려 하는 경우.** 세 가지 정책이 있다.
 
 - **Signal-and-wait**: P가 기다리고 Q가 즉시 실행된다(Hoare의 원래 정의).
 - **Signal-and-continue**: P가 모니터를 떠날 때까지 계속 실행되고, 그다음에 Q가 실행된다.

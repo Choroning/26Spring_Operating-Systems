@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **Last Updated:** 2026-11-17
+> **Last Updated:** 2026-11-18
 >
 > Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 3 (3.4-3.8)
 
@@ -19,7 +19,7 @@
 - [1. Interprocess Communication (IPC) Overview](#1-interprocess-communication-ipc-overview)
   - [1.1 Independent vs Cooperating Processes](#11-independent-vs-cooperating-processes)
   - [1.2 Reasons for Process Cooperation](#12-reasons-for-process-cooperation)
-  - [1.3 What is IPC?](#13-what-is-ipc)
+  - [1.3 The Concept of IPC](#13-the-concept-of-ipc)
 - [2. Shared Memory Systems](#2-shared-memory-systems)
   - [2.1 Shared Memory IPC](#21-shared-memory-ipc)
   - [2.2 The Producer-Consumer Problem](#22-the-producer-consumer-problem)
@@ -67,7 +67,7 @@ Processes running concurrently in an OS fall into two categories.
 - Can affect or be affected by the execution of other processes.
 - Any process that shares data with other processes belongs to this category.
 
-> **Note:** Most real-world systems consist of cooperating processes.
+Most real-world systems consist of cooperating processes.
 
 ### 1.2 Reasons for Process Cooperation
 
@@ -91,9 +91,9 @@ IPC is used everywhere in modern software.
 
 *Table 1. IPC mechanisms in real-world applications*
 
-> **Key Point:** Whenever two programs exchange data, some form of IPC is at work.
+Whenever two programs exchange data, some form of IPC is at work.
 
-### 1.3 What is IPC?
+### 1.3 The Concept of IPC
 
 **Interprocess Communication (IPC)** is a mechanism for cooperating processes to exchange data.
 
@@ -108,7 +108,7 @@ The two fundamental IPC models are as follows.
 
 *Table 2. Comparison of the shared memory and message passing models*
 
-> **Note:** Most operating systems provide **both models**.
+Most operating systems provide **both models**.
 
 ![Figure 1. Two IPC models: (a) shared memory, (b) message passing](../../images/Week03_p21.png)
 
@@ -133,7 +133,7 @@ Modern applications that adopt similar multi-process/multi-component architectur
 - **Microservices:** Independent processes communicate via REST, gRPC, or message queues.
 - **Container orchestration (Kubernetes):** Pods communicate via network sockets.
 
-> **Key Point:** The current trend is to **isolate components into separate processes for fault tolerance and security** and connect them via IPC.
+The current trend is to **isolate components into separate processes for fault tolerance and security** and connect them via IPC.
 
 ---
 
@@ -154,13 +154,13 @@ The key characteristics are as follows.
 - The format and location of data are **determined by the processes** (the OS is not involved).
 - **Synchronization is the programmer's responsibility**.
 
-> **Note:** Shared memory is implemented by the OS manipulating virtual memory page tables so that virtual addresses in different processes point to the same physical memory frame. Subsequent access is identical to normal memory access, so there is no kernel involvement, making it fast.
+Shared memory is implemented by the OS manipulating virtual memory page tables so that virtual addresses in different processes point to the same physical memory frame. Subsequent access is identical to normal memory access, so there is no kernel involvement, making it fast.
 
-> **Note:** The points at which the kernel is and is not involved in shared memory are as follows.
-> - **Kernel involved:** `shm_open()` (creating a shared memory object), `mmap()` (setting up page table mapping), and `shm_unlink()` (deleting the object); these system calls execute in kernel mode.
-> - **Kernel not involved:** Read/write operations like `ptr[i] = value` after mapping are identical to normal memory access and bypass the kernel (except for handling the page fault on the first access to a page).
->
-> Therefore, after the initial setup cost, it is much faster than message passing. In contrast, message passing requires a system call for every `send()`/`receive()`.
+The points at which the kernel is and is not involved in shared memory are as follows.
+- **Kernel involved:** `shm_open()` (creating a shared memory object), `mmap()` (setting up page table mapping), and `shm_unlink()` (deleting the object); these system calls execute in kernel mode.
+- **Kernel not involved:** Read/write operations like `ptr[i] = value` after mapping are identical to normal memory access and bypass the kernel (except for handling the page fault on the first access to a page).
+
+Therefore, after the initial setup cost, it is much faster than message passing. In contrast, message passing requires a system call for every `send()`/`receive()`.
 
 ### 2.2 The Producer-Consumer Problem
 
@@ -180,7 +180,7 @@ Real-world examples include compiler (producer) → assembler (consumer) and web
 
 *Table 3. Comparison of unbounded and bounded buffers*
 
-> **Note:** In practice, bounded buffers are far more common and give rise to synchronization issues.
+In practice, bounded buffers are far more common and give rise to synchronization issues.
 
 **Bounded buffers in real life:**
 
@@ -203,7 +203,7 @@ Real-world examples include compiler (producer) → assembler (consumer) and web
 
 *Figure 3. Bounded buffer as a circular array with in and out positions*
 
-> **Key Point:** When the buffer is full, the producer waits; when it is empty, the consumer waits. In Figure 3, A, B, and C occupy slots 0-2, so the next write position `in` precisely points to slot 3 (the fourth slot).
+When the buffer is full, the producer waits; when it is empty, the consumer waits. In Figure 3, A, B, and C occupy slots 0-2, so the next write position `in` precisely points to slot 3 (the fourth slot).
 
 ### 2.3 Bounded Buffer Implementation
 
@@ -226,7 +226,7 @@ int out = 0;   /* Next read position (consumer) */
 - The buffer is full when `((in + 1) % BUFFER_SIZE) == out`.
 - With this approach, at most **BUFFER_SIZE - 1** items can be stored.
 
-> **Note:** In practice, `item` would be whatever data the producer generates. For example, `typedef struct { int value; } item;` could represent a sensor reading or a message.
+In practice, `item` would be whatever data the producer generates. For example, `typedef struct { int value; } item;` could represent a sensor reading or a message.
 
 > **[Data Structures]** A **circular queue** is a FIFO queue that wraps its indices with the modulo operation so that the first slot of the array follows the last one, and this bounded buffer has the same structure. `in` corresponds to rear, `out` to front, and the reason for leaving one slot empty is to distinguish between the empty and full states.
 
@@ -262,7 +262,7 @@ while (true) {
 }
 ```
 
-> **Note:** Busy waiting is a method where the CPU continuously loops checking a condition, wasting CPU resources. Synchronization tools that improve on this, such as semaphores and mutexes, are covered in textbook Chapter 6 and Week 9. This example does not address concurrent access issues.
+Busy waiting is a method where the CPU continuously loops checking a condition, wasting CPU resources. Synchronization tools that improve on this, such as semaphores and mutexes, are covered in textbook Chapter 6 and Week 9. This example does not address concurrent access issues.
 
 > **Note:** The alternative to busy waiting is a **blocking (sleep) approach**. If the condition is not met, the process transitions to the **Waiting state**, releasing the CPU, and another process **wakes it up** when the condition is satisfied. Representative implementations are as follows.
 > - **Semaphore:** decrements the value on `wait()`, and if the result is negative, the process sleeps (Week 9).
@@ -317,9 +317,9 @@ The three considerations for the **logical implementation** of communication lin
 - A single link can be associated with **more than two** processes.
 - **Multiple links** can exist between a pair of processes.
 
-> **Note:** **Mailbox ownership.**
-> - **Process-owned mailbox:** only the owner can receive, and the mailbox is destroyed when the process terminates.
-> - **OS-owned mailbox:** it exists independently, and the OS provides system calls for creation, deletion, send, and receive.
+**Mailbox ownership:**
+- **Process-owned mailbox:** only the owner can receive, and the mailbox is destroyed when the process terminates.
+- **OS-owned mailbox:** it exists independently, and the OS provides system calls for creation, deletion, send, and receive.
 
 **Multiple receiver problem:** P1 sends a message to mailbox A, and both P2 and P3 call `receive()`. Who gets the message?
 The solutions are (1) to allow a link to be associated with at most two processes, (2) to allow only one process at a time to execute `receive()`, or (3) to let the system select the receiver arbitrarily.
@@ -349,7 +349,7 @@ while (true) {
 }
 ```
 
-> **Note:** The blocking approach is simple to implement but processes may enter a waiting state. The non-blocking approach has good responsiveness but introduces the complexity of polling for message arrival or handling callbacks.
+The blocking approach is simple to implement but processes may enter a waiting state. The non-blocking approach has good responsiveness but introduces the complexity of polling for message arrival or handling callbacks.
 
 ### 3.4 Buffering
 
@@ -363,7 +363,7 @@ Messages are stored in a **temporary queue** attached to the communication link.
 
 *Table 5. Message buffering by queue capacity*
 
-> **Note:** Zero capacity means no buffering, so the sender must block. Non-zero capacity is called automatic buffering.
+Zero capacity means no buffering, so the sender must block. Non-zero capacity is called automatic buffering.
 
 ---
 
@@ -389,9 +389,9 @@ char *ptr = (char *)mmap(0, 4096, PROT_READ | PROT_WRITE,
                           MAP_SHARED, fd, 0);
 ```
 
-> **Note:** **`shm_open()` parameters.** `name` is the shared-memory object name used by processes to access the same object. `O_CREAT` creates the object if it does not exist, and `O_RDWR` allows reading and writing. The return value is a file descriptor, which is an integer.
+**`shm_open()` parameters:** `name` is the shared-memory object name used by processes to access the same object. `O_CREAT` creates the object if it does not exist, and `O_RDWR` allows reading and writing. The return value is a file descriptor, which is an integer.
 
-> **Note:** `ftruncate(fd, SIZE)` sets the size of the newly created shared memory object to `SIZE` bytes. A new `shm_open` object has zero length by default, so this step is mandatory before writing.
+`ftruncate(fd, SIZE)` sets the size of the newly created shared memory object to `SIZE` bytes. A new `shm_open` object has zero length by default, so this step is mandatory before writing.
 
 > **[Systems Programming]** `mmap()` is a system call that maps a file or shared memory object directly into a process's virtual address space. After mapping, data can be accessed via pointers like regular memory, enabling data exchange without `read()`/`write()` system calls.
 
@@ -462,7 +462,7 @@ int main()
 
 Compile: `gcc producer.c -o producer -lrt`
 
-> **Note:** `-lrt` is an option to link the **POSIX real-time library (librt)**. Functions like `shm_open()` and `shm_unlink()` are implemented in this library. `-l` is the option to link the library whose name follows, and `rt` is the library name (librt.so). Since glibc 2.34, these functions have been integrated into the standard C library (libc), so compilation may succeed without `-lrt`, but specifying it explicitly is safer for portability.
+`-lrt` is an option to link the **POSIX real-time library (librt)**. Functions like `shm_open()` and `shm_unlink()` are implemented in this library. `-l` is the option to link the library whose name follows, and `rt` is the library name (librt.so). Since glibc 2.34, these functions have been integrated into the standard C library (libc), so compilation may succeed without `-lrt`, but specifying it explicitly is safer for portability.
 
 **Flow summary:**
 
@@ -501,7 +501,7 @@ Compile: `gcc producer.c -o producer -lrt`
 
 > **Key Point:** Shared memory excels when **data volume is large and low latency is required**. However, the programmer must handle **synchronization** directly (textbook Chapters 6-7, Week 9).
 
-> **Note:** Mach in Section 4.2 and Windows ALPC in Section 4.3 are case studies for comparison. Understanding the general message-passing concepts is what matters; implementation details are secondary.
+Mach in Section 4.2 and Windows ALPC in Section 4.3 are case studies for comparison. Understanding the general message-passing concepts is what matters; implementation details are secondary.
 
 ### 4.2 Mach Message Passing
 
@@ -521,7 +521,7 @@ The core concept of Mach is that **everything is a message**.
 
 **Port creation:**
 
-> **Note:** The Mach code below uses Mach-specific types. `mach_port_t` is a handle to a port (like a file descriptor for messages), and `mach_task_self()` returns a reference to the calling task (analogous to `getpid()` in POSIX). The flow of allocating a port for a task and granting it a receive right matters more than the exact API names.
+The Mach code below uses Mach-specific types. `mach_port_t` is a handle to a port (like a file descriptor for messages), and `mach_task_self()` returns a reference to the calling task (analogous to `getpid()` in POSIX). The flow of allocating a port for a task and granting it a receive right matters more than the exact API names.
 
 ```c
 mach_port_t port;
@@ -545,9 +545,7 @@ mach_msg(message, MACH_RCV_MSG, 0, size, port,
          MACH_MSG_TIMEOUT_NONE, MACH_PORT_NULL);
 ```
 
-**Options when the queue is full:** The sender can (1) wait indefinitely, (2) wait with a timeout, (3) return immediately, or (4) temporarily cache the message (entrust it to the OS).
-
-> **Note:** With the temporary cache option, the message is handed to the OS, and the sender receives a notification when space becomes available. Only one pending message per thread is allowed.
+**Options when the queue is full:** The sender can (1) wait indefinitely, (2) wait with a timeout, (3) return immediately, or (4) temporarily cache the message (entrust it to the OS). With the temporary cache option, the message is handed to the OS, and the sender receives a notification when space becomes available. Only one pending message per thread is allowed.
 
 **Performance optimization:** Messages within the same system use **virtual memory mapping** to deliver without actual copying.
 
@@ -601,7 +599,7 @@ pipe(fd);
 - `fd[0]` is the **read end**, and `fd[1]` is the **write end**.
 - Children **inherit** the pipe through `fork()`.
 
-> **Note:** This code uses `fork()`. How `fork()` creates a child process is covered in detail in [Week 2 Lecture](../Week02_Process-1/Concepts_Lecture.md).
+This code uses `fork()`. How `fork()` creates a child process is covered in detail in [Week 2 Lecture](../Week02_Process-1/Concepts_Lecture.md).
 
 **Code example (Figures 3.21-3.22):**
 
@@ -644,7 +642,7 @@ int main(void)
 }
 ```
 
-> **Note:** The `+1` in `strlen(write_msg) + 1` is to include the **null terminator (`\0`)** at the end of the string. In C, `strlen()` returns the number of characters excluding `\0`, so to transmit `\0` as well, 1 must be added. The receiving side's `printf("read %s", read_msg)` requires `\0` to be present in `read_msg` to work correctly. Without `\0`, the receiving side cannot determine where the string ends and may print garbage values.
+The `+1` in `strlen(write_msg) + 1` is to include the **null terminator (`\0`)** at the end of the string. In C, `strlen()` returns the number of characters excluding `\0`, so to transmit `\0` as well, 1 must be added. The receiving side's `printf("read %s", read_msg)` requires `\0` to be present in `read_msg` to work correctly. Without `\0`, the receiving side cannot determine where the string ends and may print garbage values.
 
 **Key rules:**
 1. **Unused ends must be closed with close().**
@@ -660,7 +658,7 @@ ls -l | less                          # ls's stdout is piped to less's stdin
 cat file.txt | grep "error" | wc -l   # pipe chain
 ```
 
-> **Note:** Windows also uses pipes (e.g., `dir | more`).
+Windows also uses pipes (e.g., `dir | more`).
 
 ### 5.2 Named Pipes (FIFO)
 
@@ -688,7 +686,7 @@ int fd = open("/tmp/my_fifo", O_RDONLY);
 read(fd, buf, 6);
 ```
 
-> **Note:** `0666` is a Unix permission mask in octal, meaning the file is readable and writable by all users (owner, group, and others). The actual permissions are this value with the process's umask applied.
+`0666` is a Unix permission mask in octal, meaning the file is readable and writable by all users (owner, group, and others). The actual permissions are this value with the process's umask applied.
 
 **UNIX vs Windows named pipes:**
 
@@ -770,7 +768,7 @@ The communication methods are as follows.
 - **TCP:** connection-oriented, providing a reliable byte stream.
 - **UDP:** connectionless, with no reliability guarantee, but fast.
 
-> **Note:** A connection-oriented protocol (TCP) first performs a handshake to establish a connection before sending data, like picking up the phone before talking. A connectionless protocol (UDP) sends packets directly without prior setup, like dropping a letter in a mailbox with no confirmation.
+A connection-oriented protocol (TCP) first performs a handshake to establish a connection before sending data, like picking up the phone before talking. A connectionless protocol (UDP) sends packets directly without prior setup, like dropping a letter in a mailbox with no confirmation.
 
 > **[Computer Networks]** A socket is the interface between the application layer and the transport layer. TCP sockets are connection-oriented and are used on the client side in the sequence `connect()` → `send()`/`recv()` → `close()`, while UDP sockets are connectionless and use `sendto()`/`recvfrom()`.
 
@@ -801,7 +799,7 @@ public class DateServer {
 }
 ```
 
-> **Note:** **Key lines.** `ServerSocket(6013)` listens on port 6013, and `accept()` blocks until a connection request arrives.
+`ServerSocket(6013)` listens on port 6013, and `accept()` blocks until a connection request arrives.
 
 **Date client socket example (Java, Figure 3.28):**
 
@@ -828,7 +826,7 @@ public class DateClient {
 }
 ```
 
-> **Note:** **Key line.** `Socket("127.0.0.1", 6013)` connects to port 6013 of the server running on the local machine.
+`Socket("127.0.0.1", 6013)` connects to port 6013 of the server running on the local machine.
 
 **Sockets in everyday applications:**
 
@@ -843,7 +841,7 @@ public class DateClient {
 
 *Table 10. Socket use in everyday applications*
 
-> **Note:** When chatting with ChatGPT, the browser maintains a streaming connection such as **SSE (Server-Sent Events) or WebSocket** with the server, receiving tokens one at a time in real time.
+When chatting with ChatGPT, the browser maintains a streaming connection such as **SSE (Server-Sent Events) or WebSocket** with the server, receiving tokens one at a time in real time.
 
 **Limitations of sockets:** Sockets exchange only unstructured byte streams, and imposing structure on the data is the application's responsibility. A higher-level abstraction is therefore needed, and **RPC** is the representative example.
 
@@ -864,7 +862,7 @@ public class DateClient {
 
 *Figure 10. Execution of a remote procedure call (RPC)*
 
-> **Note:** Stubs exist on both the client and server sides. The client stub marshals parameters and sends them over the network, while the server stub (skeleton) unmarshals the received data and calls the actual procedure.
+Stubs exist on both the client and server sides. The client stub marshals parameters and sends them over the network, while the server stub (skeleton) unmarshals the received data and calls the actual procedure.
 
 > **[Computer Architecture]** **Endianness** refers to the byte order in which multi-byte data is stored in memory. For example, the integer `0x12345678` is stored as follows.
 > - **Big-endian:** stores the most significant byte first → `12 34 56 78` (network byte order)
@@ -874,9 +872,7 @@ public class DateClient {
 
 **Execution semantics:**
 
-Network packets can be lost, causing the sender to retransmit. This retransmission can cause the server to receive and execute the same request twice. RPC semantics exist to handle this.
-
-> **Note:** Network messages can be lost or duplicated. Imagine mailing a letter that might get lost, so you resend it, but the recipient might then receive two copies. RPC semantics define how to handle this.
+Network messages can be lost or duplicated. Just as resending a letter that seems lost can leave the recipient with two copies, a lost packet causes the sender to retransmit, and this retransmission can cause the server to receive and execute the same request twice. RPC semantics define how to handle this situation.
 
 | Semantics | Description |
 |:--|:----------|
@@ -908,7 +904,7 @@ interface RemoteService {
 - The client calls `service.remoteMethod(3, 0.14);` like a local method.
 - Internally, the binder framework handles marshalling and inter-process delivery.
 
-> **Note:** Android's binder delivers data with only one copy through the Linux kernel's `/dev/binder` driver, achieving excellent performance. Nearly all system services in Android communicate via binder.
+Android's binder delivers data with only one copy through the Linux kernel's `/dev/binder` driver, achieving excellent performance. Nearly all system services in Android communicate via binder.
 
 > **Definition:** An **Android Service** is a component with no UI that runs in the background. A client binds to a service with `bindService()`. Communication happens via message passing or RPC.
 
@@ -936,7 +932,7 @@ The client calls `GetForecast()` as if it were a local function, and gRPC automa
 
 gRPC is used by companies such as Netflix, Spotify, and Uber and by projects such as Kubernetes and gRPC-Web.
 
-> **Note:** gRPC is the modern implementation of the traditional RPC concepts covered in the textbook. Since everything from stub auto-generation to marshalling (Protocol Buffers) to network transport is abstracted by the framework, developers only need to define interfaces in `.proto` files.
+gRPC is the modern implementation of the traditional RPC concepts covered in the textbook. Since everything from stub auto-generation to marshalling (Protocol Buffers) to network transport is abstracted by the framework, developers only need to define interfaces in `.proto` files.
 
 ---
 
@@ -1042,7 +1038,7 @@ Consumed: 30
 Consumed: 40
 ```
 
-> **Note:** The actual output may be interleaved differently from the above depending on scheduling.
+The actual output may be interleaved differently from the above depending on scheduling.
 
 ### 7.3 Lab 3: POSIX Shared Memory
 

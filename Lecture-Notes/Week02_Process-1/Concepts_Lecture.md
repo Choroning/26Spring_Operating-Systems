@@ -17,7 +17,7 @@
 ## Table of Contents
 
 - [1. Process Concepts](#1-process-concepts)
-  - [1.1 What is a Process?](#11-what-is-a-process)
+  - [1.1 The Concept of a Process](#11-the-concept-of-a-process)
   - [1.2 Memory Layout](#12-memory-layout)
   - [1.3 Dynamic Growth of Stack and Heap](#13-dynamic-growth-of-stack-and-heap)
   - [1.4 Memory Layout of a C Program](#14-memory-layout-of-a-c-program)
@@ -27,7 +27,7 @@
   - [1.8 PCB in Linux: task_struct](#18-pcb-in-linux-task_struct)
   - [1.9 Thread Overview](#19-thread-overview)
 - [2. Process Scheduling](#2-process-scheduling)
-  - [2.1 Why is it Needed?](#21-why-is-it-needed)
+  - [2.1 The Need for Scheduling](#21-the-need-for-scheduling)
   - [2.2 Degree of Multiprogramming and Process Types](#22-degree-of-multiprogramming-and-process-types)
   - [2.3 Scheduling Queues](#23-scheduling-queues)
   - [2.4 CPU Scheduling](#24-cpu-scheduling)
@@ -59,7 +59,7 @@
 
 ## 1. Process Concepts
 
-### 1.1 What is a Process?
+### 1.1 The Concept of a Process
 
 A **process** is a program in execution.
 
@@ -67,7 +67,7 @@ A **process** is a program in execution.
 - In modern computers, multiple programs are loaded into memory and run **concurrently**.
 - This evolution demanded stricter control and compartmentalization, giving rise to the **process** concept.
 
-> **Key Point:** The textbook defines it as follows: "A process is the unit of work in a modern computing system."
+The textbook defines it as follows: "A process is the unit of work in a modern computing system."
 
 - From the OS's perspective, there exist both processes executing user code and processes executing OS code.
 - The CPU(s) are **multiplexed** among these processes.
@@ -142,7 +142,7 @@ The `dec` and `hex` columns show the total size of all sections combined, in dec
 
 - **data** holds initialized global variables, and **bss** (block started by symbol) holds uninitialized global variables.
 
-> **Note:** The reason BSS is separated from data is **to reduce the executable file size**. Variables in the data section (`int y = 15`) must store their initial value of 15 in the executable, but variables in the BSS section (`int x`) will be initialized to 0 anyway, so the executable only needs to record the BSS size (8 bytes in this example). In other words, BSS does not store actual data on disk, making the executable smaller. When the program is loaded, the OS fills the BSS region with zeros.
+The reason BSS is separated from data is **to reduce the executable file size**. Variables in the data section (`int y = 15`) must store their initial value of 15 in the executable, but variables in the BSS section (`int x`) will be initialized to 0 anyway, so the executable only needs to record the BSS size (8 bytes in this example). In other words, BSS does not store actual data on disk, making the executable smaller. When the program is loaded, the OS fills the BSS region with zeros.
 
 ### 1.5 Program vs Process
 
@@ -196,7 +196,7 @@ A process changes **state** during its execution:
 
 > **Definition:** A **time slice** (or quantum) is the fixed amount of CPU time the OS allocates to each process before preempting it.
 
-> **Key Point:** Running → Ready is an **involuntary** transition caused by time slice expiration, whereas Running → Waiting is a **voluntary** transition caused by an I/O request.
+Running → Ready is an **involuntary** transition caused by time slice expiration, whereas Running → Waiting is a **voluntary** transition caused by an I/O request.
 
 ### 1.7 Process Control Block (PCB)
 
@@ -220,7 +220,7 @@ The PCB serves as a repository for all data needed to **start or restart** a pro
 
 *Table 4. Fields of the PCB and their contents*
 
-> **Note:** **Why these fields?** Among these fields, the **program counter** and **process state** are the most critical, because they determine where execution resumes and whether the process is ready to run.
+**Key fields.** Among these fields, the **program counter** and **process state** are the most critical, because they determine where execution resumes and whether the process is ready to run.
 
 > **[Computer Architecture]** The **base register** stores the **starting address** of memory a process can access, and the **limit register** stores the **size (range)** of that process's memory. When the CPU accesses memory, the hardware automatically checks whether the address falls within the [base, base+limit) range, preventing access to another process's memory. This was the memory protection method before virtual memory (page tables) emerged, and more advanced methods are covered in Week 11.
 
@@ -246,7 +246,7 @@ struct mm_struct *mm;          /* address space (memory management) */
 current->state = new_state;  // Change the current process's state
 ```
 
-> **Note:** The `->` operator accesses a field through a pointer. `current->state` means the `state` field of the struct that `current` points to.
+The `->` operator accesses a field through a pointer. `current->state` means the `state` field of the struct that `current` points to.
 
 > **[Data Structures]** The reason the Linux kernel manages processes as a doubly linked list is that insertions and deletions of processes occur frequently, making O(1) insertion/deletion performance important. Managing them with an array would incur O(n) movement cost on insertion/deletion.
 
@@ -268,9 +268,9 @@ Modern OSes allow **multi-threaded execution**:
 
 **What is independent per thread:** program counter (PC), register set, stack
 
-> **Note:** In systems that support threads, the PCB is extended to include information for each thread. System-wide changes are needed to support threads.
+In systems that support threads, the PCB is extended to include information for each thread. System-wide changes are needed to support threads.
 
-> **Note:** Details on threads are covered in **Week 4**.
+Details on threads are covered in **Week 4**.
 
 ---
 
@@ -278,7 +278,7 @@ Modern OSes allow **multi-threaded execution**:
 
 ## 2. Process Scheduling
 
-### 2.1 Why is it Needed?
+### 2.1 The Need for Scheduling
 
 **Goal of multiprogramming:** Maximize **CPU utilization** by ensuring some process is always running.
 
@@ -303,7 +303,7 @@ The **Degree of Multiprogramming** is the number of processes currently in memor
 
 A proper mix of I/O-bound and CPU-bound processes is important for efficient scheduling.
 
-> **Note:** **Why a proper mix matters.** If only I/O-bound processes exist, the ready queue empties and the CPU idles. If only CPU-bound processes exist, the wait queue empties and I/O devices idle.
+**Why a proper mix matters:** If only I/O-bound processes exist, the ready queue empties and the CPU idles. If only CPU-bound processes exist, the wait queue empties and I/O devices idle.
 
 ### 2.3 Scheduling Queues
 
@@ -328,7 +328,7 @@ A process repeats the cycle in Figure 5 until it terminates. Upon termination, i
 
 **Scheduling frequency:** The CPU scheduler typically runs at least every **100 ms**.
 
-> **Note:** I/O-bound processes execute for only a few milliseconds before waiting for I/O. CPU-bound processes execute longer, but the scheduler forcibly reclaims the CPU.
+I/O-bound processes execute for only a few milliseconds before waiting for I/O. CPU-bound processes execute longer, but the scheduler forcibly reclaims the CPU.
 
 **Swapping:**
 - Moving a process from memory to disk (**swap out**) and later reloading it (**swap in**).
@@ -349,9 +349,9 @@ A process repeats the cycle in Figure 5 until it terminates. Upon termination, i
 
 > **Key Point:** The context switch is a core OS mechanism. Users perceive multiple programs running simultaneously because the OS performs context switches between processes extremely quickly. However, no useful work is performed during a context switch, so it is pure overhead.
 
-> **Note:** **Analogy.** Consider taking an exam and needing to switch to a different test paper. You save your current answers (register state), put away the current sheet (save PCB), and pick up the new one (restore PCB). The time you spend shuffling papers is wasted (overhead), but it lets you proceed as if you were working on multiple tests simultaneously.
+Consider taking an exam and needing to switch to a different test paper. You save your current answers (register state), put away the current sheet (save PCB), and pick up the new one (restore PCB). The time you spend shuffling papers is wasted (overhead), but it lets you proceed as if you were working on multiple tests simultaneously.
 
-> **Note:** A concrete example is as follows. While Process A (word processor) is running and a timer interrupt occurs, the OS (1) saves A's PC, register values, stack pointer, etc. to A's PCB, (2) selects Process B (web browser) from the ready queue, and (3) restores the PC, register values, etc. previously saved in B's PCB to the CPU. This entire process completes within microseconds, making the user perceive A and B as running simultaneously.
+A concrete example is as follows. While Process A (word processor) is running and a timer interrupt occurs, the OS (1) saves A's PC, register values, stack pointer, etc. to A's PCB, (2) selects Process B (web browser) from the ready queue, and (3) restores the PC, register values, etc. previously saved in B's PCB to the CPU. This entire process completes within microseconds, making the user perceive A and B as running simultaneously.
 
 **Context switch overhead:**
 - A context switch typically takes **a few microseconds**.
@@ -402,7 +402,7 @@ A process can create several new processes during its execution.
 
 > **Definition:** **`systemd`** (or `init` in older systems) is the first user-space program the Linux kernel launches at boot; it then starts all other services, so every user process is ultimately a descendant of PID 1.
 
-> **[Data Structures]** The process tree is literally a tree structure. The root node is the first process (systemd, pid=1 on Linux), and each node can have child nodes (child processes). The clear parent-child relationship enables systematic process management (termination, resource reclamation, etc.).
+The process tree is literally a tree structure. The root node is the first process (systemd, pid=1 on Linux), and each node can have child nodes (child processes). The clear parent-child relationship enables systematic process management (termination, resource reclamation, etc.).
 
 **Resource and execution options:**
 
@@ -418,7 +418,7 @@ Address space options:
 1. The child is a **duplicate** of the parent (same program and data).
 2. A **new program** is loaded into the child.
 
-> **Note:** Resource limits prevent excessive child process creation.
+Resource limits prevent excessive child process creation.
 
 ### 3.2 fork() in UNIX/Linux
 
@@ -429,7 +429,7 @@ In UNIX, new processes are created using the **`fork()`** system call.
 2. **Both** parent and child continue execution from the instruction after fork().
 3. The child inherits the parent's privileges, scheduling attributes, open files, etc.
 
-> **Note:** **Why copy the entire address space?** So that the child can continue running the same program with the same data right after fork() and can communicate easily with the parent. Actual implementations optimize this copy with COW (Copy-On-Write, Week 12). Pages are initially shared and copied only on write, which makes fork() very cheap when followed immediately by exec().
+**Reason for copying the entire address space.** So that the child can continue running the same program with the same data right after fork() and can communicate easily with the parent. Actual implementations optimize this copy with COW (Copy-On-Write, Week 12). Pages are initially shared and copied only on write, which makes fork() very cheap when followed immediately by exec().
 
 **Return values of fork():**
 
@@ -489,7 +489,7 @@ int main() {
 }
 ```
 
-> **Note:** In `execlp("/bin/ls", "ls", NULL)`, the first argument `"/bin/ls"` is the **file path** to execute, and the arguments from the second onward are the **argv array** passed to the program. By UNIX convention, `argv[0]` should be the program's own name. Therefore, `"ls"` is passed as `argv[0]`. Ignoring this convention still allows execution, but since many programs use `argv[0]` to print error messages, it is proper to always include it. The final `NULL` marks the end of the argument list.
+In `execlp("/bin/ls", "ls", NULL)`, the first argument `"/bin/ls"` is the **file path** to execute, and the arguments from the second onward are the **argv array** passed to the program. By UNIX convention, `argv[0]` should be the program's own name. Therefore, `"ls"` is passed as `argv[0]`. Ignoring this convention still allows execution, but since many programs use `argv[0]` to print error messages, it is proper to always include it. The final `NULL` marks the end of the argument list.
 
 **fork() + exec() + wait() flow:**
 
@@ -539,7 +539,7 @@ Why is it designed this way?
 
 *Table 8. Comparison of UNIX fork() and Windows CreateProcess()*
 
-> **Note:** **Windows structures.** `STARTUPINFO` specifies the new process's window size, appearance, and standard I/O handles. `PROCESS_INFORMATION` contains handles and identifiers for the created process and thread.
+`STARTUPINFO` specifies the new process's window size, appearance, and standard I/O handles. `PROCESS_INFORMATION` contains handles and identifiers for the created process and thread.
 
 ### 3.6 Process Termination
 
@@ -563,11 +563,9 @@ exit(1);  // child returns status to parent
 pid = wait(&status);  // parent collects child's exit status
 ```
 
-> **Note:** To forcibly terminate a process in Linux, use the `kill` command or the `kill()` system call. In Windows, use the `TerminateProcess()` API.
+To forcibly terminate a process in Linux, use the `kill` command or the `kill()` system call. In Windows, use the `TerminateProcess()` API.
 
-**Cascading Termination:** A scheme in which all children must be terminated when the parent terminates. Typically initiated by the OS.
-
-> **Note:** Linux does **not** implement cascading termination by default. Orphaned children are re-parented to init/systemd instead (see Section 3.7).
+**Cascading Termination:** A scheme in which all children must be terminated when the parent terminates. Typically initiated by the OS. Linux does **not** implement cascading termination by default. Orphaned children are re-parented to init/systemd instead (see Section 3.7).
 
 ### 3.7 Zombie and Orphan Processes
 
@@ -577,7 +575,7 @@ pid = wait(&status);  // parent collects child's exit status
 - All processes briefly pass through the zombie state upon termination.
 - If the parent never calls `wait()`, zombies accumulate and waste system resources.
 
-> **Note:** When viewing the process list with `ps aux`, processes with status `Z` are zombie processes. Zombies themselves do not consume CPU or memory, but they occupy process table entries, reducing the number of processes the system can create.
+When viewing the process list with `ps aux`, processes with status `Z` are zombie processes. Zombies themselves do not consume CPU or memory, but they occupy process table entries, reducing the number of processes the system can create.
 
 **Orphan Process:**
 - An orphan is a child process left behind because its parent **terminated first** without calling `wait()`.
@@ -596,18 +594,18 @@ pid = wait(&status);  // parent collects child's exit status
 
 > **Key Point:** A **zombie** is a child process that has terminated but has not been reaped (wait) by its parent; an **orphan** is a child process left alone because its parent terminated first. Which of the two a situation produces is decided by who terminated first and whether the parent called wait().
 
-> **Note:** **Analogy.** A zombie is a process that is dead but still listed in the process table (like a zombie that will not lie down). An orphan is a process whose parent disappeared, so it is adopted by init/systemd (like an orphanage taking in a child).
+A zombie is a process that is dead but still listed in the process table (like a zombie that will not lie down). An orphan is a process whose parent disappeared, so it is adopted by init/systemd (like an orphanage taking in a child).
 
 Because zombies accumulate when the parent does not call `wait()` in time, the parent needs a way to learn when a child has terminated. For this purpose, the operating system notifies the parent when a child terminates.
 
 > **Definition:** A **signal** is a software notification the OS sends to a process to trigger a specific action. `SIGCHLD` is automatically sent to a parent whenever one of its children terminates.
 
-> **Note:** How to remove zombie processes:
-> 1. **Send SIGCHLD signal to the parent**: `kill -SIGCHLD <parent_PID>` prompts the parent to call `wait()` in its signal handler. This works only if the parent has such a handler.
-> 2. **Kill the parent process**: killing the parent changes the zombie's parent to init/systemd, which automatically calls `wait()` to reap the zombie.
-> 3. **Code-level prevention**: setting `signal(SIGCHLD, SIG_IGN)` causes the OS to automatically reap zombies upon child termination (POSIX standard).
->
-> Removing a zombie directly with `kill` is impossible, because it is already a terminated process. It must always be resolved through the parent.
+How to remove zombie processes:
+1. **Send SIGCHLD signal to the parent**: `kill -SIGCHLD <parent_PID>` prompts the parent to call `wait()` in its signal handler. This works only if the parent has such a handler.
+2. **Kill the parent process**: killing the parent changes the zombie's parent to init/systemd, which automatically calls `wait()` to reap the zombie.
+3. **Code-level prevention**: setting `signal(SIGCHLD, SIG_IGN)` causes the OS to automatically reap zombies upon child termination (POSIX standard).
+
+Removing a zombie directly with `kill` is impossible, because it is already a terminated process. It must always be resolved through the parent.
 
 ### 3.8 Android Process Hierarchy
 
@@ -623,7 +621,7 @@ Android determines the termination order based on an **importance hierarchy**:
 
 *Table 10. Importance hierarchy and termination priority of Android processes*
 
-> **Note:** If a process serves multiple roles, the highest rank applies.
+If a process serves multiple roles, the highest rank applies.
 
 ### 3.9 Chrome Multi-Process Architecture
 
@@ -641,7 +639,7 @@ Android determines the termination order based on an **importance hierarchy**:
 
 **Advantages:** Websites are **isolated** from each other, so a crash in one site only affects its renderer. Renderer processes run in a **sandbox** to minimize the impact of security vulnerabilities.
 
-> **Note:** Chrome's multi-process architecture is a great example of how process isolation and independent address spaces are applied in practice. If you check Chrome's processes in the task manager, you can see multiple processes that grow with the number of tabs.
+Chrome's multi-process architecture is a great example of how process isolation and independent address spaces are applied in practice. If you check Chrome's processes in the task manager, you can see multiple processes that grow with the number of tabs.
 
 ---
 
@@ -712,7 +710,7 @@ int main() {
 
 > **Caution:** If `return 0` is omitted in the child process, the child also calls fork() in the remaining iterations. In this example, the 3 iterations create $2^3 = 8$ processes including the original, and with a large iteration count or an infinite loop, the number of processes grows exponentially, creating a risk of a **fork bomb**.
 
-> **Note:** A fork bomb is an attack where a process infinitely replicates itself to exhaust system resources. A famous fork bomb command in Linux is `:(){ :|:& };:`, which defines a function that recursively calls itself twice and then executes it.
+A fork bomb is an attack where a process infinitely replicates itself to exhaust system resources. A famous fork bomb command in Linux is `:(){ :|:& };:`, which defines a function that recursively calls itself twice and then executes it.
 
 ### 4.3 Running a New Program with exec()
 
@@ -791,7 +789,7 @@ int main() {
 - `WEXITSTATUS(status)`: extracts the exit status value (0-255).
 - `WIFSIGNALED(status)`: checks if the child was terminated by a signal.
 
-> **Note:** The OS encodes multiple pieces of information (normal exit vs signal kill, exit code, signal number) into different bit ranges of the single `status` integer. The `W*` macros extract the specific piece you need, so you never have to inspect the bits manually.
+The OS encodes multiple pieces of information (normal exit vs signal kill, exit code, signal number) into different bit ranges of the single `status` integer. The `W*` macros extract the specific piece you need, so you never have to inspect the bits manually.
 
 ### 4.6 How a Simple Shell Works
 
@@ -841,7 +839,7 @@ flowchart TD
 
 *Figure 10. The loop in which a simple shell processes one command*
 
-> **Note:** Real shells like bash and zsh also fundamentally use this fork() + exec() + wait() pattern. When you append `&` after a command in the shell, the parent (shell) does not call wait() and can immediately accept the next command; this is the principle behind background execution.
+Real shells like bash and zsh also fundamentally use this fork() + exec() + wait() pattern. When you append `&` after a command in the shell, the parent (shell) does not call wait() and can immediately accept the next command; this is the principle behind background execution.
 
 **Practice key summary:**
 

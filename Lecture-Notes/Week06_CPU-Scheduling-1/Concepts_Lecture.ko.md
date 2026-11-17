@@ -2,7 +2,7 @@
 
 [레포지토리 안내](../../README.ko.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **최종 수정일:** 2026-11-04
+> **최종 수정일:** 2026-11-18
 >
 > Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 5 (5.1-5.3)
 
@@ -517,7 +517,7 @@ SJF(Shortest-Job-First)는 **다음 CPU 버스트가 가장 짧은** 프로세�
 
 ### 4.2 SJF: 최적성 증명
 
-**왜 SJF가 최적인가?**
+**SJF가 최적인 이유**
 
 ```text
 경우 1: 긴 것 먼저 (버스트: 10, 3)

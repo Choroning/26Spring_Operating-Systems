@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lab.md) | [한국어](Concepts_Lab.ko.md)
 
-> **Last Updated:** 2026-10-27
+> **Last Updated:** 2026-11-18
 
 > **Learning Objectives:**
 > 1. Create and join threads using `pthread_create` and `pthread_join`
@@ -58,7 +58,7 @@ gcc -Wall -pthread -o lab3_arg_pitfall   lab3_arg_pitfall.c
 gcc -Wall -O2 -pthread -o lab4_speedup   lab4_speedup.c
 ```
 
-> **Note:** The `-pthread` flag tells the compiler to link against the POSIX threads library. Without it, calls to `pthread_create` and `pthread_join` cause linker errors on some systems. Since glibc 2.34, the Pthreads functions are part of the standard C library (libc), so linking may succeed without the flag, but specifying it explicitly is safer for portability.
+The `-pthread` flag tells the compiler to link against the POSIX threads library. Without it, calls to `pthread_create` and `pthread_join` cause linker errors on some systems. Since glibc 2.34, the Pthreads functions are part of the standard C library (libc), so linking may succeed without the flag, but specifying it explicitly is safer for portability.
 
 ---
 
@@ -171,9 +171,9 @@ void *sum_array(void *arg)
 
 The `arg` parameter is cast to `struct thread_arg *`. `struct thread_arg { int id; };` is a simple struct holding the thread's assigned ID, and it is defined in the full source file. Each thread handles a contiguous range `[start, end)` of `chunk` elements, and the last thread (`id == nthreads - 1`) also processes the leftover elements when `ARRAY_SIZE` is not divisible by `nthreads`.
 
-> **Note:** **Why `partial_sum[id]` instead of a shared variable?**
-> - Each thread writes to **its own index**, so there is no conflict.
-> - If all threads wrote to a single `total` variable, a **race condition** would occur. A race condition is a bug where the program's output depends on the unpredictable timing of concurrent threads accessing shared data, and it is covered in detail in textbook Chapter 6 and Week 9.
+**Reason for `partial_sum[id]` instead of a shared variable**
+- Each thread writes to **its own index**, so there is no conflict.
+- If all threads wrote to a single `total` variable, a **race condition** would occur. A race condition is a bug where the program's output depends on the unpredictable timing of concurrent threads accessing shared data, and it is covered in detail in textbook Chapter 6 and Week 9.
 
 > **[Algorithms]** **Divide and conquer** is an algorithm design technique that splits a problem into smaller subproblems, solves each, and combines the results, with merge sort as a classic example. The approach here has the same structure: it splits the data, processes each part independently, and combines the results (unlike merge sort, it splits in a single step without recursion). The key difference is that the split and process phases run **in parallel** across multiple cores.
 
@@ -222,7 +222,7 @@ Thread received id = 2
 Thread received id = 3
 ```
 
-> **Key Point:** All threads share the same `&i` address. By the time a thread reads it, `i` may have already advanced. Once the loop ends, the lifetime of `i` also ends, so reading `i` through the pointer afterwards is undefined behavior; the 4s in the output above appear because the value at loop exit happened to remain in that location.
+All threads share the same `&i` address. By the time a thread reads it, `i` may have already advanced. Once the loop ends, the lifetime of `i` also ends, so reading `i` through the pointer afterwards is undefined behavior; the 4s in the output above appear because the value at loop exit happened to remain in that location.
 
 ### 4.1 Why This Happens
 
@@ -271,7 +271,7 @@ Main (loop)              Thread 0             Thread 1
 
 **Amdahl's Law** (Textbook Section 4.2): Speedup $\leq \frac{1}{S + \frac{1-S}{N}}$
 
-> **Note:** In this formula, **S** is the fraction of the program that must run **serially** (cannot be parallelized), and **N** is the number of processing cores. When S = 0 (fully parallel), ideal speedup = N. When S = 10% and N = 8 (8 threads), the maximum speedup is $\frac{1}{0.1 + 0.9/8} = \frac{1}{0.2125} \approx 4.71$, that is, **4.71x** (not 8x). Even a small serial fraction places a hard ceiling on performance gains.
+In this formula, **S** is the fraction of the program that must run **serially** (cannot be parallelized), and **N** is the number of processing cores. When S = 0 (fully parallel), ideal speedup = N. When S = 10% and N = 8 (8 threads), the maximum speedup is $\frac{1}{0.1 + 0.9/8} = \frac{1}{0.2125} \approx 4.71$, that is, **4.71x** (not 8x). Even a small serial fraction places a hard ceiling on performance gains.
 
 ### 5.1 Ideal vs Reality
 

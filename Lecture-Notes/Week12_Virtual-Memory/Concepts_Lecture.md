@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **Last Updated:** 2026-11-17
+> **Last Updated:** 2026-11-18
 >
 > Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 10
 
@@ -46,7 +46,7 @@
   - [3.10 Stack Algorithms and Why They Avoid Belady](#310-stack-algorithms-and-why-they-avoid-belady)
   - [3.11 Algorithm Comparison](#311-algorithm-comparison)
 - [4. LRU-Approximation Algorithms](#4-lru-approximation-algorithms)
-  - [4.1 Why Approximate?](#41-why-approximate)
+  - [4.1 Reasons for Approximation](#41-reasons-for-approximation)
   - [4.2 Additional-Reference-Bits](#42-additional-reference-bits)
   - [4.3 Second-Chance (Clock) Algorithm](#43-second-chance-clock-algorithm)
   - [4.4 Clock Algorithm Visualization](#44-clock-algorithm-visualization)
@@ -413,7 +413,7 @@ The canonical example reference string used below:
 
 **FIFO trace:** 3 frames, reference string `7 0 1 2 0 3 0 4 2 3 0 3 2 1 2 0 1 7 0 1`
 
-| Ref | F1   | F2   | F3   | Fault? |
+| Ref | F1   | F2   | F3   | Fault |
 |-----|------|------|------|--------|
 | 7   | 7    | -    | -    | F      |
 | 0   | 7    | 0    | -    | F      |
@@ -457,7 +457,7 @@ More frames lead to **more** faults. This is **Belady's anomaly**, a fundamental
 
 **3-frame trace** (9 faults):
 
-| Ref | F1   | F2   | F3   | Fault? |
+| Ref | F1   | F2   | F3   | Fault |
 |-----|------|------|------|--------|
 | 1   | 1    | -    | -    | F      |
 | 2   | 1    | 2    | -    | F      |
@@ -476,7 +476,7 @@ More frames lead to **more** faults. This is **Belady's anomaly**, a fundamental
 
 **4-frame trace** (10 faults):
 
-| Ref | F1   | F2   | F3   | F4   | Fault? |
+| Ref | F1   | F2   | F3   | F4   | Fault |
 |-----|------|------|------|------|--------|
 | 1   | 1    | -    | -    | -    | F      |
 | 2   | 1    | 2    | -    | -    | F      |
@@ -508,7 +508,7 @@ The **OPT** algorithm replaces the page that **will not be used for the longest 
 
 **OPT trace:** 3 frames, same string as FIFO
 
-| Ref | F1    | F2    | F3    | Fault? | Reason (victim = farthest next use) |
+| Ref | F1    | F2    | F3    | Fault | Reason (victim = farthest next use) |
 |-----|-------|-------|-------|--------|-------------------------------------|
 | 7   | **7** | -     | -     | F      |        |
 | 0   | 7     | **0** | -     | F      |        |
@@ -545,7 +545,7 @@ Since we cannot see the future, we approximate it with the past: **replace the p
 
 **LRU trace:** 3 frames, same reference string
 
-| Ref | F1    | F2    | F3    | Fault? | Reason (LRU victim) |
+| Ref | F1    | F2    | F3    | Fault | Reason (LRU victim) |
 |-----|-------|-------|-------|--------|---------------------|
 | 7   | 7     | -     | -     | F      |                     |
 | 0   | 7     | 0     | -     | F      |                     |
@@ -624,7 +624,7 @@ Same reference string, 3 frames:
 
 ## 4. LRU-Approximation Algorithms
 
-### 4.1 Why Approximate?
+### 4.1 Reasons for Approximation
 
 True LRU requires hardware that updates a clock or stack on **every** memory reference, and most architectures do not provide that. What most architectures **do** provide is a **reference bit**:
 

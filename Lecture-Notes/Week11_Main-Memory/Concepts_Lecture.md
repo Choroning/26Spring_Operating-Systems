@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **Last Updated:** 2026-11-17
+> **Last Updated:** 2026-11-18
 >
 > Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 9
 
@@ -43,7 +43,7 @@
   - [4.3 Paging Hardware and Free-Frame Management](#43-paging-hardware-and-free-frame-management)
   - [4.4 Internal Fragmentation and Page Size Trade-offs](#44-internal-fragmentation-and-page-size-trade-offs)
 - [5. Paging Hardware Support: TLB](#5-paging-hardware-support-tlb)
-  - [5.1 Where to Keep the Page Table](#51-where-to-keep-the-page-table)
+  - [5.1 Location of the Page Table](#51-location-of-the-page-table)
   - [5.2 TLB: Translation Look-aside Buffer](#52-tlb-translation-look-aside-buffer)
   - [5.3 ASID: Address-Space Identifier](#53-asid-address-space-identifier)
   - [5.4 Effective Access Time (EAT)](#54-effective-access-time-eat)
@@ -507,7 +507,7 @@ Modern systems typically use **4KB** or **8KB** as the default, with optional **
 
 ## 5. Paging Hardware Support: TLB
 
-### 5.1 Where to Keep the Page Table
+### 5.1 Location of the Page Table
 
 There are two implementation strategies:
 

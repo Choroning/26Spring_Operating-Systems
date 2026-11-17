@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **Last Updated:** 2026-11-04
+> **Last Updated:** 2026-11-18
 >
 > Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 5 (5.1-5.3)
 
@@ -517,7 +517,7 @@ SJF (Shortest-Job-First) selects the process with the **shortest next CPU burst*
 
 ### 4.2 SJF: Proof of Optimality
 
-**Why is SJF optimal?**
+**Reason SJF is optimal**
 
 ```text
 Case 1: Long first (burst: 10, 3)

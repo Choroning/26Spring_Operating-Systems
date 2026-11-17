@@ -66,7 +66,7 @@ if (pid == 0) {
 }
 ```
 
-> **Definition:** **`pid_t`** is a typedef for an integer type (defined in `<sys/types.h>`) used for process IDs. It is used instead of `int` to ensure portability across systems where PID sizes may vary.
+**`pid_t`** is a typedef for an integer type (defined in `<sys/types.h>`) used for process IDs. It is used instead of `int` to ensure portability across systems where PID sizes may vary.
 
 ```mermaid
 graph TD
@@ -84,11 +84,11 @@ graph TD
 - `fork()` returns **0** to the child and the **child's PID** to the parent.
 - `wait(NULL)` blocks until a child process terminates.
 
-> **Note:** In `wait(NULL)`, the `NULL` argument means the caller does not care about the child's exit status. If you pass a pointer to an `int` instead (e.g., `wait(&status)`), the kernel writes the child's exit status into that variable.
+In `wait(NULL)`, the `NULL` argument means the caller does not care about the child's exit status. If you pass a pointer to an `int` instead (e.g., `wait(&status)`), the kernel writes the child's exit status into that variable.
 
 - **Exercise**: What happens if you remove `wait()`?
 
-> **Note:** When `fork()` is called, the parent's memory space is copied to the child. In actual implementations, the **COW (Copy-On-Write)** technique is used to defer physical page copying until a write occurs. If `wait()` is not called, even after the child terminates, the PCB is not reclaimed, and the child becomes a **zombie process**.
+When `fork()` is called, the parent's memory space is copied to the child. In actual implementations, the **COW (Copy-On-Write)** technique is used to defer physical page copying until a write occurs. If `wait()` is not called, even after the child terminates, the PCB is not reclaimed, and the child becomes a **zombie process**.
 
 > **Definition:** **COW (Copy-On-Write)** means the parent and child initially share the same physical memory pages after `fork()`. Only when either process tries to **write** to a page does the kernel copy that specific page, saving both memory and time. This is why `fork()` followed immediately by `exec()` is very cheap: the child's pages are about to be replaced anyway.
 
@@ -163,7 +163,7 @@ if (fork() == 0) {
 }
 ```
 
-> **Note:** `strlen(msg)` is used here (not `sizeof(msg)`) because `msg` is a pointer, and `sizeof` on a pointer gives the pointer's byte size (4 or 8 bytes), not the string length.
+`strlen(msg)` is used here (not `sizeof(msg)`) because `msg` is a pointer, and `sizeof` on a pointer gives the pointer's byte size (4 or 8 bytes), not the string length.
 
 ```mermaid
 graph LR
@@ -182,7 +182,7 @@ graph LR
 
 *Figure 5. Pipe data flow from the child through the kernel buffer to the parent*
 
-> **[Data Structures]** A pipe is a classic implementation of the producer-consumer pattern. One side (the child) writes data and the other side (the parent) reads it, synchronized through a bounded buffer inside the kernel. This buffer is a fixed-size **FIFO queue** in which the bytes written first are read first. When the buffer is full, `write()` blocks; when it is empty, `read()` blocks.
+A pipe is a classic implementation of the producer-consumer pattern. One side (the child) writes data and the other side (the parent) reads it, synchronized through a bounded buffer inside the kernel. This buffer is a fixed-size **FIFO queue** in which the bytes written first are read first. When the buffer is full, `write()` blocks; when it is empty, `read()` blocks.
 
 **Rules**:
 - Always close the **unused** end.
@@ -191,7 +191,7 @@ graph LR
 
 > **Definition:** **EOF (End of File)** signals that there is no more data to read. For pipes, this occurs when **all** write-end file descriptors are closed. This is why every process that holds a copy of the write-end fd must close it.
 
-> **Note:** A specific scenario when `close()` is omitted is as follows. If the parent does not close `fd[1]` (the write end) and calls `read(fd[0])`, even after the child finishes writing and closes `fd[1]`, the parent itself still holds `fd[1]`, so the kernel considers the write end still open. As a result, `read()` never receives EOF and **blocks forever**, causing the program to hang. This is the most common bug in pipe programming.
+A specific scenario when `close()` is omitted is as follows. If the parent does not close `fd[1]` (the write end) and calls `read(fd[0])`, even after the child finishes writing and closes `fd[1]`, the parent itself still holds `fd[1]`, so the kernel considers the write end still open. As a result, `read()` never receives EOF and **blocks forever**, causing the program to hang. This is the most common bug in pipe programming.
 
 ---
 
@@ -211,13 +211,13 @@ close(fd);
 printf("Redirected!\n");
 ```
 
-> **Note:** The `open()` flags are as follows:
-> - `O_WRONLY`: open for writing only (no reading).
-> - `O_CREAT`: create the file if it does not exist.
-> - `O_TRUNC`: if the file already exists, truncate its contents to make it empty.
-> - `0644`: file permissions (owner: read+write, group/others: read only). In octal notation, this corresponds to `rw-r--r--`. The permissions actually granted are this value with the umask applied.
->
-> This combination is equivalent to the `> file.txt` redirection in a shell. To implement `>>` (append mode), use `O_APPEND` instead of `O_TRUNC`.
+The `open()` flags are as follows:
+- `O_WRONLY`: open for writing only (no reading).
+- `O_CREAT`: create the file if it does not exist.
+- `O_TRUNC`: if the file already exists, truncate its contents to make it empty.
+- `0644`: file permissions (owner: read+write, group/others: read only). In octal notation, this corresponds to `rw-r--r--`. The permissions actually granted are this value with the umask applied.
+
+This combination is equivalent to the `> file.txt` redirection in a shell. To implement `>>` (append mode), use `O_APPEND` instead of `O_TRUNC`.
 
 **How `ls > file.txt` works:**
 
@@ -235,22 +235,22 @@ graph TD
 
 **Exercise**: Combine `fork()` + `pipe()` + `dup2()` to implement `ls | wc -l`.
 
-> **Note:** When `dup2(oldfd, newfd)` is called and `newfd` is already open, it is automatically closed before duplication. The full sequence when the shell executes `ls > file.txt` is as follows. (1) `fork()` to create a child → (2) the child calls `open()` to open the file, getting fd=3 → (3) `dup2(3, 1)` redirects stdout (fd=1) to the file → (4) `close(3)` cleans up the original fd → (5) `exec("ls")` replaces the program. After this, when `ls` outputs via `printf()`/`write(1,...)`, it is automatically written to the file.
+When `dup2(oldfd, newfd)` is called and `newfd` is already open, it is automatically closed before duplication. The full sequence when the shell executes `ls > file.txt` is as follows. (1) `fork()` to create a child → (2) the child calls `open()` to open the file, getting fd=3 → (3) `dup2(3, 1)` redirects stdout (fd=1) to the file → (4) `close(3)` cleans up the original fd → (5) `exec("ls")` replaces the program. After this, when `ls` outputs via `printf()`/`write(1,...)`, it is automatically written to the file.
 
-> **Note:** `ls | wc -l` is implemented in the following steps:
-> 1. The parent calls `pipe(fd)` to create a pipe → `fd[0]` (read), `fd[1]` (write)
-> 2. First `fork()` → **Child 1** (ls role):
->    - `dup2(fd[1], STDOUT_FILENO)`: redirect stdout to the pipe's write end.
->    - `close(fd[0])`, `close(fd[1])`: close all original fds.
->    - `execlp("ls", "ls", NULL)`: run ls.
-> 3. Second `fork()` → **Child 2** (wc role):
->    - `dup2(fd[0], STDIN_FILENO)`: redirect stdin to the pipe's read end.
->    - `close(fd[0])`, `close(fd[1])`: close all original fds.
->    - `execlp("wc", "wc", "-l", NULL)`: run wc -l.
-> 4. **Parent**: `close(fd[0])`, `close(fd[1])`, so the parent also closes all pipe fds (required).
-> 5. **Parent**: call `wait(NULL)` twice to reap both children.
->
-> The key is that unused pipe fds must be closed in **all processes** including the parent for EOF to be properly delivered.
+`ls | wc -l` is implemented in the following steps:
+1. The parent calls `pipe(fd)` to create a pipe → `fd[0]` (read), `fd[1]` (write)
+2. First `fork()` → **Child 1** (ls role):
+   - `dup2(fd[1], STDOUT_FILENO)`: redirect stdout to the pipe's write end.
+   - `close(fd[0])`, `close(fd[1])`: close all original fds.
+   - `execlp("ls", "ls", NULL)`: run ls.
+3. Second `fork()` → **Child 2** (wc role):
+   - `dup2(fd[0], STDIN_FILENO)`: redirect stdin to the pipe's read end.
+   - `close(fd[0])`, `close(fd[1])`: close all original fds.
+   - `execlp("wc", "wc", "-l", NULL)`: run wc -l.
+4. **Parent**: `close(fd[0])`, `close(fd[1])`, so the parent also closes all pipe fds (required).
+5. **Parent**: call `wait(NULL)` twice to reap both children.
+
+The key is that unused pipe fds must be closed in **all processes** including the parent for EOF to be properly delivered.
 
 ```mermaid
 graph TD

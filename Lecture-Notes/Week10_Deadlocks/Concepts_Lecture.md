@@ -253,7 +253,7 @@ The relationship between cycles in the RAG and deadlock depends on whether resou
 
 *Table 3. Relationship between cycles and deadlock in a RAG*
 
-**Why the asymmetry?** With single-instance resources, the cycle's edges describe an immutable wait pattern: each thread waits for the *specific* instance held by the next. With multiple instances, a non-cycle thread holding another instance of the same type may release it and break the wait.
+**Reason for the asymmetry.** With single-instance resources, the cycle's edges describe an immutable wait pattern: each thread waits for the *specific* instance held by the next. With multiple instances, a non-cycle thread holding another instance of the same type may release it and break the wait.
 
 **Example 1: cycle and deadlock.** T1 holds R2 and waits for R1. T2 holds R1 and R2 and waits for R3 (the two instances of R2 are held one each by T1 and T2). T3 holds R3 and additionally requests R2. Two cycles form (`T1→R1→T2→R3→T3→R2→T1` and `T2→R3→T3→R2→T2`), so the system is in **deadlock**.
 

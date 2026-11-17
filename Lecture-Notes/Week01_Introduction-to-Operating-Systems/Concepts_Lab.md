@@ -15,7 +15,7 @@
 ## Table of Contents
 
 - [1. Lab Overview](#1-lab-overview)
-- [2. What is a Coding Agent?](#2-what-is-a-coding-agent)
+- [2. The Concept of a Coding Agent](#2-the-concept-of-a-coding-agent)
 - [3. Available Agents](#3-available-agents)
 - [4. Task 1: Install a Coding Agent](#4-task-1-install-a-coding-agent)
 - [5. Task 2: File Organization](#5-task-2-file-organization)
@@ -24,6 +24,7 @@
   - [7.1 Applying RALPH in Practice](#71-applying-ralph-in-practice)
 - [8. Task 5: Build a Mini OS](#8-task-5-build-a-mini-os)
   - [8.1 What to Observe](#81-what-to-observe)
+- [Glossary](#glossary)
 - [Summary](#summary)
 - [Self-Check Questions](#self-check-questions)
 
@@ -49,7 +50,7 @@ graph LR
 
 <br>
 
-## 2. What is a Coding Agent?
+## 2. The Concept of a Coding Agent
 
 A coding agent is an AI-based CLI tool that generates code by **understanding context**.
 
@@ -70,7 +71,7 @@ graph LR
 - It can read the file system, execute commands, and make edits autonomously.
 - It is used for scaffolding, refactoring, documentation, and debugging.
 
-> **Note:** **Scaffolding** refers to automatically generating a project's initial skeleton (directory structure, configuration files, boilerplate code, etc.). The term originates from the construction industry, where scaffolds are erected before building. For example, if you say "Create a React project," the agent will create `package.json`, a `src/` directory, basic component files, and more all at once.
+**Scaffolding** refers to automatically generating a project's initial skeleton (directory structure, configuration files, boilerplate code, etc.). The term originates from the construction industry, where scaffolds are erected before building. For example, if you say "Create a React project," the agent will create `package.json`, a `src/` directory, basic component files, and more all at once.
 
 **Example:** Given the request "Write a Makefile for a C project with debug and release targets", the agent works in the order: checks directory → writes Makefile → verifies build success.
 
@@ -92,7 +93,7 @@ graph LR
 
 Another option is **OpenCode**. OpenCode is an open-source harness that can use a wide range of models, including open-source LLMs.
 
-> **Note:** Gemini CLI is free and can be used without cost concerns for lab exercises. Claude Code excels in complex multi-file projects, and Codex CLI is open-source and customizable. We recommend starting with the free Gemini CLI and trying other agents as needed.
+Gemini CLI is free and can be used without cost concerns for lab exercises. Claude Code excels in complex multi-file projects, and Codex CLI is open-source and customizable. We recommend starting with the free Gemini CLI and trying other agents as needed.
 
 ---
 
@@ -120,11 +121,9 @@ gemini --version    # or: claude --version
 - Check that you can authenticate (Gemini uses a Google account, Claude uses an Anthropic account).
 - Enter a simple prompt such as `"What is 2 + 2?"` and check that a response is returned.
 
-> **Definition:** In Node.js, **LTS (Long-Term Support)** is the stable, long-term support version recommended for most users.
+`npm` is the package manager for Node.js. If it is not installed, you must first install the LTS version from [the official Node.js website](https://nodejs.org). After installation, you can verify it by running `node --version` and `npm --version` in the terminal.
 
-> **Note:** `npm` is the package manager for Node.js. If it is not installed, you must first install the LTS version from [the official Node.js website](https://nodejs.org). After installation, you can verify it by running `node --version` and `npm --version` in the terminal.
-
-> **Note:** The `-g` in `npm install -g` stands for **global**, meaning the package is installed system-wide rather than in the current project. With a global installation, you can run commands like `gemini` or `claude` directly from any terminal location. Without `-g`, the package is installed only in the current directory's `node_modules/` and cannot be used as a global command.
+The `-g` in `npm install -g` stands for **global**, meaning the package is installed system-wide rather than in the current project. With a global installation, you can run commands like `gemini` or `claude` directly from any terminal location. Without `-g`, the package is installed only in the current directory's `node_modules/` and cannot be used as a global command.
 
 ---
 
@@ -150,7 +149,7 @@ Use an agent to **organize files** in a messy directory.
 - What would have happened if you had not said "Show me the plan first"?
 - How can you give more specific instructions when the result is unsatisfactory?
 
-> **Note:** Getting into the habit of asking the agent to "Show me the plan first" when delegating tasks is very important. This prevents unintended file deletion or movement. Especially when working with real file systems, undo is difficult, so it is safest to always review and approve the agent's plan before execution.
+Getting into the habit of asking the agent to "Show me the plan first" when delegating tasks is very important. This prevents unintended file deletion or movement. Especially when working with real file systems, undo is difficult, so it is safest to always review and approve the agent's plan before execution.
 
 ---
 
@@ -176,7 +175,7 @@ Use an agent to **generate a README.md** for an existing codebase.
 - Are the installation instructions correct and complete?
 - Is anything missing (license, contribution guide, screenshots)?
 
-> **Note:** Save this README, because the next task (Task 4) improves it.
+Save this README, because the next task (Task 4) improves it.
 
 ---
 
@@ -260,17 +259,13 @@ graph LR
 
 *Figure 4. Expected output files of the mini OS build and the role of each file*
 
-> **Definition:** **Real mode.** The mode an x86 CPU runs in when it first starts; in this mode, the CPU can access only 1 MB of memory.
-
-> **Definition:** **Protected mode.** The x86 CPU operating mode that enables full memory access and hardware protection features (like memory segmentation and privilege levels).
-
-Because a powered-on x86 CPU starts in real mode, a step that switches the CPU to protected mode is needed before the kernel runs. In Figure 4, `boot.asm` performs this step.
+Because a powered-on x86 CPU starts in **real mode**, in which it can access only 1 MB of memory, a step that switches the CPU to **protected mode**, which enables full memory access and hardware protection features (such as memory segmentation and privilege levels), is needed before the kernel runs. In Figure 4, `boot.asm` performs this step.
 
 > **Definition:** **Bootloader.** The program that loads the kernel into memory and switches the CPU from real mode to protected mode. A 32-bit kernel can run only after this switch is complete.
 
 > **[Computer Architecture]** With legacy BIOS booting, when a computer is powered on, the BIOS loads the boot sector (512 bytes) into memory and executes it (UEFI loads an EFI executable instead of a boot sector). `boot.asm` is this boot sector code, which starts in Real Mode, transitions to Protected Mode, and then loads the kernel (`kernel.c`). `linker.ld` is a linker script that specifies where the kernel code and data are placed in memory.
 
-> **Note:** For regular applications, the OS manages memory layout, but when developing an OS itself, you must specify where the code is loaded in memory yourself. The **linker script** is what performs this role. For example, the bootloader must be located at memory address `0x7C00`, and the kernel code must be placed at the address where the bootloader loads it; this is specified in the linker script through the starting addresses and ordering of `.text`, `.data`, and `.bss` sections. `.text` holds executable code, `.data` holds initialized variables, and `.bss` holds uninitialized variables. `0x7C00` is the memory address where the BIOS places the boot sector, a convention established decades ago by the IBM PC BIOS. Without a linker script, the linker would use its default layout for regular applications and booting would fail.
+For regular applications, the OS manages memory layout, but when developing an OS itself, you must specify where the code is loaded in memory yourself. The **linker script** is what performs this role. For example, the bootloader must be located at memory address `0x7C00`, and the kernel code must be placed at the address where the bootloader loads it; this is specified in the linker script through the starting addresses and ordering of `.text`, `.data`, and `.bss` sections. `.text` holds executable code, `.data` holds initialized variables, and `.bss` holds uninitialized variables. `0x7C00` is the memory address where the BIOS places the boot sector, a convention established decades ago by the IBM PC BIOS. Without a linker script, the linker would use its default layout for regular applications and booting would fail.
 
 ### 8.1 What to Observe
 
@@ -287,11 +282,25 @@ You do **not** need to successfully boot the OS. The **process** is what matters
 - _"Explain what the linker script does, line by line"_
 - _"The build failed with error X. Fix it"_
 
-> **Note:** It is highly likely that the OS code generated by the agent will produce build errors when run as-is. In that case, pass the error message directly to the agent. The key is to be specific: "The build failed. Here is the error message: [error message]."
+It is highly likely that the OS code generated by the agent will produce build errors when run as-is. In that case, pass the error message directly to the agent. The key is to be specific: "The build failed. Here is the error message: [error message]."
 
 > **Key Point:** Coding agents are just tools, and understanding the output they generate is still **the user's own** responsibility.
 
-> **Note:** It is important to view agents as powerful assistants, not magic tools. If you submit agent-generated code without understanding it, there is no learning benefit. Always ask "Explain why you did it this way," and develop the habit of reading and understanding the generated code yourself.
+It is important to view agents as powerful assistants, not magic tools. If you submit agent-generated code without understanding it, there is no learning benefit. Always ask "Explain why you did it this way," and develop the habit of reading and understanding the generated code yourself.
+
+---
+
+<br>
+
+## Glossary
+
+| English | Korean | One-Line Definition |
+|:-----|:-----|:-----|
+| LTS (Long-Term Support) | LTS | In Node.js, the stable, long-term support version recommended for most users. |
+| Real Mode | 리얼 모드 | The mode an x86 CPU runs in when it first starts, in which the CPU can access only 1 MB of memory. |
+| Protected Mode | 프로텍티드 모드 | The x86 CPU operating mode that enables full memory access and hardware protection features (such as memory segmentation and privilege levels). |
+
+*Table 2. Glossary*
 
 ---
 

@@ -2,7 +2,7 @@
 
 [레포지토리 안내](../../README.ko.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **최종 수정일:** 2026-11-17
+> **최종 수정일:** 2026-11-18
 >
 > Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 9
 
@@ -43,7 +43,7 @@
   - [4.3 페이징 하드웨어와 프리 프레임 관리](#43-페이징-하드웨어와-프리-프레임-관리)
   - [4.4 내부 단편화와 페이지 크기 트레이드오프](#44-내부-단편화와-페이지-크기-트레이드오프)
 - [5. 페이징 하드웨어 지원: TLB](#5-페이징-하드웨어-지원-tlb)
-  - [5.1 페이지 테이블을 어디에 둘 것인가](#51-페이지-테이블을-어디에-둘-것인가)
+  - [5.1 페이지 테이블의 위치](#51-페이지-테이블의-위치)
   - [5.2 TLB: Translation Look-aside Buffer](#52-tlb-translation-look-aside-buffer)
   - [5.3 ASID: Address-Space Identifier](#53-asid-address-space-identifier)
   - [5.4 유효 접근 시간 (EAT)](#54-유효-접근-시간-eat)
@@ -507,7 +507,7 @@ OS는 **프리 프레임 리스트**를 유지한다. 프로세스가 생성되�
 
 ## 5. 페이징 하드웨어 지원: TLB
 
-### 5.1 페이지 테이블을 어디에 둘 것인가
+### 5.1 페이지 테이블의 위치
 
 구현 전략은 두 가지이다.
 

@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **Last Updated:** 2026-11-04
+> **Last Updated:** 2026-11-18
 >
 > Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 11
 
@@ -530,7 +530,7 @@ SCAN and C-SCAN go all the way to the end of the disk even when there are no req
 
 *Figure 15. SCAN and C-SCAN going to the disk end versus LOOK and C-LOOK turning at the last request*
 
-| Algorithm | Goes to disk end? | Bidirectional service? |
+| Algorithm | Goes to disk end | Bidirectional service |
 |-----------|-------------------|------------------------|
 | SCAN      | Yes               | Yes                    |
 | LOOK      | No                | Yes                    |
@@ -912,7 +912,7 @@ Cloud storage is remote storage accessed over the **Internet**.
 
 Representative services are Amazon S3, Microsoft OneDrive and Azure Blob, Google Cloud Storage, Apple iCloud, and Dropbox.
 
-**Why API-based?** Wide-area networks have high, variable latency and frequent disconnections. The file-system protocols (NFS, CIFS) are optimized for LAN conditions and behave poorly across the public Internet. REST APIs are explicitly designed for retries, eventual consistency, and disconnection-tolerant client code.
+**Reason for being API-based.** Wide-area networks have high, variable latency and frequent disconnections. The file-system protocols (NFS, CIFS) are optimized for LAN conditions and behave poorly across the public Internet. REST APIs are explicitly designed for retries, eventual consistency, and disconnection-tolerant client code.
 
 ---
 
@@ -1321,7 +1321,7 @@ Expected totals: **FCFS 640, SCAN 236, C-SCAN 382, LOOK 208, C-LOOK 322**.
 
    </details>
 
-2. **Why no overwrite?** Explain why NAND Flash cannot overwrite a page directly, and the consequences that follow (FTL, garbage collection, write amplification).
+2. **Reason overwriting is impossible:** Explain why NAND Flash cannot overwrite a page directly, and the consequences that follow (FTL, garbage collection, write amplification).
 
    <details>
    <summary>Answer</summary>

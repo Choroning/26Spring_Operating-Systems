@@ -2,7 +2,7 @@
 
 [레포지토리 안내](../../README.ko.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **최종 수정일:** 2026-11-04
+> **최종 수정일:** 2026-11-18
 >
 > Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 11
 
@@ -530,7 +530,7 @@ SCAN과 C-SCAN은 끝 근처에 요청이 없어도 디스크 끝까지 가므�
 
 *그림 15. 디스크 끝까지 가는 SCAN, C-SCAN과 마지막 요청에서 돌아서는 LOOK, C-LOOK*
 
-| 알고리즘 | 디스크 끝까지? | 양방향 서비스? |
+| 알고리즘 | 디스크 끝까지 이동 여부 | 양방향 서비스 여부 |
 |----------|----------------|-----------------|
 | SCAN     | Yes            | Yes             |
 | LOOK     | No             | Yes             |

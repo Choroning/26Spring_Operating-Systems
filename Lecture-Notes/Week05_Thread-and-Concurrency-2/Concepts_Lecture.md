@@ -84,9 +84,9 @@
 
 **Implicit Threading** is a strategy that delegates thread creation and management to the **compiler and runtime library**.
 
-> **Note:** **Analogy.** Explicit threading (Week 4) is like a chef personally managing every worker by assigning tasks, watching timing, and handling conflicts. With implicit threading, a restaurant manager handles staffing and scheduling while the chef decides what to cook.
+Explicit threading (Week 4) is like a chef personally managing every worker by assigning tasks, watching timing, and handling conflicts. With implicit threading, a restaurant manager handles staffing and scheduling while the chef decides what to cook.
 
-**Why is it needed?**
+**Motivation**
 - Applications with hundreds to thousands of threads have emerged.
 - Guaranteeing **correctness** of multithreaded programming is extremely difficult.
 - Direct thread management by programmers leads to exploding complexity.
@@ -126,7 +126,7 @@
 
 *Figure 1. Layered structure of implicit threading*
 
-> **Note:** This layered architecture means that the application programmer operates at the highest level of abstraction. The compiler/runtime layer acts as a smart translator: it knows how many cores are available and the current system load, and it makes decisions about thread creation and scheduling that would be impractical for a programmer to manage manually in every application.
+This layered architecture means that the application programmer operates at the highest level of abstraction. The compiler/runtime layer acts as a smart translator: it knows how many cores are available and the current system load, and it makes decisions about thread creation and scheduling that would be impractical for a programmer to manage manually in every application.
 
 ---
 
@@ -179,7 +179,7 @@ flowchart LR
 - Set **heuristically** based on CPU count, physical memory, expected concurrent requests
 - Can be dynamically adjusted (e.g., GCD automatically adjusts based on system load)
 
-> **Key Point:** The three benefits of thread pools (Speed, Resource bound, Separation of execution and creation) map closely to the four benefits of threads from Week 4 (Responsiveness, Resource Sharing, Economy, Scalability). Thread pools amplify the Economy benefit further by eliminating repeated creation/destruction overhead.
+The three benefits of thread pools (Speed, Resource bound, Separation of execution and creation) map closely to the four benefits of threads from Week 4 (Responsiveness, Resource Sharing, Economy, Scalability). Thread pools amplify the Economy benefit further by eliminating repeated creation/destruction overhead.
 
 ### 2.3 Thread Pool: Windows API
 
@@ -238,7 +238,7 @@ public class ThreadPoolExample {
 
 The code above creates a thread pool in Java (textbook Figure 4.15, p.180).
 
-> **Note:** This example was introduced in Week 4's Java Executor Framework section. Here the key difference is **perspective**: in Week 4 we learned the Executor API as a thread library; here we see thread pools as an **implicit threading technique** where the library manages threads for us.
+This example was introduced in Week 4's Java Executor Framework section. Here the key difference is **perspective**: in Week 4 we learned the Executor API as a thread library; here we see thread pools as an **implicit threading technique** where the library manages threads for us.
 
 ### 2.5 Java ExecutorService Details
 
@@ -264,7 +264,7 @@ graph TD
 
 **Android AIDL**: Provides a thread pool to remote services, handling multiple concurrent requests with individual threads from the pool.
 
-> **Note:** **Mobile Development.** In Android, AIDL (Android Interface Definition Language) enables inter-process communication. When a client calls a remote service method, the AIDL framework dispatches the call to a thread from the service's thread pool, so the developer does not need to create threads manually. This is another example of implicit threading at the framework level.
+In Android, AIDL (Android Interface Definition Language) enables inter-process communication. When a client calls a remote service method, the AIDL framework dispatches the call to a thread from the service's thread pool, so the developer does not need to create threads manually. This is another example of implicit threading at the framework level.
 
 ---
 
@@ -288,7 +288,7 @@ graph TD
 
 *Figure 4. Fork-join parallelism*
 
-> **Note:** **Analogy.** The fork-join model is like a team leader delegating subtasks. The leader (parent thread) forks work to team members, then waits at a meeting point for everyone to join back with their results. The fork-join library is the project manager who decides how many people to hire and how to assign tasks efficiently.
+The fork-join model is like a team leader delegating subtasks. The leader (parent thread) forks work to team members, then waits at a meeting point for everyone to join back with their results. The fork-join library is the project manager who decides how many people to hire and how to assign tasks efficiently.
 
 ### 3.2 Fork-Join and Divide-and-Conquer
 
@@ -340,7 +340,7 @@ graph TD
 
 *Figure 7. UML class diagram for Fork-Join*
 
-> **Note:** `RecursiveTask<V>` is used when you need to return a computed result (like a sum), while `RecursiveAction` is used for side-effect-only tasks (like sorting in place).
+`RecursiveTask<V>` is used when you need to return a computed result (like a sum), while `RecursiveAction` is used for side-effect-only tasks (like sorting in place).
 
 ### 3.4 Fork-Join in Java: SumTask Implementation
 
@@ -379,14 +379,14 @@ public class SumTask extends RecursiveTask<Integer> {
 }
 ```
 
-> **Note:** **Code walkthrough.**
-> 1. If the range is smaller than THRESHOLD (1000), compute directly; this is the **base case**.
-> 2. Otherwise, split the range in half and fork both halves as subtasks.
-> 3. `fork()` submits the subtask to the ForkJoinPool for parallel execution.
-> 4. `join()` blocks until the subtask completes and returns its result.
-> 5. Results are combined with `+`.
->
-> This looks exactly like a recursive merge sort, except that each recursive call runs as a **separate task** that the pool can execute on a different thread.
+**Code walkthrough:**
+1. If the range is smaller than THRESHOLD (1000), compute directly; this is the **base case**.
+2. Otherwise, split the range in half and fork both halves as subtasks.
+3. `fork()` submits the subtask to the ForkJoinPool for parallel execution.
+4. `join()` blocks until the subtask completes and returns its result.
+5. Results are combined with `+`.
+
+This looks exactly like a recursive merge sort, except that each recursive call runs as a **separate task** that the pool can execute on a different thread.
 
 ### 3.5 Work Stealing
 
@@ -449,7 +449,7 @@ int main(int argc, char *argv[]) {
 `#pragma omp parallel` → **automatically creates as many threads as there are processing cores**
 - Dual-core → 2 threads, Quad-core → 4 threads
 
-> **Note:** **`#pragma`** is a C/C++ compiler directive that provides implementation-specific instructions. The OpenMP directives (`#pragma omp ...`) are ignored by compilers that do not support OpenMP, so the code remains valid C and simply runs sequentially. This is a major advantage: **the same code works both with and without OpenMP** (as long as it uses only directives; code that calls `omp_*` runtime functions does not build without OpenMP support), making it easy to add parallelism to existing serial code.
+**`#pragma`** is a C/C++ compiler directive that provides implementation-specific instructions. The OpenMP directives (`#pragma omp ...`) are ignored by compilers that do not support OpenMP, so the code remains valid C and simply runs sequentially. This is a major advantage: **the same code works both with and without OpenMP** (as long as it uses only directives; code that calls `omp_*` runtime functions does not build without OpenMP support), making it easy to add parallelism to existing serial code.
 
 ### 4.2 parallel for
 
@@ -548,7 +548,7 @@ int main() {
 - At the end of the parallel region, all threads' sums are **combined using the + operation**.
 - Enables safe summation without race conditions.
 
-> **Note:** Compare this with the race condition on the shared `total` variable described in the Week 4 lab. If every thread adds to the same variable, as in `total += array[i]`, updates are lost because the threads perform non-atomic read-modify-write on that variable. OpenMP's `reduction` clause solves this elegantly: each thread gets its own private copy, and the runtime merges them safely at the end. No locks, no race conditions, one line of code.
+Compare this with the race condition on the shared `total` variable described in the Week 4 lab. If every thread adds to the same variable, as in `total += array[i]`, updates are lost because the threads perform non-atomic read-modify-write on that variable. OpenMP's `reduction` clause solves this elegantly: each thread gets its own private copy, and the runtime merges them safely at the end. No locks, no race conditions, one line of code.
 
 ---
 
@@ -631,7 +631,7 @@ let queue = dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0)
 dispatch_async(queue, { print("I am a closure.") })
 ```
 
-> **Note:** Blocks and closures are the task units in GCD. Just as OpenMP uses `#pragma` directives to mark parallel regions, GCD uses blocks/closures to define units of work. The key difference is that GCD tasks are submitted to **queues** (async or sync), giving the developer more control over execution order and concurrency.
+Blocks and closures are the task units in GCD. Just as OpenMP uses `#pragma` directives to mark parallel regions, GCD uses blocks/closures to define units of work. The key difference is that GCD tasks are submitted to **queues** (async or sync), giving the developer more control over execution order and concurrency.
 
 ### 5.4 GCD Internal Architecture
 
@@ -663,7 +663,7 @@ dispatch_async(queue, { print("I am a closure.") })
 
 *Figure 10. Layered architecture of GCD*
 
-> **Note:** This layered architecture shows how GCD abstracts threading all the way from application code down to kernel threads. The developer writes blocks/closures at the top, and 4 layers of abstraction handle everything else. Notice that GCD ultimately sits on top of POSIX threads; even Apple's seemingly magic threading is built on the same Pthreads we studied in Week 4.
+This layered architecture shows how GCD abstracts threading all the way from application code down to kernel threads. The developer writes blocks/closures at the top, and 4 layers of abstraction handle everything else. Notice that GCD ultimately sits on top of POSIX threads; even Apple's seemingly magic threading is built on the same Pthreads we studied in Week 4.
 
 ---
 
@@ -688,7 +688,7 @@ dispatch_async(queue, { print("I am a closure.") })
 - Mutual exclusion locking
 - Concurrent data structures (hash map, queue, vector)
 
-> **Note:** **Comparison with OpenMP.** OpenMP uses **compiler directives** (`#pragma`), so it requires a compiler that supports OpenMP. TBB uses pure **C++ templates and libraries**, so any standard C++ compiler works. This makes TBB more portable in some environments, but OpenMP is simpler syntactically.
+**Comparison with OpenMP:** OpenMP uses **compiler directives** (`#pragma`), so it requires a compiler that supports OpenMP. TBB uses pure **C++ templates and libraries**, so any standard C++ compiler works. This makes TBB more portable in some environments, but OpenMP is simpler syntactically.
 
 ### 6.2 parallel_for Example
 
@@ -720,7 +720,7 @@ parallel_for(size_t(0), n, [=](size_t i) {
 - Creates multiple tasks and assigns them to available threads
 - Similar approach to Java's Fork-Join
 
-> **Note:** The `[=]` in the lambda captures by value all variables used in its body. This is important for thread safety because each thread works with its own copy of captured variables. If you need to modify shared state, use `[&]` (capture by reference) with appropriate synchronization.
+The `[=]` in the lambda captures by value all variables used in its body. This is important for thread safety because each thread works with its own copy of captured variables. If you need to modify shared state, use `[&]` (capture by reference) with appropriate synchronization.
 
 ### 6.3 parallel_reduce Example
 
@@ -749,11 +749,11 @@ int sum = parallel_reduce(
 - Maintains load balance using the **work-stealing** algorithm.
 - Available in both commercial and open-source versions (Windows, Linux, macOS)
 
-> **Note:** **Comparison with OpenMP reduction.** Both achieve the same goal (parallel array summation), but the approach differs:
-> - OpenMP expresses it as one line of directive: `#pragma omp parallel for reduction(+:sum)`
-> - TBB expresses it as an explicit function call with lambdas: `parallel_reduce(range, init, body, combine)`
->
-> OpenMP is more concise; TBB is more flexible because a combine function can be passed directly as a lambda to define arbitrary combine operations (OpenMP also supports user-defined reductions through `declare reduction` since version 4.0).
+**Comparison with OpenMP reduction:** Both achieve the same goal (parallel array summation), but the approach differs:
+- OpenMP expresses it as one line of directive: `#pragma omp parallel for reduction(+:sum)`
+- TBB expresses it as an explicit function call with lambdas: `parallel_reduce(range, init, body, combine)`
+
+OpenMP is more concise; TBB is more flexible because a combine function can be passed directly as a lambda to define arbitrary combine operations (OpenMP also supports user-defined reductions through `declare reduction` since version 4.0).
 
 ---
 
@@ -794,7 +794,7 @@ Five key issues to consider in multithreaded programming:
 4. **Thread-Local Storage (TLS)**: per-thread unique data
 5. **Scheduler Activations**: communication between kernel and thread library
 
-> **Note:** These issues arise from the fundamental tension in multithreading: threads share the process's resources (which makes them efficient) but sometimes need independent behavior (which creates complexity). Each issue below is a specific case where the shared-vs-independent boundary causes problems.
+These issues arise from the fundamental tension in multithreading: threads share the process's resources (which makes them efficient) but sometimes need independent behavior (which creates complexity). Each issue below is a specific case where the shared-vs-independent boundary causes problems.
 
 ### 8.2 fork() and exec() Semantics
 
@@ -864,7 +864,7 @@ Five key issues to consider in multithreaded programming:
 
 Here, **synchronous** means that the signal was caused by the running thread's own action, such as dividing by zero, and a signal caused by an external event is asynchronous.
 
-> **Note:** **Synchronous signals** are the result of a thread's own actions, like dividing by zero or accessing invalid memory. The thread caused the signal, so delivery is straightforward. **Asynchronous signals** come from outside the process (the user pressing Ctrl+C, a timer expiring, another process sending a signal), which is where the multithreading complication arises: *which* thread should receive it?
+**Synchronous signals** are the result of a thread's own actions, like dividing by zero or accessing invalid memory. The thread caused the signal, so delivery is straightforward. **Asynchronous signals** come from outside the process (the user pressing Ctrl+C, a timer expiring, another process sending a signal), which is where the multithreading complication arises: *which* thread should receive it?
 
 ### 8.4 Signal Handling: Multithreaded Environment
 
@@ -969,7 +969,7 @@ pthread_join(tid, NULL);
 - Actual cancellation is determined by the target thread's cancellation mode.
 - If cancellation is **disabled** → the request remains in **pending** state
 
-> **Note:** **Important distinction.** `pthread_cancel()` is a **request**, not a command. The target thread decides when (or if) to honor it. This is fundamentally different from `kill()`, which delivers a signal that typically terminates the process immediately. The deferred model gives the target thread control over its own termination.
+`pthread_cancel()` is a **request**, not a command. The target thread decides when (or if) to honor it. This is fundamentally different from `kill()`, which delivers a signal that typically terminates the process immediately. The deferred model gives the target thread control over its own termination.
 
 ### 8.8 Cancellation Points and Cleanup Handlers
 
@@ -996,7 +996,7 @@ while (1) {
 
 **Cleanup Handler**: A function that safely releases resources (memory, files, locks, etc.) when a thread is canceled
 
-> **Note:** **Practical pattern.** Long-running worker threads that do not call blocking system calls should periodically call `pthread_testcancel()`. Without this, a deferred cancellation request would remain pending forever because there is no cancellation point. The thread would appear to ignore the cancel request.
+Long-running worker threads that do not call blocking system calls should periodically call `pthread_testcancel()`. Without this, a deferred cancellation request would remain pending forever because there is no cancellation point. The thread would appear to ignore the cancel request.
 
 ### 8.9 Thread Cancellation: Java
 
@@ -1030,15 +1030,15 @@ while (!Thread.currentThread().isInterrupted()) {
 
 *Table 9. Thread cancellation in Pthreads versus Java*
 
-> **Note:** On Linux, Pthreads cancellation is internally implemented using **signals**.
+On Linux, Pthreads cancellation is internally implemented using **signals**.
 
-> **Note:** Java's approach is even safer than Pthreads: `interrupt()` only sets a boolean flag. The thread must explicitly check `isInterrupted()` or be in a blocking method that throws `InterruptedException`. This makes it impossible to accidentally terminate a thread at an unsafe point.
+Java's approach is even safer than Pthreads: `interrupt()` only sets a boolean flag. The thread must explicitly check `isInterrupted()` or be in a blocking method that throws `InterruptedException`. This makes it impossible to accidentally terminate a thread at an unsafe point.
 
 ### 8.10 Thread-Local Storage (TLS)
 
 **TLS (Thread-Local Storage)**: A mechanism where each thread maintains its own **copy of data**
 
-**Why is it needed?**
+**Motivation**
 - Threads fundamentally **share** process data.
 - However, sometimes threads need **their own unique data**.
 - Example: Assigning a **unique transaction ID** to each thread in a transaction processing system
@@ -1053,7 +1053,7 @@ while (!Thread.currentThread().isInterrupted()) {
 
 *Table 10. Local variables versus TLS*
 
-> **Note:** **Analogy.** Think of TLS as each thread having its own locker at the office. Everyone shares the same open workspace (shared data), but each person has a private locker (TLS) that persists throughout their employment (thread lifetime) and only they can access. Local variables are more like sticky notes you use during a meeting; they are discarded when the meeting ends.
+Think of TLS as each thread having its own locker at the office. Everyone shares the same open workspace (shared data), but each person has a private locker (TLS) that persists throughout their employment (thread lifetime) and only they can access. Local variables are more like sticky notes you use during a meeting; they are discarded when the meeting ends.
 
 ### 8.11 TLS: Implementation by Language
 
@@ -1104,7 +1104,7 @@ An LWP (Lightweight Process) is an OS-managed execution slot between user thread
 
 **Number of LWPs**: A CPU-bound application running on a single processor needs only 1, while an I/O-intensive application typically needs as many as the number of concurrent blocking I/O operations
 
-> **Note:** Week 4 introduced the Many-to-Many and Two-Level models along with upcalls. Here we see the LWP in the context where those models actually operate: the LWP is the communication channel between the kernel and the user-level thread library. When the kernel needs to inform the thread library about an event (like a thread blocking), it does so through the LWP.
+Week 4 introduced the Many-to-Many and Two-Level models along with upcalls. Here we see the LWP in the context where those models actually operate: the LWP is the communication channel between the kernel and the user-level thread library. When the kernel needs to inform the thread library about an event (like a thread blocking), it does so through the LWP.
 
 ### 8.13 Scheduler Activations: Upcall Mechanism
 
@@ -1136,7 +1136,7 @@ An LWP (Lightweight Process) is an OS-managed execution slot between user thread
 
 > **Note:** **Upcall versus system call.** A system call is a **downward** request (user → kernel) asking the kernel for a service such as I/O. An upcall is an **upward** notification (kernel → user thread library) telling the library that one of its threads just blocked. This bidirectional communication is what makes the Many-to-Many model work: without upcalls, the thread library would not know when a user thread blocked in the kernel, and it would not be able to schedule another thread in its place.
 
-> **Note:** Scheduler activations are primarily relevant to Many-to-Many models. Since most modern systems use the One-to-One model (Linux, Windows), scheduler activations are less commonly encountered in practice today. However, the concept remains important for understanding how hybrid threading models work.
+Scheduler activations are primarily relevant to Many-to-Many models. Since most modern systems use the One-to-One model (Linux, Windows), scheduler activations are less commonly encountered in practice today. However, the concept remains important for understanding how hybrid threading models work.
 
 ---
 
@@ -1165,7 +1165,7 @@ An LWP (Lightweight Process) is an OS-managed execution slot between user thread
 
 *Table 11. Three key data structures of a Windows thread*
 
-> **Note:** **Names of the three structures.** ETHREAD stands for Executive Thread, KTHREAD for Kernel Thread, and TEB for Thread Environment Block. The naming follows Windows' layered kernel architecture: the Executive layer (ETHREAD) handles high-level thread management, the Kernel layer (KTHREAD) handles scheduling, and the TEB provides user-space accessible information.
+ETHREAD stands for Executive Thread, KTHREAD for Kernel Thread, and TEB for Thread Environment Block. The naming follows Windows' layered kernel architecture: the Executive layer (ETHREAD) handles high-level thread management, the Kernel layer (KTHREAD) handles scheduling, and the TEB provides user-space accessible information.
 
 ### 9.2 Windows Threads: Data Structures
 
@@ -1199,7 +1199,7 @@ flowchart LR
 - All execution flows are called **tasks**
 - Each task has its own unique **struct task_struct**.
 
-> **Key Point:** `task_struct` does not store data directly but contains **pointers to other data structures**.
+`task_struct` does not store data directly but contains **pointers to other data structures**.
 
 ```mermaid
 graph LR
@@ -1243,7 +1243,7 @@ Key clone flags:
 
 *Table 12. Key clone() flags and what they share*
 
-> **Note:** When `pthread_create()` is called on Linux, it internally calls `clone()` with all sharing flags set. This is why Pthreads on Linux creates threads that share the address space, file descriptors, and signal handlers; all of this is controlled by the `clone()` flags.
+When `pthread_create()` is called on Linux, it internally calls `clone()` with all sharing flags set. This is why Pthreads on Linux creates threads that share the address space, file descriptors, and signal handlers; all of this is controlled by the `clone()` flags.
 
 ### 9.5 Linux: fork() vs clone() Comparison
 
@@ -1314,9 +1314,9 @@ void multiply_parallel(int num_threads) {
 
 Compile: `gcc -fopenmp matrix_mul.c -o matrix_mul`
 
-> **Note:** **`collapse(2)`** merges the outer two loops (`i` and `j`) into a single iteration space of N*N = 1,000,000 iterations, which are then distributed among threads. Without `collapse`, only the outermost loop (`i`) would be parallelized (1,000 iterations). Having more iterations to distribute generally improves load balancing because the work can be divided more evenly among threads.
+**`collapse(2)`** merges the outer two loops (`i` and `j`) into a single iteration space of N*N = 1,000,000 iterations, which are then distributed among threads. Without `collapse`, only the outermost loop (`i`) would be parallelized (1,000 iterations). Having more iterations to distribute generally improves load balancing because the work can be divided more evenly among threads.
 
-> **Note:** The innermost `k` loop is **not** parallelized because `C[i][j]` accumulates a sum; parallelizing it would require a reduction. The outer loops are independent (different `(i,j)` pairs write to different `C[i][j]` elements), making them safe to parallelize without synchronization.
+The innermost `k` loop is **not** parallelized because `C[i][j]` accumulates a sum; parallelizing it would require a reduction. The outer loops are independent (different `(i,j)` pairs write to different `C[i][j]` elements), making them safe to parallelize without synchronization.
 
 ### 10.2 Lab: Performance Comparison by Thread Count
 
@@ -1387,9 +1387,9 @@ int main() {
 }
 ```
 
-> **Note:** This lab computes the partial sum of the harmonic series: 1/1 + 1/2 + 1/3 + ... + 1/10000000. Both sequential and parallel versions should produce the **same result** (or very close values, because floating-point addition is not perfectly associative, so the order of operations can cause tiny differences). The key observation is the **time difference**: the parallel version should be significantly faster on a multicore machine.
+This lab computes the partial sum of the harmonic series: 1/1 + 1/2 + 1/3 + ... + 1/10000000. Both sequential and parallel versions should produce the **same result** (or very close values, because floating-point addition is not perfectly associative, so the order of operations can cause tiny differences). The key observation is the **time difference**: the parallel version should be significantly faster on a multicore machine.
 
-> **Note:** **Comparison with Week 4 Lab.** In the Week 4 lab, we manually partitioned an array across Pthreads and used a `partial_sum[]` array to avoid race conditions. Here, OpenMP's `reduction` clause does all of that automatically in a single directive. This is the power of implicit threading: the same parallelization that took about 50 lines of Pthreads code takes 1 line with OpenMP.
+In the Week 4 lab, we manually partitioned an array across Pthreads and used a `partial_sum[]` array to avoid race conditions. Here, OpenMP's `reduction` clause does all of that automatically in a single directive. This is the power of implicit threading: the same parallelization that took about 50 lines of Pthreads code takes 1 line with OpenMP.
 
 ---
 

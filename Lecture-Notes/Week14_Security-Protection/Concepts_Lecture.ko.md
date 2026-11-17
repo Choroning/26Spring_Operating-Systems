@@ -2,7 +2,7 @@
 
 [레포지토리 안내](../../README.ko.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **최종 수정일:** 2026-11-04
+> **최종 수정일:** 2026-11-18
 >
 > Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 16, 17
 
@@ -1510,7 +1510,7 @@ print(rbac.check_access("Bob", "File1", "write"))    # False
 
    </details>
 
-4. **바이러스 vs 웜:** 두 멀웨어를 호스트 필요성, 전파 방식, 주된 피해의 세 축에서 비교하라. Morris Worm이 시사하는 바는 무엇인가?
+4. **바이러스 vs 웜:** 두 멀웨어를 호스트 필요성, 전파 방식, 주된 피해의 세 기준으로 비교하라. Morris Worm이 시사하는 바는 무엇인가?
 
    <details>
    <summary>정답</summary>

@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lab.md) | [한국어](Concepts_Lab.ko.md)
 
-> **Last Updated:** 2026-10-27
+> **Last Updated:** 2026-11-18
 
 > **Learning Objectives:**
 > 1. Read `swtch.S` and explain which registers are saved/restored during a context switch
@@ -15,7 +15,7 @@
 ## Table of Contents
 
 - [1. Lab Overview](#1-lab-overview)
-  - [1.1 What Is a Context Switch?](#11-what-is-a-context-switch)
+  - [1.1 The Concept of a Context Switch](#11-the-concept-of-a-context-switch)
 - [2. Exercise 1: swtch.S Analysis](#2-exercise-1-swtchs-analysis)
   - [2.1 Background: Caller-Saved vs Callee-Saved Registers](#21-background-caller-saved-vs-callee-saved-registers)
   - [2.2 struct context: Callee-Saved Registers and ra](#22-struct-context-callee-saved-registers-and-ra)
@@ -30,7 +30,7 @@
   - [4.1 Running Multiple Processes](#41-running-multiple-processes)
   - [4.2 Expected Scheduling Pattern](#42-expected-scheduling-pattern)
   - [4.3 End-to-End Context Switch Path](#43-end-to-end-context-switch-path)
-  - [4.4 Why Round-Robin?](#44-why-round-robin)
+  - [4.4 Reasons for Round-Robin](#44-reasons-for-round-robin)
   - [4.5 Subtle Bias](#45-subtle-bias)
   - [4.6 Multi-CPU Experiment](#46-multi-cpu-experiment)
 - [5. Exercise 4: sleep/wakeup Tracing](#5-exercise-4-sleepwakeup-tracing)
@@ -50,7 +50,7 @@
 - **Objective**: Understand the xv6 context switch mechanism by reading assembly, tracing the scheduler, and observing process state transitions.
 - **Topics**: `swtch.S`, Scheduler tracing, Round-robin scheduling, `sleep`/`wakeup`
 
-### 1.1 What Is a Context Switch?
+### 1.1 The Concept of a Context Switch
 
 A CPU can only run one process at a time. To give the illusion that many programs run simultaneously, the OS rapidly switches between processes, dozens of times per second. Each switch is called a **context switch**:
 
@@ -95,7 +95,7 @@ cd xv6-riscv && make qemu   # verify clean boot
 
 In the RISC-V calling convention, CPU registers are divided into two groups:
 
-| Group | Registers | Who saves them? | When? |
+| Group | Registers | Saved by | Saved when |
 |-------|-----------|-----------------|-------|
 | **Caller-saved** | `ra` (return address), `a0`-`a7` (arguments), `t0`-`t6` (temporaries) | The **caller** (the function that calls another function) | Before making the call, pushed onto the stack |
 | **Callee-saved** | `sp` (stack pointer), `s0`-`s11` | The **callee** (the function being called) | Must be restored before returning |
@@ -158,7 +158,7 @@ graph TD
 
 When `allocproc()` creates a new process, it sets `p->context.ra = forkret`. Since `swtch` ends with `ret` (which jumps to `ra`), the **first** `swtch` into a new process jumps to `forkret()` instead of returning to a previous call site. `forkret()` performs one-time initialization for the new process (e.g., releasing the process lock), then calls `usertrapret()` to jump into user space and start executing the program.
 
-> **Note:** **Why only callee-saved registers?** The caller-saved registers (`a0`-`a7`, `t0`-`t6`) are already saved on the stack, if needed, by the C calling convention before `swtch` is called. By saving only callee-saved registers plus `ra`, xv6 minimizes the context structure size (14 registers × 8 bytes = 112 bytes) while still correctly restoring execution state.
+> **Note:** **Reason only callee-saved registers are saved.** The caller-saved registers (`a0`-`a7`, `t0`-`t6`) are already saved on the stack, if needed, by the C calling convention before `swtch` is called. By saving only callee-saved registers plus `ra`, xv6 minimizes the context structure size (14 registers × 8 bytes = 112 bytes) while still correctly restoring execution state.
 
 > **Key Point:** `swtch` does **not** save/restore the program counter directly. Instead, it saves `ra` (the return address register). When `ret` executes, control transfers to whatever address is in `ra`, effectively resuming the new process exactly where it left off.
 
@@ -281,7 +281,7 @@ graph TD
 
 **End-to-end context switch path**: A context switch triggered by a timer interrupt proceeds as `yield()` → `sched()` → `swtch()` (to scheduler) → `swtch()` (to next process), after which the next process resumes.
 
-### 4.4 Why Round-Robin?
+### 4.4 Reasons for Round-Robin
 
 The xv6 scheduler uses a simple **linear scan** of the process table:
 

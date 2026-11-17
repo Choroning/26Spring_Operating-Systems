@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **Last Updated:** 2026-10-20
+> **Last Updated:** 2026-11-18
 >
 > Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 6, 7
 
@@ -618,7 +618,7 @@ There are two essential differences from semaphores.
 - `x.signal()` has **no effect** if no thread is waiting on `x`. A semaphore's `signal` always changes the value.
 - A thread that calls `x.wait()` **releases the monitor** so other threads can enter. Otherwise the monitor would deadlock.
 
-**What happens after `x.signal()` if both the signaler P and the awakened Q want to be inside the monitor?** Three policies exist.
+**When both the signaler P and the awakened Q want to be inside the monitor after `x.signal()`.** Three policies exist.
 
 - **Signal-and-wait**: P waits, and Q runs immediately (Hoare's original definition).
 - **Signal-and-continue**: P continues until it leaves the monitor, and Q runs afterward.

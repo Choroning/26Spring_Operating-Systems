@@ -56,7 +56,7 @@ graph LR
 
 ## 2. Lab 0: Environment Setup
 
-> **Note:** If the xv6 build environment is already set up, skip to [Section 3](#3-lab-1-source-structure).
+If the xv6 build environment is already set up, skip to [Section 3](#3-lab-1-source-structure).
 
 ### 2.1 Prerequisites
 
@@ -103,7 +103,7 @@ git clone https://github.com/mit-pdos/xv6-riscv.git
 
 > **[Computer Architecture]** xv6 runs on the RISC-V architecture, where the transition from user mode (U-mode) to kernel mode (S-mode) is performed via the `ecall` instruction. Understanding this structure makes it much easier to follow the system call path later.
 
-> **Note:** U-mode (User mode) is where normal programs run with restricted privileges; S-mode (Supervisor mode) is the privileged level where the kernel runs, and the CPU enforces strict rules about which operations each mode can perform.
+U-mode (User mode) is where normal programs run with restricted privileges; S-mode (Supervisor mode) is the privileged level where the kernel runs, and the CPU enforces strict rules about which operations each mode can perform.
 
 ### 2.2 Build Verification and Troubleshooting
 
@@ -166,7 +166,7 @@ make TOOLPREFIX=riscv64-elf- qemu
 
 *Table 2. Main xv6 kernel source files and their roles*
 
-> **Note:** A **stub** is a short piece of code that acts as a proxy for the actual implementation. Here, user-space stubs only put the system call number into a register and execute the `ecall` instruction when a user program calls `fork()`. In other words, the user writes `fork()` as if calling a regular function, but the stub actually mediates the entry into the kernel. The `usys.pl` script auto-generates these stubs.
+A **stub** is a short piece of code that acts as a proxy for the actual implementation. Here, user-space stubs only put the system call number into a register and execute the `ecall` instruction when a user program calls `fork()`. In other words, the user writes `fork()` as if calling a regular function, but the stub actually mediates the entry into the kernel. The `usys.pl` script auto-generates these stubs.
 
 ---
 
@@ -189,11 +189,11 @@ flowchart TD
 
 *Figure 2. Path of the fork() system call from user space to the kernel implementation*
 
-> **Note:** The kernel-side implementation is named `kfork()` to distinguish it from the user-facing `fork()` system call. In the current xv6-riscv source, this function is defined as `kfork()` in `proc.c`; older versions named it `fork()`.
+The kernel-side implementation is named `kfork()` to distinguish it from the user-facing `fork()` system call. In the current xv6-riscv source, this function is defined as `kfork()` in `proc.c`; older versions named it `fork()`.
 
 **Exercise**: Add a `printf` to `sys_fork()`, rebuild, and verify that you found the correct location.
 
-> **Note:** When the `ecall` instruction is executed, the hardware automatically performs the following: (1) saves the current PC to the `sepc` register, (2) switches the privilege mode to S-mode, (3) jumps to the trap handler address set in the `stvec` register. Understanding this flow makes the `usertrap()` → `syscall()` path clear.
+When the `ecall` instruction is executed, the hardware automatically performs the following: (1) saves the current PC to the `sepc` register, (2) switches the privilege mode to S-mode, (3) jumps to the trap handler address set in the `stvec` register. Understanding this flow makes the `usertrap()` → `syscall()` path clear.
 
 > **[Computer Architecture]** The RISC-V assembly instructions in Figure 2 are as follows:
 > - `li a7, SYS_fork`: the **Load Immediate** instruction, which loads the constant `SYS_fork` (= 1) into register `a7`. `a7` is the register used to convey the system call number.
@@ -264,7 +264,7 @@ stateDiagram-v2
 
 - **Exercise**: Which fields change at each state transition?
 
-> **[Computer Programming]** `enum procstate` is a C enumeration that represents each state as an integer constant. State machines are a design pattern used not only in operating systems but in protocols, game logic, and many other fields.
+`enum procstate` is a C enumeration that represents each state as an integer constant. State machines are a design pattern used not only in operating systems but in protocols, game logic, and many other fields.
 
 ### 5.2 Full Definition of struct proc
 
@@ -294,21 +294,21 @@ struct proc {
 
 The fields of `struct proc` fall into three broad groups by what they do. The first group, from `lock` to `parent`, holds management information that the scheduler and `wait()` consult, such as the state, the identifier, and the parent relationship.
 
-> **Note:** `struct spinlock lock` is the **spinlock** for this process structure. A spinlock is the simplest synchronization tool that prevents other CPU cores from simultaneously modifying the same `struct proc`. It is called a spinlock because a core trying to acquire it spins in a `while (lock == held)` loop. Since xv6 supports multi-core, this lock must be acquired before changing the process state. Details on spinlocks and synchronization are covered in Week 9.
+`struct spinlock lock` is the **spinlock** for this process structure. A spinlock is the simplest synchronization tool that prevents other CPU cores from simultaneously modifying the same `struct proc`. It is called a spinlock because a core trying to acquire it spins in a `while (lock == held)` loop. Since xv6 supports multi-core, this lock must be acquired before changing the process state. Details on spinlocks and synchronization are covered in Week 9.
 
-> **Note:** A **sleep channel** is an **arbitrary address value** that identifies what a process is waiting for while sleeping. For example, if a process sleeps while waiting for data on a pipe, the address of that pipe structure is stored in `chan`. Later, when data arrives, `wakeup(chan)` is called to wake all processes sleeping on that address. This mechanism avoids busy waiting and uses the CPU efficiently. The behavior of `sleep()`/`wakeup()` is traced in the Week 6 lab.
+A **sleep channel** is an **arbitrary address value** that identifies what a process is waiting for while sleeping. For example, if a process sleeps while waiting for data on a pipe, the address of that pipe structure is stored in `chan`. Later, when data arrives, `wakeup(chan)` is called to wake all processes sleeping on that address. This mechanism avoids busy waiting and uses the CPU efficiently. The behavior of `sleep()`/`wakeup()` is traced in the Week 6 lab.
 
 The second group, from `kstack` to `context`, holds the memory and register state of the process. Two fields save registers: `trapframe` and `context`.
 
-> **Note:** `context` saves callee-saved kernel registers used when the scheduler switches between processes inside the kernel (via `swtch.S`), while `trapframe` saves the full user-mode register state when entering the kernel from user space. They serve different switches: kernel↔kernel vs. user↔kernel.
+`context` saves callee-saved kernel registers used when the scheduler switches between processes inside the kernel (via `swtch.S`), while `trapframe` saves the full user-mode register state when entering the kernel from user space. They serve different switches: kernel↔kernel vs. user↔kernel.
 
-> **Key Point:** `trapframe` is a structure for preserving user register values when transitioning from user mode to kernel mode. It is the core mechanism that allows a user program to resume exactly where it left off after a system call completes. The representative registers saved in the trapframe are listed in Section 6.
+`trapframe` is a structure for preserving user register values when transitioning from user mode to kernel mode. It is the core mechanism that allows a user program to resume exactly where it left off after a system call completes. The representative registers saved in the trapframe are listed in Section 6.
 
-> **Note:** `pagetable_t` in xv6 is a typedef for a pointer to the root of a process's page table; it maps virtual addresses to physical memory. Its definition is `typedef uint64 *pagetable_t;` in `kernel/riscv.h`.
+`pagetable_t` in xv6 is a typedef for a pointer to the root of a process's page table; it maps virtual addresses to physical memory. Its definition is `typedef uint64 *pagetable_t;` in `kernel/riscv.h`.
 
 The third group, `ofile[]` and `cwd`, points to file system resources such as the files the process has opened and its current working directory. The last field, `name`, is used only for debugging.
 
-> **Note:** `ofile[]` holds kernel-side file objects. The file descriptor number that user programs use (e.g., `fd = 3`) is simply the index into this array.
+`ofile[]` holds kernel-side file objects. The file descriptor number that user programs use (e.g., `fd = 3`) is simply the index into this array.
 
 > **Definition:** An **`inode`** is the kernel's internal descriptor for a file or directory, storing metadata like size, permissions, and disk location.
 
@@ -337,7 +337,7 @@ The third group, `ofile[]` and `cwd`, points to file system resources such as th
 
 *Figure 4. Steps of the xv6 fork() implementation*
 
-> **Note:** The kernel stack (`kstack`) is a private stack region in kernel memory used when this process executes inside the kernel (e.g., during a system call). It is completely separate from the user stack to prevent user code from tampering with kernel execution. In xv6, kernel stacks are allocated and mapped for every process slot at boot, and allocproc() does not allocate a new kernel stack but uses the one attached to the slot (the `kstack*` in Figure 4).
+The kernel stack (`kstack`) is a private stack region in kernel memory used when this process executes inside the kernel (e.g., during a system call). It is completely separate from the user stack to prevent user code from tampering with kernel execution. In xv6, kernel stacks are allocated and mapped for every process slot at boot, and allocproc() does not allocate a new kernel stack but uses the one attached to the slot (the `kstack*` in Figure 4).
 
 **Discussion questions**:
 - Why does the child process need its **own copy** of the trapframe?
@@ -367,27 +367,25 @@ The third group, `ofile[]` and `cwd`, points to file system resources such as th
 
   </details>
 
-> **Note:** Breaking down the internal operation of `uvmcopy()` step by step:
-> 1. Walk the parent's page table to find all mapped user pages.
-> 2. For each page, allocate a new physical memory frame with `kalloc()`.
-> 3. Copy the contents of the parent's page to the new frame **byte by byte** (`memmove`).
-> 4. Map the new frame to the same virtual address in the child's page table.
->
-> This process becomes more expensive as the process memory grows. In the function name, `u` stands for user, `vm` for virtual memory, and `copy` for copy; as the name suggests, it is a function that copies user virtual memory.
+Breaking down the internal operation of `uvmcopy()` step by step:
+1. Walk the parent's page table to find all mapped user pages.
+2. For each page, allocate a new physical memory frame with `kalloc()`.
+3. Copy the contents of the parent's page to the new frame **byte by byte** (`memmove`).
+4. Map the new frame to the same virtual address in the child's page table.
+
+This process becomes more expensive as the process memory grows. In the function name, `u` stands for user, `vm` for virtual memory, and `copy` for copy; as the name suggests, it is a function that copies user virtual memory.
 
 > **Note:** Having `uvmcopy()` copy all pages is highly inefficient. In real Linux, the COW (Copy-On-Write) technique is used: at fork time, only page table entries are copied, and actual physical pages are copied only when a write is attempted. This optimization is covered in Week 12.
 
 Steps 3 and 4 deal with the trapframe. The child receives an exact copy of the parent's trapframe, so it resumes execution at the point where the parent called `fork()`, and only the register that holds the return value is changed to 0.
 
-> **Note:** Representative registers saved in the trapframe are as follows:
-> - `epc`: program counter at the time of the trap (the address to return to)
-> - `a0`-`a7`: function arguments / system call arguments / return values
-> - `sp`: user stack pointer
-> - `s0`-`s11`: callee-saved registers (values that must be preserved per calling convention)
->
-> Setting `trapframe->a0 = 0` in fork() ensures that when the child returns from kernel to user mode, it reads 0 from `a0` (the return value register), allowing it to recognize that it is the child.
+Representative registers saved in the trapframe are as follows:
+- `epc`: program counter at the time of the trap (the address to return to)
+- `a0`-`a7`: function arguments / system call arguments / return values
+- `sp`: user stack pointer
+- `s0`-`s11`: callee-saved registers (values that must be preserved per calling convention)
 
-> **[Computer Architecture]** The `a0` register in RISC-V is used to convey function return values. The mechanism by which `fork()` returns the child PID to the parent and 0 to the child is implemented through manipulation of `trapframe->a0`. This mechanism is what lets identical code return different values in two processes.
+Setting `trapframe->a0 = 0` in fork() ensures that when the child returns from kernel to user mode, it reads 0 from `a0` (the return value register), allowing it to recognize that it is the child. Because `a0` is the RISC-V register that conveys function return values, the parent's `a0` holds the child PID while the child's `a0` holds 0, which is what lets identical code return different values in two processes.
 
 ```text
   What this lab explored:

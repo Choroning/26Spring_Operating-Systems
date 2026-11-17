@@ -9,7 +9,7 @@
 ## Table of Contents
 
 - [Chapter 0. How to Use This Guide for Exam Preparation](#chapter-0-how-to-use-this-guide-for-exam-preparation)
-- [Chapter 1. What Is an Operating System (Week 1)](#chapter-1-what-is-an-operating-system-week-1)
+- [Chapter 1. The Concept of an Operating System (Week 1)](#chapter-1-the-concept-of-an-operating-system-week-1)
 - [Chapter 2. The Birth and Life of a Process (Week 2)](#chapter-2-the-birth-and-life-of-a-process-week-2)
 - [Chapter 3. Inter-Process Communication (IPC) (Week 3)](#chapter-3-inter-process-communication-ipc-week-3)
 - [Chapter 4. Fundamentals of Threads and Concurrency (Week 4)](#chapter-4-fundamentals-of-threads-and-concurrency-week-4)
@@ -37,7 +37,7 @@ A **deep-understanding answer** includes the following six elements.
 | Element | Description | Example |
 |---|---|---|
 | ① Definition | Korean term + English term + one sentence | "A process is a program in execution." |
-| ② Why it is needed | Alternatives, counterexamples, motivation | "Without the process abstraction, only one program could run at a time." |
+| ② Motivation | Alternatives, counterexamples, motivation | "Without the process abstraction, only one program could run at a time." |
 | ③ Mechanism | How it works | "Store the PC, registers, and memory information in the PCB, and switch with a context switch..." |
 | ④ Concrete example | Code, calculation, practice | "Opening a browser creates a new process, each with its own independent memory..." |
 | ⑤ Limitation/trade-off | Cost, constraints | "However, communication between processes requires IPC and has large overhead" |
@@ -55,9 +55,9 @@ A **deep-understanding answer** includes the following six elements.
 
 ---
 
-## Chapter 1. What Is an Operating System (Week 1)
+## Chapter 1. The Concept of an Operating System (Week 1)
 
-### 1.1 The Problem to Solve: Why an OS Is Needed
+### 1.1 The Problem to Solve: The Need for an OS
 
 Computer hardware is a collection of devices such as the **CPU, memory, disk, network card, and keyboard**. Users want to use a word processor, listen to music, and open a browser. **But connecting these two worlds directly causes serious problems.**
 
@@ -110,7 +110,7 @@ The role of the OS can be viewed from two complementary perspectives.
 
 #### 1.3.1 Resource Allocator
 
-**How should limited resources be divided fairly and efficiently?**
+**Dividing limited resources fairly and efficiently**
 
 What it manages:
 - **CPU time**: which process runs when? → CPU scheduling (Weeks 6-7)
@@ -122,7 +122,7 @@ Key trade-off:
 
 #### 1.3.2 Control Program
 
-**How can user programs be prevented from misusing the system?**
+**Preventing user programs from misusing the system**
 
 Functions it handles:
 - **Execution management**: controls starting, stopping, and suspending programs
@@ -187,7 +187,7 @@ How a trap occurs:
 
 If dual mode is the wall, a **system call** is the **only passage** that legitimately goes through the wall.
 
-#### 1.5.1 What a System Call Is
+#### 1.5.1 The Concept of a System Call
 
 > **Definition:** A **system call** is the only mechanism by which a user program requests an OS service.
 
@@ -371,7 +371,7 @@ If a program's memory accesses were completely random, no cache would be effecti
 
 🔗 **Connection**: This principle is the premise of every caching technique, including the **TLB (address translation cache), page cache (file system cache), and buffer cache**.
 
-### 1.8 OS Structure: How to Design the Kernel
+### 1.8 OS Structure: Kernel Design Approaches
 
 There are four representative paradigms for organizing the OS kernel.
 
@@ -1186,7 +1186,7 @@ while (true) {
 
 🔗 **Connection**: Week 9 introduces blocking approaches with **semaphores, mutexes, and condition variables**. A waiting process is put to sleep, freeing the CPU.
 
-### 3.4 Three Design Axes of Message Passing
+### 3.4 Three Design Issues of Message Passing
 
 #### 3.4.1 Naming: Direct vs Indirect
 
@@ -1666,7 +1666,7 @@ struct proc {
 
 ## Chapter 4. Fundamentals of Threads and Concurrency (Week 4)
 
-### 4.1 What Is a Thread
+### 4.1 The Concept of a Thread
 
 #### 4.1.1 Definition
 
@@ -2744,7 +2744,7 @@ Run in order of arrival. Nonpreemptive.
 - P3: 27
 - **Average: (0+24+27)/3 = 17**
 
-**What if the order is P2-P3-P1?**:
+**If the order is P2-P3-P1**:
 ```text
 | P2 | P3 | P1         |
 0    3    6           30
@@ -2962,7 +2962,7 @@ struct context {
 };
 ```
 
-**Why only callee-saved registers?**: The caller-saved registers (t0-t6, a0-a7) are already saved on the stack by the C compiler, because the C code that calls swtch() assumes the call returns.
+**Reason only callee-saved registers are saved**: The caller-saved registers (t0-t6, a0-a7) are already saved on the stack by the C compiler, because the C code that calls swtch() assumes the call returns.
 
 #### 6.11.2 swtch.S Flow
 

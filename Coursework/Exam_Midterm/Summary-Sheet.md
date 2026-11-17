@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Summary-Sheet.md) | [한국어](Summary-Sheet.ko.md)
 
-> **Last Updated:** 2026-11-16
+> **Last Updated:** 2026-11-18
 
 ---
 
@@ -286,14 +286,14 @@ if (pid == 0) {                          // child
 - Maximum stored: **SIZE − 1** items
 - Why one slot stays empty: to distinguish empty from full
 
-### Three Design Axes of Message Passing
-| Axis | Options |
+### Three Design Issues of Message Passing
+| Issue | Options |
 |---|---|
 | Naming | Direct symmetric / direct asymmetric / indirect (mailbox) |
 | Synchronization | Blocking send and recv / nonblocking (4 combinations) |
 | Buffering | 0 (rendezvous) / bounded / unbounded |
 
-*Table 12. Design axes and options of message passing*
+*Table 12. Design issues and options of message passing*
 
 ### POSIX Shared Memory
 ```c

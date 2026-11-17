@@ -2,7 +2,7 @@
 
 [레포지토리 안내](../../README.ko.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **최종 수정일:** 2026-11-17
+> **최종 수정일:** 2026-11-18
 >
 > Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 10
 
@@ -46,7 +46,7 @@
   - [3.10 스택 알고리즘과 Belady 회피 이유](#310-스택-알고리즘과-belady-회피-이유)
   - [3.11 알고리즘 비교](#311-알고리즘-비교)
 - [4. LRU 근사 알고리즘](#4-lru-근사-알고리즘)
-  - [4.1 왜 근사하는가?](#41-왜-근사하는가)
+  - [4.1 근사하는 이유](#41-근사하는-이유)
   - [4.2 Additional-Reference-Bits](#42-additional-reference-bits)
   - [4.3 Second-Chance (Clock) 알고리즘](#43-second-chance-clock-알고리즘)
   - [4.4 Clock 알고리즘의 시각화](#44-clock-알고리즘의-시각화)
@@ -624,7 +624,7 @@ demand paging은 **과다 할당(over-allocation)** 으로 이어진다. OS가 �
 
 ## 4. LRU 근사 알고리즘
 
-### 4.1 왜 근사하는가?
+### 4.1 근사하는 이유
 
 정확한 LRU는 **모든** 메모리 참조에서 시계나 스택을 갱신하는 하드웨어를 요구하지만, 대부분의 아키텍처는 이를 제공하지 않는다. 대부분의 아키텍처가 **제공하는** 것은 **reference bit**이다.
 
