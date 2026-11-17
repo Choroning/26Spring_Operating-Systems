@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **Last Updated:** 2026-10-27
+> **Last Updated:** 2026-11-17
 >
 > Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 1, 2
 
@@ -106,7 +106,9 @@ graph LR
 
 > **Note:** **Analogy.** Consider a bank. Employees (kernel mode) have vault access and can handle any operation. Customers (user mode) can only interact through the counter window (system calls). A customer who tries to jump over the counter is stopped immediately. This is the same principle as the hardware trapping a user-mode program that attempts a privileged instruction.
 
-> **Definition:** A **register** is a tiny, ultra-fast memory slot built directly into the CPU, used to hold values the CPU is currently working with. A **status register** is a special register that stores flags indicating the CPU's current state (e.g., which mode it is in).
+> **Definition:** A **register** is a tiny, ultra-fast memory slot built directly into the CPU, used to hold values the CPU is currently working with.
+
+> **Definition:** A **status register** is a special register that stores flags indicating the CPU's current state (e.g., which mode it is in).
 
 > **[Computer Architecture]** The mode bit is typically stored in the CPU's **status register (PSW: Program Status Word)**. In RISC-V, the current mode is not directly visible in a register; when a trap occurs, the hardware records the mode before the trap in the SPP (Supervisor Previous Privilege) bit of the `sstatus` register, and `sret` uses it to decide which mode to return to. Since the hardware automatically changes the mode upon a trap, software cannot arbitrarily switch to kernel mode.
 

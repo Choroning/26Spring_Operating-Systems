@@ -73,7 +73,7 @@
 └── README.md
 ```
 
-단원 목록은 [`Lecture-Notes` 색인](Lecture-Notes/README.ko.md)에, 과제와 텀 프로젝트는 [`Coursework` 색인](Coursework/README.ko.md)에 있습니다.
+단원 목록은 [`Lecture-Notes` 색인](Lecture-Notes/README.ko.md)에, 과제, 중간고사 대비 자료, 텀 프로젝트는 [`Coursework` 색인](Coursework/README.ko.md)에 있습니다.
 
 <br><a name="license"></a>
 ## 🤝 라이선스

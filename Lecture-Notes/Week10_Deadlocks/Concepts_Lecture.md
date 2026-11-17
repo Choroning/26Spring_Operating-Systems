@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **Last Updated:** 2026-11-04
+> **Last Updated:** 2026-11-17
 >
 > Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 8
 
@@ -102,7 +102,7 @@ A thread uses a resource in three steps:
 
 ### 1.2 Definition of Deadlock
 
-> **Definition:** **Deadlock** is a state in which every thread in a set is waiting for an event (typically resource release) that can only be caused by another thread in the **same set**.
+> **Definition:** **Deadlock** is a state in which every thread in a set is waiting for an event (typically resource release) that can only be caused by another thread in the same set.
 
 Canonical two-thread example:
 
@@ -451,9 +451,11 @@ Characteristics:
 
 Prevention is heavy-handed: it removes deadlock by structurally restricting what the system can do, often hurting utilization. **Avoidance** instead asks: *Given each thread's maximum future demand, can I grant this request and still be sure every thread can finish?*
 
-> **Definition:** A **Safe State** is a state for which there exists a **safe sequence** ⟨T1, T2, ..., Tn⟩ such that for every Ti, its remaining resource needs can be satisfied by `Available + Σ Allocation(Tj for j < i)`.
->
-> An **Unsafe State**, by contrast, is a state in which no safe sequence exists.
+> **Definition:** A **safe sequence** is an ordering of threads ⟨T1, T2, ..., Tn⟩ such that for every Ti, its remaining resource needs can be satisfied by `Available + Σ Allocation(Tj for j < i)`.
+
+> **Definition:** A **Safe State** is a state for which a safe sequence exists.
+
+> **Definition:** An **Unsafe State** is a state in which no safe sequence exists.
 
 > **[Discrete Mathematics]** For equal-length vectors X and Y, **`X ≤ Y` means component-wise comparison**: `X[j] ≤ Y[j]` at every index. Vector addition and subtraction are also component-wise. This relation is a **partial order**, so some vectors are incomparable; for example, neither `(1,3) ≤ (2,2)` nor `(2,2) ≤ (1,3)`. The Banker's Algorithm relies on this: if `Request ≤ Available` fails, the request is not necessarily larger than Available; at least one resource component is unavailable.
 

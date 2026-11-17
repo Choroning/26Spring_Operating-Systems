@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **Last Updated:** 2026-11-04
+> **Last Updated:** 2026-11-17
 >
 > Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 5 (5.3.4-5.8)
 
@@ -660,7 +660,7 @@ The step-by-step explanation is as follows.
 
 **CPU utilization** is 25/50 + 35/80 = 0.50 + 0.4375 = **93.75%**.
 
-The theoretical RM upper bound for N = 2 tasks is $N(2^{1/N} - 1) = 2(\sqrt{2} - 1) \approx 82.8\%$.
+The theoretical RM upper bound for N = 2 tasks is $`N(2^{1/N} - 1) = 2(\sqrt{2} - 1) \approx 82.8\%`$.
 
 Since **93.75% > 82.8%**, RM may fail. Checking the schedule gives the following.
 

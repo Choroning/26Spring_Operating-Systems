@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Total-Review.md) | [한국어](Total-Review.ko.md)
 
-> **Last Updated:** 2026-11-16
+> **Last Updated:** 2026-11-17
 
 ---
 
@@ -1259,6 +1259,7 @@ char *ptr = (char *)mmap(0, 4096, PROT_READ | PROT_WRITE,
 #include <stdio.h>
 #include <fcntl.h>
 #include <sys/mman.h>
+#include <unistd.h>
 
 int main() {
     const int SIZE = 4096;
@@ -1387,6 +1388,7 @@ int main() {
 #### 3.6.4 Shell Pipeline: Implementing `ls | wc -l`
 
 ```c
+#include <stdio.h>
 #include <unistd.h>
 #include <sys/wait.h>
 

@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **Last Updated:** 2026-11-04
+> **Last Updated:** 2026-11-17
 >
 > Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 4 (4.5-4.7)
 
@@ -1165,7 +1165,7 @@ An LWP (Lightweight Process) is an OS-managed execution slot between user thread
 
 *Table 11. Three key data structures of a Windows thread*
 
-> **Definition:** **ETHREAD** = Executive Thread, **KTHREAD** = Kernel Thread, **TEB** = Thread Environment Block. The naming follows Windows' layered kernel architecture: the Executive layer (ETHREAD) handles high-level thread management, the Kernel layer (KTHREAD) handles scheduling, and the TEB provides user-space accessible information.
+> **Note:** **Names of the three structures.** ETHREAD stands for Executive Thread, KTHREAD for Kernel Thread, and TEB for Thread Environment Block. The naming follows Windows' layered kernel architecture: the Executive layer (ETHREAD) handles high-level thread management, the Kernel layer (KTHREAD) handles scheduling, and the TEB provides user-space accessible information.
 
 ### 9.2 Windows Threads: Data Structures
 

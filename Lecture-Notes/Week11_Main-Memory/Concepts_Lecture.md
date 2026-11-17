@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **Last Updated:** 2026-11-04
+> **Last Updated:** 2026-11-17
 >
 > Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 9
 
@@ -618,6 +618,8 @@ Each page-table entry carries extra bits:
 - *Invalid*: the page is not in use by this process; any reference traps.
 
 This handles the common case where a process's actual address-space use is much smaller than the theoretical maximum. To cut the page table down to just the used portion, hardware exposes a **PTLR (Page-Table Length Register)** that bounds the table's actual length.
+
+Figure 23 shows an example with a 14-bit address space (addresses 0-16383) and 2 KB pages, so the page table has 8 entries (pages 0-7). The program uses only addresses 0-10468, so pages 0-5 are marked valid and pages 6 and 7 invalid. Page 5 covers addresses 10240-12287, so references to 10469-12287 are also allowed even though the program does not use them. The valid-invalid bit works at page granularity, and this unused tail of page 5 is internal fragmentation.
 
 ![Figure 23. Valid (v) and invalid (i) bits in a page table](../../images/Week11_p21.png)
 

@@ -2,7 +2,7 @@
 
 [레포지토리 안내](README.ko.md) | [English](Course-Information.md) | [한국어](Course-Information.ko.md)
 
-> **최종 수정일:** 2026-10-26
+> **최종 수정일:** 2026-11-17
 
 ## 목차
 
@@ -101,5 +101,6 @@
 | 유형 | 내용 |
 |:-----|:-----|
 | 교재 | A. Silberschatz, P. B. Galvin, and G. Gagne, *Operating System Concepts*, 10th ed. Hoboken, NJ, USA: Wiley, 2018. (공룡책) |
+| 참고 도서 | R. Cox, F. Kaashoek, and R. Morris, *xv6: a simple, Unix-like teaching operating system*, Sep. 2025. (xv6 교재) |
 | 참고 강의 | MIT 6.1810 Operating System Engineering ([강의 웹사이트](https://pdos.csail.mit.edu/6.1810/)), 실습 환경인 RISC-V용 xv6의 자료 |
 | 강의자료 | [교수자 제공 Markdown 노트와 슬라이드 (GitHub)](https://github.com/codingchild2424/2026-lecture-operating-system) |

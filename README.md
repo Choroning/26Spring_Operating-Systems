@@ -73,7 +73,7 @@ This course covers the design and implementation of operating systems, including
 └── README.md
 ```
 
-The units are listed in the [`Lecture-Notes` index](Lecture-Notes/README.md), and the assignments and the term project in the [`Coursework` index](Coursework/README.md).
+The units are listed in the [`Lecture-Notes` index](Lecture-Notes/README.md), and the assignments, midterm preparation materials, and term project in the [`Coursework` index](Coursework/README.md).
 
 <br><a name="license"></a>
 ## 🤝 License

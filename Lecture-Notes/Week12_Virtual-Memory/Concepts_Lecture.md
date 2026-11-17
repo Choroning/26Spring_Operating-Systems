@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **Last Updated:** 2026-10-20
+> **Last Updated:** 2026-11-17
 >
 > Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 10
 
@@ -257,18 +257,18 @@ $$
 \text{EAT} = (1 - p) \cdot \text{mem} + p \cdot \text{pf}
 $$
 
-**Worked example:** with $\text{mem} = 200\ \text{ns}$ and $\text{pf} = 8\ \text{ms} = 8\,000\,000\ \text{ns}$:
+**Worked example:** with $\text{mem} = 200\ \text{ns}$ and $`\text{pf} = 8\ \text{ms} = 8\,000\,000\ \text{ns}`$:
 
-$$
+```math
 \text{EAT} = 200 + 7\,999\,800 \cdot p
-$$
+```
 
 - With $p = 1/1000$ (one fault per 1000 accesses), $\text{EAT} = 200 + 7999.8 \approx 8200\ \text{ns}$, which is **about 40× slower** than raw memory.
-- To keep the slowdown within 10% ($\text{EAT} \leq 220$), we need $20 \geq 7\,999\,800 \cdot p$, that is, $p \leq 0.0000025 \approx 1/400\,000$.
+- To keep the slowdown within 10% ($`\text{EAT} \leq 220`$), we need $`20 \geq 7\,999\,800 \cdot p`$, that is, $`p \leq 0.0000025 \approx 1/400\,000`$.
 
 > **Note:** **The lesson.** Page faults must be **extremely rare** (at most one per about 400,000 references) for demand paging to feel free. This is why good replacement policies, working sets, and locality management matter: a small jump in fault rate translates into a huge jump in effective access time.
 
-> **[Computer Architecture]** This EAT formula is the same expected-value technique used for the **TLB** in Week 11 ($\alpha(T+M) + (1-\alpha)(T+2M)$), just one rung lower on the **memory hierarchy**. The TLB version balanced a cache hit (cycles) against a memory access (about 100 ns); this version balances a memory access (about 100 ns) against a fault serviced by disk or SSD (millions of cycles). The numbers are brutal here because each step down the hierarchy (register, cache, DRAM, SSD, disk) costs roughly **two orders of magnitude** more latency. A TLB miss merely doubles a fast operation, while a page fault replaces a 100 ns operation with an 8 ms one. That is why the tolerable miss rate collapses from about 2% (TLB) to about 0.00025% (page fault).
+> **[Computer Architecture]** This EAT formula is the same expected-value technique used for the **TLB** in Week 11 ($`\alpha(T+M) + (1-\alpha)(T+2M)`$), just one rung lower on the **memory hierarchy**. The TLB version balanced a cache hit (cycles) against a memory access (about 100 ns); this version balances a memory access (about 100 ns) against a fault serviced by disk or SSD (millions of cycles). The numbers are brutal here because each step down the hierarchy (register, cache, DRAM, SSD, disk) costs roughly **two orders of magnitude** more latency. A TLB miss merely doubles a fast operation, while a page fault replaces a 100 ns operation with an 8 ms one. That is why the tolerable miss rate collapses from about 2% (TLB) to about 0.00025% (page fault).
 
 ### 1.11 Swap Space Utilization
 
@@ -767,7 +767,9 @@ Given $m$ available frames and $n$ processes, the OS must decide how to distribu
 - **Equal allocation:** $m / n$ frames each.
   - Example: 93 frames and 5 processes give 18 frames each, with 3 spare (the spare frames can serve as a free-frame buffer pool).
 - **Proportional allocation:** give a process frames in proportion to its size $s_i$:
-  $$ a_i = \frac{s_i}{S} \cdot m, \qquad S = \sum_i s_i $$
+  ```math
+  a_i = \frac{s_i}{S} \cdot m, \qquad S = \sum_i s_i
+  ```
   - Example: 62 frames, process A (10 KB), process B (127 KB), $S = 137\ \text{KB}$:
     - A: $10/137 \times 62 \approx 4$ frames
     - B: $127/137 \times 62 \approx 57$ frames
@@ -849,9 +851,9 @@ A process **moves from locality to locality** during execution:
 
 The working-set model is a **practical** approximation of the current locality. It defines a working-set window $\Delta$ as a number of recent memory references.
 
-$$
+```math
 WS_i(t) = \{\text{pages referenced by process } i \text{ in the last } \Delta \text{ references}\}
-$$
+```
 
 - If $\Delta$ is too small, it does not capture the whole locality, which causes needless misses.
 - If $\Delta$ is too large, it spans multiple localities, which causes over-allocation.
@@ -1274,7 +1276,7 @@ Total Page Faults: 15
    <details>
    <summary>Answer</summary>
 
-   The last 8 references are positions 5-12, `4, 5, 1, 2, 3, 4, 5, 6`. So $WS = \{1, 2, 3, 4, 5, 6\}$: six distinct pages in the last 8 references. The process needs at least 6 frames to avoid thrashing in its current locality.
+   The last 8 references are positions 5-12, `4, 5, 1, 2, 3, 4, 5, 6`. So $`WS = \{1, 2, 3, 4, 5, 6\}`$: six distinct pages in the last 8 references. The process needs at least 6 frames to avoid thrashing in its current locality.
 
    </details>
 

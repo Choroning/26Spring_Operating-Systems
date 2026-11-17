@@ -2,7 +2,7 @@
 
 [레포지토리 안내](../../README.ko.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **최종 수정일:** 2026-11-04
+> **최종 수정일:** 2026-11-17
 >
 > Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 5 (5.3.4-5.8)
 
@@ -660,7 +660,7 @@ Rate-Monotonic 우선순위는 주기가 더 짧은 P1이 높다(**P1 > P2**).
 
 **CPU 이용률**은 25/50 + 35/80 = 0.50 + 0.4375 = **93.75%** 이다.
 
-N = 2 태스크에 대한 이론적 RM 상한은 $N(2^{1/N} - 1) = 2(\sqrt{2} - 1) \approx 82.8\%$이다.
+N = 2 태스크에 대한 이론적 RM 상한은 $`N(2^{1/N} - 1) = 2(\sqrt{2} - 1) \approx 82.8\%`$이다.
 
 **93.75% > 82.8%** 이므로 RM은 실패할 수 있다. 실제로 확인하면 다음과 같다.
 

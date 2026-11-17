@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Assignment-Explanation.md) | [한국어](Assignment-Explanation.ko.md)
 
-> **Last Updated:** 2026-11-16
+> **Last Updated:** 2026-11-17
 >
 > Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 4 (4.5-4.7)
 
@@ -128,7 +128,7 @@ $$
 T(N) = f \cdot T(1) + \frac{(1 - f) \cdot T(1)}{N}, \qquad S(N) = \frac{T(1)}{T(N)} = \frac{1}{f + \frac{1 - f}{N}}
 $$
 
-As $N \to \infty$, $S(N) \to 1/f$, so the serial fraction sets a hard upper bound regardless of the number of cores. Small serial fractions matter enormously: $f = 5\%$ caps the speedup at 20 times, and $f = 1\%$ at 100 times. Amdahl's Law models strong scaling, with a fixed problem size and more threads. Its complement, Gustafson's Law, describes weak scaling, in which the problem grows with the number of cores and the serial fraction shrinks relative to the growing parallel work. This assignment uses fixed input sizes (10 million integers and a 1024 × 1024 matrix), so Amdahl's Law is the appropriate lens.
+As $N \to \infty$, $S(N) \to 1/f$, so the serial fraction sets a hard upper bound regardless of the number of cores. Small serial fractions matter enormously: $`f = 5\%`$ caps the speedup at 20 times, and $`f = 1\%`$ at 100 times. Amdahl's Law models strong scaling, with a fixed problem size and more threads. Its complement, Gustafson's Law, describes weak scaling, in which the problem grows with the number of cores and the serial fraction shrinks relative to the growing parallel work. This assignment uses fixed input sizes (10 million integers and a 1024 × 1024 matrix), so Amdahl's Law is the appropriate lens.
 
 ### 3.4 Memory Hierarchy and Spatial Locality
 
@@ -344,7 +344,7 @@ $$
 \frac{1}{5.18} = 0.1931 = f + \frac{1 - f}{8} \quad\Rightarrow\quad \frac{7}{8} f = 0.0681 \quad\Rightarrow\quad f \approx 0.078
 $$
 
-Almost 8% (7.8%) of the wall-clock time is inherently serial. This serial time comes mostly from the final merge passes: the outermost merge, which combines the two halves into the final sorted output, is by construction single-threaded and runs in $O(N)$ time. Thread creation and join overhead contribute the rest. For comparison, the Week 4 histogram assignment (HW3) measured $f \approx 15\%$ on the same machine; merge sort's lower $f$ reflects its higher ratio of computation to overhead.
+Almost 8% (7.8%) of the wall-clock time is inherently serial. This serial time comes mostly from the final merge passes: the outermost merge, which combines the two halves into the final sorted output, is by construction single-threaded and runs in $O(N)$ time. Thread creation and join overhead contribute the rest. For comparison, the Week 4 histogram assignment (HW3) measured $`f \approx 15\%`$ on the same machine; merge sort's lower $f$ reflects its higher ratio of computation to overhead.
 
 ### 7.2 Oversubscription and the Sweet Spot of MAX_DEPTH
 
@@ -382,7 +382,7 @@ Report question 3 asks when to use the fork-join pattern and when OpenMP. Fork-j
 
 ## 8. Key Takeaways
 
-1. **Amdahl's Law is the first thing to measure.** Solve for the serial fraction $f$ before adding cores: the upper bound $1/f$ is often tighter than the core count. The merge sort in this assignment has $f \approx 7.8\%$, capping the speedup near 13 times regardless of how many threads are used.
+1. **Amdahl's Law is the first thing to measure.** Solve for the serial fraction $f$ before adding cores: the upper bound $1/f$ is often tighter than the core count. The merge sort in this assignment has $`f \approx 7.8\%`$, capping the speedup near 13 times regardless of how many threads are used.
 2. **Oversubscription is catastrophic.** The right thread count is roughly the number of physical cores, not a large number. In the depth sweep, 16384 threads ran more than 3 times slower than a single thread, because the per-thread creation and stack costs grow linearly while the payoff of parallelism saturates after about 8 threads.
 3. **Memory access patterns dominate operation counts on modern CPUs.** A single loop permutation (from i-j-k to i-k-j) produces a roughly 14-fold speedup without changing any arithmetic. Row-major stride-1 access in the innermost loop is the single most important matrix multiplication optimization before SIMD and blocking.
 4. **Choose the parallelism model by the shape of the problem.** Use OpenMP (one directive, automatic pooling) for regular `for` loops with independent iterations, and fork-join (explicit Pthreads or a work-stealing runtime) for recursive divide-and-conquer structures.

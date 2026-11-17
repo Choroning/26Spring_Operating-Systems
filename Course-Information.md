@@ -2,7 +2,7 @@
 
 [Repository Guide](README.md) | [English](Course-Information.md) | [한국어](Course-Information.ko.md)
 
-> **Last Updated:** 2026-10-26
+> **Last Updated:** 2026-11-17
 
 ## Table of Contents
 
@@ -101,5 +101,6 @@
 | Type | Contents |
 |:-----|:-----|
 | Textbook | A. Silberschatz, P. B. Galvin, and G. Gagne, *Operating System Concepts*, 10th ed. Hoboken, NJ, USA: Wiley, 2018. (the Dinosaur Book) |
+| Reference Book | R. Cox, F. Kaashoek, and R. Morris, *xv6: a simple, Unix-like teaching operating system*, Sep. 2025. (the xv6 book) |
 | Reference Course | MIT 6.1810 Operating System Engineering ([course website](https://pdos.csail.mit.edu/6.1810/)), resources for the RISC-V xv6 lab environment |
 | Lecture Slides | [Instructor's Markdown notes and slides (GitHub)](https://github.com/codingchild2424/2026-lecture-operating-system) |

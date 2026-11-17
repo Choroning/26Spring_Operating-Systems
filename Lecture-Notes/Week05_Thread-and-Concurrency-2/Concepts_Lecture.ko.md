@@ -2,7 +2,7 @@
 
 [레포지토리 안내](../../README.ko.md) | [English](Concepts_Lecture.md) | [한국어](Concepts_Lecture.ko.md)
 
-> **최종 수정일:** 2026-11-04
+> **최종 수정일:** 2026-11-17
 >
 > Operating System Concepts, Silberschatz, Galvin, and Gagne, Ch 4 (4.5-4.7)
 
@@ -1165,7 +1165,7 @@ LWP(경량 프로세스)는 사용자 스레드와 커널 스레드 사이에 �
 
 *표 11. Windows 스레드의 세 가지 핵심 자료 구조*
 
-> **용어 정의:** **ETHREAD** = Executive Thread, **KTHREAD** = Kernel Thread, **TEB** = Thread Environment Block. 이름은 Windows의 계층화된 커널 아키텍처를 따른다: Executive 계층(ETHREAD)은 상위 수준 스레드 관리를 담당하고, Kernel 계층(KTHREAD)은 스케줄링을 담당하며, TEB는 사용자 공간에서 접근 가능한 정보를 제공한다.
+> **참고:** **세 자료 구조의 이름.** ETHREAD는 Executive Thread, KTHREAD는 Kernel Thread, TEB는 Thread Environment Block의 약자이다. 이름은 Windows의 계층화된 커널 아키텍처를 따른다. Executive 계층(ETHREAD)은 상위 수준 스레드 관리를 담당하고, Kernel 계층(KTHREAD)은 스케줄링을 담당하며, TEB는 사용자 공간에서 접근 가능한 정보를 제공한다.
 
 ### 9.2 Windows 스레드: 자료 구조
 
