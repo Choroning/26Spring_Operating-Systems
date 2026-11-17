@@ -22,7 +22,7 @@ This repository archives lecture notes and coursework for the Operating Systems 
 <br><a name="about-this-repository"></a>
 ## 📝 About This Repository
 
-- `Lecture-Notes/` holds a lecture note for each week (`Week##`), and Weeks 1-6 also hold lab notes.
+- `Lecture-Notes/` holds a lecture note for each week (`Week##`), and Weeks 1-6 and 9-13 also hold lab notes.
 - `Coursework/` holds, for each assignment, the assignment handout and distributed files, the solution (C implementations, xv6 kernel patches), an assignment explanation, and a code walkthrough, along with midterm review materials, with the term project and xv6-riscv linked as git submodules.
 - Every note comes as an English (`.md`) and Korean (`.ko.md`) pair.
 

@@ -2,7 +2,7 @@
 
 [레포지토리 안내](README.ko.md) | [English](Course-Information.md) | [한국어](Course-Information.ko.md)
 
-> **최종 수정일:** 2026-11-17
+> **최종 수정일:** 2026-11-18
 
 ## 목차
 
@@ -83,12 +83,13 @@
 | 11주차 | 5/13, 5/14 | 주 메모리 | W11_LEC_Main-Memory<br>W11_LAB_Page-Tables |
 | 12주차 | 5/20, 5/21 | 가상 메모리 | W12_LEC_Virtual-Memory<br>W12_LAB_COW-Fork-And-Lazy-Allocation |
 | 13주차 | 5/27, 5/28 | 저장 장치 관리, 보안 및 보호 | W13_LEC_Storage-Management<br>W13_LAB_File-System-Internals |
-| 14주차 | 6/3, 6/4 | 기말고사 (텀 프로젝트) | W14_LEC_Security-And-Protection |
+| 14주차 | 6/3 (공휴일), 6/4 | 기말고사 (텀 프로젝트) | W14_LEC_Security-And-Protection |
 | 15주차 | 6/10, 6/11 | 기말고사 (필기) | - |
 | 16주차 | 6/17, 6/18 | 자율학습 주간 | - |
 
 - 강의자료는 주차마다 이론 자료(`W##_LEC_`)와 실습 자료(`W##_LAB_`)로 배포되었으며, 같은 번호의 `Week##` 단원에 각각 `Concepts_Lecture`와 `Concepts_Lab`으로 정리했다. 단원 목록은 [`Lecture-Notes` 색인](Lecture-Notes/README.ko.md)에 있다.
-- 7주차와 14주차에는 실습 자료가 없고, 9~13주차의 실습 자료(`W09_LAB_Sleep-Wakeup-And-Pipes`, `W10_LAB_Deadlocks`, `W11_LAB_Page-Tables`, `W12_LAB_COW-Fork-And-Lazy-Allocation`, `W13_LAB_File-System-Internals`)는 실습 노트를 만들지 않았다.
+- 7주차와 14주차에는 실습 자료가 없다.
+- 14주차의 6/3은 제9회 전국동시지방선거일(공휴일)이다.
 - 보안 및 보호는 13주차에 계획된 주제이지만 강의자료가 14주차 자료(`W14_LEC_Security-And-Protection`)로 배포되어 `Week14` 단원에 정리했다.
 - HW1\~HW5는 2\~6주차의 가정 과제이며 [`Coursework` 색인](Coursework/README.ko.md)에 있다.
 

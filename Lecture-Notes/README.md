@@ -2,7 +2,7 @@
 
 [Repository Guide](../README.md) | [English](README.md) | [한국어](README.ko.md)
 
-> **Last Updated:** 2026-10-27
+> **Last Updated:** 2026-11-18
 
 | Unit | Topics | Documents |
 |:-----|:-----|:-----|
@@ -13,9 +13,9 @@
 | [Week 5 Threads and Concurrency (2)](Week05_Thread-and-Concurrency-2/) | Implicit threading (thread pools, fork-join, OpenMP, GCD, TBB), threading issues, operating-system examples, fork() in multithreaded programs, thread-local storage | [Lecture notes](Week05_Thread-and-Concurrency-2/Concepts_Lecture.md), [Lab notes](Week05_Thread-and-Concurrency-2/Concepts_Lab.md) |
 | [Week 6 CPU Scheduling (1)](Week06_CPU-Scheduling-1/) | Scheduling criteria, FCFS, SJF, SRTF, round-robin, algorithm comparison, context switching and scheduler tracing in xv6 | [Lecture notes](Week06_CPU-Scheduling-1/Concepts_Lecture.md), [Lab notes](Week06_CPU-Scheduling-1/Concepts_Lab.md) |
 | [Week 7 CPU Scheduling (2)](Week07_CPU-Scheduling-2/) | Priority scheduling, multilevel queue and MLFQ, thread scheduling, multiprocessor scheduling, real-time CPU scheduling, algorithm evaluation | [Lecture notes](Week07_CPU-Scheduling-2/Concepts_Lecture.md) |
-| [Week 9 Synchronization](Week09_Synchronization/) | Critical-section problem, Peterson's solution, hardware support for synchronization, mutex locks, semaphores, monitors, liveness, classic problems of synchronization | [Lecture notes](Week09_Synchronization/Concepts_Lecture.md) |
-| [Week 10 Deadlocks](Week10_Deadlocks/) | Deadlock characterization, deadlock prevention, avoidance, detection, and recovery, banker's algorithm | [Lecture notes](Week10_Deadlocks/Concepts_Lecture.md) |
-| [Week 11 Main Memory](Week11_Main-Memory/) | Address binding and the MMU, contiguous memory allocation, paging and the TLB, page-table structure, swapping | [Lecture notes](Week11_Main-Memory/Concepts_Lecture.md) |
-| [Week 12 Virtual Memory](Week12_Virtual-Memory/) | Demand paging, copy-on-write, page replacement and LRU-approximation algorithms, frame allocation and thrashing, memory compression, kernel memory allocation | [Lecture notes](Week12_Virtual-Memory/Concepts_Lecture.md) |
-| [Week 13 Storage Management](Week13_Storage-Management/) | HDD structure and access time, NVM devices, HDD scheduling algorithms, error detection and correction, swap-space management, storage attachment, RAID | [Lecture notes](Week13_Storage-Management/Concepts_Lecture.md) |
+| [Week 9 Synchronization](Week09_Synchronization/) | Critical-section problem, Peterson's solution, hardware support for synchronization, mutex locks, semaphores, monitors, liveness, classic problems of synchronization, sleep/wakeup and the pipe implementation in xv6, the lost wakeup problem | [Lecture notes](Week09_Synchronization/Concepts_Lecture.md), [Lab notes](Week09_Synchronization/Concepts_Lab.md) |
+| [Week 10 Deadlocks](Week10_Deadlocks/) | Deadlock characterization, deadlock prevention, avoidance, detection, and recovery, banker's algorithm, observing and preventing deadlock with pthread mutexes, lock ordering in the xv6 kernel | [Lecture notes](Week10_Deadlocks/Concepts_Lecture.md), [Lab notes](Week10_Deadlocks/Concepts_Lab.md) |
+| [Week 11 Main Memory](Week11_Main-Memory/) | Address binding and the MMU, contiguous memory allocation, paging and the TLB, page-table structure, swapping, RISC-V Sv39 and xv6 page tables, walk() and vmprint(), tracing sbrk() | [Lecture notes](Week11_Main-Memory/Concepts_Lecture.md), [Lab notes](Week11_Main-Memory/Concepts_Lab.md) |
+| [Week 12 Virtual Memory](Week12_Virtual-Memory/) | Demand paging, copy-on-write, page replacement and LRU-approximation algorithms, frame allocation and thrashing, memory compression, kernel memory allocation, page fault handling in xv6, designing COW fork and lazy allocation | [Lecture notes](Week12_Virtual-Memory/Concepts_Lecture.md), [Lab notes](Week12_Virtual-Memory/Concepts_Lab.md) |
+| [Week 13 Storage Management](Week13_Storage-Management/) | HDD structure and access time, NVM devices, HDD scheduling algorithms, error detection and correction, swap-space management, storage attachment, RAID, the buffer cache and logging of the xv6 file system, tracing file creation, large file support | [Lecture notes](Week13_Storage-Management/Concepts_Lecture.md), [Lab notes](Week13_Storage-Management/Concepts_Lab.md) |
 | [Week 14 Security and Protection](Week14_Security-Protection/) | Program threats, system and network threats, cryptography, user authentication, protection rings and domains, access matrix, access-control models, sandboxing and code signing | [Lecture notes](Week14_Security-Protection/Concepts_Lecture.md) |

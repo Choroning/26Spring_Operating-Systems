@@ -2,7 +2,7 @@
 
 [Repository Guide](README.md) | [English](Course-Information.md) | [한국어](Course-Information.ko.md)
 
-> **Last Updated:** 2026-11-17
+> **Last Updated:** 2026-11-18
 
 ## Table of Contents
 
@@ -83,12 +83,13 @@
 | W11 | 5/13, 5/14 | Main Memory | W11_LEC_Main-Memory<br>W11_LAB_Page-Tables |
 | W12 | 5/20, 5/21 | Virtual Memory | W12_LEC_Virtual-Memory<br>W12_LAB_COW-Fork-And-Lazy-Allocation |
 | W13 | 5/27, 5/28 | Storage Management, Security and Protection | W13_LEC_Storage-Management<br>W13_LAB_File-System-Internals |
-| W14 | 6/3, 6/4 | Final Exam (Term Project) | W14_LEC_Security-And-Protection |
+| W14 | 6/3 (public holiday), 6/4 | Final Exam (Term Project) | W14_LEC_Security-And-Protection |
 | W15 | 6/10, 6/11 | Final Exam (Written) | - |
 | W16 | 6/17, 6/18 | Study Week | - |
 
 - Each week's slides were distributed as a lecture deck (`W##_LEC_`) and a lab deck (`W##_LAB_`), and they are organized in the `Week##` unit of the same number as `Concepts_Lecture` and `Concepts_Lab`, respectively. The units are listed in the [`Lecture-Notes` index](Lecture-Notes/README.md).
-- Weeks 7 and 14 have no lab deck, and no lab notes were made for the lab decks of Weeks 9-13 (`W09_LAB_Sleep-Wakeup-And-Pipes`, `W10_LAB_Deadlocks`, `W11_LAB_Page-Tables`, `W12_LAB_COW-Fork-And-Lazy-Allocation`, `W13_LAB_File-System-Internals`).
+- Weeks 7 and 14 have no lab deck.
+- In Week 14, 6/3 was the day of the 9th nationwide local elections (a public holiday).
 - Security and protection was planned for Week 13, but its slides were distributed as a Week 14 deck (`W14_LEC_Security-And-Protection`), so it is organized in the `Week14` unit.
 - HW1-HW5 are the take-home assignments of Weeks 2-6 and are listed in the [`Coursework` index](Coursework/README.md).
 
