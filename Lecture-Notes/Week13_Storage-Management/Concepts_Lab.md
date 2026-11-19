@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lab.md) | [한국어](Concepts_Lab.ko.md)
 
-> **Last Updated:** 2026-11-18
+> **Last Updated:** 2026-11-19
 
 > **Learning Objectives:**
 > 1. Explain the layered structure and the disk layout of the xv6 file system
@@ -885,8 +885,6 @@ Second write to file.
 - **Directory:** The new directory's size of 32 bytes is the two entries `"."` and `".."` (16 bytes each). Its `nlink` is 1 because `"."` does not increment the link count.
 - **Closing and reopening:** When a file is opened without `O_CREATE`, `sys_open()` only finds the existing inode with `namei()` and `dirlookup()` and does not go through `ialloc()` and `dirlink()`. The 46 bytes read after reopening match what was written, confirming the path from a write through the log and the disk to the buffer cache and a read.
 - **Deletion:** `unlink()` clears the inode number in the parent directory's entry to 0 and decrements `nlink`. If another process has the file open, a reference to the in-memory inode remains, so the blocks are not freed at once; when the last reference is closed, `iput()` sees `nlink == 0` and frees the blocks with `itrunc()`.
-
-> **Note:** In this xv6, the `size` field of `struct stat` is a `uint64`, so it is printed with `%ld` in the user `printf()`. The `printf` declaration in the user library also carries a format-checking attribute, so using `%d` causes a compile error under `-Werror`.
 
 ---
 

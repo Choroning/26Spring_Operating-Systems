@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lab.md) | [한국어](Concepts_Lab.ko.md)
 
-> **Last Updated:** 2026-11-18
+> **Last Updated:** 2026-11-19
 
 > **Learning Objectives:**
 > 1. Implement a thread pool with a task queue and pre-created worker threads
@@ -334,8 +334,6 @@ Thread 1: sum += a[1]       Thread 1: local_sum1 += a[1]
 
 > **[Programming Languages]** OpenMP is a **declarative** parallelism model: you tell the compiler *what* to parallelize, not *how*. The runtime decides thread count, scheduling, and synchronization. This contrasts with the **imperative** `pthread_create` approach from Week 4 where you manage every detail yourself.
 
-> **Key Point:** Without `reduction`, multiple threads writing to the same `sum` variable would cause a race condition. The `reduction` clause gives each thread a private copy and safely combines them after the loop completes.
-
 ---
 
 <br>
@@ -421,8 +419,6 @@ if (pid == 0) {
 The `exec()` call replaces the **entire address space**, so the inherited locked-mutex problem disappears. It does not matter that other threads are missing because the whole process image is replaced.
 
 > **Note:** **`fork()` in a multithreaded process.** Recall from Weeks 2-3 that `fork()` creates a copy of the calling process. In a single-threaded process, this copies everything. In a multithreaded process, POSIX specifies that only the calling thread is duplicated. This design avoids the complexity of duplicating thread synchronization state, but it means the child is in a fragile state until it calls `exec()`.
-
-> **Key Point:** When `fork()` is called in a multithreaded program, only the calling thread is copied, and the safe pattern is calling `exec()` immediately after `fork()`.
 
 ---
 

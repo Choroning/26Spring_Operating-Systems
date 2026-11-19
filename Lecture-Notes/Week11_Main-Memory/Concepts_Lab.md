@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lab.md) | [한국어](Concepts_Lab.ko.md)
 
-> **Last Updated:** 2026-11-18
+> **Last Updated:** 2026-11-19
 
 > **Learning Objectives:**
 > 1. Explain the three-level page table structure and the PTE format of RISC-V Sv39
@@ -515,7 +515,7 @@ vmprint(pagetable_t pagetable)
 }
 ```
 
-> **Note:** The xv6 kernel's `printf()` handles only `%d`, `%ld`, `%u`, `%x`, `%lx`, `%p`, `%s`, and `%c` and does not support width specifiers such as `%016lx`. With a width specifier, `0x%016lx` is not interpreted and is printed literally. `%p` prints `0x` followed by 16 hexadecimal digits, so `%p` is used for fixed-width output, and the arguments are cast to `(void *)` because the `printf` declaration in `defs.h` carries a format-checking attribute.
+> **Note:** The xv6 kernel's `printf()` does not support width specifiers such as `%016lx`, so the code above prints the PTE and the physical address at a fixed width with `%p`, which prints `0x` followed by 16 hexadecimal digits, and casts the arguments to `(void *)`.
 
 ### 4.2 Hooking It into the Kernel
 

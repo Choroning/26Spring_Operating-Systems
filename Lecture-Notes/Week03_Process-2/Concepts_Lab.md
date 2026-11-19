@@ -2,7 +2,7 @@
 
 [Repository Guide](../../README.md) | [English](Concepts_Lab.md) | [한국어](Concepts_Lab.ko.md)
 
-> **Last Updated:** 2026-11-18
+> **Last Updated:** 2026-11-19
 
 > **Learning Objectives:**
 > 1. Navigate the xv6 source code structure
@@ -442,24 +442,6 @@ Setting `trapframe->a0 = 0` in fork() ensures that when the child returns from k
    <summary>Answer</summary>
 
    RUNNING → **SLEEPING**. The updated fields are `state = SLEEPING` and `chan = <wait channel>` (used to match `wakeup()`). After updating, the process calls `sched()` to hand control back to the scheduler.
-
-   </details>
-
-4. **fork() internals**: Explain why `uvmcopy()` must be called before copying the trapframe. What would happen if the order were reversed?
-
-   <details>
-   <summary>Answer</summary>
-
-   `uvmcopy()` allocates a fresh page table and copies every physical page; it can **fail** (out of memory) and is by far the most expensive step. Putting it first means the expensive/failure-prone work happens before any partial initialization of the child, keeping the error-cleanup path simple. If trapframe copy came first and then `uvmcopy()` failed, the child would already have partial state that must be torn down in a careful order. Strictly speaking, the trapframe copy is a simple struct assignment that cannot fail, and on failure `freeproc()` releases all of the child's resources, so this order is a choice for keeping the error path simple rather than a strict requirement for correctness.
-
-   </details>
-
-5. **spinlock**: Why does xv6 use a spinlock (rather than a sleeping lock) to protect `struct proc`? Consider when `struct proc` is accessed.
-
-   <details>
-   <summary>Answer</summary>
-
-   `struct proc` is touched by the scheduler, interrupt handlers, and other CPUs concurrently. A sleeping lock would `sleep()` the caller on contention, but the scheduler itself (the code that lives to run `sleep()` and `wakeup()`) needs this lock, which would deadlock. Interrupt handlers also cannot sleep. The critical sections are short, so busy-waiting on a spinlock is the only safe choice.
 
    </details>
 
